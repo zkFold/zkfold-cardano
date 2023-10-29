@@ -1,0 +1,87 @@
+cabal-version:      3.0
+
+name:               zkfold-symbolic-demo
+version:            0.1.0.0
+
+license:            MIT
+license-file:       LICENSE
+
+author:             Vladimir Sinyakov
+maintainer:         info@zkfold.io
+
+build-type:         Simple
+
+common options
+    default-language: Haskell2010
+    ghc-options:
+      -fwarn-redundant-constraints
+      -Wall
+      -Wcompat
+      -Widentities
+      -Wincomplete-record-updates
+      -Wincomplete-uni-patterns
+      -Wnoncanonical-monad-instances
+      -Wpartial-fields
+      -Wredundant-constraints
+    default-extensions:
+      BangPatterns,
+      BinaryLiterals,
+      ConstraintKinds,
+      DataKinds,
+      DefaultSignatures,
+      DeriveDataTypeable,
+      DeriveFoldable,
+      DeriveFunctor,
+      DeriveGeneric,
+      DeriveTraversable,
+      ExistentialQuantification,
+      FlexibleContexts,
+      FlexibleInstances,
+      FunctionalDependencies,
+      GADTs,
+      GeneralizedNewtypeDeriving,
+      InstanceSigs,
+      KindSignatures,
+      LambdaCase,
+      MultiParamTypeClasses,
+      MultiWayIf,
+      NamedFieldPuns,
+      NoImplicitPrelude,
+      NumericUnderscores,
+      OverloadedStrings,
+      PolyKinds,
+      RankNTypes,
+      RecordWildCards,
+      ScopedTypeVariables,
+      StandaloneDeriving,
+      StandaloneKindSignatures,
+      TupleSections,
+      TypeFamilies,
+      ViewPatterns
+
+executable zkfold-symbolic-demo
+    import: options
+    main-is: Main.hs
+    other-modules:
+      DemoScript
+    build-depends:
+      base                          >= 4.9 && < 5,
+      containers                                 ,
+      zkfold-base                                ,
+    hs-source-dirs: app src
+
+test-suite zkfold-symbolic-demo-examples
+    import: options
+    type: exitcode-stdio-1.0
+    ghc-options: -rtsopts
+    main-is: Main.hs
+    other-modules:
+      Examples.Fibonacci
+      Examples.MiMCHash
+      Examples.MiMC.Constants
+      Examples.VestingScript
+    build-depends:
+      base                          >= 4.9 && < 5,
+      containers                                 ,
+      zkfold-base                                ,
+    hs-source-dirs: test
