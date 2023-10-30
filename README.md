@@ -1,2 +1,2 @@
-# symbolic-demo
+# zkfold-symbolic-demo
 zkFold Symbolic demo project

@@ -63,7 +63,7 @@ executable zkfold-symbolic-demo
     import: options
     main-is: Main.hs
     other-modules:
-      DemoScript
+      ScriptTemplate
     build-depends:
       base                          >= 4.9 && < 5,
       containers                                 ,

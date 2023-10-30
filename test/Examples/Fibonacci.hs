@@ -6,11 +6,13 @@ import           Prelude                         hiding (Num(..), Eq(..), Bool, 
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Field  (Zp)
-import           ZkFold.Symbolic.Arithmetization  (compile, acSizeM, acSizeN)
+import           ZkFold.Prelude                   (writeFileJSON)
+import           ZkFold.Symbolic.Arithmetization  (ArithmeticCircuit, acSizeM, acSizeN)
+import           ZkFold.Symbolic.Compiler         (compile)
 import           ZkFold.Symbolic.Data.Bool        (Bool (..))
 import           ZkFold.Symbolic.Data.Conditional (bool)
 import           ZkFold.Symbolic.Data.Eq          (Eq (..))
-import           ZkFold.Symbolic.Types            (R, I, SmallField, Symbolic)
+import           ZkFold.Symbolic.Types            (I, Symbolic, BLS12_381_Scalar)
 
 -- The Fibonacci index function. If `x` is a Fibonacci number, returns its index (up until `nMax`). Otherwise, returns `0`.
 fibonacciIndex :: forall a . Symbolic a => Integer -> a -> a
@@ -24,11 +26,12 @@ exampleFibonacci :: IO ()
 exampleFibonacci = do
     let nMax = 10
 
-    let r = compile @(Zp SmallField) (fibonacciIndex @R nMax) :: R
+    let ac   = compile @(Zp BLS12_381_Scalar) (fibonacciIndex @(ArithmeticCircuit (Zp BLS12_381_Scalar)) nMax) :: ArithmeticCircuit (Zp BLS12_381_Scalar)
+        file = "compiled_scripts/fibonacciIndex.json"
 
-    putStrLn "\nStarting Fibonacci test...\n"
+    putStrLn "\nExample: Fibonacci index function\n"
 
-    putStrLn "Fibonacci index function"
-    putStrLn "R1CS size:"
-    putStrLn $ "Number of constraints: " ++ show (acSizeN r)
-    putStrLn $ "Number of variables: " ++ show (acSizeM r)
+    putStrLn $ "Number of constraints: " ++ show (acSizeN ac)
+    putStrLn $ "Number of variables: "   ++ show (acSizeM ac)
+    writeFileJSON file ac
+    putStrLn $ "Script saved: " ++ file
