@@ -79,9 +79,12 @@ test-suite zkfold-symbolic-demo-examples
       Examples.Fibonacci
       Examples.MiMCHash
       Examples.MiMC.Constants
+      Examples.ReverseList
       Examples.VestingScript
     build-depends:
       base                          >= 4.9 && < 5,
       containers                                 ,
+      fixed-length                               ,
       zkfold-base                                ,
+      tfp                                        ,
     hs-source-dirs: test
