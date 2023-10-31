@@ -17,7 +17,10 @@ import           ZkFold.Symbolic.Types            (BLS12_381_Scalar)
 
 type X a = (a, a)
 
--- | Reverse the order of elements in a fixed size list
+-- | Reverses the order of elements in a fixed size list
+-- NOTE: With our approach a list can be inverted for free!
+-- Compare this to the "Reverse Array" example from the Polylang playground
+-- https://polylang.dev/playground 
 reverseList :: forall a n . (Natural n) => List n (X a) -> List n (X a)
 reverseList lst = map (`index` lst) (map (toList indices !!) inds)
     where

@@ -77,6 +77,7 @@ test-suite zkfold-symbolic-demo-examples
     main-is: Main.hs
     other-modules:
       Examples.Fibonacci
+      Examples.LEQ
       Examples.MiMCHash
       Examples.MiMC.Constants
       Examples.ReverseList
@@ -84,6 +85,7 @@ test-suite zkfold-symbolic-demo-examples
     build-depends:
       base                          >= 4.9 && < 5,
       containers                                 ,
+      directory                                  ,
       fixed-length                               ,
       zkfold-base                                ,
       tfp                                        ,

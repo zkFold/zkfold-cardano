@@ -14,7 +14,7 @@ import           ZkFold.Symbolic.Data.Conditional (bool)
 import           ZkFold.Symbolic.Data.Eq          (Eq (..))
 import           ZkFold.Symbolic.Types            (I, Symbolic, BLS12_381_Scalar)
 
--- The Fibonacci index function. If `x` is a Fibonacci number, returns its index (up until `nMax`). Otherwise, returns `0`.
+-- | The Fibonacci index function. If `x` is a Fibonacci number, returns its index (up until `nMax`). Otherwise, returns `0`.
 fibonacciIndex :: forall a . Symbolic a => Integer -> a -> a
 fibonacciIndex nMax x = foldl (\m k -> bool m (fromConstant @I @a k) (fib k one one == x :: Bool a)) zero [1..nMax]
     where
@@ -24,7 +24,7 @@ fibonacciIndex nMax x = foldl (\m k -> bool m (fromConstant @I @a k) (fib k one 
 
 exampleFibonacci :: IO ()
 exampleFibonacci = do
-    let nMax = 10
+    let nMax = 100
 
     let ac   = compile @(Zp BLS12_381_Scalar) (fibonacciIndex @(ArithmeticCircuit (Zp BLS12_381_Scalar)) nMax) :: ArithmeticCircuit (Zp BLS12_381_Scalar)
         file = "compiled_scripts/fibonacciIndex.json"
