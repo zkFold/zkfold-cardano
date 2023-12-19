@@ -76,12 +76,6 @@ test-suite zkfold-symbolic-demo-examples
     ghc-options: -rtsopts
     main-is: Main.hs
     other-modules:
-      Examples.Fibonacci
-      Examples.LEQ
-      Examples.MiMCHash
-      Examples.MiMC.Constants
-      Examples.ReverseList
-      Examples.VestingScript
     build-depends:
       base                          >= 4.9 && < 5,
       containers                                 ,

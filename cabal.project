@@ -16,4 +16,4 @@ test-show-details: direct
 source-repository-package
   type: git
   location: https://github.com/zkFold/zkfold-base.git
-  tag: 88b434c03e5302a967242d07d57fee8ac4936590
+  tag: cac749b590be93f9684928824cbc9bb8e38cd3bd

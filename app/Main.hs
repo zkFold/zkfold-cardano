@@ -2,16 +2,16 @@
 
 module Main where
 
-import           Prelude                         hiding (Bool)
+import           Prelude                                     hiding (Bool)
 
-import           ZkFold.Base.Algebra.Basic.Field (Zp)
-import           ZkFold.Prelude                  (writeFileJSON)
-import           ZkFold.Symbolic.Arithmetization (ArithmeticCircuit, acSizeN, acSizeM)
-import           ZkFold.Symbolic.Compiler        (compile)
-import           ZkFold.Symbolic.Data.Bool       (Bool(..))
-import           ZkFold.Symbolic.Types           (BLS12_381_Scalar)
+import           ZkFold.Base.Algebra.Basic.Field             (Zp)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_Scalar)
+import           ZkFold.Prelude                              (writeFileJSON)
+import           ZkFold.Symbolic.Arithmetization             (ArithmeticCircuit, acSizeN, acSizeM)
+import           ZkFold.Symbolic.Compiler                    (compile)
+import           ZkFold.Symbolic.Data.Bool                   (Bool(..))
 
-import           ScriptTemplate                  (scriptTemplate)
+import           ScriptTemplate                              (scriptTemplate)
 
 scriptFile :: FilePath
 scriptFile = "compiled_scripts/script.json"
