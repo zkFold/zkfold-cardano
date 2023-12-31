@@ -1,6 +1,6 @@
 cradle:
   cabal:
     - path: "src"
-      component: "zkfold-symbolic-demo:exe:zkfold-symbolic-demo"
+      component: "zkfold-symbolic-demo:lib:zkfold-symbolic-demo"
     - path: "test"
-      component: "zkfold-symbolic-demo:test:zkfold-symbolic-demo-examples"
+      component: "zkfold-symbolic-demo:test:zkfold-symbolic-demo-test"

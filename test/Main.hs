@@ -1,8 +1,9 @@
 module Main where
 
 import           Prelude
-import           System.Directory       (createDirectoryIfMissing)
+
+import           Tests.Verifier (specVerifier)
 
 main :: IO ()
 main = do
-    createDirectoryIfMissing True "compiled_scripts"
+    specVerifier

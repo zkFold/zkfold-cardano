@@ -59,28 +59,30 @@ common options
       TypeFamilies,
       ViewPatterns
 
-executable zkfold-symbolic-demo
+library
     import: options
-    main-is: Main.hs
-    other-modules:
-      ScriptTemplate
+    exposed-modules:
+      ZkFold.Symbolic.Verifier
     build-depends:
       base                          >= 4.9 && < 5,
+      bytestring                                 ,
       containers                                 ,
+      QuickCheck                                 ,
       zkfold-base                                ,
-    hs-source-dirs: app src
+    hs-source-dirs: src
 
-test-suite zkfold-symbolic-demo-examples
+test-suite zkfold-symbolic-demo-test
     import: options
     type: exitcode-stdio-1.0
     ghc-options: -rtsopts
     main-is: Main.hs
     other-modules:
+      Tests.Verifier
     build-depends:
       base                          >= 4.9 && < 5,
       containers                                 ,
-      directory                                  ,
-      fixed-length                               ,
+      hspec                                      ,
+      QuickCheck                                 ,
       zkfold-base                                ,
-      tfp                                        ,
+      zkfold-symbolic-demo                       ,
     hs-source-dirs: test
