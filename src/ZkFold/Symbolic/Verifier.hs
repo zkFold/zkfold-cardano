@@ -2,27 +2,33 @@
 
 module ZkFold.Symbolic.Verifier where
 
-import           Data.ByteString                             (empty)
-import           Prelude                                     hiding (Num(..), (^), (/), (!!), sum, length, take, drop, replicate)
+import           PlutusTx.Prelude                         (Bool (..), BuiltinByteString, bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString)
+import           Prelude                                  (Integer, ($), (.), undefined, fromInteger, head)
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Algebra.Basic.Field             (toZp)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
-import           ZkFold.Base.Algebra.EllipticCurve.Class
-import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk)
-import           ZkFold.Base.Protocol.Commitment.KZG
-import           ZkFold.Base.Protocol.NonInteractiveProof
+import           ZkFold.Base.Protocol.ARK.Plonk           (Plonk)
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof(..))
+import           ZkFold.Symbolic.Verifier.Internal
+
+type PlonkBBS = Plonk BuiltinByteString
 
 data PlonkPlutus
 
-mkSetup :: Setup Plonk -> Setup PlonkPlutus
+mkSetup :: Setup PlonkBBS -> Setup PlonkPlutus
 mkSetup ((_, gs, h0, h1, omega, k1, k2), _, (cmQl, cmQr, cmQo, cmQm, cmQc, cmS1, cmS2, cmS3), _, _) =
-    ((order @Plonk, head gs, h0, h1, omega, k1, k2), (cmQl, cmQr, cmQo, cmQm, cmQc, cmS1, cmS2, cmS3))
+    ((order @PlonkBBS, convertG1 $ head gs, convertG2 h0, convertG2 h1, convertF omega, convertF k1, convertF k2),
+    (convertG1 cmQl, convertG1 cmQr, convertG1 cmQo, convertG1 cmQm, convertG1 cmQc, convertG1 cmS1, convertG1 cmS2, convertG1 cmS3))
 
-mkInput :: Input Plonk -> Input PlonkPlutus
-mkInput = head
+mkInput :: Input PlonkBBS -> Input PlonkPlutus
+mkInput = convertF . head
+
+mkProof :: Proof PlonkBBS -> Proof PlonkPlutus
+mkProof (cmA, cmB, cmC, cmZ, cmT1, cmT2, cmT3, proof1, proof2, a_xi, b_xi, c_xi, s1_xi, s2_xi, z_xi) =
+    (convertG1 cmA, convertG1 cmB, convertG1 cmC, convertG1 cmZ, convertG1 cmT1, convertG1 cmT2, convertG1 cmT3,
+    convertG1 proof1, convertG1 proof2, convertF a_xi, convertF b_xi, convertF c_xi, convertF s1_xi, convertF s2_xi, convertF z_xi)
 
 instance NonInteractiveProof PlonkPlutus where
+    type Transcript PlonkPlutus   = BuiltinByteString
     type Params PlonkPlutus       = ()
     type SetupSecret PlonkPlutus  = ()
     type Setup PlonkPlutus        = ((Integer, G1, G2, G2, F, F, F), (G1, G1, G1, G1, G1, G1, G1, G1))
@@ -38,41 +44,42 @@ instance NonInteractiveProof PlonkPlutus where
     prove = undefined
 
     -- TODO: Validate arguments
+    {-# INLINABLE verify #-}
     verify :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
     verify
         ((n, g0, h0, h1, omega, k1, k2), (cmQl, cmQr, cmQo, cmQm, cmQc, cmS1, cmS2, cmS3))
         pubInput
-        (cmA, cmB, cmC, cmZ, cmT1, cmT2, cmT3, proof1, proof2, a_xi, b_xi, c_xi, s1_xi, s2_xi, z_xi) = p1 == p2
+        (cmA, cmB, cmC, cmZ, cmT1, cmT2, cmT3, proof1, proof2, a_xi, b_xi, c_xi, s1_xi, s2_xi, z_xi) = bls12_381_finalVerify p1 p2
         where
-            (beta, ts) = challenge $ empty
-                `transcript` cmA
-                `transcript` cmB
-                `transcript` cmC :: (F, Transcript)
+            (beta, ts) = challenge $ emptyByteString
+                `transcriptG1` cmA
+                `transcriptG1` cmB
+                `transcriptG1` cmC
             (gamma, ts') = challenge ts
 
-            (alpha, ts'') = challenge $ ts' `transcript` cmZ
+            (alpha, ts'') = challenge $ ts' `transcriptG1` cmZ
 
             (xi, ts''') = challenge $ ts''
-                `transcript` cmT1
-                `transcript` cmT2
-                `transcript` cmT3
+                `transcriptG1` cmT1
+                `transcriptG1` cmT2
+                `transcriptG1` cmT3
 
             (v, ts'''') = challenge $ ts'''
-                `transcript` a_xi
-                `transcript` b_xi
-                `transcript` c_xi
-                `transcript` s1_xi
-                `transcript` s2_xi
-                `transcript` z_xi
+                `transcriptF` a_xi
+                `transcriptF` b_xi
+                `transcriptF` c_xi
+                `transcriptF` s1_xi
+                `transcriptF` s2_xi
+                `transcriptF` z_xi
 
             (u, _) = challenge $ ts''''
-                `transcript` proof1
-                `transcript` proof2
+                `transcriptG1` proof1
+                `transcriptG1` proof2
 
-            zH_xi        = xi^n - one :: F
-            lagrange1_xi = omega * zH_xi / (toZp n * (xi - omega))
+            zH_xi        = xi^n - one
+            lagrange1_xi = omega * zH_xi / (fromInteger n * (xi - omega))
             omega2       = omega * omega
-            lagrange2_xi = omega2 * zH_xi / (toZp n * (xi - omega2))
+            lagrange2_xi = omega2 * zH_xi / (F n * (xi - omega2))
             pubPoly_xi   = pubInput * lagrange1_xi - lagrange2_xi
 
             r0 =
@@ -122,5 +129,5 @@ instance NonInteractiveProof PlonkPlutus where
                 + u * z_xi
                 ) `mul` g0
 
-            p1 = pairing (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
-            p2 = pairing (proof1 + u `mul` proof2) h1
+            p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
+            p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1

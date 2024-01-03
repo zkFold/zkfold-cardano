@@ -63,10 +63,13 @@ library
     import: options
     exposed-modules:
       ZkFold.Symbolic.Verifier
+      ZkFold.Symbolic.Verifier.Internal
     build-depends:
       base                          >= 4.9 && < 5,
       bytestring                                 ,
       containers                                 ,
+      plutus-tx                                  ,
+      plutus-tx-plugin                           ,
       QuickCheck                                 ,
       zkfold-base                                ,
     hs-source-dirs: src
