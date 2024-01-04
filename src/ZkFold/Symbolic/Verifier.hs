@@ -2,8 +2,10 @@
 
 module ZkFold.Symbolic.Verifier where
 
-import           PlutusTx.Prelude                         (Bool (..), BuiltinByteString, bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString)
-import           Prelude                                  (Integer, ($), (.), undefined, fromInteger, head)
+import           PlutusLedgerApi.V3                       (ScriptContext)
+import           PlutusTx.Prelude                         (Integer, Bool (..), BuiltinByteString, ($),
+    bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString)
+import           Prelude                                  (undefined, fromInteger, head, (.))
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Protocol.ARK.Plonk           (Plonk)
@@ -76,7 +78,7 @@ instance NonInteractiveProof PlonkPlutus where
                 `transcriptG1` proof1
                 `transcriptG1` proof2
 
-            zH_xi        = xi^n - one
+            zH_xi        = xi `powMod` n - one
             lagrange1_xi = omega * zH_xi / (fromInteger n * (xi - omega))
             omega2       = omega * omega
             lagrange2_xi = omega2 * zH_xi / (F n * (xi - omega2))
@@ -111,7 +113,7 @@ instance NonInteractiveProof PlonkPlutus where
                     * (b_xi + beta * s2_xi + gamma)
                     * z_xi
                     ) cmS3
-                - mul zH_xi (cmT1 + (xi^n) `mul` cmT2 + (xi^(2*n)) `mul` cmT3)
+                - mul zH_xi (cmT1 + (xi `powMod` n) `mul` cmT2 + (xi `powMod` (2*n)) `mul` cmT3)
             f  =
                   d
                 + v `mul` cmA
@@ -131,3 +133,6 @@ instance NonInteractiveProof PlonkPlutus where
 
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
             p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
+
+policyCheck :: Setup PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
+policyCheck = undefined

@@ -33,6 +33,7 @@ source-repository-package
   tag: f73459108e74e98c62926334fcaf0ba0897681f4
   subdir:
     plutus-core
+    plutus-ledger-api
     plutus-tx
     plutus-tx-plugin
     prettyprinter-configurable

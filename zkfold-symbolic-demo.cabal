@@ -68,6 +68,8 @@ library
       base                          >= 4.9 && < 5,
       bytestring                                 ,
       containers                                 ,
+      plutus-core                                ,
+      plutus-ledger-api                          ,
       plutus-tx                                  ,
       plutus-tx-plugin                           ,
       QuickCheck                                 ,
