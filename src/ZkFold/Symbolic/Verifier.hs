@@ -2,9 +2,10 @@
 
 module ZkFold.Symbolic.Verifier where
 
-import           PlutusLedgerApi.V3                       (ScriptContext)
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..), ToData (..))
+import           PlutusTx.Builtins                        (serialiseData, builtinByteStringToInteger)
 import           PlutusTx.Prelude                         (Integer, Bool (..), BuiltinByteString, ($),
-    bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString)
+    bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString, map, (<>), Eq (..), blake2b_224, (&&))
 import           Prelude                                  (undefined, fromInteger, head, (.))
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -134,5 +135,16 @@ instance NonInteractiveProof PlonkPlutus where
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
             p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
 
-policyCheck :: Setup PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
-policyCheck = undefined
+-- TODO: split the setup data into the fixed and varying parts
+{-# INLINABLE policyCheck #-}
+policyCheck :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
+policyCheck (s, input, proof) ctx = condition1 && condition2
+    where
+        info = scriptContextTxInfo ctx
+        ins  = map txInInfoOutRef (txInfoInputs info)
+        outs = txInfoOutputs info
+
+        h    = blake2b_224 $ serialiseData (toBuiltinData ins) <> serialiseData (toBuiltinData outs)
+
+        condition1 = input == F (builtinByteStringToInteger True h)
+        condition2 = verify @PlonkPlutus s input proof
