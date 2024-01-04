@@ -4,8 +4,8 @@ module ZkFold.Symbolic.Verifier where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..), ToData (..))
 import           PlutusTx.Builtins                        (serialiseData, builtinByteStringToInteger)
-import           PlutusTx.Prelude                         (Integer, Bool (..), BuiltinByteString, ($),
-    bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString, map, (<>), Eq (..), blake2b_224, (&&))
+import           PlutusTx.Prelude                         (Eq (..), Integer, Bool (..), BuiltinByteString, ($), (&&), map,
+    bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString, blake2b_224)
 import           Prelude                                  (undefined, fromInteger, head, (.))
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -138,13 +138,23 @@ instance NonInteractiveProof PlonkPlutus where
 -- TODO: split the setup data into the fixed and varying parts
 {-# INLINABLE policyCheck #-}
 policyCheck :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
-policyCheck (s, input, proof) ctx = condition1 && condition2
+policyCheck (contract, input, proof) ctx = condition1 && condition2
     where
-        info = scriptContextTxInfo ctx
-        ins  = map txInInfoOutRef (txInfoInputs info)
-        outs = txInfoOutputs info
+        info  = scriptContextTxInfo ctx
+        ins   = map txInInfoOutRef (txInfoInputs info)
+        outs  = txInfoOutputs info
+        refs  = map txInInfoOutRef (txInfoInputs info)
+        range = txInfoValidRange info
 
-        h    = blake2b_224 $ serialiseData (toBuiltinData ins) <> serialiseData (toBuiltinData outs)
+        h     = blake2b_224 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
 
+        -- Verifying that the public input in the ZKP protocol corresponds to the hash of the transaction data.
+        --
+        -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
+        -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
+        -- For inputs and reference inputs, we only need the references as we can supply the past transaction data as private inputs.
         condition1 = input == F (builtinByteStringToInteger True h)
-        condition2 = verify @PlonkPlutus s input proof
+
+        -- Verifying the validity of the ZkFold Symbolic smart contract on the current transaction.
+        -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
+        condition2 = verify @PlonkPlutus contract input proof
