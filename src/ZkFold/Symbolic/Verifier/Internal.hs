@@ -6,7 +6,7 @@
 module ZkFold.Symbolic.Verifier.Internal where
 
 import           PlutusTx                                 (makeLift, makeIsDataIndexed)
-import           PlutusTx.Builtins                        (builtinIntegerToByteString, builtinByteStringToInteger, greaterThanByteString)
+import           PlutusTx.Builtins                        
 import           PlutusTx.Prelude                         hiding (fromInteger)
 import           Prelude                                  (Num (fromInteger))
 import qualified Prelude                                  as Haskell
@@ -196,12 +196,3 @@ challenge :: Transcript -> (F, Transcript)
 challenge ts =
     let ts' = newTranscript @BuiltinByteString @F ts
     in (fromTranscript ts', ts')
-
-{-# INLINABLE challenges #-}
-challenges :: Transcript -> Integer -> ([F], Transcript)
-challenges ts0 n = go ts0 n []
-  where
-    go ts 0 acc = (acc, ts)
-    go ts k acc =
-        let (c, ts') = challenge ts
-        in go ts' (k - 1) (c : acc)

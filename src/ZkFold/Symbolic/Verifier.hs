@@ -2,10 +2,11 @@
 
 module ZkFold.Symbolic.Verifier where
 
-import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..), ToData (..))
-import           PlutusTx.Builtins                        (serialiseData, builtinByteStringToInteger)
-import           PlutusTx.Prelude                         (Eq (..), Integer, Bool (..), BuiltinByteString, ($), (&&), map,
-    bls12_381_millerLoop, bls12_381_finalVerify, emptyByteString, blake2b_224)
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..))
+import           PlutusTx                                 (toBuiltinData)
+import           PlutusTx.Builtins                        hiding (head)
+import           PlutusTx.Prelude                         (Eq (..), Bool (..), ($), (&&))
+import qualified PlutusTx.Prelude                         as Plutus
 import           Prelude                                  (undefined, fromInteger, head, (.))
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -114,7 +115,7 @@ instance NonInteractiveProof PlonkPlutus where
                     * (b_xi + beta * s2_xi + gamma)
                     * z_xi
                     ) cmS3
-                - mul zH_xi (cmT1 + (xi `powMod` n) `mul` cmT2 + (xi `powMod` (2*n)) `mul` cmT3)
+                - mul zH_xi (cmT1 + (xi `powMod` n) `mul` cmT2 + (xi `powMod` (2 Plutus.* n)) `mul` cmT3)
             f  =
                   d
                 + v `mul` cmA
@@ -141,9 +142,9 @@ policyCheck :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> Scri
 policyCheck (contract, input, proof) ctx = condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
-        ins   = map txInInfoOutRef (txInfoInputs info)
+        ins   = Plutus.map txInInfoOutRef (txInfoInputs info)
         outs  = txInfoOutputs info
-        refs  = map txInInfoOutRef (txInfoInputs info)
+        refs  = Plutus.map txInInfoOutRef (txInfoInputs info)
         range = txInfoValidRange info
 
         h     = blake2b_224 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
@@ -153,8 +154,11 @@ policyCheck (contract, input, proof) ctx = condition1 && condition2
         -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
         -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
         -- For inputs and reference inputs, we only need the references as we can supply the past transaction data as private inputs.
-        condition1 = input == F (builtinByteStringToInteger True h)
+        condition1 = serialiseData (toBuiltinData input) == h
 
         -- Verifying the validity of the ZkFold Symbolic smart contract on the current transaction.
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
         condition2 = verify @PlonkPlutus contract input proof
+
+-- policy :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
+-- policy = $$(compile [|| policyCheck ||])
