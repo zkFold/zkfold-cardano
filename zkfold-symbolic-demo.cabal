@@ -6,7 +6,7 @@ version:            0.1.0.0
 license:            MIT
 license-file:       LICENSE
 
-author:             Vladimir Sinyakov
+author:             Vladimir Sinyakov, Ilya Baryshnikov
 maintainer:         info@zkfold.io
 
 build-type:         Simple

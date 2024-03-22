@@ -1,18 +1,21 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module ZkFold.Symbolic.Verifier where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..))
-import           PlutusTx                                 (toBuiltinData)
+import           PlutusTx                                 (toBuiltinData, CompiledCode)
 import           PlutusTx.Builtins                        hiding (head)
 import           PlutusTx.Prelude                         (Eq (..), Bool (..), ($), (&&))
 import qualified PlutusTx.Prelude                         as Plutus
+import           PlutusTx.TH                              (compile)
 import           Prelude                                  (undefined, fromInteger, head, (.))
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Protocol.ARK.Plonk           (Plonk)
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof(..))
 import           ZkFold.Symbolic.Verifier.Internal
+import           GHC.Natural                              (naturalToInteger)
 
 type PlonkBBS = Plonk BuiltinByteString
 
@@ -20,7 +23,7 @@ data PlonkPlutus
 
 mkSetup :: Setup PlonkBBS -> Setup PlonkPlutus
 mkSetup ((_, gs, h0, h1, omega, k1, k2), _, (cmQl, cmQr, cmQo, cmQm, cmQc, cmS1, cmS2, cmS3), _, _) =
-    ((order @PlonkBBS, convertG1 $ head gs, convertG2 h0, convertG2 h1, convertF omega, convertF k1, convertF k2),
+    ((naturalToInteger $ order @PlonkBBS, convertG1 $ head gs, convertG2 h0, convertG2 h1, convertF omega, convertF k1, convertF k2),
     (convertG1 cmQl, convertG1 cmQr, convertG1 cmQo, convertG1 cmQm, convertG1 cmQc, convertG1 cmS1, convertG1 cmS2, convertG1 cmS3))
 
 mkInput :: Input PlonkBBS -> Input PlonkPlutus
@@ -33,18 +36,15 @@ mkProof (cmA, cmB, cmC, cmZ, cmT1, cmT2, cmT3, proof1, proof2, a_xi, b_xi, c_xi,
 
 instance NonInteractiveProof PlonkPlutus where
     type Transcript PlonkPlutus   = BuiltinByteString
-    type Params PlonkPlutus       = ()
-    type SetupSecret PlonkPlutus  = ()
     type Setup PlonkPlutus        = ((Integer, G1, G2, G2, F, F, F), (G1, G1, G1, G1, G1, G1, G1, G1))
-    type ProverSecret PlonkPlutus = ()
     type Witness PlonkPlutus      = ()
     type Input PlonkPlutus        = F
     type Proof PlonkPlutus        = (G1, G1, G1, G1, G1, G1, G1, G1, G1, F, F, F, F, F, F)
 
-    setup :: Params PlonkPlutus -> SetupSecret PlonkPlutus -> Setup PlonkPlutus
+    setup :: PlonkPlutus -> Setup PlonkPlutus
     setup = undefined
 
-    prove :: ProverSecret PlonkPlutus -> Setup PlonkPlutus -> Witness PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus)
+    prove :: Setup PlonkPlutus -> Witness PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus)
     prove = undefined
 
     -- TODO: Validate arguments
@@ -160,5 +160,5 @@ policyCheck (contract, input, proof) ctx = condition1 && condition2
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
         condition2 = verify @PlonkPlutus contract input proof
 
--- policy :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
--- policy = $$(compile [|| policyCheck ||])
+policy :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
+policy = $$(compile [|| policyCheck ||])
