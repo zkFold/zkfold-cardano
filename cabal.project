@@ -10,7 +10,7 @@ test-show-details: direct
 source-repository-package
   type: git
   location: https://github.com/zkFold/zkfold-base.git
-  tag: 388cbad4b07816f06411c50ae3b46602d2e32218
+  tag: f288bae5a7b3fcd9e1d31783aab0ec26e76c4049
 
 repository cardano-haskell-packages
   url: https://chap.intersectmbo.org/
@@ -24,13 +24,13 @@ repository cardano-haskell-packages
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
 index-state:
-  , hackage.haskell.org 2023-11-26T21:52:49Z
-  , cardano-haskell-packages 2023-11-26T20:12:16Z
+  , hackage.haskell.org 2024-03-22T11:04:03Z
+  , cardano-haskell-packages 2024-03-21T17:49:01Z
 
 source-repository-package
   type: git
   location: https://github.com/IntersectMBO/plutus.git
-  tag: f73459108e74e98c62926334fcaf0ba0897681f4
+  tag: 902cfa3ac5f4a97fc9ef45b405f74d659c671ed2
   subdir:
     plutus-core
     plutus-ledger-api
