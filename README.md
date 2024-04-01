@@ -1,4 +1,4 @@
-# zkFold - Cardano
+# zkFold: Cardano integration library
 An integration of zkFold Symbolic smart contracts with the Cardano blockchain. The repository contains
 - the Plutus script for the zkFold Symbolic verifier;
 - the Plutus script for the Plonk proof verification token;
