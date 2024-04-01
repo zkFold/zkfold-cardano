@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module ZkFold.Symbolic.Verifier where
 
@@ -144,7 +144,7 @@ policyCheck (contract, input, proof) ctx = condition1 && condition2
         info  = scriptContextTxInfo ctx
         ins   = Plutus.map txInInfoOutRef (txInfoInputs info)
         outs  = txInfoOutputs info
-        refs  = Plutus.map txInInfoOutRef (txInfoInputs info)
+        refs  = Plutus.map txInInfoOutRef (txInfoReferenceInputs info)
         range = txInfoValidRange info
 
         h     = blake2b_224 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
