@@ -3,7 +3,7 @@
 
 {-# OPTIONS_GHC -Wno-orphans  #-}
 
-module ZkFold.Symbolic.Verifier.Internal where
+module ZkFold.Cardano.Plonk.Internal where
 
 import           GHC.ByteOrder                            (ByteOrder(..))
 import           GHC.Natural                              (naturalToInteger)

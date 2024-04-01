@@ -1,8 +1,8 @@
-# zkFold Symbolic demo project
-
-ZKFold Symbolic is a high-level programming language for zero-knowledge smart contracts, a subset of Haskell. It targets arithmetic circuits, the language used in various zero-knowledge protocols.
-
-The language is a part of the `zkfold-base` package. You can compile functions and expressions using the `compile` function from `ZkFold.Symbolic.Compiler` module.
+# zkFold - Cardano
+An integration of zkFold Symbolic smart contracts with the Cardano blockchain. The repository contains
+- the Plutus script for the zkFold Symbolic verifier;
+- the Plutus script for the Plonk proof verification token;
+- the off-chain code for transaction building.
 
 ## Building the project
 
