@@ -5,6 +5,8 @@
 
 module ZkFold.Symbolic.Verifier.Internal where
 
+import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.Natural                              (naturalToInteger)
 import           PlutusTx                                 (makeLift, makeIsDataIndexed)
 import           PlutusTx.Builtins                        
 import           PlutusTx.Prelude                         hiding (fromInteger)
@@ -16,8 +18,6 @@ import           ZkFold.Base.Algebra.Basic.Field          (Ext2 (..), fromZp, to
 import           ZkFold.Base.Algebra.EllipticCurve.Class  (Point(..))
 import           ZkFold.Base.Protocol.NonInteractiveProof (ToTranscript (..), FromTranscript (..))
 import qualified ZkFold.Base.Protocol.ARK.Plonk           as Plonk
-import           GHC.Natural                              (naturalToInteger)
-import           GHC.ByteOrder                            (ByteOrder(..))
 
 -- TODO: separate on-chain and off-chain code
 

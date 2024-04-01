@@ -1,12 +1,18 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+
 module ZkFold.Symbolic.Verifier where
 
-import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..))
-import           PlutusTx                                 (toBuiltinData, CompiledCode)
+import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.Natural                              (naturalToInteger)
+import           PlutusLedgerApi.V1.Value                 (flattenValue)
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..), TokenName (..))
+import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
+import           PlutusTx                                 (CompiledCode, toBuiltinData)
 import           PlutusTx.Builtins                        hiding (head)
-import           PlutusTx.Prelude                         (Eq (..), Bool (..), ($), (&&))
+import           PlutusTx.Prelude                         (Eq (..), Bool (..), Maybe (..), Ord (..), ($), (||), (&&))
 import qualified PlutusTx.Prelude                         as Plutus
 import           PlutusTx.TH                              (compile)
 import           Prelude                                  (undefined, fromInteger, head, (.))
@@ -15,7 +21,6 @@ import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Protocol.ARK.Plonk           (Plonk)
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof(..))
 import           ZkFold.Symbolic.Verifier.Internal
-import           GHC.Natural                              (naturalToInteger)
 
 type PlonkBBS = Plonk BuiltinByteString
 
@@ -137,9 +142,10 @@ instance NonInteractiveProof PlonkPlutus where
             p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
 
 -- TODO: split the setup data into the fixed and varying parts
-{-# INLINABLE policyCheck #-}
-policyCheck :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
-policyCheck (contract, input, proof) ctx = condition1 && condition2
+-- | The Plutus script for verifying a ZkFold Symbolic smart contract.
+{-# INLINABLE symbolicVerifier #-}
+symbolicVerifier :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
+symbolicVerifier (contract, input, proof) ctx = condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
         ins   = Plutus.map txInInfoOutRef (txInfoInputs info)
@@ -160,5 +166,32 @@ policyCheck (contract, input, proof) ctx = condition1 && condition2
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
         condition2 = verify @PlonkPlutus contract input proof
 
-policy :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
-policy = $$(compile [|| policyCheck ||])
+compiledSymbolicVerifier :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
+compiledSymbolicVerifier = $$(compile [|| symbolicVerifier ||])
+
+-- | The Plutus script (minting policy) for verifying a Plonk proof.
+{-# INLINABLE plonkVerifier #-}
+plonkVerifier :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
+plonkVerifier (computation, input, proof) ctx = condition1 || condition2
+    where
+        info           = scriptContextTxInfo ctx
+        Just (_, _, n) = Plutus.find
+            (
+                \(s, t, _) ->
+                s == ownCurrencySymbol ctx
+                && TokenName (integerToByteString BigEndian 0 (toF input)) == t
+            )
+            (flattenValue $ txInfoMint info)
+
+        -- With this minting policy, we can mint tokens if the Plonk proof is valid for the input provided in the redeemer.
+        -- The tokens serve as proof that the network has verified the computation.
+        -- We can also burn already minted tokens.
+
+        -- Burning already minted tokens.
+        condition1 = n < 0
+
+        -- Verifying the Plonk proof.
+        condition2 = verify @PlonkPlutus computation input proof
+
+compiledPlonkVerifier :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
+compiledPlonkVerifier = $$(compile [|| plonkVerifier ||])
