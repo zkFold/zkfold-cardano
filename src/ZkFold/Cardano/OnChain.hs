@@ -6,13 +6,14 @@
 module ZkFold.Cardano.OnChain where
 
 import           GHC.ByteOrder                            (ByteOrder(..))
-import           PlutusLedgerApi.V1.Value                 (flattenValue)
+import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..), TokenName (..))
 import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
 import           PlutusTx                                 (CompiledCode, toBuiltinData)
 import           PlutusTx.Builtins                        hiding (head)
 import           PlutusTx.Prelude                         (Eq (..), Bool (..), Maybe (..), Ord (..), ($), (||), (&&))
 import qualified PlutusTx.Prelude                         as Plutus
+import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.TH                              (compile)
 import           Prelude                                  ((.))
 
@@ -51,25 +52,23 @@ compiledSymbolicVerifier = $$(compile [|| symbolicVerifier ||])
 -- | The Plutus script (minting policy) for verifying a Plonk proof.
 {-# INLINABLE plonkVerifier #-}
 plonkVerifier :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
-plonkVerifier (computation, input, proof) ctx = condition1 || condition2
+plonkVerifier (computation, input, proof) ctx = condition0 && (condition1 || condition2)
     where
-        info           = scriptContextTxInfo ctx
-        Just (_, _, n) = Plutus.find
-            (
-                \(s, t, _) ->
-                s == ownCurrencySymbol ctx
-                && TokenName (integerToByteString BigEndian 0 (toF input)) == t
-            )
-            (flattenValue $ txInfoMint info)
+        info               = scriptContextTxInfo ctx
+        Just m             = AssocMap.lookup (ownCurrencySymbol ctx) (getValue $ txInfoMint info)
+        [(TokenName t, n)] = AssocMap.toList m
 
         -- With this minting policy, we can mint tokens if the Plonk proof is valid for the input provided in the redeemer.
         -- The tokens serve as proof that the network has verified the computation.
         -- We can also burn already minted tokens.
 
-        -- Burning already minted tokens.
+        -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol
+        condition0 = t == integerToByteString BigEndian 0 (toF input)
+
+        -- Burning already minted tokens
         condition1 = n < 0
 
-        -- Verifying the Plonk proof.
+        -- Verifying the Plonk proof
         condition2 = verify @PlonkPlutus computation input proof
 
 compiledPlonkVerifier :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
