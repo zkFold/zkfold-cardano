@@ -1,30 +1,30 @@
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeApplications  #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-module ZkFold.Cardano.OnChain where
+module ZkFold.Cardano.OnChain (symbolicVerifier, plonkVerifier) where
 
-import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusLedgerApi.V1.Value                 (Value (..))
-import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxInInfo (..), TokenName (..))
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInInfo (..), TxInfo (..))
 import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
-import           PlutusTx                                 (CompiledCode, toBuiltinData)
-import           PlutusTx.Builtins                        hiding (head)
-import           PlutusTx.Prelude                         (Eq (..), Bool (..), Maybe (..), Ord (..), ($), (||), (&&))
+import           PlutusTx                                 (toBuiltinData)
 import qualified PlutusTx.AssocMap                        as AssocMap
-import           PlutusTx.TH                              (compile)
-import           Prelude                                  ((.))
+import           PlutusTx.Builtins                        (blake2b_224, integerToByteString, serialiseData)
+import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), ($), (&&), (.), (||))
+import qualified PlutusTx.Prelude                         as Plutus
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof(..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+import           ZkFold.Cardano.Plonk.Inputs              (InputPlonkPlutus (..))
 import           ZkFold.Cardano.Plonk.Internal            (toF)
 
 -- TODO: split the setup data into the fixed and varying parts
 -- | The Plutus script for verifying a ZkFold Symbolic smart contract.
 {-# INLINABLE symbolicVerifier #-}
-symbolicVerifier :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
-symbolicVerifier (contract, input, proof) ctx = condition1 && condition2
+symbolicVerifier :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> Bool
+symbolicVerifier contract input proof ctx = condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
         ins   = txInfoInputs info
@@ -44,13 +44,10 @@ symbolicVerifier (contract, input, proof) ctx = condition1 && condition2
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
         condition2 = verify @PlonkPlutus contract input proof
 
-compiledSymbolicVerifier :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
-compiledSymbolicVerifier = $$(compile [|| symbolicVerifier ||])
-
 -- | The Plutus script (minting policy) for verifying a Plonk proof.
 {-# INLINABLE plonkVerifier #-}
-plonkVerifier :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool
-plonkVerifier (computation, input, proof) ctx = condition0 && (condition1 || condition2)
+plonkVerifier :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> Bool
+plonkVerifier computation input proof ctx = condition0 && (condition1 || condition2)
     where
         info               = scriptContextTxInfo ctx
         Just m             = AssocMap.lookup (ownCurrencySymbol ctx) (getValue $ txInfoMint info)
@@ -61,13 +58,10 @@ plonkVerifier (computation, input, proof) ctx = condition0 && (condition1 || con
         -- We can also burn already minted tokens.
 
         -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol
-        condition0 = t == integerToByteString BigEndian 0 (toF input)
+        condition0 = t == integerToByteString BigEndian 0 (toF $ pubInput input)
 
         -- Burning already minted tokens
         condition1 = n < 0
 
         -- Verifying the Plonk proof
         condition2 = verify @PlonkPlutus computation input proof
-
-compiledPlonkVerifier :: CompiledCode ((Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) -> ScriptContext -> Bool)
-compiledPlonkVerifier = $$(compile [|| plonkVerifier ||])

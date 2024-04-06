@@ -1,6 +1,22 @@
 cradle:
   cabal:
-    - path: "src"
+    - path: "zkfold-cardano/src"
       component: "lib:zkfold-cardano"
-    - path: "test"
+
+    - path: "zkfold-cardano/test"
       component: "zkfold-cardano:test:zkfold-cardano-test"
+
+    - path: "zkfold-cardano/bench/Main.hs"
+      component: "zkfold-cardano:bench:zkfold-cardano-bench"
+
+    - path: "zkfold-cardano/bench/Script.hs"
+      component: "zkfold-cardano:bench:zkfold-cardano-bench"
+
+    - path: "zkfold-cardano-benchmark/common"
+      component: "zkfold-cardano-benchmark:lib:zkfold-cardano-benchmark-common"
+
+    - path: "zkfold-cardano-benchmark/src"
+      component: "zkfold-cardano-benchmark:lib:zkfold-cardano-benchmark-lib"
+
+    - path: "zkfold-cardano-benchmark/exe/Main.hs"
+      component: "zkfold-cardano-benchmark:exe:zkfold-cardano-benchmark-exe"

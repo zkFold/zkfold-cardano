@@ -1,23 +1,25 @@
-{-# LANGUAGE TemplateHaskell  #-}
-{-# LANGUAGE TypeApplications #-}
-
-{-# OPTIONS_GHC -Wno-orphans  #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE TypeApplications      #-}
 
 module ZkFold.Cardano.Plonk.Internal where
 
-import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Natural                              (naturalToInteger)
-import           PlutusTx                                 (makeLift, makeIsDataIndexed)
-import           PlutusTx.Builtins                        
+import           PlutusTx                                 (makeIsDataIndexed, makeLift)
+import           PlutusTx.Builtins
 import           PlutusTx.Prelude                         hiding (fromInteger)
 import           Prelude                                  (Num (fromInteger))
 import qualified Prelude                                  as Haskell
 
 import qualified ZkFold.Base.Algebra.Basic.Class          as ZkFold
-import           ZkFold.Base.Algebra.Basic.Field          (Ext2 (..), fromZp, toZp, Zp)
-import           ZkFold.Base.Algebra.EllipticCurve.Class  (Point(..))
-import           ZkFold.Base.Protocol.NonInteractiveProof (ToTranscript (..), FromTranscript (..))
+import           ZkFold.Base.Algebra.Basic.Field          (Ext2 (..), Zp, fromZp, toZp)
+import           ZkFold.Base.Algebra.EllipticCurve.Class  (Point (..))
 import qualified ZkFold.Base.Protocol.ARK.Plonk           as Plonk
+import           ZkFold.Base.Protocol.NonInteractiveProof (FromTranscript (..), ToTranscript (..))
 
 -- TODO: separate on-chain and off-chain code
 

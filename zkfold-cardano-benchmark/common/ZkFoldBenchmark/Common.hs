@@ -1,0 +1,102 @@
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE NumericUnderscores #-}
+
+{- | Miscellaneous shared code for benchmarking-related things. -}
+module ZkFoldBenchmark.Common where
+
+import PlutusCore qualified as PLC
+import PlutusCore.Default (DefaultFun, DefaultUni)
+import PlutusCore.Evaluation.Machine.ExBudget (ExBudget (..))
+import PlutusCore.Evaluation.Machine.ExBudgetingDefaults qualified as PLC
+import PlutusCore.Evaluation.Machine.ExMemory (ExCPU (..), ExMemory (..))
+import UntypedPlutusCore qualified as UPLC
+import UntypedPlutusCore.Evaluation.Machine.Cek qualified as Cek
+
+import Data.ByteString qualified as BS
+import Data.SatInt (fromSatInt)
+import Flat qualified
+import System.IO (Handle)
+import Text.Printf (hPrintf, printf)
+
+-- Protocol parameters (June 2023)
+
+-- | This is the "maximum transaction size".  We're just comparing the size of
+-- the script with this, so our results may be a little optimistic if the
+-- transaction includes other stuff (I'm not sure exactly what "maximum
+-- transaction size" means).
+maxTxSize :: Integer
+maxTxSize = 16_384
+
+maxTxExSteps :: Integer
+maxTxExSteps = 10_000_000_000
+
+maxTxExMem :: Integer
+maxTxExMem = 14_000_000
+
+type Term = UPLC.Term PLC.NamedDeBruijn DefaultUni DefaultFun ()
+
+{- | Remove the textual names from a NamedDeBruijn term -}
+toAnonDeBruijnTerm
+    :: Term
+    -> UPLC.Term UPLC.DeBruijn DefaultUni DefaultFun ()
+toAnonDeBruijnTerm = UPLC.termMapNames UPLC.unNameDeBruijn
+
+toAnonDeBruijnProg
+    :: UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+    -> UPLC.Program UPLC.DeBruijn      DefaultUni DefaultFun ()
+toAnonDeBruijnProg (UPLC.Program () ver body) =
+    UPLC.Program () ver $ toAnonDeBruijnTerm body
+
+-- | Evaluate a script and return the CPU and memory costs (according to the cost model)
+getCostsCek :: UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun () -> (Integer, Integer)
+getCostsCek (UPLC.Program () _ prog) =
+    case Cek.runCekDeBruijn PLC.defaultCekParameters Cek.tallying Cek.noEmitter prog of
+      (_, Cek.TallyingSt _ budget, _) ->
+          let ExBudget (ExCPU cpu) (ExMemory mem) = budget
+          in (fromSatInt cpu, fromSatInt mem)
+
+---------------- Printing tables of information about costs ----------------
+
+data TestSize =
+    NoSize
+  | TestSize Integer
+
+stringOfTestSize :: TestSize -> String
+stringOfTestSize =
+    \case
+     NoSize     -> "-"
+     TestSize n -> show n
+
+-- Printing utilities
+percentage :: (Integral a, Integral b) => a -> b -> Double
+percentage a b =
+    let a' = fromIntegral a :: Double
+        b' = fromIntegral b :: Double
+    in (a' * 100) / b'
+
+percentTxt :: (Integral a, Integral b) => a -> b -> String
+percentTxt a b = printf "(%.1f%%)" (percentage a b)
+
+-- | Print a header to be followed by a list of size statistics.
+printHeader :: Handle -> IO ()
+printHeader h = do
+  hPrintf h "    n     Script size             CPU usage               Memory usage\n"
+  hPrintf h "  ----------------------------------------------------------------------\n"
+
+-- | Evaluate a script and print out the serialised size and the CPU and memory
+-- usage, both as absolute values and percentages of the maxima specified in the
+-- protocol parameters.
+printSizeStatistics
+    :: Handle
+    -> TestSize
+    -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+    -> IO ()
+printSizeStatistics h n script = do
+    let serialised = Flat.flat (UPLC.UnrestrictedProgram $ toAnonDeBruijnProg script)
+        size = BS.length serialised
+        (cpu, mem) = getCostsCek script
+    hPrintf h "  %3s %7d %8s %15d %8s %15d %8s \n"
+           (stringOfTestSize n)
+           size (percentTxt size maxTxSize)
+           cpu  (percentTxt cpu  maxTxExSteps)
+           mem  (percentTxt mem  maxTxExMem)

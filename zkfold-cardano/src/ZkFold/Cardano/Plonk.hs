@@ -1,42 +1,79 @@
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module ZkFold.Cardano.Plonk where
 
+import qualified Data.Vector                              as Vector
 import           GHC.Natural                              (naturalToInteger)
-import           PlutusTx.Builtins                        hiding (head)
+import           PlutusTx.Builtins
 import           PlutusTx.Prelude                         (Bool (..), ($))
 import qualified PlutusTx.Prelude                         as Plutus
-import           Prelude                                  (undefined, fromInteger, head, (.))
+import           Prelude                                  (fromInteger, undefined, (.))
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Protocol.ARK.Plonk           (Plonk)
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof(..))
+import           ZkFold.Base.Algebra.Basic.Number         (value)
+import           ZkFold.Base.Protocol.ARK.Plonk
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Cardano.Plonk.Inputs
 import           ZkFold.Cardano.Plonk.Internal
 
-type PlonkBBS = Plonk BuiltinByteString
+type PlonkBBS = Plonk 32 BuiltinByteString
 
 data PlonkPlutus
 
 mkSetup :: Setup PlonkBBS -> Setup PlonkPlutus
-mkSetup ((_, gs, h0, h1, omega, k1, k2), _, (cmQl, cmQr, cmQo, cmQm, cmQc, cmS1, cmS2, cmS3), _, _) =
-    ((naturalToInteger $ order @PlonkBBS, convertG1 $ head gs, convertG2 h0, convertG2 h1, convertF omega, convertF k1, convertF k2),
-    (convertG1 cmQl, convertG1 cmQr, convertG1 cmQo, convertG1 cmQm, convertG1 cmQc, convertG1 cmS1, convertG1 cmS2, convertG1 cmS3))
+mkSetup (PlonkSetupParams {..}, _, _, PlonkCircuitCommitments {..}, _, _) = SetupPlonkPlutus
+  { n   = naturalToInteger $ value @32
+  , g0  = convertG1 $ Vector.head gs
+  , h0  = convertG2 h0
+  , h1  = convertG2 h1
+  , omega = convertF omega
+  , k1    = convertF k1
+  , k2    = convertF k2
+  , cmQl  = convertG1 cmQl
+  , cmQr  = convertG1 cmQr
+  , cmQo  = convertG1 cmQo
+  , cmQm  = convertG1 cmQm
+  , cmQc  = convertG1 cmQc
+  , cmS1  = convertG1 cmS1
+  , cmS2  = convertG1 cmS2
+  , cmS3  = convertG1 cmS3
+  }
 
 mkInput :: Input PlonkBBS -> Input PlonkPlutus
-mkInput = convertF . head
+mkInput (PlonkInput input) = InputPlonkPlutus . convertF . Vector.head $ input
 
 mkProof :: Proof PlonkBBS -> Proof PlonkPlutus
-mkProof (cmA, cmB, cmC, cmZ, cmT1, cmT2, cmT3, proof1, proof2, a_xi, b_xi, c_xi, s1_xi, s2_xi, z_xi) =
-    (convertG1 cmA, convertG1 cmB, convertG1 cmC, convertG1 cmZ, convertG1 cmT1, convertG1 cmT2, convertG1 cmT3,
-    convertG1 proof1, convertG1 proof2, convertF a_xi, convertF b_xi, convertF c_xi, convertF s1_xi, convertF s2_xi, convertF z_xi)
+mkProof (PlonkProof cmA cmB cmC cmZ cmT1 cmT2 cmT3 proof1 proof2 a_xi b_xi c_xi s1_xi s2_xi z_xi) = ProofPlonkPlutus
+  { cmA = convertG1 cmA
+  , cmB = convertG1 cmB
+  , cmC = convertG1 cmC
+  , cmZ  = convertG1 cmZ
+  , cmT1 = convertG1 cmT1
+  , cmT2 = convertG1 cmT2
+  , cmT3 = convertG1 cmT3
+  , proof1 = convertG1 proof1
+  , proof2 = convertG1 proof2
+  , a_xi = convertF a_xi
+  , b_xi = convertF b_xi
+  , c_xi = convertF c_xi
+  , s1_xi = convertF s1_xi
+  , s2_xi = convertF s2_xi
+  , z_xi = convertF z_xi
+  }
 
 instance NonInteractiveProof PlonkPlutus where
     type Transcript PlonkPlutus   = BuiltinByteString
-    type Setup PlonkPlutus        = ((Integer, G1, G2, G2, F, F, F), (G1, G1, G1, G1, G1, G1, G1, G1))
+    type Setup PlonkPlutus        = SetupPlonkPlutus
     type Witness PlonkPlutus      = ()
-    type Input PlonkPlutus        = F
-    type Proof PlonkPlutus        = (G1, G1, G1, G1, G1, G1, G1, G1, G1, F, F, F, F, F, F)
+    type Input PlonkPlutus        = InputPlonkPlutus
+    type Proof PlonkPlutus        = ProofPlonkPlutus
 
     setup :: PlonkPlutus -> Setup PlonkPlutus
     setup = undefined
@@ -47,10 +84,7 @@ instance NonInteractiveProof PlonkPlutus where
     -- TODO: Validate arguments
     {-# INLINABLE verify #-}
     verify :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
-    verify
-        ((n, g0, h0, h1, omega, k1, k2), (cmQl, cmQr, cmQo, cmQm, cmQc, cmS1, cmS2, cmS3))
-        pubInput
-        (cmA, cmB, cmC, cmZ, cmT1, cmT2, cmT3, proof1, proof2, a_xi, b_xi, c_xi, s1_xi, s2_xi, z_xi) = bls12_381_finalVerify p1 p2
+    verify (SetupPlonkPlutus {..}) (InputPlonkPlutus {..}) (ProofPlonkPlutus {..}) = bls12_381_finalVerify p1 p2
         where
             (beta, ts) = challenge $ emptyByteString
                 `transcriptG1` cmA
