@@ -12,7 +12,6 @@ import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
 import           PlutusTx                                 (CompiledCode, toBuiltinData)
 import           PlutusTx.Builtins                        hiding (head)
 import           PlutusTx.Prelude                         (Eq (..), Bool (..), Maybe (..), Ord (..), ($), (||), (&&))
-import qualified PlutusTx.Prelude                         as Plutus
 import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.TH                              (compile)
 import           Prelude                                  ((.))
@@ -28,9 +27,9 @@ symbolicVerifier :: (Setup PlonkPlutus, Input PlonkPlutus, Proof PlonkPlutus) ->
 symbolicVerifier (contract, input, proof) ctx = condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
-        ins   = Plutus.map txInInfoOutRef (txInfoInputs info)
+        ins   = txInfoInputs info
         outs  = txInfoOutputs info
-        refs  = Plutus.map txInInfoOutRef (txInfoReferenceInputs info)
+        refs  = txInfoReferenceInputs info
         range = txInfoValidRange info
 
         h     = blake2b_224 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
@@ -39,7 +38,6 @@ symbolicVerifier (contract, input, proof) ctx = condition1 && condition2
         --
         -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
         -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
-        -- For inputs and reference inputs, we only need the references as we can supply the past transaction data as private inputs.
         condition1 = serialiseData (toBuiltinData input) == h
 
         -- Verifying the validity of the ZkFold Symbolic smart contract on the current transaction.
