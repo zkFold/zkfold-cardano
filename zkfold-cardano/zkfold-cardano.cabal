@@ -28,7 +28,7 @@ library
       vector                                     ,
     hs-source-dirs: src
 
-test-suite zkfold-cardano-test
+test-suite test
     default-language: Haskell2010
     type:             exitcode-stdio-1.0
     ghc-options:      -rtsopts
@@ -47,7 +47,7 @@ test-suite zkfold-cardano-test
       zkfold-cardano                             ,
     hs-source-dirs: test
 
-benchmark zkfold-cardano-bench
+benchmark bench-uplc
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
   main-is:          Main.hs

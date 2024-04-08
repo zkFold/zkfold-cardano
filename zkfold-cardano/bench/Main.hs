@@ -18,9 +18,8 @@ import           ZkFold.Cardano.Plonk.Inputs
 
 -- This reads the test vectors and applies them to the compiled plonk verifier script.
 -- This applied verifier is written to disk in the flat format.
--- use: nix shell nixpkgs#flamegraph github:input-output-hk/plutus#x86_64-linux.plutus.library.plutus-project-92.hsPkgs.plutus-core.components.exes.traceToStacks github:input-output-hk/plutus#x86_64-linux.plutus.library.plutus-project-92.hsPkgs.plutus-core.components.exes.uplc
--- use: nix shell nixpkgs#flamegraph github:perturbing/plutus/8152f746f07c2097ef18bd649e55a6269d6cb47b#x86_64-linux.plutus.library.plutus-project-92.hsPkgs.plutus-core.components.exes.traceToStacks github:perturbing/plutus/8152f746f07c2097ef18bd649e55a6269d6cb47b#x86_64-linux.plutus.library.plutus-project-92.hsPkgs.plutus-core.components.exes.uplc
--- and: uplc evaluate -t -i appliedPlonkScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
+-- cabal install plutus-core
+-- uplc evaluate -t -i appliedPlonkScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
 -- to log the CPU/MEM consumption
 -- for more info see https://hydra.family/head-protocol/benchmarks/profiling/
 -- and https://plutus.readthedocs.io/en/latest/howtos/profiling-scripts.html
