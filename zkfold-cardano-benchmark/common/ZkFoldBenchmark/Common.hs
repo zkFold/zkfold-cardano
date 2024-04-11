@@ -3,7 +3,6 @@ module ZkFoldBenchmark.Common (TestSize (..), printHeader, printSizeStatistics) 
 import qualified Data.ByteString                                   as BS
 import           Data.SatInt                                       (fromSatInt)
 import qualified Flat
-import qualified PlutusCore                                        as PLC
 import           PlutusCore.Default                                (DefaultFun, DefaultUni)
 import           PlutusCore.Evaluation.Machine.ExBudget            (ExBudget (..))
 import qualified PlutusCore.Evaluation.Machine.ExBudgetingDefaults as PLC
@@ -29,19 +28,11 @@ maxTxExSteps = 10_000_000_000
 maxTxExMem :: Integer
 maxTxExMem = 14_000_000
 
-type Term = UPLC.Term PLC.NamedDeBruijn DefaultUni DefaultFun ()
-
-{- | Remove the textual names from a NamedDeBruijn term -}
-toAnonDeBruijnTerm
-    :: Term
-    -> UPLC.Term UPLC.DeBruijn DefaultUni DefaultFun ()
-toAnonDeBruijnTerm = UPLC.termMapNames UPLC.unNameDeBruijn
-
 toAnonDeBruijnProg
     :: UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
     -> UPLC.Program UPLC.DeBruijn      DefaultUni DefaultFun ()
 toAnonDeBruijnProg (UPLC.Program () ver body) =
-    UPLC.Program () ver $ toAnonDeBruijnTerm body
+    UPLC.Program () ver $ UPLC.termMapNames UPLC.unNameDeBruijn body
 
 -- | Evaluate a script and return the CPU and memory costs (according to the cost model)
 getCostsCek :: UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun () -> (Integer, Integer)

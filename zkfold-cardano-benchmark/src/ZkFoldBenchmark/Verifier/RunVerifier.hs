@@ -18,14 +18,15 @@ import           ZkFold.Cardano.Plonk                        (Plonk32, PlonkPlut
 import           ZkFold.Cardano.Plonk.Inputs                 (Contract (..), RowContractJSON, toContract)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
+import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
 import           ZkFoldBenchmark.Common                      (TestSize (..), printHeader, printSizeStatistics)
 import           ZkFoldBenchmark.Verifier.Scripts            (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
 
-lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> () -> Bool a
-lockedByTxId (TxId targetId) (TxId txId) _ = txId == fromConstant targetId
+lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
+lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
 
 printCostsSymbolicVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsSymbolicVerifier h s i p = printSizeStatistics h NoSize (symbolicVerifierScript s i p)
@@ -43,17 +44,19 @@ runVerifier h = do
   case maybeRowContract of
     Just rowContract ->
       let Contract{..} = toContract rowContract
-          Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) (TxId targetId))
+          Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) @Fr (TxId targetId))
+          acc = applyArgs ac [targetId]
+
           (omega, k1, k2) = getParams 5
-          inputs  = fromList [(1, targetId), (acOutput ac, 1)]
-          plonk   = Plonk omega k1 k2 inputs ac x
+          inputs  = fromList [(acOutput acc, 1)]
+          plonk   = Plonk omega k1 k2 inputs acc x
           setup'  = setup @Plonk32 plonk
           w       = (PlonkWitnessInput inputs, ps)
           (input', proof') = prove @Plonk32 setup' w
       in do
         let setup = mkSetup setup'
             input = mkInput input'
-            proof = mkProof proof'
+            proof = mkProof setup proof'
         hPrintf h "\n\n"
         hPrintf h "Run plonk verify\n\n"
         printHeader h

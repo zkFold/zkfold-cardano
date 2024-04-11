@@ -21,7 +21,7 @@ import           ZkFold.Cardano.Plonk.Internal  (F (..), G1, G2, convertG2, conv
 
 data SetupPlonkPlutus = SetupPlonkPlutus {
     n     :: Integer
-  , gs    :: [G1]
+  , g0    :: G1
   , h0    :: G2
   , h1    :: G2
   , omega :: F
@@ -80,7 +80,7 @@ data Contract = Contract {
 
 data SetupBytes = SetupBytes {
     n'     :: Integer
-  , gs'    :: [BuiltinByteString]
+  , g0'    :: BuiltinByteString
   , h0'    :: BuiltinByteString
   , h1'    :: BuiltinByteString
   , omega' :: Integer
@@ -94,6 +94,7 @@ data SetupBytes = SetupBytes {
   , cmS1'  :: BuiltinByteString
   , cmS2'  :: BuiltinByteString
   , cmS3'  :: BuiltinByteString
+  , gens'  :: [F]
 } deriving (Show)
 
 makeLift ''SetupBytes
@@ -107,21 +108,22 @@ makeLift ''InputBytes
 makeIsDataIndexed ''InputBytes [('InputBytes,0)]
 
 data ProofBytes = ProofBytes {
-    cmA'    :: BuiltinByteString
-  , cmB'    :: BuiltinByteString
-  , cmC'    :: BuiltinByteString
-  , cmZ'    :: BuiltinByteString
-  , cmT1'   :: BuiltinByteString
-  , cmT2'   :: BuiltinByteString
-  , cmT3'   :: BuiltinByteString
-  , proof1' :: BuiltinByteString
-  , proof2' :: BuiltinByteString
-  , a_xi'   :: Integer
-  , b_xi'   :: Integer
-  , c_xi'   :: Integer
-  , s1_xi'  :: Integer
-  , s2_xi'  :: Integer
-  , z_xi'   :: Integer
+    cmA'     :: BuiltinByteString
+  , cmB'     :: BuiltinByteString
+  , cmC'     :: BuiltinByteString
+  , cmZ'     :: BuiltinByteString
+  , cmT1'    :: BuiltinByteString
+  , cmT2'    :: BuiltinByteString
+  , cmT3'    :: BuiltinByteString
+  , proof1'  :: BuiltinByteString
+  , proof2'  :: BuiltinByteString
+  , a_xi'    :: Integer
+  , b_xi'    :: Integer
+  , c_xi'    :: Integer
+  , s1_xi'   :: Integer
+  , s2_xi'   :: Integer
+  , z_xi'    :: Integer
+  , lagsInv' :: [F]
 } deriving (Show)
 
 makeLift ''ProofBytes
@@ -162,13 +164,13 @@ toContract (RowContractJSON x' ps' targetId') =
 {-# INLINABLE toSetup #-}
 toSetup :: SetupBytes -> SetupPlonkPlutus
 toSetup SetupBytes{..} = SetupPlonkPlutus {
-    n     = n'  
-  , gs    = Haskell.fmap bls12_381_G1_uncompress gs' 
-  , h0    = bls12_381_G2_uncompress h0' 
-  , h1    = bls12_381_G2_uncompress h1' 
+    n     = n'
+  , g0    = bls12_381_G1_uncompress g0'
+  , h0    = bls12_381_G2_uncompress h0'
+  , h1    = bls12_381_G2_uncompress h1'
   , omega = F omega'
-  , k1    = F k1'   
-  , k2    = F k2'   
+  , k1    = F k1'
+  , k2    = F k2'
   , cmQl  = bls12_381_G1_uncompress cmQl'
   , cmQr  = bls12_381_G1_uncompress cmQr'
   , cmQo  = bls12_381_G1_uncompress cmQo'

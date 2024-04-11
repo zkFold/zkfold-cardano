@@ -55,11 +55,19 @@ and https://plutus.readthedocs.io/en/latest/howtos/profiling-scripts.html
 ## Benchmark of plonk
 
 ```bash
+Run plonk verify
+
+    n     Script size             CPU usage               Memory usage
+  ----------------------------------------------------------------------
+    -    4981  (30.4%)      3623185969  (36.2%)          620438   (4.4%) 
+```
+
+```bash
 Run plonk verifier
 
     n     Script size             CPU usage               Memory usage
   ----------------------------------------------------------------------
-    -    7448  (45.5%)        16192100   (0.2%)           70500   (0.5%) 
+    -    5093  (31.1%)         5681100   (0.1%)           24800   (0.2%) 
 ```
 
 ```bash
@@ -67,5 +75,5 @@ Run symbolic plonk verifier
 
     n     Script size             CPU usage               Memory usage
   ----------------------------------------------------------------------
-    -    7926  (48.4%)        17503100   (0.2%)           76200   (0.5%) 
+    -    5589  (34.1%)         7061100   (0.1%)           30800   (0.2%) 
 ```

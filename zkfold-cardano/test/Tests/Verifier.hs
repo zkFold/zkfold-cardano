@@ -32,7 +32,7 @@ testVerifier x ps targetId =
         w       = (PlonkWitnessInput inputs, ps)
         (input, proof) = prove @Plonk32 s w
 
-    in verify @PlonkPlutus (mkSetup s) (mkInput input) (mkProof proof)
+    in verify @PlonkPlutus (mkSetup s) (mkInput input) (mkProof (mkSetup s) proof)
 
 specVerifier :: IO ()
 specVerifier = hspec $ do

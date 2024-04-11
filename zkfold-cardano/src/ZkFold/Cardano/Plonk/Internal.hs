@@ -166,7 +166,7 @@ type Transcript = BuiltinByteString
 
 instance ToTranscript BuiltinByteString F where
     {-# INLINABLE toTranscript #-}
-    toTranscript (F a) = integerToByteString BigEndian 0 a
+    toTranscript (F a) = integerToByteString BigEndian 32 a
 
 instance ToTranscript BuiltinByteString Plonk.F where
     toTranscript = toTranscript . F . convertZp
@@ -197,6 +197,14 @@ instance FromTranscript BuiltinByteString Plonk.F where
     newTranscript = newTranscript @BuiltinByteString @F
 
     fromTranscript = toZp . toF . fromTranscript @BuiltinByteString @F
+
+{-# INLINABLE transcriptFByte #-}
+transcriptFByte :: Transcript -> Integer -> Transcript
+transcriptFByte ts a = ts <> integerToByteString BigEndian 32 a
+
+{-# INLINABLE transcriptG1Byte #-}
+transcriptG1Byte :: Transcript -> BuiltinByteString -> Transcript
+transcriptG1Byte ts g = ts <> g
 
 {-# INLINABLE challenge #-}
 challenge :: Transcript -> (F, Transcript)
