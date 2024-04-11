@@ -1,18 +1,9 @@
+{-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module ZkFold.Cardano.Plonk.Inputs (
-  SetupPlonkPlutus(..),
-  InputPlonkPlutus(..),
-  ProofPlonkPlutus(..),
-  SetupJSON(..),
-  InputJSON(..),
-  ProofJSON(..),
-  convertSetupPlonkPlutus,
-  convertInputPlonkPlutus,
-  convertProofPlonkPlutus,
-) where
+module ZkFold.Cardano.Plonk.Inputs where
 
-import           Data.Aeson                    (FromJSON, ToJSON)
+import           Data.Aeson                    (FromJSON, ToJSON, toJSON)
 import qualified Data.ByteString               as BS
 import           Data.Word                     ()
 import           GHC.Generics                  (Generic)
@@ -23,7 +14,8 @@ import           Prelude                       (Functor (..), Num (..), Show, fr
 import qualified Prelude
 import qualified Prelude                       as Haskell
 
-import           ZkFold.Cardano.Plonk.Internal (F (..), G1, G2, convertG2, powMod)
+import           ZkFold.Cardano.Plonk.Internal (F (..), G1, G2, convertG2, powMod, convertPlonkF)
+import qualified ZkFold.Base.Protocol.ARK.Plonk as ZkFold
 
 ------------------------------------ Plutus ------------------------------------
 
@@ -76,107 +68,38 @@ data ProofPlonkPlutus = ProofPlonkPlutus {
 makeLift ''ProofPlonkPlutus
 makeIsDataIndexed ''ProofPlonkPlutus [('ProofPlonkPlutus,0)]
 
+data Contract = Contract {
+    x        :: ZkFold.F
+  , ps       :: ZkFold.PlonkProverSecret
+  , targetId :: ZkFold.F
+}
+
 ------------------------------------- JSON -------------------------------------
 
-data SetupJSON = SetupJSON {
-    n'     :: Integer
-  , gs'    :: [[Integer]]
-  , h0'    :: [Integer]
-  , h1'    :: [Integer]
-  , omega' :: [Integer]
-  , k1'    :: [Integer]
-  , k2'    :: [Integer]
-  , cmQl'  :: [Integer]
-  , cmQr'  :: [Integer]
-  , cmQo'  :: [Integer]
-  , cmQm'  :: [Integer]
-  , cmQc'  :: [Integer]
-  , cmS1'  :: [Integer]
-  , cmS2'  :: [Integer]
-  , cmS3'  :: [Integer]
-} deriving (Show, Generic)
+data PlonkProverSecret = PlonkProverSecret F F F F F F F F F F F
+  deriving (Show, Generic, ToJSON, FromJSON)
 
-instance FromJSON SetupJSON
-instance ToJSON SetupJSON
+data RowContractJSON = RowContractJSON {
+    x'        :: F
+  , ps'       :: PlonkProverSecret
+  , targetId' :: F
+} deriving (Show, Generic, ToJSON, FromJSON)
 
-newtype InputJSON = InputJSON {
-    pubInput' :: [Integer]
-} deriving (Show, Generic)
+toPlonkPlonkProverSecret :: PlonkProverSecret -> ZkFold.PlonkProverSecret
+toPlonkPlonkProverSecret (PlonkProverSecret b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) =
+  ZkFold.PlonkProverSecret 
+    (convertPlonkF b1) 
+    (convertPlonkF b2)
+    (convertPlonkF b3)
+    (convertPlonkF b4)
+    (convertPlonkF b5)
+    (convertPlonkF b6)
+    (convertPlonkF b7)
+    (convertPlonkF b8)
+    (convertPlonkF b9)
+    (convertPlonkF b10)
+    (convertPlonkF b11)
 
-instance FromJSON InputJSON
-instance ToJSON InputJSON
-
-data ProofJSON = ProofJSON {
-    cmA'    :: [Integer]
-  , cmB'    :: [Integer]
-  , cmC'    :: [Integer]
-  , cmZ'    :: [Integer]
-  , cmT1'   :: [Integer]
-  , cmT2'   :: [Integer]
-  , cmT3'   :: [Integer]
-  , proof1' :: [Integer]
-  , proof2' :: [Integer]
-  , a_xi'   :: [Integer]
-  , b_xi'   :: [Integer]
-  , c_xi'   :: [Integer]
-  , s1_xi'  :: [Integer]
-  , s2_xi'  :: [Integer]
-  , z_xi'   :: [Integer]
-} deriving (Show, Generic)
-
-instance FromJSON ProofJSON
-instance ToJSON ProofJSON
-
-listToF :: [Integer] -> F
-listToF = F . \[a, b, c, d] -> a + b * (2 :: Integer) ^ (64 :: Integer)
-                                 + c * (2 :: Integer) ^ (128 :: Integer)
-                                 + d * (2 :: Integer) ^ (192 :: Integer)
-
-listToG2 :: [Integer] -> P.BuiltinBLS12_381_G2_Element
-listToG2 = P.bls12_381_G2_uncompress . P.toBuiltin . BS.pack . Prelude.map fromIntegral
-
-listToG1 :: [Integer] -> P.BuiltinBLS12_381_G1_Element
-listToG1 = P.bls12_381_G1_uncompress . P.toBuiltin . BS.pack . Prelude.map fromIntegral
-
-convertSetupPlonkPlutus :: SetupJSON -> SetupPlonkPlutus
-convertSetupPlonkPlutus SetupJSON{..} = SetupPlonkPlutus
-  { n     = n'
-  , gs    = fmap listToG1 gs'
-  , h0    = listToG2 h0'
-  , h1    = listToG2 h1'
-  , omega = listToF omega'
-  , k1    = listToF k1'
-  , k2    = listToF k2'
-  , cmQl  = listToG1 cmQl'
-  , cmQr  = listToG1 cmQr'
-  , cmQo  = listToG1 cmQo'
-  , cmQm  = listToG1 cmQm'
-  , cmQc  = listToG1 cmQc'
-  , cmS1  = listToG1 cmS1'
-  , cmS2  = listToG1 cmS2'
-  , cmS3  = listToG1 cmS3'
-  }
-
-convertInputPlonkPlutus :: InputJSON -> InputPlonkPlutus
-convertInputPlonkPlutus InputJSON{..} = InputPlonkPlutus
-  { pubInput = fmap F pubInput'
-  }
-
-convertProofPlonkPlutus :: ProofJSON -> ProofPlonkPlutus
-convertProofPlonkPlutus ProofJSON{..} = ProofPlonkPlutus
-  { cmA    = listToG1 cmA'
-  , cmB    = listToG1 cmB'
-  , cmC    = listToG1 cmC'
-  , cmZ    = listToG1 cmZ'
-  , cmT1   = listToG1 cmT1'
-  , cmT2   = listToG1 cmT2'
-  , cmT3   = listToG1 cmT3'
-  , proof1 = listToG1 proof1'
-  , proof2 = listToG1 proof2'
-  , a_xi   = listToF a_xi'
-  , b_xi   = listToF b_xi'
-  , c_xi   = listToF c_xi'
-  , s1_xi  = listToF s1_xi'
-  , s2_xi  = listToF s2_xi'
-  , z_xi   = listToF z_xi'
-}
+toContract :: RowContractJSON -> Contract
+toContract (RowContractJSON x' ps' targetId') =
+  Contract (convertPlonkF x') (toPlonkPlonkProverSecret ps') (convertPlonkF targetId')

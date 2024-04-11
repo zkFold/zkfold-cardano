@@ -2,7 +2,9 @@
 
 module ZkFold.Cardano.Plonk.Internal where
 
+import           Data.Aeson                               (FromJSON, ToJSON)
 import           GHC.ByteOrder                            (ByteOrder (..))
+import           GHC.Generics                             (Generic)
 import           GHC.Natural                              (naturalToInteger)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins
@@ -24,7 +26,7 @@ bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 newtype F = F { toF :: Integer }
-    deriving (Haskell.Show)
+    deriving (Haskell.Show, Generic, ToJSON, FromJSON)
 makeLift ''F
 makeIsDataIndexed ''F [('F,0)]
 
@@ -128,6 +130,9 @@ instance ZkFold.AdditiveGroup BuiltinBLS12_381_G2_Element where
 
 convertF :: Plonk.F -> F
 convertF = F . naturalToInteger . fromZp
+
+convertPlonkF :: F -> Plonk.F
+convertPlonkF = toZp . toF
 
 convertZp :: Zp p -> Integer
 convertZp = naturalToInteger . fromZp
