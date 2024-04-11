@@ -19,12 +19,23 @@ common lang
     DeriveTraversable
     DerivingStrategies
     DerivingVia
-    ExplicitForAll
-    FlexibleContexts
-    GeneralizedNewtypeDeriving
     ImportQualifiedPost
-    ScopedTypeVariables
+    LambdaCase
+    NumericUnderscores
+    GeneralizedNewtypeDeriving
     StandaloneDeriving
+    ViewPatterns
+    AllowAmbiguousTypes
+    FlexibleContexts
+    RankNTypes
+    TypeApplications
+    DataKinds
+    InstanceSigs
+    MultiParamTypeClasses
+    RecordWildCards
+    ScopedTypeVariables
+    FlexibleInstances
+    NoImplicitPrelude
     Strict
 
   ghc-options:
@@ -60,8 +71,8 @@ library bench-common
     directory                               ,
     filepath                                ,
     flat                              ^>=0.6,
-    plutus-core                             ,
-    plutus-tx                               ,
+    plutus-core                      ^>=1.24,
+    plutus-tx                        ^>=1.24,
     tasty                                   ,
     tasty-golden                            ,
     temporary                               ,
@@ -79,14 +90,15 @@ library bench-lib
   build-depends:
     aeson                                   ,
     base                         >=4.9 && <5,
+    bench-common                            ,
     bytestring                              ,
     hedgehog                                ,
-    plutus-core                             ,
-    plutus-tx                               ,
-    plutus-tx-plugin                        ,
+    plutus-core                      ^>=1.24,
+    plutus-tx                        ^>=1.24,
+    plutus-tx-plugin                 ^>=1.24,
     zkfold-base                             ,
     zkfold-cardano                          ,
-    bench-common                            ,
+    containers                              ,
 
 executable bench-cpu-mem
   import:           lang

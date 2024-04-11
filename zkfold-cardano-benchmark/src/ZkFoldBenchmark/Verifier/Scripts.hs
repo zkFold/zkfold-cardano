@@ -1,8 +1,6 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module ZkFoldBenchmark.Verifier.Scripts where
+module ZkFoldBenchmark.Verifier.Scripts (verifySymbolicScript, verifyPlonkScript) where
 
 import           PlutusCore                               (DefaultFun, DefaultUni)
 import           PlutusTx                                 (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode)

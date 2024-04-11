@@ -17,6 +17,8 @@ common lang
     DeriveTraversable
     DerivingStrategies
     DerivingVia
+    ImportQualifiedPost
+    LambdaCase
     GeneralizedNewtypeDeriving
     StandaloneDeriving
     ViewPatterns
@@ -45,10 +47,10 @@ library
     base                          >= 4.9 && < 5,
     bytestring                                 ,
     containers                                 ,
-    plutus-core                        ^>=1.24 ,
-    plutus-ledger-api                  ^>=1.24 ,
-    plutus-tx                          ^>=1.24 ,
-    plutus-tx-plugin                   ^>=1.24 ,
+    plutus-core                         ^>=1.24,
+    plutus-ledger-api                   ^>=1.24,
+    plutus-tx                           ^>=1.24,
+    plutus-tx-plugin                    ^>=1.24,
     QuickCheck                                 ,
     zkfold-base                                ,
     vector                                     ,
@@ -87,10 +89,10 @@ benchmark bench-uplc
     containers                                 ,
     bytestring                                 ,
     flat                                       ,
-    plutus-core                        ^>=1.24 ,
-    plutus-ledger-api                  ^>=1.24 ,
-    plutus-tx                          ^>=1.24 ,
-    plutus-tx-plugin                   ^>=1.24 ,
+    plutus-core                         ^>=1.24,
+    plutus-ledger-api                   ^>=1.24,
+    plutus-tx                           ^>=1.24,
+    plutus-tx-plugin                    ^>=1.24,
     zkfold-base                                ,
     zkfold-cardano                             ,
 

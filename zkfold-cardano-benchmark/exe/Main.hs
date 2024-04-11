@@ -1,7 +1,9 @@
 module Main where
 
-import ZkFoldBenchmark.Verifier.RunVerifier (runVerifier)
-import System.IO (stdout)
+import           Prelude
+import           System.IO                            (stdout)
+
+import           ZkFoldBenchmark.Verifier.RunVerifier (runVerifier)
 
 main :: IO ()
 main = do runVerifier stdout

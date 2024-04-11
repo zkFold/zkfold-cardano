@@ -1,22 +1,18 @@
-{-# LANGUAGE LambdaCase         #-}
-{-# LANGUAGE NumericUnderscores #-}
+module ZkFoldBenchmark.Common (TestSize (..), printHeader, printSizeStatistics) where
 
-{- | Miscellaneous shared code for benchmarking-related things. -}
-module ZkFoldBenchmark.Common where
-
-import PlutusCore qualified as PLC
-import PlutusCore.Default (DefaultFun, DefaultUni)
-import PlutusCore.Evaluation.Machine.ExBudget (ExBudget (..))
-import PlutusCore.Evaluation.Machine.ExBudgetingDefaults qualified as PLC
-import PlutusCore.Evaluation.Machine.ExMemory (ExCPU (..), ExMemory (..))
-import UntypedPlutusCore qualified as UPLC
-import UntypedPlutusCore.Evaluation.Machine.Cek qualified as Cek
-
-import Data.ByteString qualified as BS
-import Data.SatInt (fromSatInt)
-import Flat qualified
-import System.IO (Handle)
-import Text.Printf (hPrintf, printf)
+import qualified Data.ByteString                                   as BS
+import           Data.SatInt                                       (fromSatInt)
+import qualified Flat
+import qualified PlutusCore                                        as PLC
+import           PlutusCore.Default                                (DefaultFun, DefaultUni)
+import           PlutusCore.Evaluation.Machine.ExBudget            (ExBudget (..))
+import qualified PlutusCore.Evaluation.Machine.ExBudgetingDefaults as PLC
+import           PlutusCore.Evaluation.Machine.ExMemory            (ExCPU (..), ExMemory (..))
+import           Prelude
+import           System.IO                                         (Handle)
+import           Text.Printf                                       (hPrintf, printf)
+import qualified UntypedPlutusCore                                 as UPLC
+import qualified UntypedPlutusCore.Evaluation.Machine.Cek          as Cek
 
 -- Protocol parameters (June 2023)
 

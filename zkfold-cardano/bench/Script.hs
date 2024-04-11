@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Script where
+module Script (compiledSymbolicVerifier, compiledPlonkVerifier) where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..))
 import           PlutusTx                                 (CompiledCode)
