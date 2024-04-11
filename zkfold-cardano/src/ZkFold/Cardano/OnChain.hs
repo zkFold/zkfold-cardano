@@ -16,7 +16,7 @@ import qualified PlutusTx.Prelude                         as Plutus
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.Inputs              (InputBytes (..), InputPlonkPlutus (..))
-import           ZkFold.Cardano.Plonk.Internal            (F (..), toF)
+import           ZkFold.Cardano.Plonk.Internal            (F (..))
 
 -- TODO: split the setup data into the fixed and varying parts
 -- | The Plutus script for verifying a ZkFold Symbolic smart contract.

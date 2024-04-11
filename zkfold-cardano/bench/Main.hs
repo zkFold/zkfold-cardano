@@ -10,7 +10,7 @@ import           Flat                                        (flat)
 import qualified PlutusTx                                    as P
 import qualified PlutusTx                                    as Tx
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           Script                                      (compiledPlonkVerifier, compiledSymbolicVerifier)
+import           Script                                      (compiledPlonkVerifier, compiledSymbolicVerifier, compiledPlonkVerify)
 import           UntypedPlutusCore                           (UnrestrictedProgram (..))
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
@@ -58,7 +58,7 @@ main = do
            `Tx.unsafeApplyCode` Tx.liftCodeDef setup
            `Tx.unsafeApplyCode` Tx.liftCodeDef input
            `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-        BS.writeFile "plonkVerifyScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerifier
+        BS.writeFile "plonkVerifyScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerify
            `Tx.unsafeApplyCode` Tx.liftCodeDef setup
            `Tx.unsafeApplyCode` Tx.liftCodeDef input
            `Tx.unsafeApplyCode` Tx.liftCodeDef proof

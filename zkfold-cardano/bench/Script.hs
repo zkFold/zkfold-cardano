@@ -1,5 +1,8 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
+
 module Script (compiledSymbolicVerifier, compiledPlonkVerifier, compiledPlonkVerify) where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..))
