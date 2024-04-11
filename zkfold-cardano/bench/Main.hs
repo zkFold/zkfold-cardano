@@ -55,4 +55,8 @@ main = do
            `Tx.unsafeApplyCode` Tx.liftCodeDef setup
            `Tx.unsafeApplyCode` Tx.liftCodeDef input
            `Tx.unsafeApplyCode` Tx.liftCodeDef proof
+        BS.writeFile "plonkVerifyScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerifier
+           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
+           `Tx.unsafeApplyCode` Tx.liftCodeDef input
+           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
     _ -> print "Could not deserialize"

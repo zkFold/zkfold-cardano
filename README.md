@@ -40,6 +40,7 @@ This repository will follow [this](https://github.com/perturbing/plutus-plonk-po
 ## Analyze uplc
 You can analyze your script uplc.
 
+`uplc evaluate -t -i plonkVerifyScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 `uplc evaluate -t -i plonkVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 `uplc evaluate -t -i symbolicVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 

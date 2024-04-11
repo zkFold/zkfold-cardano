@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Script (compiledSymbolicVerifier, compiledPlonkVerifier) where
+module Script (compiledSymbolicVerifier, compiledPlonkVerifier, compiledPlonkVerify) where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..))
 import           PlutusTx                                 (CompiledCode)
@@ -16,3 +16,6 @@ compiledSymbolicVerifier = $$(compile [|| symbolicVerifier ||])
 
 compiledPlonkVerifier :: CompiledCode (Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> Bool)
 compiledPlonkVerifier = $$(compile [|| plonkVerifier ||])
+
+compiledPlonkVerify :: CompiledCode (Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool)
+compiledPlonkVerify = $$(compile [|| verify @PlonkPlutus ||])

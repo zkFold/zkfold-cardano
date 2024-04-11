@@ -22,16 +22,19 @@ import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
 import           ZkFoldBenchmark.Common                      (TestSize (..), printHeader, printSizeStatistics)
-import           ZkFoldBenchmark.Verifier.Scripts            (verifyPlonkScript, verifySymbolicScript)
+import           ZkFoldBenchmark.Verifier.Scripts            (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
 
 lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> () -> Bool a
 lockedByTxId (TxId targetId) (TxId txId) _ = txId == fromConstant targetId
 
-printCostsVerifySymbolicScript :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
-printCostsVerifySymbolicScript h s i p = printSizeStatistics h NoSize (verifySymbolicScript s i p)
+printCostsSymbolicVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
+printCostsSymbolicVerifier h s i p = printSizeStatistics h NoSize (symbolicVerifierScript s i p)
 
-printCostsVerifierPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
-printCostsVerifierPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
+printCostsPlonkVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
+printCostsPlonkVerifier h s i p = printSizeStatistics h NoSize (plonkVerifierScript s i p)
+
+printCostsVerifyPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
+printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
 
 runVerifier :: Handle -> IO ()
 runVerifier h = do
@@ -52,13 +55,18 @@ runVerifier h = do
             input = mkInput input'
             proof = mkProof proof'
         hPrintf h "\n\n"
+        hPrintf h "Run plonk verify\n\n"
+        printHeader h
+        printCostsVerifyPlonk h setup input proof
+        hPrintf h "\n\n"
+        hPrintf h "\n\n"
         hPrintf h "Run plonk verifier\n\n"
         printHeader h
-        printCostsVerifierPlonk h setup input proof
+        printCostsPlonkVerifier h setup input proof
         hPrintf h "\n\n"
         hPrintf h "\n\n"
         hPrintf h "Run symbolic plonk verifier\n\n"
         printHeader h
-        printCostsVerifySymbolicScript h setup input proof
+        printCostsSymbolicVerifier h setup input proof
         hPrintf h "\n\n"
     _ -> print "Could not deserialize"
