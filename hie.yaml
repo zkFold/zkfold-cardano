@@ -4,19 +4,19 @@ cradle:
       component: "lib:zkfold-cardano"
 
     - path: "zkfold-cardano/test"
-      component: "zkfold-cardano:test:zkfold-cardano-test"
+      component: "zkfold-cardano:test:test"
 
     - path: "zkfold-cardano/bench/Main.hs"
-      component: "zkfold-cardano:bench:zkfold-cardano-bench"
+      component: "zkfold-cardano:bench:bench-uplc"
 
     - path: "zkfold-cardano/bench/Script.hs"
-      component: "zkfold-cardano:bench:zkfold-cardano-bench"
+      component: "zkfold-cardano:bench:bench-uplc"
 
     - path: "zkfold-cardano-benchmark/common"
-      component: "zkfold-cardano-benchmark:lib:zkfold-cardano-benchmark-common"
+      component: "zkfold-cardano-benchmark:lib:bench-common"
 
     - path: "zkfold-cardano-benchmark/src"
-      component: "zkfold-cardano-benchmark:lib:zkfold-cardano-benchmark-lib"
+      component: "zkfold-cardano-benchmark:lib:bench-lib"
 
     - path: "zkfold-cardano-benchmark/exe/Main.hs"
-      component: "zkfold-cardano-benchmark:exe:zkfold-cardano-benchmark-exe"
+      component: "zkfold-cardano-benchmark:exe:bench-cpu-mem"

@@ -7,47 +7,75 @@ maintainer:         info@zkfold.io
 license:            MIT
 build-type:         Simple
 
+common lang
+  default-language:   Haskell2010
+  default-extensions:
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    GeneralizedNewtypeDeriving
+    StandaloneDeriving
+    ViewPatterns
+    AllowAmbiguousTypes
+    FlexibleContexts
+    RankNTypes
+    TypeApplications
+    DataKinds
+    InstanceSigs
+    MultiParamTypeClasses
+    RecordWildCards
+    ScopedTypeVariables
+    FlexibleInstances
+    NoImplicitPrelude
+
 library
-    default-language: Haskell2010
-    exposed-modules:
-      ZkFold.Cardano.OnChain
-      ZkFold.Cardano.Plonk
-      ZkFold.Cardano.Plonk.Internal
-      ZkFold.Cardano.Plonk.Inputs
-    build-depends:
-      aeson                                      ,
-      base                          >= 4.9 && < 5,
-      bytestring                                 ,
-      containers                                 ,
-      plutus-core                                ,
-      plutus-ledger-api                          ,
-      plutus-tx                                  ,
-      plutus-tx-plugin                           ,
-      QuickCheck                                 ,
-      zkfold-base                                ,
-      vector                                     ,
-    hs-source-dirs: src
+  import: lang
+  default-language: Haskell2010
+  exposed-modules:
+    ZkFold.Cardano.OnChain
+    ZkFold.Cardano.Plonk
+    ZkFold.Cardano.Plonk.Internal
+    ZkFold.Cardano.Plonk.Inputs
+  build-depends:
+    aeson                                      ,
+    base                          >= 4.9 && < 5,
+    bytestring                                 ,
+    containers                                 ,
+    plutus-core                        ^>=1.24 ,
+    plutus-ledger-api                  ^>=1.24 ,
+    plutus-tx                          ^>=1.24 ,
+    plutus-tx-plugin                   ^>=1.24 ,
+    QuickCheck                                 ,
+    zkfold-base                                ,
+    vector                                     ,
+  hs-source-dirs: src
 
 test-suite test
-    default-language: Haskell2010
-    type:             exitcode-stdio-1.0
-    ghc-options:      -rtsopts
-    main-is:          Main.hs
-    other-modules:
-      Tests.Verifier
-      Tests.Data
-    build-depends:
-      aeson                                      ,
-      base                          >= 4.9 && < 5,
-      bytestring                                 ,
-      containers                                 ,
-      hspec                                      ,
-      QuickCheck                                 ,
-      zkfold-base                                ,
-      zkfold-cardano                             ,
-    hs-source-dirs: test
+  import: lang
+  default-language: Haskell2010
+  type:             exitcode-stdio-1.0
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  other-modules:
+    Tests.Verifier
+    Tests.Data
+  build-depends:
+    aeson                                      ,
+    base                          >= 4.9 && < 5,
+    bytestring                                 ,
+    containers                                 ,
+    hspec                                      ,
+    QuickCheck                                 ,
+    zkfold-base                                ,
+    zkfold-cardano                             ,
+  hs-source-dirs: test
 
 benchmark bench-uplc
+  import: lang
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
@@ -59,10 +87,10 @@ benchmark bench-uplc
     containers                                 ,
     bytestring                                 ,
     flat                                       ,
-    plutus-core                                ,
-    plutus-ledger-api                          ,
-    plutus-tx                                  ,
-    plutus-tx-plugin                           ,
+    plutus-core                        ^>=1.24 ,
+    plutus-ledger-api                  ^>=1.24 ,
+    plutus-tx                          ^>=1.24 ,
+    plutus-tx-plugin                   ^>=1.24 ,
     zkfold-base                                ,
     zkfold-cardano                             ,
 

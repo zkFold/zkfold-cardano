@@ -1,8 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE TypeApplications    #-}
-
 module Tests.Verifier (specVerifier) where
 
 import           Data.Map                                    (fromList)
@@ -16,7 +11,7 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkProverSecret, PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                        (PlonkBBS, PlonkPlutus, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.Plonk                        (Plonk32, PlonkPlutus, mkInput, mkProof, mkSetup)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
@@ -33,9 +28,9 @@ testVerifier x ps targetId =
         (omega, k1, k2) = getParams 5
         inputs  = fromList [(1, targetId), (acOutput ac, 1)]
         plonk   = Plonk omega k1 k2 inputs ac x
-        s       = setup @PlonkBBS plonk
+        s       = setup @Plonk32 plonk
         w       = (PlonkWitnessInput inputs, ps)
-        (input, proof) = prove @PlonkBBS s w
+        (input, proof) = prove @Plonk32 s w
 
     in verify @PlonkPlutus (mkSetup s) (mkInput input) (mkProof proof)
 

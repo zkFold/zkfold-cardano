@@ -1,9 +1,4 @@
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE ViewPatterns          #-}
-{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module ZkFold.Cardano.Plonk.Internal where
 
@@ -191,7 +186,7 @@ instance FromTranscript BuiltinByteString F where
     newTranscript = consByteString 0
 
     {-# INLINABLE fromTranscript #-}
-    fromTranscript = fromInteger . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256
+    fromTranscript = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256
 
 instance FromTranscript BuiltinByteString Plonk.F where
     newTranscript = newTranscript @BuiltinByteString @F

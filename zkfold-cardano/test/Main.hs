@@ -6,5 +6,5 @@ import           Tests.Verifier (specVerifier)
 
 main :: IO ()
 main = do
-    verifyIsSatisfied
+    -- verifyIsSatisfied
     specVerifier

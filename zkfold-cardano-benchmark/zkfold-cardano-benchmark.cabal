@@ -4,7 +4,7 @@ name:               zkfold-cardano-benchmark
 version:            0.1.0.0
 synopsis:           zero-knowledge proof protocols benchmark
 category:           Testing, Cryptography, Math, Symbolic Computation
-author:             Ilya Baryshnikov
+author:             Vladimir Sinyakov, Ilya Baryshnikov
 maintainer:         info@zkfold.io
 license:            MIT
 build-type:         Simple

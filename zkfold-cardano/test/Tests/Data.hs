@@ -1,17 +1,12 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE TypeApplications    #-}
-
 module Tests.Data (verifyIsSatisfied) where
-
 
 import           Data.Aeson                               (FromJSON, ToJSON, decode)
 import           Data.ByteString                          (pack)
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Word                                ()
-import           Test.Hspec                                  (describe, hspec, it)
-import           Test.QuickCheck                             (Testable (property))
+import           Prelude
+import           Test.Hspec                               (describe, hspec, it)
+import           Test.QuickCheck                          (Testable (property))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
