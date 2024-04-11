@@ -40,7 +40,8 @@ This repository will follow [this](https://github.com/perturbing/plutus-plonk-po
 ## Analyze uplc
 You can analyze your script uplc.
 
-`uplc evaluate -t -i appliedPlonkScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o log`
+`uplc evaluate -t -i plonkVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
+`uplc evaluate -t -i symbolicVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 
 to log the CPU/MEM consumption
 ```
@@ -49,3 +50,21 @@ cat logs | traceToStacks --column 2 | flamegraph.pl > mem.svg
 ```
 for more info see https://hydra.family/head-protocol/benchmarks/profiling/
 and https://plutus.readthedocs.io/en/latest/howtos/profiling-scripts.html
+
+## Benchmark of plonk
+
+```bash
+Run plonk verifier
+
+    n     Script size             CPU usage               Memory usage
+  ----------------------------------------------------------------------
+    -    7448  (45.5%)        16192100   (0.2%)           70500   (0.5%) 
+```
+
+```bash
+Run symbolic plonk verifier
+
+    n     Script size             CPU usage               Memory usage
+  ----------------------------------------------------------------------
+    -    7926  (48.4%)        17503100   (0.2%)           76200   (0.5%) 
+```

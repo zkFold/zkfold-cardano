@@ -29,15 +29,6 @@ import           ZkFold.Symbolic.Types                       (Symbolic)
 lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> () -> Bool a
 lockedByTxId (TxId targetId) (TxId txId) _ = txId == fromConstant targetId
 
--- This reads the test vectors and applies them to the compiled plonk verifier script.
--- This applied verifier is written to disk in the flat format.
--- cabal install plutus-core
--- uplc evaluate -t -i appliedPlonkScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
--- to log the CPU/MEM consumption
--- for more info see https://hydra.family/head-protocol/benchmarks/profiling/
--- and https://plutus.readthedocs.io/en/latest/howtos/profiling-scripts.html
-
--- Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> Bool
 main :: IO ()
 main = do
   jsonRowContract <- BL.readFile "test-data/rowcontract.json"

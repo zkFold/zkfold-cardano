@@ -14,8 +14,8 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                        (Plonk32, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.Plonk.Inputs
+import           ZkFold.Cardano.Plonk                        (Plonk32, PlonkPlutus, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.Plonk.Inputs                 (Contract (..), RowContractJSON, toContract)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
@@ -27,10 +27,10 @@ import           ZkFoldBenchmark.Verifier.Scripts            (verifyPlonkScript,
 lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> () -> Bool a
 lockedByTxId (TxId targetId) (TxId txId) _ = txId == fromConstant targetId
 
-printCostsVerifySymbolicScript :: Handle -> SetupPlonkPlutus -> InputPlonkPlutus -> ProofPlonkPlutus -> IO ()
+printCostsVerifySymbolicScript :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifySymbolicScript h s i p = printSizeStatistics h NoSize (verifySymbolicScript s i p)
 
-printCostsVerifierPlonk :: Handle -> SetupPlonkPlutus -> InputPlonkPlutus -> ProofPlonkPlutus -> IO ()
+printCostsVerifierPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifierPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
 
 runVerifier :: Handle -> IO ()

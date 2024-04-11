@@ -128,8 +128,8 @@ instance ZkFold.AdditiveGroup BuiltinBLS12_381_G2_Element where
 
 -------------------------- Conversions ------------------------------------
 
-convertF :: Plonk.F -> F
-convertF = F . naturalToInteger . fromZp
+convertF :: Plonk.F -> Integer
+convertF = naturalToInteger . fromZp
 
 convertPlonkF :: F -> Plonk.F
 convertPlonkF = toZp . toF
@@ -138,9 +138,9 @@ convertZp :: Zp p -> Integer
 convertZp = naturalToInteger . fromZp
 
 -- See CIP-0381 for the conversion specification
-convertG1 :: Plonk.G1 -> G1
-convertG1 Inf = bls12_381_G1_uncompress bls12_381_G1_compressed_zero
-convertG1 (Point x y) = bls12_381_G1_uncompress bs
+convertG1 :: Plonk.G1 -> BuiltinByteString
+convertG1 Inf = bls12_381_G1_compressed_zero
+convertG1 (Point x y) = bs
     where
         bsX = integerToByteString BigEndian 48 $ convertZp x
         b   = indexByteString bsX 0
@@ -148,9 +148,9 @@ convertG1 (Point x y) = bls12_381_G1_uncompress bs
         bs  = consByteString b' $ sliceByteString 1 47 bsX
 
 -- See CIP-0381 for the conversion specification
-convertG2 :: Plonk.G2 -> G2
-convertG2 Inf = bls12_381_G2_uncompress bls12_381_G2_compressed_zero
-convertG2 (Point x y) = bls12_381_G2_uncompress bs
+convertG2 :: Plonk.G2 -> BuiltinByteString
+convertG2 Inf = bls12_381_G2_compressed_zero
+convertG2 (Point x y) = bs
     where
         f (Ext2 a0 a1) = integerToByteString BigEndian 48 (convertZp a1) <> integerToByteString BigEndian 48 (convertZp a0)
         bsX  = f x
@@ -180,7 +180,7 @@ instance ToTranscript BuiltinByteString G1 where
     toTranscript = bls12_381_G1_compress
 
 instance ToTranscript BuiltinByteString Plonk.G1 where
-    toTranscript = toTranscript . convertG1
+    toTranscript = toTranscript . bls12_381_G1_uncompress . convertG1
 
 {-# INLINABLE transcriptG1 #-}
 transcriptG1 :: Transcript -> G1 -> Transcript
