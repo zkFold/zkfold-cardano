@@ -4,7 +4,6 @@ module ZkFoldBenchmark.Verifier.RunVerifier (runVerifier) where
 import           Data.Aeson                                  (decode)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
-import           Data.Word                                   ()
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import           System.IO                                   (Handle)
 import           Text.Printf                                 (hPrintf)

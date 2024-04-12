@@ -15,7 +15,7 @@ import qualified PlutusTx.Prelude                         as Plutus
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.Inputs              (InputBytes (..), InputPlonkPlutus (..))
+import           ZkFold.Cardano.Plonk.Inputs              (InputBytes (..))
 import           ZkFold.Cardano.Plonk.Internal            (F (..))
 
 -- TODO: split the setup data into the fixed and varying parts
@@ -56,7 +56,7 @@ plonkVerifier computation input proof ctx = condition0 && (condition1 || conditi
         -- We can also burn already minted tokens.
 
         -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol
-        condition0 = t == toTranscript (F $ Plutus.head $ pubInput' input)
+        condition0 = t == toTranscript (Plutus.head $ pubInput input)
 
         -- Burning already minted tokens
         condition1 = n < 0

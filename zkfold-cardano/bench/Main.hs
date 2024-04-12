@@ -5,7 +5,6 @@ import           Data.Aeson                                  (decode)
 import           Data.ByteString                             as BS (writeFile)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
-import           Data.Word                                   ()
 import           Flat                                        (flat)
 import qualified PlutusTx                                    as P
 import qualified PlutusTx                                    as Tx

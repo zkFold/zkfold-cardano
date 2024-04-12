@@ -166,14 +166,10 @@ type Transcript = BuiltinByteString
 
 instance ToTranscript BuiltinByteString F where
     {-# INLINABLE toTranscript #-}
-    toTranscript (F a) = integerToByteString BigEndian 32 a
+    toTranscript f = integerToByteString BigEndian 32 $ toF f
 
 instance ToTranscript BuiltinByteString Plonk.F where
     toTranscript = toTranscript . F . convertZp
-
-{-# INLINABLE transcriptF #-}
-transcriptF :: Transcript -> F -> Transcript
-transcriptF ts a = ts <> toTranscript a
 
 instance ToTranscript BuiltinByteString G1 where
     {-# INLINABLE toTranscript #-}
@@ -181,10 +177,6 @@ instance ToTranscript BuiltinByteString G1 where
 
 instance ToTranscript BuiltinByteString Plonk.G1 where
     toTranscript = toTranscript . bls12_381_G1_uncompress . convertG1
-
-{-# INLINABLE transcriptG1 #-}
-transcriptG1 :: Transcript -> G1 -> Transcript
-transcriptG1 ts g = ts <> toTranscript g
 
 instance FromTranscript BuiltinByteString F where
     {-# INLINABLE newTranscript #-}
@@ -198,16 +190,20 @@ instance FromTranscript BuiltinByteString Plonk.F where
 
     fromTranscript = toZp . toF . fromTranscript @BuiltinByteString @F
 
-{-# INLINABLE transcriptFByte #-}
-transcriptFByte :: Transcript -> Integer -> Transcript
-transcriptFByte ts a = ts <> integerToByteString BigEndian 32 a
-
-{-# INLINABLE transcriptG1Byte #-}
-transcriptG1Byte :: Transcript -> BuiltinByteString -> Transcript
-transcriptG1Byte ts g = ts <> g
-
 {-# INLINABLE challenge #-}
 challenge :: Transcript -> (F, Transcript)
 challenge ts =
     let ts' = newTranscript @BuiltinByteString @F ts
     in (fromTranscript ts', ts')
+
+getXi :: BuiltinByteString -> BuiltinByteString -> BuiltinByteString ->
+         BuiltinByteString -> BuiltinByteString -> BuiltinByteString -> BuiltinByteString -> F
+getXi cmA' cmB' cmC' cmZ' cmT1' cmT2' cmT3' = xi
+  where
+    (beta, ts) = challenge $ cmA' <> cmB' <> cmC'
+
+    (gamma, t1) = challenge ts
+
+    (alpha, t2) = challenge $ t1 <> cmZ'
+
+    (xi, t3) = challenge $ t2 <> cmT1' <> cmT2' <> cmT3'

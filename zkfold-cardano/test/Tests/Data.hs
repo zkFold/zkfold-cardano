@@ -4,7 +4,6 @@ import           Data.Aeson                                  (decode)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import qualified Prelude                                     as Haskell
 import           Test.Hspec                                  (describe, hspec, it)
 import           Test.QuickCheck                             (Testable (..))
 
