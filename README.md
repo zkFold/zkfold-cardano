@@ -47,6 +47,8 @@ You can get uplc, traceToStacks from plutus-core:exe:.
 `uplc evaluate -t -i plonkVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 `uplc evaluate -t -i symbolicVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 
+You can get flamegraph.pl from [github](https://github.com/brendangregg/FlameGraph), or `nix shell nixpkgs#flamegraph`.
+
 to log the CPU/MEM consumption
 ```
 cat logs | traceToStacks | flamegraph.pl > cpu.svg
