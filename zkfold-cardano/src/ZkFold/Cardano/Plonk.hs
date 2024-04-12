@@ -117,16 +117,16 @@ instance NonInteractiveProof PlonkPlutus where
             (w1 : wxs) = pubInput
 
             t0 = consByteString 0 $ cmA' <> cmB' <> cmC'
-            beta =  F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t0
+            beta = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t0
 
             t1 = consByteString 0 t0
-            gamma =  F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t1
+            gamma = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t1
 
             t2 = consByteString 0 $ t1 <> cmZ'
-            alpha =  F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t2
+            alpha = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t2
 
             t3 = consByteString 0 $ t2 <> cmT1' <> cmT2' <> cmT3'
-            xi =  F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t3
+            xi = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t3
 
             t4 = consByteString 0 $ t3
                 <> integerToByteString BigEndian 32 a_xi'
@@ -135,7 +135,7 @@ instance NonInteractiveProof PlonkPlutus where
                 <> integerToByteString BigEndian 32 s1_xi'
                 <> integerToByteString BigEndian 32 s2_xi'
                 <> integerToByteString BigEndian 32 z_xi'
-            v =  F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t4
+            v = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t4
 
             u = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t4 <> proof1' <> proof2'
 

@@ -40,6 +40,9 @@ This repository will follow [this](https://github.com/perturbing/plutus-plonk-po
 ## Analyze uplc
 You can analyze your script uplc.
 
+You can get uplc, traceToStacks from plutus-core:exe:.
+`cabal install plutus-core`
+
 `uplc evaluate -t -i plonkVerifyScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 `uplc evaluate -t -i plonkVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
 `uplc evaluate -t -i symbolicVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs`
