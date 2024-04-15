@@ -1,11 +1,13 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
-module ZkFoldBenchmark.Verifier.RunVerifier (runVerifier) where
+module Main where
 
 import           Data.Aeson                                  (decode)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           System.IO                                   (Handle)
+import           Scripts                                     (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
+import           Statistics                                  (TestSize (..), printHeader, printSizeStatistics)
+import           System.IO                                   (Handle, stdout)
 import           Text.Printf                                 (hPrintf)
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
@@ -13,16 +15,14 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                        (Plonk32, PlonkPlutus, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.Plonk.Inputs                 (Contract (..), RowContractJSON, toContract)
+import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
+import           ZkFold.Cardano.Plonk.OffChain               (Plonk32, mkInput, mkProof, mkSetup, Contract (..), RowContractJSON, toContract)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
-import           ZkFoldBenchmark.Common                      (TestSize (..), printHeader, printSizeStatistics)
-import           ZkFoldBenchmark.Verifier.Scripts            (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
 
 lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
 lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
@@ -36,9 +36,9 @@ printCostsPlonkVerifier h s i p = printSizeStatistics h NoSize (plonkVerifierScr
 printCostsVerifyPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
 
-runVerifier :: Handle -> IO ()
-runVerifier h = do
-  jsonRowContract <- BL.readFile "test-data/rowcontract.json"
+main :: IO ()
+main = do
+  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   case maybeRowContract of
     Just rowContract ->
@@ -56,6 +56,7 @@ runVerifier h = do
         let setup = mkSetup setup'
             input = mkInput input'
             proof = mkProof setup proof'
+            h = stdout
         hPrintf h "\n\n"
         hPrintf h "Run plonk verify\n\n"
         printHeader h

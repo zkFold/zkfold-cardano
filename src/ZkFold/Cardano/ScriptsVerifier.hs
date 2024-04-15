@@ -1,11 +1,9 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-module ZkFold.Cardano.OnChain (symbolicVerifier, plonkVerifier) where
+module ZkFold.Cardano.ScriptsVerifier (symbolicVerifier, plonkVerifier) where
 
-import           GHC.ByteOrder                            (ByteOrder (..))
-import           GHC.Num                                  (Num (fromInteger))
 import           PlutusLedgerApi.V1.Value                 (Value (..))
-import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInInfo (..), TxInfo (..))
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..))
 import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
 import           PlutusTx                                 (toBuiltinData)
 import qualified PlutusTx.AssocMap                        as AssocMap
@@ -15,8 +13,7 @@ import qualified PlutusTx.Prelude                         as Plutus
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.Inputs              (InputBytes (..))
-import           ZkFold.Cardano.Plonk.Internal            (F (..))
+import           ZkFold.Cardano.Plonk.OnChain             (InputBytes (..))
 
 -- TODO: split the setup data into the fixed and varying parts
 -- | The Plutus script for verifying a ZkFold Symbolic smart contract.

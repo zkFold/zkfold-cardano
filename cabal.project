@@ -18,8 +18,7 @@ source-repository-package
   location: https://github.com/zkFold/zkfold-base.git
   tag: c0b8b4f65adda263f81a428647c492d06f3049fb
 
-packages: zkfold-cardano
-          zkfold-cardano-benchmark
+packages: .
 
 write-ghc-environment-files: never
 

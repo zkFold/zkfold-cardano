@@ -1,4 +1,4 @@
-module ZkFoldBenchmark.Common (TestSize (..), printHeader, printSizeStatistics) where
+module Statistics (TestSize (..), printHeader, printSizeStatistics) where
 
 import qualified Data.ByteString                                   as BS
 import           Data.SatInt                                       (fromSatInt)
@@ -15,16 +15,15 @@ import qualified UntypedPlutusCore.Evaluation.Machine.Cek          as Cek
 
 -- Protocol parameters (June 2023)
 
--- | This is the "maximum transaction size".  We're just comparing the size of
--- the script with this, so our results may be a little optimistic if the
--- transaction includes other stuff (I'm not sure exactly what "maximum
--- transaction size" means).
+-- | This is the "maximum transaction size".
 maxTxSize :: Integer
 maxTxSize = 16_384
 
+-- | This is the "cpu transaction steps".
 maxTxExSteps :: Integer
 maxTxExSteps = 10_000_000_000
 
+-- | This is the "memory transaction capacity".
 maxTxExMem :: Integer
 maxTxExMem = 14_000_000
 

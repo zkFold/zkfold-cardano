@@ -9,7 +9,7 @@ import           Flat                                        (flat)
 import qualified PlutusTx                                    as P
 import qualified PlutusTx                                    as Tx
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           Script                                      (compiledPlonkVerifier, compiledSymbolicVerifier, compiledPlonkVerify)
+import           Scripts                                     (compiledPlonkVerifier, compiledPlonkVerify, compiledSymbolicVerifier)
 import           UntypedPlutusCore                           (UnrestrictedProgram (..))
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
@@ -17,8 +17,7 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                        (Plonk32, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.Plonk.Inputs                 (Contract (..), RowContractJSON, toContract)
+import           ZkFold.Cardano.Plonk.OffChain               (Plonk32, mkInput, mkProof, mkSetup, Contract (..), RowContractJSON, toContract)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
@@ -31,7 +30,7 @@ lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
 
 main :: IO ()
 main = do
-  jsonRowContract <- BL.readFile "test-data/rowcontract.json"
+  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   case maybeRowContract of
     Just rowContract ->

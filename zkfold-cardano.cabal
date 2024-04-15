@@ -2,6 +2,7 @@ cabal-version:      3.0
 
 name:               zkfold-cardano
 version:            0.1.0.0
+category:           Testing, Cryptography, Math, Symbolic Computation
 author:             Vladimir Sinyakov, Ilya Baryshnikov
 maintainer:         info@zkfold.io
 license:            MIT
@@ -19,6 +20,7 @@ common lang
     DerivingVia
     ImportQualifiedPost
     LambdaCase
+    NumericUnderscores
     GeneralizedNewtypeDeriving
     StandaloneDeriving
     ViewPatterns
@@ -33,25 +35,31 @@ common lang
     ScopedTypeVariables
     FlexibleInstances
     NoImplicitPrelude
+  ghc-options:
+    -Wall
+    -Wnoncanonical-monad-instances
+    -Wincomplete-uni-patterns
+    -Wincomplete-record-updates
+    -Wredundant-constraints
+    -Widentities
+    -- -Wunused-packages
+    -Wmissing-deriving-strategies
 
 library
   import: lang
   default-language: Haskell2010
   exposed-modules:
-    ZkFold.Cardano.OnChain
+    ZkFold.Cardano.ScriptsVerifier
     ZkFold.Cardano.Plonk
-    ZkFold.Cardano.Plonk.Internal
-    ZkFold.Cardano.Plonk.Inputs
+    ZkFold.Cardano.Plonk.OnChain
+    ZkFold.Cardano.Plonk.OffChain
   build-depends:
     aeson                                      ,
     base                          >= 4.9 && < 5,
-    bytestring                                 ,
     containers                                 ,
-    plutus-core                         ^>=1.24,
     plutus-ledger-api                   ^>=1.24,
     plutus-tx                           ^>=1.24,
     plutus-tx-plugin                    ^>=1.24,
-    QuickCheck                                 ,
     zkfold-base                                ,
     vector                                     ,
   hs-source-dirs: src
@@ -81,13 +89,13 @@ benchmark bench-uplc
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
-  hs-source-dirs:   bench
-  other-modules:    Script
+  hs-source-dirs:   bench-uplc
+  other-modules:    Scripts
   build-depends:
     aeson                                      ,
     base                                       ,
-    containers                                 ,
     bytestring                                 ,
+    containers                                 ,
     flat                                       ,
     plutus-core                         ^>=1.24,
     plutus-ledger-api                   ^>=1.24,
@@ -106,3 +114,32 @@ benchmark bench-uplc
     -fno-specialise
     -fexpose-all-unfoldings
     -fplugin-opt PlutusTx.Plugin:defer-errors
+
+executable bench-cpu-mem
+  import:           lang
+  default-language: Haskell2010
+  main-is:          Main.hs
+  other-modules:
+    Statistics
+    Scripts
+  hs-source-dirs:   bench-cpu-mem
+  build-depends:
+    aeson                                      ,
+    base                            >=4.9 && <5,
+    bytestring                                 ,
+    containers                                 ,
+    flat                                       ,
+    plutus-core                         ^>=1.24,
+    plutus-tx                           ^>=1.24,
+    plutus-tx-plugin                    ^>=1.24,
+    zkfold-base                                ,
+    zkfold-cardano                             ,
+  ghc-options:
+    -fno-specialise
+    -fno-spec-constr
+    -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas
+    -fno-strictness
+    -fno-unbox-strict-fields 
+    -fno-unbox-small-strict-fields
+    -fno-full-laziness

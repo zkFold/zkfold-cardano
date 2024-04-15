@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module ZkFoldBenchmark.Verifier.Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkScript) where
+module Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkScript) where
 
 import           PlutusCore                               (DefaultFun, DefaultUni)
 import           PlutusTx                                 (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
@@ -8,7 +8,7 @@ import           PlutusTx.Prelude                         (($))
 import qualified UntypedPlutusCore                        as UPLC
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain                   (plonkVerifier, symbolicVerifier)
+import           ZkFold.Cardano.ScriptsVerifier                   (plonkVerifier, symbolicVerifier)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 
 symbolicVerifierScript :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
