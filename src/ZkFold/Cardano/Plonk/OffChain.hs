@@ -122,7 +122,6 @@ toContract :: RowContractJSON -> Contract
 toContract (RowContractJSON x' ps' targetId') =
   Contract (convertPlonkF x') (toPlonkPlonkProverSecret ps') (convertPlonkF targetId')
 
-
 ------------------------------- Base Conversions -------------------------------
 
 convertF :: Plonk.F -> Integer

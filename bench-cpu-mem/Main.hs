@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Main where
 
+import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
+import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
 import           Data.Aeson                                  (decode)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           Scripts                                     (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
-import           Statistics                                  (TestSize (..), printHeader, printSizeStatistics)
 import           System.IO                                   (Handle, stdout)
 import           Text.Printf                                 (hPrintf)
 
@@ -16,7 +16,7 @@ import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkW
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OffChain               (Plonk32, mkInput, mkProof, mkSetup, Contract (..), RowContractJSON, toContract)
+import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)

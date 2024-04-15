@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Main (main) where
 
+import           Bench.Scripts                               (compiledPlonkVerifier, compiledPlonkVerify, compiledSymbolicVerifier)
 import           Data.Aeson                                  (decode)
 import           Data.ByteString                             as BS (writeFile)
 import qualified Data.ByteString.Lazy                        as BL
@@ -9,7 +10,6 @@ import           Flat                                        (flat)
 import qualified PlutusTx                                    as P
 import qualified PlutusTx                                    as Tx
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           Scripts                                     (compiledPlonkVerifier, compiledPlonkVerify, compiledSymbolicVerifier)
 import           UntypedPlutusCore                           (UnrestrictedProgram (..))
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
@@ -17,7 +17,7 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OffChain               (Plonk32, mkInput, mkProof, mkSetup, Contract (..), RowContractJSON, toContract)
+import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
 import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
