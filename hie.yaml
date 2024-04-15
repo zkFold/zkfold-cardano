@@ -1,6 +1,22 @@
 cradle:
   cabal:
-    - path: "src"
+    - path: "./src"
       component: "lib:zkfold-cardano"
-    - path: "test"
-      component: "zkfold-cardano:test:zkfold-cardano-test"
+
+    - path: "./test"
+      component: "zkfold-cardano:test:test"
+
+    - path: "./bench-uplc/Main.hs"
+      component: "zkfold-cardano:bench:bench-uplc"
+
+    - path: "./bench-uplc/Bench/Scripts.hs"
+      component: "zkfold-cardano:bench:bench-uplc"
+
+    - path: "./bench-cpu-mem/Main.hs"
+      component: "zkfold-cardano:exe:bench-cpu-mem"
+
+    - path: "./bench-cpu-mem/Bench/Statistics.hs"
+      component: "zkfold-cardano:exe:bench-cpu-mem"
+
+    - path: "./bench-cpu-mem/Bench/Scripts.hs"
+      component: "zkfold-cardano:exe:bench-cpu-mem"
