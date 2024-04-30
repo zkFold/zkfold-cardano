@@ -9,7 +9,7 @@ license:            MIT
 build-type:         Simple
 
 common lang
-  default-language:   Haskell2010
+  default-language: Haskell2010
   default-extensions:
     DeriveFoldable
     DeriveFunctor
@@ -46,7 +46,7 @@ common lang
     -Wmissing-deriving-strategies
 
 library
-  import: lang
+  import:           lang
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.ScriptsVerifier
@@ -54,18 +54,18 @@ library
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OffChain
   build-depends:
-    aeson                                      ,
-    base                          >= 4.9 && < 5,
-    containers                                 ,
-    plutus-ledger-api                   ^>=1.24,
-    plutus-tx                           ^>=1.24,
-    plutus-tx-plugin                    ^>=1.24,
-    zkfold-base                                ,
-    vector                                     ,
-  hs-source-dirs: src
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    containers                     ,
+    plutus-ledger-api       ^>=1.24,
+    plutus-tx               ^>=1.24,
+    plutus-tx-plugin        ^>=1.24,
+    zkfold-base                    ,
+    vector                         ,
+  hs-source-dirs:   src
 
 test-suite test
-  import: lang
+  import:           lang
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
   ghc-options:      -rtsopts
@@ -74,36 +74,35 @@ test-suite test
     Tests.Verifier
     Tests.Data
   build-depends:
-    aeson                                      ,
-    base                          >= 4.9 && < 5,
-    bytestring                                 ,
-    containers                                 ,
-    hspec                                      ,
-    QuickCheck                                 ,
-    zkfold-base                                ,
-    zkfold-cardano                             ,
-  hs-source-dirs: test
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    containers                     ,
+    hspec                          ,
+    QuickCheck                     ,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
+  hs-source-dirs:   test
 
 benchmark bench-uplc
-  import: lang
+  import:           lang
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
+  ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   bench-uplc
   other-modules:    Bench.Scripts
   build-depends:
-    aeson                                      ,
-    base                                       ,
-    bytestring                                 ,
-    containers                                 ,
-    flat                                       ,
-    plutus-core                         ^>=1.24,
-    plutus-ledger-api                   ^>=1.24,
-    plutus-tx                           ^>=1.24,
-    plutus-tx-plugin                    ^>=1.24,
-    zkfold-base                                ,
-    zkfold-cardano                             ,
-
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    containers                     ,
+    flat                           ,
+    plutus-core             ^>=1.24,
+    plutus-ledger-api       ^>=1.24,
+    plutus-tx               ^>=1.24,
+    plutus-tx-plugin        ^>=1.24,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
   ghc-options:
     -Wall
     -fobject-code
@@ -114,26 +113,27 @@ benchmark bench-uplc
     -fno-specialise
     -fexpose-all-unfoldings
     -fplugin-opt PlutusTx.Plugin:defer-errors
+  hs-source-dirs:   bench-uplc
 
 executable bench-cpu-mem
   import:           lang
   default-language: Haskell2010
+  ghc-options:      -rtsopts
   main-is:          Main.hs
   other-modules:
     Bench.Statistics
     Bench.Scripts
-  hs-source-dirs:   bench-cpu-mem
   build-depends:
-    aeson                                      ,
-    base                            >=4.9 && <5,
-    bytestring                                 ,
-    containers                                 ,
-    flat                                       ,
-    plutus-core                         ^>=1.24,
-    plutus-tx                           ^>=1.24,
-    plutus-tx-plugin                    ^>=1.24,
-    zkfold-base                                ,
-    zkfold-cardano                             ,
+    aeson                          ,
+    base                >=4.9 && <5,
+    bytestring                     ,
+    containers                     ,
+    flat                           ,
+    plutus-core             ^>=1.24,
+    plutus-tx               ^>=1.24,
+    plutus-tx-plugin        ^>=1.24,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
   ghc-options:
     -fno-specialise
     -fno-spec-constr
@@ -143,3 +143,4 @@ executable bench-cpu-mem
     -fno-unbox-strict-fields 
     -fno-unbox-small-strict-fields
     -fno-full-laziness
+  hs-source-dirs:   bench-cpu-mem

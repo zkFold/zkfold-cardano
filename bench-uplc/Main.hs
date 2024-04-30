@@ -18,7 +18,7 @@ import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkW
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
+import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
