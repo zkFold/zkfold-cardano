@@ -34,7 +34,7 @@ symbolicVerifier contract input proof ctx = condition1 && condition2
         --
         -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
         -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
-        condition1 = serialiseData (toBuiltinData input) == h
+        condition1 = (integerToByteString BigEndian 32 . toF) (pubInput input) == h
 
         -- Verifying the validity of the ZkFold Symbolic smart contract on the current transaction.
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.

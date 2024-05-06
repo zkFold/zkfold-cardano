@@ -57,11 +57,11 @@ library
     aeson                          ,
     base              >= 4.9 && < 5,
     containers                     ,
-    plutus-ledger-api       ^>=1.24,
-    plutus-tx               ^>=1.24,
-    plutus-tx-plugin        ^>=1.24,
-    zkfold-base                    ,
+    plutus-ledger-api       ^>=1.26,
+    plutus-tx               ^>=1.26,
+    plutus-tx-plugin        ^>=1.26,
     vector                         ,
+    zkfold-base                    ,
   hs-source-dirs:   src
 
 test-suite test
@@ -71,14 +71,22 @@ test-suite test
   ghc-options:      -rtsopts
   main-is:          Main.hs
   other-modules:
-    Tests.Verifier
     Tests.Data
+    Tests.Verifier
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
     containers                     ,
+    plutus-ledger-api       ^>=1.26,
+    plutus-tx               ^>=1.26,
+    plutus-tx-plugin        ^>=1.26,
     hspec                          ,
+    tasty                          ,
+    tasty-expected-failure         ,
+    tasty-hunit                    ,
+    tasty-quickcheck               ,
+    text                           ,
     QuickCheck                     ,
     zkfold-base                    ,
     zkfold-cardano                 ,
@@ -94,13 +102,15 @@ benchmark bench-uplc
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
+    base16-bytestring              ,
     bytestring                     ,
+    cardano-binary                 ,
     containers                     ,
     flat                           ,
-    plutus-core             ^>=1.24,
-    plutus-ledger-api       ^>=1.24,
-    plutus-tx               ^>=1.24,
-    plutus-tx-plugin        ^>=1.24,
+    plutus-core             ^>=1.26,
+    plutus-ledger-api       ^>=1.26,
+    plutus-tx               ^>=1.26,
+    plutus-tx-plugin        ^>=1.26,
     zkfold-base                    ,
     zkfold-cardano                 ,
   ghc-options:
@@ -129,9 +139,10 @@ executable bench-cpu-mem
     bytestring                     ,
     containers                     ,
     flat                           ,
-    plutus-core             ^>=1.24,
-    plutus-tx               ^>=1.24,
-    plutus-tx-plugin        ^>=1.24,
+    plutus-core             ^>=1.26,
+    plutus-ledger-api       ^>=1.26,
+    plutus-tx               ^>=1.26,
+    plutus-tx-plugin        ^>=1.26,
     zkfold-base                    ,
     zkfold-cardano                 ,
   ghc-options:

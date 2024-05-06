@@ -1,12 +1,19 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import           Bench.Scripts                               (compiledPlonkVerifier, compiledPlonkVerify, compiledSymbolicVerifier)
+import           Cardano.Binary                              (serialize')
 import           Data.Aeson                                  (decode)
-import           Data.ByteString                             as BS (writeFile)
+import           Data.ByteString                             as BS
+import qualified Data.ByteString.Base16                      as B16
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
 import           Flat                                        (flat)
+import           PlutusLedgerApi.Common                      (serialiseCompiledCode)
+-- import           PlutusTx                                    (CompiledCode)
 import qualified PlutusTx                                    as P
 import qualified PlutusTx                                    as Tx
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
@@ -28,6 +35,22 @@ import           ZkFold.Symbolic.Types                       (Symbolic)
 lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
 lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
 
+-- savePlutus :: FilePath -> CompiledCode a -> IO ()
+savePlutus setup input proof filePath code =
+    let validator = serialiseCompiledCode $ code
+                          `Tx.unsafeApplyCode` Tx.liftCodeDef setup
+                          `Tx.unsafeApplyCode` Tx.liftCodeDef input
+                          `Tx.unsafeApplyCode` Tx.liftCodeDef proof
+    in BS.writeFile ("./asserts/" <> filePath <> ".plutus")
+         $ "{\n  \"type\": \"PlutusScriptV3\",\n  \"description\": \"\",\n  \"cborHex\": \""
+         <> B16.encode (serialize' validator) <> "\"\n}"
+
+saveFlat setup input proof filePath code =
+   BS.writeFile ("./asserts/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
+           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
+           `Tx.unsafeApplyCode` Tx.liftCodeDef input
+           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
+
 main :: IO ()
 main = do
   jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
@@ -48,16 +71,10 @@ main = do
         let setup = mkSetup setup'
             input = mkInput input'
             proof = mkProof setup proof'
-        BS.writeFile "symbolicVerifierScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledSymbolicVerifier
-           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
-           `Tx.unsafeApplyCode` Tx.liftCodeDef input
-           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-        BS.writeFile "plonkVerifierScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerifier
-           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
-           `Tx.unsafeApplyCode` Tx.liftCodeDef input
-           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-        BS.writeFile "plonkVerifyScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerify
-           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
-           `Tx.unsafeApplyCode` Tx.liftCodeDef input
-           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-    _ -> print "Could not deserialize"
+        savePlutus setup input proof "symbolicVerifier" compiledSymbolicVerifier
+        savePlutus setup input proof "plonkVerifier" compiledPlonkVerifier
+        savePlutus setup input proof "plonkVerify" compiledPlonkVerify
+        saveFlat setup input proof "plonkSymbolicVerifier" compiledSymbolicVerifier
+        saveFlat setup input proof "plonkVerifierScript" compiledPlonkVerifier
+        saveFlat setup input proof "plonkVerifyScript" compiledPlonkVerify
+    _ -> print ("Could not deserialize" :: String)

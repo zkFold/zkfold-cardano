@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module ZkFold.Cardano.Plonk.OnChain where
 
@@ -166,14 +167,14 @@ data SetupBytes = SetupBytes {
   , cmS1' :: BuiltinByteString
   , cmS2' :: BuiltinByteString
   , cmS3' :: BuiltinByteString
-} deriving stock (Show)
+} deriving stock (Show, Generic)
 
 makeLift ''SetupBytes
 makeIsDataIndexed ''SetupBytes [('SetupBytes,0)]
 
 newtype InputBytes = InputBytes {
   pubInput :: F
-} deriving stock (Show)
+} deriving stock (Show, Generic)
 
 makeLift ''InputBytes
 makeIsDataIndexed ''InputBytes [('InputBytes,0)]
@@ -195,7 +196,7 @@ data ProofBytes = ProofBytes {
   , s2_xi'  :: Integer
   , z_xi'   :: Integer
   , lagsInv :: F
-} deriving stock (Show)
+} deriving stock (Show, Generic)
 
 makeLift ''ProofBytes
 makeIsDataIndexed ''ProofBytes [('ProofBytes,0)]
