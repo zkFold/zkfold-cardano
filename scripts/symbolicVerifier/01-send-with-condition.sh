@@ -16,8 +16,8 @@ echo ""
 #-------------------------------- :init-script: --------------------------------
 
 cardano-cli conway address build \
-    --payment-script-file "$assets/plonkVerify.plutus" \
-    --out-file "$keypath/plonkVerify.addr" \
+    --payment-script-file "$assets/symbolicVerifier.plutus" \
+    --out-file "$keypath/symbolicVerifier.addr" \
     --testnet-magic 4
 
 #----------------------------------- :sender: ----------------------------------
@@ -25,21 +25,21 @@ cardano-cli conway address build \
 cardano-cli conway transaction build \
     --testnet-magic 4 \
     --tx-in $in \
-    --tx-out "$(cat $keypath/plonkVerify.addr) + 50746356 lovelace" \
+    --tx-out "$(cat $keypath/symbolicVerifier.addr) + 50745828 lovelace" \
     --change-address "$(cat $keypath/alice.addr)" \
-    --tx-out-reference-script-file "$assets/plonkVerify.plutus" \
+    --tx-out-reference-script-file "$assets/symbolicVerifier.plutus" \
     --tx-out-datum-hash-file "$assets/datum.json" \
-    --out-file "$keypath/plonkVerify.txbody"
+    --out-file "$keypath/symbolicVerifier.txbody"
 
 cardano-cli conway transaction sign \
     --testnet-magic 4 \
-    --tx-body-file "$keypath/plonkVerify.txbody" \
+    --tx-body-file "$keypath/symbolicVerifier.txbody" \
     --signing-key-file "$keypath/alice.skey" \
-    --out-file "$keypath/plonkVerify.tx"
+    --out-file "$keypath/symbolicVerifier.tx"
 
 cardano-cli conway transaction submit \
     --testnet-magic 4 \
-    --tx-file "$keypath/plonkVerify.tx"
+    --tx-file "$keypath/symbolicVerifier.tx"
 
 #-------------------------------------------------------------------------------
 
@@ -49,8 +49,8 @@ echo ""
 sleep 60
 
 echo ""
-echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerify.tx")"
+echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/symbolicVerifier.tx")"
 echo ""
 echo "script address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/plonkVerify.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/symbolicVerifier.addr) --testnet-magic 4)"
 echo ""

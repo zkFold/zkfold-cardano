@@ -12,8 +12,7 @@ import           PlutusTx.TH                              (compile)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (ParamsVerifier, RedeemerVerifier (..), DatumVerifier)
-import           ZkFold.Cardano.ScriptsVerifier           (plonkVerifier, symbolicVerifier)
+import           ZkFold.Cardano.ScriptsVerifier
 
 compiledSymbolicVerifier :: ParamsVerifier -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
 compiledSymbolicVerifier params' = $$(compile [|| untypedSymbolicVerifier ||]) `unsafeApplyCode` liftCodeDef params'

@@ -13,8 +13,7 @@ import qualified UntypedPlutusCore                        as UPLC
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (DatumVerifier, ParamsVerifier, RedeemerVerifier (..))
-import           ZkFold.Cardano.ScriptsVerifier           (plonkVerifier, symbolicVerifier)
+import           ZkFold.Cardano.ScriptsVerifier
 
 symbolicVerifierScript :: ParamsVerifier -> DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
 symbolicVerifierScript params datum redeemer ctx =

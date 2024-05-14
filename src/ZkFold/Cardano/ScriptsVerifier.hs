@@ -1,24 +1,44 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+{-# LANGUAGE TemplateHaskell #-}
 
-module ZkFold.Cardano.ScriptsVerifier (symbolicVerifier, plonkVerifier) where
+module ZkFold.Cardano.ScriptsVerifier where
 
+import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..))
 import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
-import           PlutusTx                                 (toBuiltinData)
+import           PlutusTx                                 (makeIsDataIndexed, makeLift, toBuiltinData)
 import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.Builtins                        (blake2b_256, serialiseData)
 import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), ($), (&&), (.), (||))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (DatumVerifier (..), ParamsVerifier (..), RedeemerVerifier (..))
+import           ZkFold.Cardano.Plonk.OnChain             (InputBytes(..), ProofBytes, SetupBytes)
+
+data ParamsVerifier = ParamsVerifier
+  deriving stock (Generic)
+
+makeLift ''ParamsVerifier
+makeIsDataIndexed ''ParamsVerifier [('ParamsVerifier, 0)]
+
+data DatumVerifier = DatumVerifier
+  deriving stock (Generic)
+
+makeLift ''DatumVerifier
+makeIsDataIndexed ''DatumVerifier [('DatumVerifier, 0)]
+
+data RedeemerVerifier = RedeemerVerifier SetupBytes InputBytes ProofBytes
+  deriving stock (Generic)
+
+makeLift ''RedeemerVerifier
+makeIsDataIndexed ''RedeemerVerifier [('RedeemerVerifier, 0)]
 
 -- TODO: split the setup data into the fixed and varying parts
 -- | The Plutus script for verifying a ZkFold Symbolic smart contract.
 {-# INLINABLE symbolicVerifier #-}
 symbolicVerifier :: ParamsVerifier -> DatumVerifier -> RedeemerVerifier -> ScriptContext -> Bool
-symbolicVerifier (ParamsVerifier hash) _ (RedeemerVerifier contract input proof) ctx =
+symbolicVerifier _ _ (RedeemerVerifier contract input proof) ctx =
     condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
@@ -26,15 +46,12 @@ symbolicVerifier (ParamsVerifier hash) _ (RedeemerVerifier contract input proof)
         ins   = txInfoInputs info
         outs  = txInfoOutputs info
         refs  = txInfoReferenceInputs info
-        range = txInfoValidRange info
-
-        h     = blake2b_256 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
 
         -- Verifying that the public input in the ZKP protocol corresponds to the hash of the transaction data.
         --
         -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
         -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
-        condition1 = hash == h
+        condition1 = serialiseData (toBuiltinData input) == (blake2b_256 . serialiseData . toBuiltinData $ (ins, refs, outs))
 
         -- Verifying the validity of the ZkFold Symbolic smart contract on the current transaction.
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
@@ -43,7 +60,7 @@ symbolicVerifier (ParamsVerifier hash) _ (RedeemerVerifier contract input proof)
 -- | The Plutus script (minting policy) for verifying a Plonk proof.
 {-# INLINABLE plonkVerifier #-}
 plonkVerifier :: ParamsVerifier -> DatumVerifier -> RedeemerVerifier -> ScriptContext -> Bool
-plonkVerifier (ParamsVerifier hash) _ (RedeemerVerifier computation input proof) ctx =
+plonkVerifier _ _ (RedeemerVerifier computation input proof) ctx =
     condition0 && (condition1 || condition2)
     where
         info               = scriptContextTxInfo ctx
@@ -55,11 +72,11 @@ plonkVerifier (ParamsVerifier hash) _ (RedeemerVerifier computation input proof)
         -- The tokens serve as proof that the network has verified the computation.
         -- We can also burn already minted tokens.
 
-        -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol
-        condition0 = hash == t
+        -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol.
+        condition0 = t == serialiseData (toBuiltinData input)
 
-        -- Burning already minted tokens
+        -- Burning already minted tokens.
         condition1 = n < 0
 
-        -- Verifying the Plonk proof
+        -- Verifying the Plonk proof.
         condition2 = verify @PlonkPlutus computation input proof

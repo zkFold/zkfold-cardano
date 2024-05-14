@@ -49,8 +49,9 @@ library
   import:           lang
   default-language: Haskell2010
   exposed-modules:
-    ZkFold.Cardano.ScriptsVerifier
     ZkFold.Cardano.Plonk
+    ZkFold.Cardano.ScriptsVerifier
+    ZkFold.Cardano.ScriptsWithParams
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OffChain
   build-depends:

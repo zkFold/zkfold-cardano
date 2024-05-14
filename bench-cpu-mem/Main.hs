@@ -8,8 +8,6 @@ import           Data.Aeson                                  (decode)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
 import           PlutusLedgerApi.V3                          (Interval, POSIXTime, ScriptContext (..), TxInInfo, TxInfo (..), TxOut, always)
-import           PlutusTx                                    (toBuiltinData)
-import           PlutusTx.Builtins                           (blake2b_256, serialiseData)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import           System.IO                                   (Handle, stdout)
 import           Text.Printf                                 (hPrintf)
@@ -21,7 +19,7 @@ import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Cardano.Plonk.OnChain                (DatumVerifier (..), ParamsVerifier (..), RedeemerVerifier (..))
+import           ZkFold.Cardano.ScriptsVerifier              (DatumVerifier (..), ParamsVerifier (..), RedeemerVerifier (..))
 import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
@@ -43,20 +41,20 @@ context = ScriptContext
     }
   }
 
+{-
 {-# INLINABLE params #-}
 params :: ParamsVerifier
-params = ParamsVerifier . blake2b_256 . serialiseData . toBuiltinData $
-  ( []     :: [TxInInfo]
-  , []     :: [TxInInfo]
-  , []     :: [TxOut]
-  , always :: Interval POSIXTime
-  )
+params = ParamsVerifier hash endTime
+  where hash = blake2b_256 . serialiseData . toBuiltinData $
+          ( [] :: [PlutusV3.TxInInfo], [] :: [PlutusV3.TxInInfo], [] :: [PlutusV3.TxOut])
+        endTime = fromMilliSeconds $ DiffMilliSeconds 2031068167000 -- Sun, 12 May 2034 17:36:07 GMT
+-}
 
 printCostsSymbolicVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsSymbolicVerifier h s i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript params DatumVerifier (RedeemerVerifier s i p) ctx)
+printCostsSymbolicVerifier h s i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript ParamsVerifier DatumVerifier (RedeemerVerifier s i p) ctx)
 
 printCostsPlonkVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript params DatumVerifier (RedeemerVerifier s i p) ctx)
+printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript ParamsVerifier DatumVerifier (RedeemerVerifier s i p) ctx)
 
 printCostsVerifyPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript (RedeemerVerifier s i p))

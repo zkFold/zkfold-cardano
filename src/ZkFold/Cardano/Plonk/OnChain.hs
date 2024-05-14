@@ -200,21 +200,3 @@ data ProofBytes = ProofBytes {
 
 makeLift ''ProofBytes
 makeIsDataIndexed ''ProofBytes [('ProofBytes,0)]
-
-newtype ParamsVerifier = ParamsVerifier BuiltinByteString
-  deriving stock (Show, Generic)
-
-makeLift ''ParamsVerifier
-makeIsDataIndexed ''ParamsVerifier [('ParamsVerifier, 0)]
-
-data DatumVerifier = DatumVerifier
-  deriving stock (Show, Generic)
-
-makeLift ''DatumVerifier
-makeIsDataIndexed ''DatumVerifier [('DatumVerifier, 0)]
-
-data RedeemerVerifier = RedeemerVerifier SetupBytes InputBytes ProofBytes
-  deriving stock (Show, Generic)
-
-makeLift ''RedeemerVerifier
-makeIsDataIndexed ''RedeemerVerifier [('RedeemerVerifier, 0)]
