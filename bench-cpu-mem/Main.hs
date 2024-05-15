@@ -51,10 +51,10 @@ params = ParamsVerifier hash endTime
 -}
 
 printCostsSymbolicVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsSymbolicVerifier h s i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript ParamsVerifier DatumVerifier (RedeemerVerifier s i p) ctx)
+printCostsSymbolicVerifier h s i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript DatumVerifier (RedeemerVerifier s i p) ctx)
 
 printCostsPlonkVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript ParamsVerifier DatumVerifier (RedeemerVerifier s i p) ctx)
+printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript DatumVerifier (RedeemerVerifier s i p) ctx)
 
 printCostsVerifyPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript (RedeemerVerifier s i p))

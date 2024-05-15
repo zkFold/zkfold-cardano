@@ -6,7 +6,7 @@
 module Bench.Scripts (compiledSymbolicVerifier, compiledPlonkVerifier, compiledPlonkVerify) where
 
 import           PlutusLedgerApi.V3                       (ScriptContext, BuiltinData)
-import           PlutusTx                                 (CompiledCode, unsafeApplyCode, liftCodeDef, UnsafeFromData (..))
+import           PlutusTx                                 (CompiledCode, UnsafeFromData (..))
 import           PlutusTx.Prelude                         (Bool, check, ($))
 import           PlutusTx.TH                              (compile)
 
@@ -14,27 +14,25 @@ import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.ScriptsVerifier
 
-compiledSymbolicVerifier :: ParamsVerifier -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
-compiledSymbolicVerifier params' = $$(compile [|| untypedSymbolicVerifier ||]) `unsafeApplyCode` liftCodeDef params'
+compiledSymbolicVerifier :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
+compiledSymbolicVerifier = $$(compile [|| untypedSymbolicVerifier ||])
   where
-    untypedSymbolicVerifier :: ParamsVerifier -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-    untypedSymbolicVerifier params datum redeemer ctx =
+    untypedSymbolicVerifier :: BuiltinData -> BuiltinData -> BuiltinData -> ()
+    untypedSymbolicVerifier datum redeemer ctx =
       check
         ( symbolicVerifier
-            params
             (unsafeFromBuiltinData datum)
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)
         )
 
-compiledPlonkVerifier :: ParamsVerifier -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
-compiledPlonkVerifier params' = $$(compile [|| untypedPlonkVerifier ||]) `unsafeApplyCode` liftCodeDef params'
+compiledPlonkVerifier :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
+compiledPlonkVerifier = $$(compile [|| untypedPlonkVerifier ||])
   where
-    untypedPlonkVerifier :: ParamsVerifier -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-    untypedPlonkVerifier params datum redeemer ctx =
+    untypedPlonkVerifier :: BuiltinData -> BuiltinData -> BuiltinData -> ()
+    untypedPlonkVerifier datum redeemer ctx =
       check
         ( plonkVerifier
-            params
             (unsafeFromBuiltinData datum)
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)

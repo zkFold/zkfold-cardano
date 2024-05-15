@@ -15,18 +15,16 @@ import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.ScriptsVerifier
 
-symbolicVerifierScript :: ParamsVerifier -> DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-symbolicVerifierScript params datum redeemer ctx =
+symbolicVerifierScript :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+symbolicVerifierScript datum redeemer ctx =
     getPlcNoAnn $ $$(compile [|| symbolicVerifier ||])
-       `unsafeApplyCode` liftCodeDef params
        `unsafeApplyCode` liftCodeDef datum
        `unsafeApplyCode` liftCodeDef redeemer
        `unsafeApplyCode` liftCodeDef ctx
 
-plonkVerifierScript :: ParamsVerifier -> DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierScript params datum redeemer ctx =
+plonkVerifierScript :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkVerifierScript datum redeemer ctx =
     getPlcNoAnn $ $$(compile [|| plonkVerifier ||])
-       `unsafeApplyCode` liftCodeDef params
        `unsafeApplyCode` liftCodeDef datum
        `unsafeApplyCode` liftCodeDef redeemer
        `unsafeApplyCode` liftCodeDef ctx
