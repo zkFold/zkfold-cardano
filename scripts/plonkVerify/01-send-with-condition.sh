@@ -25,7 +25,7 @@ cardano-cli conway address build \
 cardano-cli conway transaction build \
     --testnet-magic 4 \
     --tx-in $in \
-    --tx-out "$(cat $keypath/plonkVerify.addr) + 50746356 lovelace" \
+    --tx-out "$(cat $keypath/plonkVerify.addr) + 50745828 lovelace" \
     --change-address "$(cat $keypath/alice.addr)" \
     --tx-out-reference-script-file "$assets/plonkVerify.plutus" \
     --tx-out-datum-hash-file "$assets/datum.json" \
