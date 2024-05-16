@@ -72,7 +72,7 @@ plonkVerifier (RedeemerVerifier computation input proof) ctx =
         -- We can also burn already minted tokens.
 
         -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol.
-        condition0 = t == serialiseData (toBuiltinData input)
+        condition0 = (F . byteStringToInteger BigEndian . takeByteString 31 $ t) == pubInput input
 
         -- Burning already minted tokens.
         condition1 = n < 0
