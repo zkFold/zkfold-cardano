@@ -1,12 +1,20 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import           Bench.Scripts                               (compiledPlonkVerifier, compiledPlonkVerify, compiledSymbolicVerifier)
+import           Cardano.Api                                 (File (..), IsPlutusScriptLanguage, PlutusScript, PlutusScriptV3, writeFileTextEnvelope)
+import           Cardano.Api.Shelley                         (PlutusScript (..))
+import           Control.Monad                               (void)
 import           Data.Aeson                                  (decode)
 import           Data.ByteString                             as BS (writeFile)
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Map                                    (fromList)
 import           Flat                                        (flat)
+import qualified PlutusLedgerApi.V3                          as PlutusV3
+import           PlutusTx                                    (CompiledCode, ToData (..))
 import qualified PlutusTx                                    as P
 import qualified PlutusTx                                    as Tx
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
@@ -18,18 +26,35 @@ import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkW
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Symbolic.Cardano.Types.Tx            (TxId (..))
+import           ZkFold.Cardano.ScriptsVerifier              (DatumVerifier (..), RedeemerVerifier (..))
+import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
 
+writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
+writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
+
+savePlutus :: FilePath -> CompiledCode a -> IO ()
+savePlutus filePath = let filePath' = ("./assets/" <> filePath <> ".plutus") in
+  writePlutusScriptToFile @PlutusScriptV3 filePath' . PlutusScriptSerialised . PlutusV3.serialiseCompiledCode
+
+saveFlat redeemer filePath code =
+   BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
+           `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData DatumVerifier) -- we need any unit.json type
+           `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
+           -- `Tx.unsafeApplyCode` Tx.liftCodeDef context
+
 lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
 lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
 
 main :: IO ()
 main = do
+  savePlutus "symbolicVerifier" compiledSymbolicVerifier
+  savePlutus "plonkVerifier"    compiledPlonkVerifier
+  savePlutus "plonkVerify"      compiledPlonkVerify
   jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   case maybeRowContract of
@@ -48,16 +73,8 @@ main = do
         let setup = mkSetup setup'
             input = mkInput input'
             proof = mkProof setup proof'
-        BS.writeFile "symbolicVerifierScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledSymbolicVerifier
-           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
-           `Tx.unsafeApplyCode` Tx.liftCodeDef input
-           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-        BS.writeFile "plonkVerifierScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerifier
-           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
-           `Tx.unsafeApplyCode` Tx.liftCodeDef input
-           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-        BS.writeFile "plonkVerifyScript.flat" . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ compiledPlonkVerify
-           `Tx.unsafeApplyCode` Tx.liftCodeDef setup
-           `Tx.unsafeApplyCode` Tx.liftCodeDef input
-           `Tx.unsafeApplyCode` Tx.liftCodeDef proof
-    _ -> print "Could not deserialize"
+            redeemer = RedeemerVerifier setup input proof
+        saveFlat redeemer "plonkSymbolicVerifier" compiledSymbolicVerifier
+        saveFlat redeemer "plonkVerifierScript"   compiledPlonkVerifier
+        saveFlat redeemer "plonkVerifyScript"     compiledPlonkVerify
+    _ -> print ("Could not deserialize" :: String)

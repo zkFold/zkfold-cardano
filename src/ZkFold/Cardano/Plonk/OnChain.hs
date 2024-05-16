@@ -1,19 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE DeriveAnyClass  #-}
 
 module ZkFold.Cardano.Plonk.OnChain where
 
-import           Data.Aeson                               (FromJSON, ToJSON)
-import           GHC.ByteOrder                            (ByteOrder (..))
-import           GHC.Generics                             (Generic)
-import           PlutusTx                                 (makeIsDataIndexed, makeLift)
+import           Data.Aeson                      (FromJSON, ToJSON)
+import           GHC.Generics                    (Generic)
+import           GHC.Natural                     (Natural, naturalToInteger)
+import           PlutusTx                        (makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         hiding (fromInteger)
-import           Prelude                                  (Num (fromInteger), Show)
-import qualified Prelude                                  as Haskell
+import           PlutusTx.Prelude
+import           Prelude                         (Show, undefined)
 
-import qualified ZkFold.Base.Algebra.Basic.Class          as ZkFold
-import           ZkFold.Base.Protocol.NonInteractiveProof (FromTranscript (..), ToTranscript (..))
+import qualified ZkFold.Base.Algebra.Basic.Class as ZkFold
 
 ---------------------------------- F --------------------------------------
 
@@ -34,6 +33,22 @@ instance ZkFold.AdditiveSemigroup F where
     {-# INLINABLE (+) #-}
     (F a) + (F b) = F $ (a + b) `modulo` bls12_381_field_prime
 
+instance ZkFold.FromConstant Natural F where
+    {-# INLINABLE fromConstant #-}
+    fromConstant = ZkFold.fromConstant . naturalToInteger
+
+instance ZkFold.Scale Natural F where
+    {-# INLINABLE scale #-}
+    scale = (ZkFold.*) . ZkFold.fromConstant
+
+instance ZkFold.FromConstant Integer F where
+    {-# INLINABLE fromConstant #-}
+    fromConstant = F . (`modulo` bls12_381_field_prime)
+
+instance ZkFold.Scale Integer F where
+    {-# INLINABLE scale #-}
+    scale = (ZkFold.*) . F
+
 instance ZkFold.AdditiveMonoid F where
     {-# INLINABLE zero #-}
     zero = F 0
@@ -45,6 +60,10 @@ instance ZkFold.AdditiveGroup F where
 instance ZkFold.MultiplicativeSemigroup F where
     {-# INLINABLE (*) #-}
     (F a) * (F b) = F $ (a * b) `modulo` bls12_381_field_prime
+
+instance ZkFold.Exponent F Natural where
+    {-# INLINABLE (^) #-}
+    (^) f n = powMod f (naturalToInteger n)
 
 instance ZkFold.MultiplicativeMonoid F where
     {-# INLINABLE one #-}
@@ -58,6 +77,10 @@ powMod b e
     | even e    = powMod (b ZkFold.* b) (e `divide` 2)
     | otherwise = b ZkFold.* powMod (b ZkFold.* b) ((e - 1) `divide` 2)
 
+instance ZkFold.Exponent F Integer where
+    {-# INLINABLE (^) #-}
+    (^) = powMod
+
 instance ZkFold.MultiplicativeGroup F where
     {-# INLINABLE invert #-}
     invert a = powMod a (bls12_381_field_prime - 2)
@@ -65,44 +88,35 @@ instance ZkFold.MultiplicativeGroup F where
     {-# INLINABLE (/) #-}
     a / b = a ZkFold.* ZkFold.invert b
 
-instance Num F where
-    {-# INLINABLE (+) #-}
-    (+) = (ZkFold.+)
-
-    {-# INLINABLE (-) #-}
-    (-) = (ZkFold.-)
-
-    {-# INLINABLE (*) #-}
-    (*) = (ZkFold.*)
-
-    {-# INLINABLE negate #-}
-    negate = ZkFold.negate
-
-    {-# INLINABLE abs #-}
-    abs = id
-
-    {-# INLINABLE signum #-}
-    signum = const ZkFold.one
-
-    {-# INLINABLE fromInteger #-}
-    fromInteger = F . (`modulo` bls12_381_field_prime)
-
 ---------------------------------- G1 -------------------------------------
 
 type G1 = BuiltinBLS12_381_G1_Element
 
-instance ZkFold.AdditiveSemigroup  BuiltinBLS12_381_G1_Element where
+instance ZkFold.AdditiveSemigroup BuiltinBLS12_381_G1_Element where
     {-# INLINABLE (+) #-}
     (+) = bls12_381_G1_add
 
+instance ZkFold.FromConstant Natural BuiltinBLS12_381_G1_Element where
+    fromConstant = undefined
+
+instance ZkFold.Scale Natural BuiltinBLS12_381_G1_Element where
+    scale n = ZkFold.scale (naturalToInteger n)
+
 instance ZkFold.AdditiveMonoid BuiltinBLS12_381_G1_Element where
-    {-# INLINABLE zero #-}
     zero = bls12_381_G1_uncompress bls12_381_G1_compressed_zero
+
+instance ZkFold.FromConstant Integer BuiltinBLS12_381_G1_Element where
+    fromConstant = undefined
+
+instance ZkFold.Scale Integer BuiltinBLS12_381_G1_Element where
+    {-# INLINABLE scale #-}
+    scale = bls12_381_G1_scalarMul
 
 instance ZkFold.AdditiveGroup BuiltinBLS12_381_G1_Element where
     {-# INLINABLE (-) #-}
     g - h = bls12_381_G1_add g (bls12_381_G1_neg h)
 
+{-# INLINABLE mul #-}
 mul :: F -> BuiltinBLS12_381_G1_Element -> BuiltinBLS12_381_G1_Element
 mul (F a) = bls12_381_G1_scalarMul a
 
@@ -110,42 +124,30 @@ mul (F a) = bls12_381_G1_scalarMul a
 
 type G2 = BuiltinBLS12_381_G2_Element
 
-instance ZkFold.AdditiveSemigroup  BuiltinBLS12_381_G2_Element where
+instance ZkFold.AdditiveSemigroup BuiltinBLS12_381_G2_Element where
     {-# INLINABLE (+) #-}
     (+) = bls12_381_G2_add
+
+instance ZkFold.FromConstant Natural BuiltinBLS12_381_G2_Element where
+    fromConstant = undefined
+
+instance ZkFold.Scale Natural BuiltinBLS12_381_G2_Element where
+    scale n = ZkFold.scale (naturalToInteger n)
 
 instance ZkFold.AdditiveMonoid BuiltinBLS12_381_G2_Element where
     {-# INLINABLE zero #-}
     zero = bls12_381_G2_uncompress bls12_381_G2_compressed_zero
 
+instance ZkFold.FromConstant Integer BuiltinBLS12_381_G2_Element where
+    fromConstant = undefined
+
+instance ZkFold.Scale Integer BuiltinBLS12_381_G2_Element where
+    {-# INLINABLE scale #-}
+    scale = bls12_381_G2_scalarMul
+
 instance ZkFold.AdditiveGroup BuiltinBLS12_381_G2_Element where
     {-# INLINABLE (-) #-}
     g - h = bls12_381_G2_add g (bls12_381_G2_neg h)
-
--------------------------- Transcript -------------------------------------
-
-type Transcript = BuiltinByteString
-
-instance ToTranscript BuiltinByteString F where
-    {-# INLINABLE toTranscript #-}
-    toTranscript f = integerToByteString BigEndian 32 $ toF f
-
-instance ToTranscript BuiltinByteString G1 where
-    {-# INLINABLE toTranscript #-}
-    toTranscript = bls12_381_G1_compress
-
-instance FromTranscript BuiltinByteString F where
-    {-# INLINABLE newTranscript #-}
-    newTranscript = consByteString 0
-
-    {-# INLINABLE fromTranscript #-}
-    fromTranscript = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256
-
-{-# INLINABLE challenge #-}
-challenge :: Transcript -> (F, Transcript)
-challenge ts =
-    let ts' = newTranscript @BuiltinByteString @F ts
-    in (fromTranscript ts', ts')
 
 ---------------------------------- ByteString ----------------------------------
 
@@ -165,15 +167,14 @@ data SetupBytes = SetupBytes {
   , cmS1' :: BuiltinByteString
   , cmS2' :: BuiltinByteString
   , cmS3' :: BuiltinByteString
-  , gens  :: [F]
-} deriving stock (Show)
+} deriving stock (Show, Generic)
 
 makeLift ''SetupBytes
 makeIsDataIndexed ''SetupBytes [('SetupBytes,0)]
 
 newtype InputBytes = InputBytes {
-  pubInput :: [F]
-} deriving stock (Show)
+  pubInput :: F
+} deriving stock (Show, Generic)
 
 makeLift ''InputBytes
 makeIsDataIndexed ''InputBytes [('InputBytes,0)]
@@ -194,8 +195,8 @@ data ProofBytes = ProofBytes {
   , s1_xi'  :: Integer
   , s2_xi'  :: Integer
   , z_xi'   :: Integer
-  , lagsInv :: [F]
-} deriving stock (Show)
+  , lagsInv :: F
+} deriving stock (Show, Generic)
 
 makeLift ''ProofBytes
 makeIsDataIndexed ''ProofBytes [('ProofBytes,0)]

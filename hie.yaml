@@ -20,3 +20,6 @@ cradle:
 
     - path: "./bench-cpu-mem/Bench/Scripts.hs"
       component: "zkfold-cardano:exe:bench-cpu-mem"
+
+    - path: "./redeemer-from-context/Main.hs"
+      component: "zkfold-cardano:exe:redeemer-from-context"

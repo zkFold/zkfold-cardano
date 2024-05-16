@@ -6,11 +6,9 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.List                            (zipWith)
 import           PlutusTx.Prelude                         (Bool (..), takeByteString, ($), (.), (<>))
 import           Prelude                                  (undefined)
 
-import qualified ZkFold.Base.Algebra.Basic.Class          as ZkFold
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk.OnChain
@@ -35,6 +33,7 @@ instance NonInteractiveProof PlonkPlutus where
     verify :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
     verify SetupBytes{..} InputBytes{..} ProofBytes{..} = bls12_381_finalVerify p1 p2
         where
+            -- uncompress Setup G1 elements
             g0    = bls12_381_G1_uncompress g0'
             h0    = bls12_381_G2_uncompress h0'
             h1    = bls12_381_G2_uncompress h1'
@@ -47,6 +46,7 @@ instance NonInteractiveProof PlonkPlutus where
             cmS2  = bls12_381_G1_uncompress cmS2'
             cmS3  = bls12_381_G1_uncompress cmS3'
 
+            -- uncompress Proof G1 and wrap Integer to F
             cmA    = bls12_381_G1_uncompress cmA'
             cmB    = bls12_381_G1_uncompress cmB'
             cmC    = bls12_381_G1_uncompress cmC'
@@ -63,8 +63,7 @@ instance NonInteractiveProof PlonkPlutus where
             s2_xi  = F s2_xi'
             z_xi   = F z_xi'
 
-            (w1 : wxs) = pubInput
-
+            -- create beta, gamma, alpha, xi, v, u from Transcript
             t0 = consByteString 0 $ cmA' <> cmB' <> cmC'
             beta = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t0
 
@@ -88,12 +87,11 @@ instance NonInteractiveProof PlonkPlutus where
 
             u = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t4 <> proof1' <> proof2'
 
+            -- common varibles for r0, d, f, e
             xi_n = xi `powMod` n
             xi_m_one = xi_n - one
 
-            (lagrange1_xi : lagranges_xi) = zipWith (\x y -> x * xi_m_one * y) gens lagsInv
-
-            pubPoly_xi = w1 * lagrange1_xi + ZkFold.sum (zipWith (*) wxs lagranges_xi)
+            lagrange1_xi = omega * xi_m_one * lagsInv
 
             alphaSquare = alpha * alpha
             alphaEvalZOmega = alpha * z_xi
@@ -109,8 +107,9 @@ instance NonInteractiveProof PlonkPlutus where
             gamma_beta_a_s1 = a_xi_gamma + beta_s1_xi
             gamma_beta_b_s2 = b_xi_gamma + beta_s2_xi
 
+            -- final calculations
             r0 =
-                  pubPoly_xi
+                  pubInput * lagrange1_xi
                 - alphaSquare * lagrange1_xi
                 - alphaEvalZOmega
                     * gamma_beta_a_s1
@@ -147,7 +146,7 @@ instance NonInteractiveProof PlonkPlutus where
                 + v `mul` cmS2))))
 
             e  = (
-                - r0
+                negate r0
                 + v * (a_xi
                 + v * (b_xi
                 + v * (c_xi

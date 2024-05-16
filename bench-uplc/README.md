@@ -11,9 +11,9 @@ You can get uplc, traceToStacks from plutus-core
 cabal install plutus-core
 ```
 ```
-uplc evaluate -t -i plonkVerifyScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
-uplc evaluate -t -i plonkVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
-uplc evaluate -t -i symbolicVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
+uplc evaluate -t -i asserts/plonkVerifyScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
+uplc evaluate -t -i asserts/plonkVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
+uplc evaluate -t -i asserts/symbolicVerifierScript.flat --if flat-namedDeBruijn --trace-mode LogsWithBudgets -o logs
 ```
 
 You can get flamegraph.pl from [github](https://github.com/brendangregg/FlameGraph), or `nix shell nixpkgs#flamegraph`.

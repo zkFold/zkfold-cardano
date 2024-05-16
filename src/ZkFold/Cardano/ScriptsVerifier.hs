@@ -1,39 +1,56 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
-module ZkFold.Cardano.ScriptsVerifier (symbolicVerifier, plonkVerifier) where
+module ZkFold.Cardano.ScriptsVerifier where
 
+import           GHC.ByteOrder                            (ByteOrder (..))
+import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..))
-import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
-import           PlutusTx                                 (toBuiltinData)
+import           PlutusLedgerApi.V3.Contexts              (TxInInfo (..), ownCurrencySymbol)
+import           PlutusTx                                 (makeIsDataIndexed, makeLift, toBuiltinData)
 import qualified PlutusTx.AssocMap                        as AssocMap
-import           PlutusTx.Builtins                        (blake2b_224, serialiseData)
-import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), ($), (&&), (.), (||))
-import qualified PlutusTx.Prelude                         as Plutus
+import           PlutusTx.Builtins                        (blake2b_256, byteStringToInteger, serialiseData)
+import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), takeByteString, ($), (&&), (.), (<$>), (||))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), ToTranscript (..))
+import           ZkFold.Base.Algebra.Basic.Class          (AdditiveGroup (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (InputBytes (..))
+import           ZkFold.Cardano.Plonk.OnChain             (F (..), InputBytes (..), ProofBytes, SetupBytes)
+
+data DatumVerifier = DatumVerifier
+  deriving stock (Generic)
+
+makeLift ''DatumVerifier
+makeIsDataIndexed ''DatumVerifier [('DatumVerifier, 0)]
+
+data RedeemerVerifier = RedeemerVerifier SetupBytes InputBytes ProofBytes
+  deriving stock (Generic)
+
+makeLift ''RedeemerVerifier
+makeIsDataIndexed ''RedeemerVerifier [('RedeemerVerifier, 0)]
 
 -- TODO: split the setup data into the fixed and varying parts
 -- | The Plutus script for verifying a ZkFold Symbolic smart contract.
 {-# INLINABLE symbolicVerifier #-}
-symbolicVerifier :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> Bool
-symbolicVerifier contract input proof ctx = condition1 && condition2
+symbolicVerifier :: RedeemerVerifier -> ScriptContext -> Bool
+symbolicVerifier (RedeemerVerifier contract input proof) ctx =
+    condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
-        ins   = txInfoInputs info
+
+        ins   = txInInfoOutRef <$> txInfoInputs info
+        refs  = txInInfoOutRef <$> txInfoReferenceInputs info
         outs  = txInfoOutputs info
-        refs  = txInfoReferenceInputs info
         range = txInfoValidRange info
 
-        h     = blake2b_224 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
-
+        hash = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
         -- Verifying that the public input in the ZKP protocol corresponds to the hash of the transaction data.
         --
         -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
         -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
-        condition1 = serialiseData (toBuiltinData input) == h
+        condition1 = pubInput input == negate hash
 
         -- Verifying the validity of the ZkFold Symbolic smart contract on the current transaction.
         -- The smart contract is encoded into the `Setup PlonkPlutus` data structure.
@@ -41,10 +58,12 @@ symbolicVerifier contract input proof ctx = condition1 && condition2
 
 -- | The Plutus script (minting policy) for verifying a Plonk proof.
 {-# INLINABLE plonkVerifier #-}
-plonkVerifier :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> Bool
-plonkVerifier computation input proof ctx = condition0 && (condition1 || condition2)
+plonkVerifier :: RedeemerVerifier -> ScriptContext -> Bool
+plonkVerifier (RedeemerVerifier computation input proof) ctx =
+    condition0 && (condition1 || condition2)
     where
         info               = scriptContextTxInfo ctx
+
         Just m             = AssocMap.lookup (ownCurrencySymbol ctx) (getValue $ txInfoMint info)
         [(TokenName t, n)] = AssocMap.toList m
 
@@ -52,11 +71,11 @@ plonkVerifier computation input proof ctx = condition0 && (condition1 || conditi
         -- The tokens serve as proof that the network has verified the computation.
         -- We can also burn already minted tokens.
 
-        -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol
-        condition0 = t == toTranscript (Plutus.head $ pubInput input)
+        -- Verifying that the token name equals to the bytestring representation of the public input in the ZKP protocol.
+        condition0 = (F . byteStringToInteger BigEndian . takeByteString 31 $ t) == pubInput input
 
-        -- Burning already minted tokens
+        -- Burning already minted tokens.
         condition1 = n < 0
 
-        -- Verifying the Plonk proof
+        -- Verifying the Plonk proof.
         condition2 = verify @PlonkPlutus computation input proof
