@@ -51,7 +51,6 @@ library
   exposed-modules:
     ZkFold.Cardano.Plonk
     ZkFold.Cardano.ScriptsVerifier
-    ZkFold.Cardano.ScriptsWithParams
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OffChain
   build-depends:
