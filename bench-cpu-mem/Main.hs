@@ -19,7 +19,7 @@ import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Cardano.ScriptsVerifier              (DatumVerifier (..), ParamsVerifier (..), RedeemerVerifier (..))
+import           ZkFold.Cardano.ScriptsVerifier              (DatumVerifier (..), RedeemerVerifier (..))
 import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
@@ -27,11 +27,7 @@ import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
 
-
-lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
-lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
-
-context :: ScriptContext
+context :: ScriptContext -- fill up with data
 context = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs          = []     :: [TxInInfo]
@@ -40,15 +36,6 @@ context = ScriptContext
     , txInfoValidRange      = always :: Interval POSIXTime
     }
   }
-
-{-
-{-# INLINABLE params #-}
-params :: ParamsVerifier
-params = ParamsVerifier hash endTime
-  where hash = blake2b_256 . serialiseData . toBuiltinData $
-          ( [] :: [PlutusV3.TxInInfo], [] :: [PlutusV3.TxInInfo], [] :: [PlutusV3.TxOut])
-        endTime = fromMilliSeconds $ DiffMilliSeconds 2031068167000 -- Sun, 12 May 2034 17:36:07 GMT
--}
 
 printCostsSymbolicVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
 printCostsSymbolicVerifier h s i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript DatumVerifier (RedeemerVerifier s i p) ctx)
@@ -66,6 +53,9 @@ main = do
   case maybeRowContract of
     Just rowContract ->
       let Contract{..} = toContract rowContract
+          lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
+          lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
+
           Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) @Fr (TxId targetId))
           acc = applyArgs ac [targetId]
 

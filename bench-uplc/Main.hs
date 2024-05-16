@@ -38,11 +38,12 @@ writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScri
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
 
 savePlutus :: FilePath -> CompiledCode a -> IO ()
-savePlutus filePath = writePlutusScriptToFile @PlutusScriptV3 ("./assets/" <> filePath <> ".plutus") . PlutusScriptSerialised . PlutusV3.serialiseCompiledCode
+savePlutus filePath = let filePath' = ("./assets/" <> filePath <> ".plutus") in
+  writePlutusScriptToFile @PlutusScriptV3 filePath' . PlutusScriptSerialised . PlutusV3.serialiseCompiledCode
 
 saveFlat redeemer filePath code =
    BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
-           `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData DatumVerifier)
+           `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData DatumVerifier) -- we need any unit.json type
            `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
            -- `Tx.unsafeApplyCode` Tx.liftCodeDef context
 

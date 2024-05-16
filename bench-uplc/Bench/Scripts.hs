@@ -5,23 +5,23 @@
 
 module Bench.Scripts (compiledSymbolicVerifier, compiledPlonkVerifier, compiledPlonkVerify) where
 
-import           PlutusLedgerApi.V3                       (ScriptContext, BuiltinData)
+import           PlutusLedgerApi.V3                       (BuiltinData)
 import           PlutusTx                                 (CompiledCode, UnsafeFromData (..))
 import           PlutusTx.Prelude                         (Bool, check, ($))
 import           PlutusTx.TH                              (compile)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.ScriptsVerifier
+import           ZkFold.Cardano.ScriptsVerifier           (RedeemerVerifier (..), plonkVerifier, symbolicVerifier)
 
 compiledSymbolicVerifier :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
 compiledSymbolicVerifier = $$(compile [|| untypedSymbolicVerifier ||])
   where
     untypedSymbolicVerifier :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-    untypedSymbolicVerifier datum redeemer ctx =
+    untypedSymbolicVerifier _ redeemer ctx =
       check
         ( symbolicVerifier
-            (unsafeFromBuiltinData datum)
+            -- (unsafeFromBuiltinData datum)
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)
         )
@@ -30,18 +30,18 @@ compiledPlonkVerifier :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData
 compiledPlonkVerifier = $$(compile [|| untypedPlonkVerifier ||])
   where
     untypedPlonkVerifier :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-    untypedPlonkVerifier datum redeemer ctx =
+    untypedPlonkVerifier _ redeemer ctx =
       check
         ( plonkVerifier
-            (unsafeFromBuiltinData datum)
+            -- (unsafeFromBuiltinData datum)
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)
         )
 
 compiledPlonkVerify :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
 compiledPlonkVerify =
-  $$(compile [|| \d r s -> check $ apply (unsafeFromBuiltinData d) (unsafeFromBuiltinData r) (unsafeFromBuiltinData s) ||])
+  $$(compile [|| \_ r _ -> check $ apply (unsafeFromBuiltinData r) ||])
   where
-    apply :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> Bool
-    apply _ redeemer _ = verify @PlonkPlutus s i p
+    apply :: RedeemerVerifier -> Bool
+    apply redeemer = verify @PlonkPlutus s i p
       where (RedeemerVerifier s i p) = redeemer

@@ -8,22 +8,16 @@ import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..))
-import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
+import           PlutusLedgerApi.V3.Contexts              (TxInInfo (..), ownCurrencySymbol)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift, toBuiltinData)
 import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.Builtins                        (blake2b_256, byteStringToInteger, serialiseData)
-import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), takeByteString, ($), (&&), (.), (||))
+import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), takeByteString, ($), (&&), (.), (<$>), (||))
 
 import           ZkFold.Base.Algebra.Basic.Class          (AdditiveGroup (..))
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain             (F (..), InputBytes (..), ProofBytes, SetupBytes)
-
-data ParamsVerifier = ParamsVerifier
-  deriving stock (Generic)
-
-makeLift ''ParamsVerifier
-makeIsDataIndexed ''ParamsVerifier [('ParamsVerifier, 0)]
 
 data DatumVerifier = DatumVerifier
   deriving stock (Generic)
@@ -40,14 +34,14 @@ makeIsDataIndexed ''RedeemerVerifier [('RedeemerVerifier, 0)]
 -- TODO: split the setup data into the fixed and varying parts
 -- | The Plutus script for verifying a ZkFold Symbolic smart contract.
 {-# INLINABLE symbolicVerifier #-}
-symbolicVerifier :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> Bool
-symbolicVerifier _ (RedeemerVerifier contract input proof) ctx =
+symbolicVerifier :: RedeemerVerifier -> ScriptContext -> Bool
+symbolicVerifier (RedeemerVerifier contract input proof) ctx =
     condition1 && condition2
     where
         info  = scriptContextTxInfo ctx
 
-        ins   = txInfoInputs info
-        refs  = txInfoReferenceInputs info
+        ins   = txInInfoOutRef <$> txInfoInputs info
+        refs  = txInInfoOutRef <$> txInfoReferenceInputs info
         outs  = txInfoOutputs info
         range = txInfoValidRange info
 
@@ -64,8 +58,8 @@ symbolicVerifier _ (RedeemerVerifier contract input proof) ctx =
 
 -- | The Plutus script (minting policy) for verifying a Plonk proof.
 {-# INLINABLE plonkVerifier #-}
-plonkVerifier :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> Bool
-plonkVerifier _ (RedeemerVerifier computation input proof) ctx =
+plonkVerifier :: RedeemerVerifier -> ScriptContext -> Bool
+plonkVerifier (RedeemerVerifier computation input proof) ctx =
     condition0 && (condition1 || condition2)
     where
         info               = scriptContextTxInfo ctx

@@ -13,19 +13,19 @@ import qualified UntypedPlutusCore                        as UPLC
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.ScriptsVerifier
+import           ZkFold.Cardano.ScriptsVerifier           (DatumVerifier, RedeemerVerifier (..), plonkVerifier, symbolicVerifier)
 
 symbolicVerifierScript :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
 symbolicVerifierScript datum redeemer ctx =
     getPlcNoAnn $ $$(compile [|| symbolicVerifier ||])
-       `unsafeApplyCode` liftCodeDef datum
+       -- `unsafeApplyCode` liftCodeDef datum
        `unsafeApplyCode` liftCodeDef redeemer
        `unsafeApplyCode` liftCodeDef ctx
 
 plonkVerifierScript :: DatumVerifier -> RedeemerVerifier -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
 plonkVerifierScript datum redeemer ctx =
     getPlcNoAnn $ $$(compile [|| plonkVerifier ||])
-       `unsafeApplyCode` liftCodeDef datum
+       -- `unsafeApplyCode` liftCodeDef datum
        `unsafeApplyCode` liftCodeDef redeemer
        `unsafeApplyCode` liftCodeDef ctx
 
