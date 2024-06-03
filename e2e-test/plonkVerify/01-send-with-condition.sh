@@ -4,7 +4,7 @@ keypath=./keys
 assets=../assets
 
 echo ""
-echo "alice wants to send money to bob, but only if someone can prove that he is an adult."
+echo "Alice wants to send money to Bob, but only if he can prove that he is an adult."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
@@ -24,12 +24,12 @@ cardano-cli conway address build \
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
+    --change-address "$(cat $keypath/alice.addr)" \
+    --out-file "$keypath/plonkVerify.txbody" \
     --tx-in $in \
     --tx-out "$(cat $keypath/plonkVerify.addr) + 50745828 lovelace" \
-    --change-address "$(cat $keypath/alice.addr)" \
     --tx-out-reference-script-file "$assets/plonkVerify.plutus" \
-    --tx-out-datum-hash-file "$assets/datum.json" \
-    --out-file "$keypath/plonkVerify.txbody"
+    --tx-out-datum-hash-file "$assets/unit.json"
 
 cardano-cli conway transaction sign \
     --testnet-magic 4 \

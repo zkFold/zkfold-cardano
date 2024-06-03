@@ -2,7 +2,7 @@
 
 keypath=./keys
 
-echo "Create alice, bob and someone."
+echo "Create alice and bob."
 
 #----------------------------------- :alice: -----------------------------------
 
@@ -26,18 +26,7 @@ cardano-cli conway address build \
   --out-file $keypath/bob.addr \
   --testnet-magic 4
 
-#---------------------------------- :someone: ----------------------------------
-
-cardano-cli conway address key-gen \
-  --verification-key-file $keypath/someone.vkey \
-  --signing-key-file $keypath/someone.skey
-
-cardano-cli conway address build \
-  --payment-verification-key-file $keypath/someone.vkey \
-  --out-file $keypath/someone.addr \
-  --testnet-magic 4
-
 #-------------------------------------------------------------------------------
 
 echo "Put some funds in the address(alice.addr): $(cat $keypath/alice.addr)"
-echo "Put some funds in the address(someone.addr): $(cat $keypath/someone.addr)"
+echo "Put some funds in the address(bob.addr): $(cat $keypath/bob.addr)"
