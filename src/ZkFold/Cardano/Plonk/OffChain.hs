@@ -10,14 +10,14 @@ import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Generics                             (Generic)
 import           GHC.Natural                              (naturalToInteger)
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Semigroup (..), takeByteString, ($), (.))
+import           PlutusTx.Prelude                         (Semigroup (..), ($), (.))
 import qualified PlutusTx.Prelude                         as Plutus
 import           Prelude                                  (Show)
 import qualified Prelude                                  as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Field          (Ext2 (..), Zp, fromZp, toZp)
-import           ZkFold.Base.Algebra.Basic.Number         (value)
+import           ZkFold.Base.Algebra.Basic.Number         (value, KnownNat)
 import           ZkFold.Base.Algebra.EllipticCurve.Class  (Point (..))
 import qualified ZkFold.Base.Protocol.ARK.Plonk           as Plonk
 import           ZkFold.Base.Protocol.ARK.Plonk           hiding (F, G1, PlonkProverSecret)
@@ -26,11 +26,11 @@ import           ZkFold.Cardano.Plonk.OnChain             (F (..), G1, InputByte
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ---------------
 
-type Plonk32 = Plonk 32 BuiltinByteString
+type PlonkN n = Plonk n BuiltinByteString
 
-mkSetup :: Setup Plonk32 -> SetupBytes
-mkSetup (PlonkSetupParams {..}, _, _, PlonkCircuitCommitments {..}, _, _) = SetupBytes
-  { n     = naturalToInteger $ value @32
+mkSetup :: Integer -> Setup (PlonkN n) -> SetupBytes
+mkSetup pow' (PlonkSetupParams {..}, _, _, PlonkCircuitCommitments {..}, _, _) = SetupBytes
+  { pow   = pow' -- value @n == 2^pow
   , g0'   = Plutus.head . Vector.toList . Vector.map convertG1 $ gs
   , h0'   = convertG2 h0
   , h1'   = convertG2 h1
@@ -47,10 +47,10 @@ mkSetup (PlonkSetupParams {..}, _, _, PlonkCircuitCommitments {..}, _, _) = Setu
   , cmS3' = convertG1 cmS3
   }
 
-mkInput :: Input Plonk32 -> InputBytes
+mkInput :: Input (PlonkN n) -> InputBytes
 mkInput (PlonkInput input) = InputBytes . Haskell.head . Vector.toList . Vector.map (F . convertF) $ input
 
-mkProof ::  SetupBytes -> Proof Plonk32 -> ProofBytes
+mkProof :: forall n. KnownNat n => SetupBytes -> Proof (PlonkN n) -> ProofBytes
 mkProof setup' proof@(PlonkProof cmA cmB cmC cmZ cmT1 cmT2 cmT3 proof1 proof2 a_xi b_xi c_xi s1_xi s2_xi z_xi) = ProofBytes
   { cmA'    = convertG1 cmA
   , cmB'    = convertG1 cmB
@@ -67,16 +67,16 @@ mkProof setup' proof@(PlonkProof cmA cmB cmC cmZ cmT1 cmT2 cmT3 proof1 proof2 a_
   , s1_xi'  = convertF s1_xi
   , s2_xi'  = convertF s2_xi
   , z_xi'   = convertF z_xi
-  , lagsInv = lagrangesInvariants setup' proof
+  , lagsInv = lagrangesInvariants @n setup' proof
   }
 
-lagrangesInvariants :: SetupBytes -> Proof Plonk32 -> F
-lagrangesInvariants  SetupBytes{n, omega} (PlonkProof cmA cmB cmC cmZ cmT1 cmT2 cmT3 _ _ _ _ _ _ _ _) =
+lagrangesInvariants :: forall n. KnownNat n => SetupBytes -> Proof (PlonkN n) -> F
+lagrangesInvariants  SetupBytes{omega} (PlonkProof cmA cmB cmC cmZ cmT1 cmT2 cmT3 _ _ _ _ _ _ _ _) =
     let (_, ts) = challenge $ convertG1 cmA <> convertG1 cmB <> convertG1 cmC
         (_, t1) = challenge ts
         (_, t2) = challenge $ t1 <> convertG1 cmZ
         (xi, _) = challenge $ t2 <> convertG1 cmT1 <> convertG1 cmT2 <> convertG1 cmT3
-    in ((/) one . (\x -> F n * (xi - x))) omega
+    in ((/) one . (\x -> F (naturalToInteger $ value @n) * (xi - x))) omega
 
 challenge :: BuiltinByteString -> (F, BuiltinByteString)
 challenge ts =
@@ -128,7 +128,7 @@ instance ToTranscript BuiltinByteString G1 where
 instance FromTranscript BuiltinByteString F where
     newTranscript = consByteString 0
 
-    fromTranscript = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256
+    fromTranscript = F . byteStringToInteger BigEndian . blake2b_224
 
 instance ToTranscript BuiltinByteString Plonk.F where
     toTranscript = integerToByteString BigEndian 32 . convertZp
@@ -139,7 +139,7 @@ instance ToTranscript BuiltinByteString Plonk.G1 where
 instance FromTranscript BuiltinByteString Plonk.F where
     newTranscript = consByteString 0
 
-    fromTranscript = toZp . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256
+    fromTranscript = toZp . byteStringToInteger BigEndian . blake2b_224
 
 ------------------------------------ Bench ------------------------------------
 

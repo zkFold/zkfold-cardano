@@ -6,7 +6,7 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), takeByteString, ($), (.), (<>))
+import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<>))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -28,7 +28,6 @@ instance NonInteractiveProof PlonkPlutus where
     prove :: Setup PlonkPlutus -> Witness PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus)
     prove = undefined
 
-    -- TODO: Validate arguments
     {-# INLINABLE verify #-}
     verify :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
     verify SetupBytes{..} InputBytes{..} ProofBytes{..} = bls12_381_finalVerify p1 p2
@@ -65,16 +64,16 @@ instance NonInteractiveProof PlonkPlutus where
 
             -- create beta, gamma, alpha, xi, v, u from Transcript
             t0 = consByteString 0 $ cmA' <> cmB' <> cmC'
-            beta = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t0
+            beta = F . byteStringToInteger BigEndian . blake2b_224 $ t0
 
             t1 = consByteString 0 t0
-            gamma = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t1
+            gamma = F . byteStringToInteger BigEndian . blake2b_224 $ t1
 
             t2 = consByteString 0 $ t1 <> cmZ'
-            alpha = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t2
+            alpha = F . byteStringToInteger BigEndian . blake2b_224 $ t2
 
             t3 = consByteString 0 $ t2 <> cmT1' <> cmT2' <> cmT3'
-            xi = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t3
+            xi = F . byteStringToInteger BigEndian . blake2b_224 $ t3
 
             t4 = consByteString 0 $ t3
                 <> integerToByteString BigEndian 32 a_xi'
@@ -83,12 +82,13 @@ instance NonInteractiveProof PlonkPlutus where
                 <> integerToByteString BigEndian 32 s1_xi'
                 <> integerToByteString BigEndian 32 s2_xi'
                 <> integerToByteString BigEndian 32 z_xi'
-            v = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t4
+            v = F . byteStringToInteger BigEndian . blake2b_224 $ t4
 
-            u = F . byteStringToInteger BigEndian . takeByteString 31 . blake2b_256 $ t4 <> proof1' <> proof2'
+            u = F . byteStringToInteger BigEndian . blake2b_224 $ t4 <> proof1' <> proof2'
 
             -- common varibles for r0, d, f, e
-            xi_n = xi `powMod` n
+            
+            xi_n = xi `powTwo` pow
             xi_m_one = xi_n - one
 
             lagrange1_xi = omega * xi_m_one * lagsInv

@@ -176,7 +176,7 @@ executable bench-cpu-mem
     -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs: bench-cpu-mem
 
-executable redeemer-from-context
+executable create-contract-transaction
   import:           lang
   default-language: Haskell2010
   ghc-options:      -rtsopts
@@ -216,4 +216,77 @@ executable redeemer-from-context
     -fno-full-laziness
     -fexpose-all-unfoldings
     -fplugin-opt PlutusTx.Plugin:defer-errors
-  hs-source-dirs: redeemer-from-context
+  hs-source-dirs: create-contract-transaction
+
+executable create-transfer-transaction
+  import:           lang
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  build-depends:
+    aeson                          ,
+    aeson-pretty                   ,
+    base              >= 4.9 && < 5,
+    base16-bytestring              ,
+    bytestring                     ,
+    cardano-api                    ,
+    cardano-binary                 ,
+    cardano-cli                    ,
+    cardano-crypto-class           ,
+    containers                     ,
+    serialise                      ,
+    transformers                   ,
+    transformers-except            ,
+    text                           ,
+    optparse-applicative-fork      ,
+    flat                           ,
+    plutus-core             ^>=1.27,
+    plutus-ledger-api       ^>=1.27,
+    plutus-tx               ^>=1.27,
+    plutus-tx-plugin        ^>=1.27,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
+  ghc-options:
+    -fobject-code
+    -fno-specialise
+    -fno-spec-constr
+    -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas
+    -fno-strictness
+    -fno-unbox-strict-fields 
+    -fno-unbox-small-strict-fields
+    -fno-full-laziness
+    -fexpose-all-unfoldings
+    -fplugin-opt PlutusTx.Plugin:defer-errors
+  hs-source-dirs: create-transfer-transaction
+
+executable create-init-transaction
+  import:           lang
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    base16-bytestring              ,
+    bytestring                     ,
+    cardano-api                    ,
+    cardano-binary                 ,
+    serialise                      ,
+    plutus-ledger-api       ^>=1.27,
+    plutus-tx               ^>=1.27,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
+  ghc-options:
+    -fobject-code
+    -fno-specialise
+    -fno-spec-constr
+    -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas
+    -fno-strictness
+    -fno-unbox-strict-fields 
+    -fno-unbox-small-strict-fields
+    -fno-full-laziness
+    -fexpose-all-unfoldings
+    -fplugin-opt PlutusTx.Plugin:defer-errors
+  hs-source-dirs: create-init-transaction
