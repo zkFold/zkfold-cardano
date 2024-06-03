@@ -33,22 +33,28 @@
       name: "Someone",
       address: "Public key hash",
       value: (
-        ada: 950
+        ada: 998
       ),
     ),
     (
-      name: "\"Above 18?\" forwarding script reference",
-      address: "\"Always False\" script",
+      name: "\"Above 18?\" setup datum",
+      address: "zkfold-setup",
       value: (
-        ada: 25
+        ada: 1
       ),
+      datum: (
+        "setup": "Above 18?"
+      )
     ),
     (
       name: "Symbolic verifier script reference",
-      address: "\"Always False\" script",
+      address: "symbolicVerifier.plutus",
       value: (
-        ada: 25
+        ada: 1
       ),
+      datum: (
+        "input": "zero hash"
+      )
     ),
   ),
   signatures: (
@@ -71,13 +77,13 @@
   ),
   outputs: (
     (
-      name: "\"Above 18?\"",
-      address: "\"Above 18?\" forwarding script",
+      name: "\"Above 18?\" Input",
+      address: "symbolicVerifier.plutus",
       value: (
         ada: 100
       ),
       datum: (
-        "address": "<Bob's wallet address>"
+        "input": "<setup address> + <Bob address>"
       )
     ),
     (
@@ -107,29 +113,32 @@
       )
     ),
     (
-      name: "\"Above 18?\"",
+      name: "\"Above 18?\" Input",
       address: "Symbolic forwarding script",
       value: (
         ada: 100
       ),
       datum: (
-        "address": "<Bob's wallet address>"
+        "input": "<setup address> + <Bob address>"
       )
     ),
     (
-      name: "Symbolic forwarding script reference",
+      name: "\"Above 18?\" setup datum",
       reference: true,
-      address: "\"Always False\" script",
+      address: "zkfold-setup",
       value: (
-        ada: 25
+        ada: 1
+      ),
+      datum: (
+        "setup": "Above 18?"
       )
     ),
     (
       name: "Symbolic verifier script reference",
       reference: true,
-      address: "\"Always False\" script",
+      address: "symbolicVerifier.plutus",
       value: (
-        ada: 25
+        ada: 1
       )
     )
   ),
