@@ -11,7 +11,7 @@ import           PlutusLedgerApi.V3                       (OutputDatum (..), Scr
 import           PlutusLedgerApi.V3.Contexts              (TxInInfo (..), ownCurrencySymbol)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift, toBuiltinData)
 import qualified PlutusTx.AssocMap                        as AssocMap
-import           PlutusTx.Builtins                        (blake2b_224, byteStringToInteger, serialiseData)
+import           PlutusTx.Builtins                        (byteStringToInteger, serialiseData)
 import           PlutusTx.Prelude                         (Bool (..), Eq (..), Maybe (..), Ord (..), error, ($), (&&), (.), (<$>), (||))
 
 import           ZkFold.Base.Algebra.Basic.Class          (AdditiveGroup (..))
@@ -55,11 +55,10 @@ newtype RedeemerSymbolic = RedeemerSymbolic { proof :: ProofBytes }
 makeLift ''RedeemerSymbolic
 makeIsDataIndexed ''RedeemerSymbolic [('RedeemerSymbolic, 0)]
 
--- | The Plutus script for verifying a ZkFold Symbolic smart contract.
-{-# INLINABLE symbolicVerifier #-}
-symbolicVerifier :: DatumSymbolic -> RedeemerSymbolic -> ScriptContext -> Bool
-symbolicVerifier (DatumSymbolic input) (RedeemerSymbolic proof) ctx =
-    conditionTransaction && conditionVerify
+-- | The Plutus script for forwarding a ZkFold Symbolic smart contract.
+{-# INLINABLE symbolicForwarding #-}
+symbolicForwarding :: DatumSymbolic -> ScriptContext -> Bool
+symbolicForwarding (DatumSymbolic input) ctx = conditionTransaction
     where
         info  = scriptContextTxInfo ctx
 
@@ -70,7 +69,7 @@ symbolicVerifier (DatumSymbolic input) (RedeemerSymbolic proof) ctx =
 
         ---------------------- calculate transaction hash ----------------------
 
-        hash = F . byteStringToInteger BigEndian . blake2b_224 . serialiseData . toBuiltinData $ (ins, refs, outs, range)
+        hash = serialiseData . toBuiltinData $ (ins, refs, outs, range)
 
         ------------------------------------------------------------------------
 
@@ -78,14 +77,29 @@ symbolicVerifier (DatumSymbolic input) (RedeemerSymbolic proof) ctx =
         --
         -- ZkFold Symbolic smart contracts will have access to inputs, reference inputs, outputs and the transaction validity range.
         -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a contract.
-        conditionTransaction = pubInput input == negate hash
+        conditionTransaction = (F . byteStringToInteger BigEndian) hash == (negate . pubInput) input
 
 
-        ---------------------- setup from reference input ----------------------
+-- | The Plutus script for verifying a ZkFold Symbolic smart contract.
+{-# INLINABLE symbolicVerifier #-}
+symbolicVerifier :: RedeemerSymbolic -> ScriptContext -> Bool
+symbolicVerifier (RedeemerSymbolic proof) ctx = conditionVerify
+    where
+        info  = scriptContextTxInfo ctx
 
-        [input1] = txInfoReferenceInputs info
-        (DatumSetup contract) = case txOutDatum $ txInInfoResolved input1 of
+        ------------------------- setup from reference -------------------------
+
+        [referenceSetup] = txInfoReferenceInputs info
+        (DatumSetup contract) = case txOutDatum $ txInInfoResolved referenceSetup of
           OutputDatum datum -> unsafeFromBuiltinData @DatumSetup $ toBuiltinData datum
+          OutputDatumHash _ -> error ()
+          NoOutputDatum     -> error ()
+        
+        --------------------- input from symbolicForwarding --------------------
+        
+        [referenceInput] = txInfoInputs info
+        (DatumSymbolic input) = case txOutDatum $ txInInfoResolved referenceInput of
+          OutputDatum datum -> unsafeFromBuiltinData @DatumSymbolic $ toBuiltinData datum
           OutputDatumHash _ -> error ()
           NoOutputDatum     -> error ()
 
@@ -102,9 +116,9 @@ makeLift ''RedeemerToken
 makeIsDataIndexed ''RedeemerToken [('RedeemerToken, 0)]
 
 -- | The Plutus script (minting policy) for verifying a Plonk proof.
-{-# INLINABLE tokenVerifier #-}
-tokenVerifier :: RedeemerToken -> ScriptContext -> Bool
-tokenVerifier (RedeemerToken computation input proof) ctx =
+{-# INLINABLE plonkVerifier #-}
+plonkVerifier :: RedeemerToken -> ScriptContext -> Bool
+plonkVerifier (RedeemerToken computation input proof) ctx =
     conditionTokenName && (conditionBurning || conditionVerify)
     where
         info               = scriptContextTxInfo ctx

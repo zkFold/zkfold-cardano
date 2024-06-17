@@ -5,35 +5,34 @@
 module ZkFold.Cardano.Plonk.OffChain where
 
 import           Data.Aeson                               (FromJSON, ToJSON)
-import qualified Data.Vector                              as Vector
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Generics                             (Generic)
 import           GHC.Natural                              (naturalToInteger)
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                         (Semigroup (..), ($), (.))
-import qualified PlutusTx.Prelude                         as Plutus
 import           Prelude                                  (Show)
 import qualified Prelude                                  as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Field          (Ext2 (..), Zp, fromZp, toZp)
-import           ZkFold.Base.Algebra.Basic.Number         (value, KnownNat)
+import           ZkFold.Base.Algebra.Basic.Number         (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.Class  (Point (..))
 import qualified ZkFold.Base.Protocol.ARK.Plonk           as Plonk
 import           ZkFold.Base.Protocol.ARK.Plonk           hiding (F, G1, PlonkProverSecret)
 import           ZkFold.Base.Protocol.NonInteractiveProof (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain             (F (..), G1, InputBytes (..), ProofBytes (..), SetupBytes (..))
+import qualified Data.Vector as V
 
---------------- Transform Plonk Base to Plonk BuiltinByteString ---------------
+--------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkN n = Plonk n BuiltinByteString
+type PlonkN n = Plonk n 1 BuiltinByteString
 
-mkSetup :: Integer -> Setup (PlonkN n) -> SetupBytes
-mkSetup pow' (PlonkSetupParams {..}, _, _, PlonkCircuitCommitments {..}, _, _) = SetupBytes
-  { pow   = pow' -- value @n == 2^pow
-  , g0'   = Plutus.head . Vector.toList . Vector.map convertG1 $ gs
-  , h0'   = convertG2 h0
-  , h1'   = convertG2 h1
+mkSetup :: SetupVerify (PlonkN n) -> SetupBytes
+mkSetup (PlonkSetupParamsVerify {..}, PlonkCircuitCommitments {..}) = SetupBytes
+  { pow -- value @n == 2^pow
+  , g0'   = convertG1 g0
+  , h0'   = convertG2 h0 -- todo: bench generate on off-chain in setup vs gengerate on on-chain in verify
+  , h1'   = convertG2 h1 -- todo: bench generate on off-chain in setup vs gengerate on on-chain in verify
   , omega = F $ convertF omega
   , k1    = F $ convertF k1
   , k2    = F $ convertF k2
@@ -47,8 +46,8 @@ mkSetup pow' (PlonkSetupParams {..}, _, _, PlonkCircuitCommitments {..}, _, _) =
   , cmS3' = convertG1 cmS3
   }
 
-mkInput :: Input (PlonkN n) -> InputBytes
-mkInput (PlonkInput input) = InputBytes . Haskell.head . Vector.toList . Vector.map (F . convertF) $ input
+mkInput :: Input (PlonkN n) -> InputBytes -- wPub = V.map negate wPub' -- todo: do it in off-chain when input create
+mkInput (PlonkInput input) = InputBytes . F . convertF $ V.head input
 
 mkProof :: forall n. KnownNat n => SetupBytes -> Proof (PlonkN n) -> ProofBytes
 mkProof setup' proof@(PlonkProof cmA cmB cmC cmZ cmT1 cmT2 cmT3 proof1 proof2 a_xi b_xi c_xi s1_xi s2_xi z_xi) = ProofBytes
@@ -141,7 +140,7 @@ instance FromTranscript BuiltinByteString Plonk.F where
 
     fromTranscript = toZp . byteStringToInteger BigEndian . blake2b_224
 
------------------------------------- Bench ------------------------------------
+------------------------------------ Bench -------------------------------------
 
 data Contract = Contract {
     x        :: Plonk.F

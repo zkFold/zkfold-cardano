@@ -16,20 +16,24 @@ import           ZkFold.Cardano.Plonk.OnChain
 data PlonkPlutus
 
 instance NonInteractiveProof PlonkPlutus where
-    type Transcript PlonkPlutus   = BuiltinByteString
-    type Setup PlonkPlutus        = SetupBytes
-    type Witness PlonkPlutus      = ()
-    type Input PlonkPlutus        = InputBytes
-    type Proof PlonkPlutus        = ProofBytes
+    type Transcript PlonkPlutus  = BuiltinByteString
+    type SetupProve PlonkPlutus  = ()
+    type SetupVerify PlonkPlutus = SetupBytes
+    type Witness PlonkPlutus     = ()
+    type Input PlonkPlutus       = InputBytes
+    type Proof PlonkPlutus       = ProofBytes
 
-    setup :: PlonkPlutus -> Setup PlonkPlutus
-    setup = undefined
+    setupProve :: PlonkPlutus -> SetupProve PlonkPlutus
+    setupProve = undefined
 
-    prove :: Setup PlonkPlutus -> Witness PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus)
+    setupVerify :: PlonkPlutus -> SetupVerify PlonkPlutus
+    setupVerify = undefined
+
+    prove :: SetupProve PlonkPlutus -> Witness PlonkPlutus -> (Input PlonkPlutus, Proof PlonkPlutus)
     prove = undefined
 
     {-# INLINABLE verify #-}
-    verify :: Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
+    verify :: SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
     verify SetupBytes{..} InputBytes{..} ProofBytes{..} = bls12_381_finalVerify p1 p2
         where
             -- uncompress Setup G1 elements
