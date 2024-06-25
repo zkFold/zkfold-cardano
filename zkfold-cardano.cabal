@@ -49,6 +49,7 @@ library
   import:           lang
   default-language: Haskell2010
   exposed-modules:
+    ZkFold.Cardano.ForwardingScripts
     ZkFold.Cardano.Plonk
     ZkFold.Cardano.PlonkVerifier
     ZkFold.Cardano.SymbolicVerifier
