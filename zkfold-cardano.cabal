@@ -50,7 +50,8 @@ library
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.Plonk
-    ZkFold.Cardano.ScriptsVerifier
+    ZkFold.Cardano.PlonkVerifier
+    ZkFold.Cardano.SymbolicVerifier
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OffChain
   build-depends:

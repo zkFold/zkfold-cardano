@@ -88,7 +88,7 @@ convertF :: Plonk.F -> Integer
 convertF = naturalToInteger . fromZp
 
 convertPlonkF :: F -> Plonk.F
-convertPlonkF = toZp . toF
+convertPlonkF (F n) = toZp n
 
 convertZp :: Zp p -> Integer
 convertZp = naturalToInteger . fromZp
@@ -119,7 +119,7 @@ convertG2 (Point x y) = bs
 ------------------ Transcript for NonInteractiveProof Plonk32 ------------------
 
 instance ToTranscript BuiltinByteString F where
-    toTranscript f = integerToByteString BigEndian 32 $ toF f
+    toTranscript (F n) = integerToByteString BigEndian 32 n
 
 instance ToTranscript BuiltinByteString G1 where
     toTranscript = bls12_381_G1_compress

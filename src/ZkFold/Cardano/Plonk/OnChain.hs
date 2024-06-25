@@ -19,11 +19,15 @@ import qualified ZkFold.Base.Algebra.Basic.Class as ZkFold
 bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
-newtype F = F { toF :: Integer }
+newtype F = F Integer
   deriving stock (Show, Generic)
   deriving newtype (ToJSON, FromJSON)
 makeLift ''F
 makeIsDataIndexed ''F [('F,0)]
+
+{-# INLINABLE toF #-}
+toF :: Integer -> F
+toF = F . (`modulo` bls12_381_field_prime)
 
 instance Eq F where
     {-# INLINABLE (==) #-}
