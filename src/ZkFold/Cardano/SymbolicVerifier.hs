@@ -14,7 +14,7 @@ import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain             (InputBytes (..), ProofBytes, SetupBytes, toF)
 
--- | The Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
+-- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --
 -- ZkFold Symbolic smart contracts have access to inputs, reference inputs, outputs and the transaction validity range.
 -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a ZK contract.

@@ -9,9 +9,9 @@ import           Cardano.Api                                 (File (..), IsPlutu
 import           Cardano.Api.Shelley                         (PlutusScript (..))
 import           Control.Monad                               (void)
 import           Data.Aeson                                  (decode)
-import           Data.ByteString                             as BS (writeFile)
+import           Data.ByteString                             as BS (writeFile, ByteString)
 import qualified Data.ByteString.Lazy                        as BL
-import           Data.Map                                    (fromList)
+import           Data.Map                                    (fromList, keys)
 import           Flat                                        (flat)
 import qualified PlutusLedgerApi.V3                          as PlutusV3
 import           PlutusTx                                    (CompiledCode, ToData (..))
@@ -22,17 +22,21 @@ import           UntypedPlutusCore                           (UnrestrictedProgra
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
+import           ZkFold.Base.Data.Vector                     (Vector(..))
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Cardano.ScriptsVerifier              (DatumVerifier (..), RedeemerVerifier (..))
-import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
+import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), RowContractJSON, mkInput, mkProof, mkSetup, toContract)
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
+
+type PlonkBase32 = Plonk 32 1 ByteString
+
+lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => a' -> a -> Bool a
+lockedByTxId targetValue inputValue = inputValue == fromConstant targetValue
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -43,38 +47,35 @@ savePlutus filePath = let filePath' = ("./assets/" <> filePath <> ".plutus") in
 
 saveFlat redeemer filePath code =
    BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
-           `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData DatumVerifier) -- we need any unit.json type
            `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
-           -- `Tx.unsafeApplyCode` Tx.liftCodeDef context
-
-lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
-lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
 
 main :: IO ()
 main = do
-  savePlutus "symbolicVerifier" compiledSymbolicVerifier
-  savePlutus "plonkVerifier"    compiledPlonkVerifier
-  savePlutus "plonkVerify"      compiledPlonkVerify
+  
   jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   case maybeRowContract of
     Just rowContract ->
       let Contract{..} = toContract rowContract
-          Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) @Fr (TxId targetId))
-          acc = applyArgs ac [targetId]
+          Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) targetValue)
+          acc = applyArgs ac [targetValue]
 
           (omega, k1, k2) = getParams 5
           inputs  = fromList [(acOutput acc, 1)]
-          plonk   = Plonk omega k1 k2 inputs acc x
-          setup'  = setup @Plonk32 plonk
+          plonk   = Plonk omega k1 k2 (Vector @1 $ keys inputs) acc x :: PlonkBase32
+          sP      = setupProve plonk
+          sV      = setupVerify plonk
           w       = (PlonkWitnessInput inputs, ps)
-          (input', proof') = prove @Plonk32 setup' w
+          (input', proof') = prove @PlonkBase32 sP w
       in do
-        let setup = mkSetup setup'
+        let setup = mkSetup sV
             input = mkInput input'
-            proof = mkProof setup proof'
-            redeemer = RedeemerVerifier setup input proof
-        saveFlat redeemer "plonkSymbolicVerifier" compiledSymbolicVerifier
-        saveFlat redeemer "plonkVerifierScript"   compiledPlonkVerifier
-        saveFlat redeemer "plonkVerifyScript"     compiledPlonkVerify
+            proof = mkProof @32 setup proof'
+            redeemer = (setup, input, proof)
+        savePlutus "symbolicVerifier" $ compiledSymbolicVerifier setup
+        savePlutus "plonkVerifier"    $ compiledPlonkVerifier setup
+        savePlutus "plonkVerify"      compiledPlonkVerify
+        saveFlat proof "plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
+        saveFlat proof "plonkVerifierScript"   $ compiledPlonkVerifier setup
+        saveFlat redeemer "plonkVerifyScript"  $ compiledPlonkVerify `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData ())
     _ -> print ("Could not deserialize" :: String)

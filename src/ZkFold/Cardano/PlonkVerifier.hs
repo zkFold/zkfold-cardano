@@ -14,7 +14,7 @@ import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain             (InputBytes (..), ProofBytes, SetupBytes, toF)
 
--- | The Plutus script (minting policy) for verifying computations on-chain.
+-- | Plutus script (minting policy) for verifying computations on-chain.
 --
 -- The token is minted if and only if the Plonk `proof` is valid for the `computation` on the `input` derived from the token name.
 -- The computation is encoded into the token's currency symbol (aka policyID).
