@@ -4,6 +4,8 @@ keypath=./keys
 
 echo "Create alice and bob."
 
+mkdir -p $keypath
+
 #----------------------------------- :alice: -----------------------------------
 
 cardano-cli conway address key-gen \

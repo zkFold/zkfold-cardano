@@ -24,3 +24,6 @@ cabal.project.local~
 compiled_scripts/*
 logs
 *.svg
+e2e-test/plonkVerify/keys/*
+e2e-test/symbolicVerifier/keys/*
+e2e-test/plonkVerifier/keys/*

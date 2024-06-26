@@ -68,27 +68,27 @@ instance NonInteractiveProof PlonkPlutus where
 
             -- create beta, gamma, alpha, xi, v, u from Transcript
             t0 = consByteString 0 $ cmA' <> cmB' <> cmC'
-            beta = F . byteStringToInteger BigEndian . blake2b_224 $ t0
+            beta = F . byteStringToInteger LittleEndian . blake2b_224 $ t0
 
             t1 = consByteString 0 t0
-            gamma = F . byteStringToInteger BigEndian . blake2b_224 $ t1
+            gamma = F . byteStringToInteger LittleEndian . blake2b_224 $ t1
 
             t2 = consByteString 0 $ t1 <> cmZ'
-            alpha = F . byteStringToInteger BigEndian . blake2b_224 $ t2
+            alpha = F . byteStringToInteger LittleEndian . blake2b_224 $ t2
 
             t3 = consByteString 0 $ t2 <> cmT1' <> cmT2' <> cmT3'
-            xi = F . byteStringToInteger BigEndian . blake2b_224 $ t3
+            xi = F . byteStringToInteger LittleEndian . blake2b_224 $ t3
 
             t4 = consByteString 0 $ t3
-                <> integerToByteString BigEndian 32 a_xi'
-                <> integerToByteString BigEndian 32 b_xi'
-                <> integerToByteString BigEndian 32 c_xi'
-                <> integerToByteString BigEndian 32 s1_xi'
-                <> integerToByteString BigEndian 32 s2_xi'
-                <> integerToByteString BigEndian 32 z_xi'
-            v = F . byteStringToInteger BigEndian . blake2b_224 $ t4
+                <> integerToByteString LittleEndian 32 a_xi'
+                <> integerToByteString LittleEndian 32 b_xi'
+                <> integerToByteString LittleEndian 32 c_xi'
+                <> integerToByteString LittleEndian 32 s1_xi'
+                <> integerToByteString LittleEndian 32 s2_xi'
+                <> integerToByteString LittleEndian 32 z_xi'
+            v = F . byteStringToInteger LittleEndian . blake2b_224 $ t4
 
-            u = F . byteStringToInteger BigEndian . blake2b_224 $ t4 <> proof1' <> proof2'
+            u = F . byteStringToInteger LittleEndian . blake2b_224 $ t4 <> proof1' <> proof2'
 
             -- common varibles for r0, d, f, e
             

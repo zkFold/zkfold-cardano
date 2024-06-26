@@ -5,6 +5,7 @@
 module ZkFold.Cardano.Plonk.OffChain where
 
 import           Data.Aeson                               (FromJSON, ToJSON)
+import qualified Data.Vector                              as V
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Generics                             (Generic)
 import           GHC.Natural                              (naturalToInteger)
@@ -21,7 +22,6 @@ import qualified ZkFold.Base.Protocol.ARK.Plonk           as Plonk
 import           ZkFold.Base.Protocol.ARK.Plonk           hiding (F, G1, PlonkProverSecret)
 import           ZkFold.Base.Protocol.NonInteractiveProof (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain             (F (..), G1, InputBytes (..), ProofBytes (..), SetupBytes (..))
-import qualified Data.Vector as V
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
@@ -119,7 +119,7 @@ convertG2 (Point x y) = bs
 ------------------ Transcript for NonInteractiveProof Plonk32 ------------------
 
 instance ToTranscript BuiltinByteString F where
-    toTranscript (F n) = integerToByteString BigEndian 32 n
+    toTranscript (F n) = integerToByteString LittleEndian 32 n
 
 instance ToTranscript BuiltinByteString G1 where
     toTranscript = bls12_381_G1_compress
@@ -127,10 +127,10 @@ instance ToTranscript BuiltinByteString G1 where
 instance FromTranscript BuiltinByteString F where
     newTranscript = consByteString 0
 
-    fromTranscript = F . byteStringToInteger BigEndian . blake2b_224
+    fromTranscript = F . byteStringToInteger LittleEndian . blake2b_224
 
 instance ToTranscript BuiltinByteString Plonk.F where
-    toTranscript = integerToByteString BigEndian 32 . convertZp
+    toTranscript = integerToByteString LittleEndian 32 . convertZp
 
 instance ToTranscript BuiltinByteString Plonk.G1 where
     toTranscript = convertG1
@@ -138,14 +138,14 @@ instance ToTranscript BuiltinByteString Plonk.G1 where
 instance FromTranscript BuiltinByteString Plonk.F where
     newTranscript = consByteString 0
 
-    fromTranscript = toZp . byteStringToInteger BigEndian . blake2b_224
+    fromTranscript = toZp . byteStringToInteger LittleEndian . blake2b_224
 
 ------------------------------------ Bench -------------------------------------
 
 data Contract = Contract {
-    x        :: Plonk.F
-  , ps       :: Plonk.PlonkProverSecret
-  , targetId :: Plonk.F
+    x           :: Plonk.F
+  , ps          :: Plonk.PlonkProverSecret
+  , targetValue :: Plonk.F
 } deriving stock (Show)
 
 ------------------------------------- JSON -------------------------------------
@@ -155,9 +155,9 @@ data PlonkProverSecret = PlonkProverSecret F F F F F F F F F F F
   deriving anyclass (ToJSON, FromJSON)
 
 data RowContractJSON = RowContractJSON {
-    x'        :: F
-  , ps'       :: PlonkProverSecret
-  , targetId' :: F
+    x'           :: F
+  , ps'          :: PlonkProverSecret
+  , targetValue' :: F
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 

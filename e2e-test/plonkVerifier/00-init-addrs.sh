@@ -4,6 +4,8 @@ keypath=./keys
 
 echo "Create someone, zkfold-setup, alice and bob."
 
+mkdir -p $keypath
+
 #----------------------------------- :alice: -----------------------------------
 
 cardano-cli conway address key-gen \
