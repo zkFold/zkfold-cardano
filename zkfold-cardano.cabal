@@ -45,8 +45,25 @@ common lang
     -- -Wunused-packages
     -Wmissing-deriving-strategies
 
+common lang-extra
+  ghc-options:
+    -fobject-code
+    -fno-specialise
+    -fno-spec-constr
+    -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas
+    -fno-strictness
+    -fno-unbox-strict-fields 
+    -fno-unbox-small-strict-fields
+    -fno-full-laziness
+    -fexpose-all-unfoldings
+    -- Comment the following line to enable PlutusTx error messages
+    -- By default, we defer the errors as they mess with the HLS
+    -fplugin-opt PlutusTx.Plugin:defer-errors
+
 library
   import:           lang
+  import:           lang-extra
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.ForwardingScripts
@@ -64,18 +81,6 @@ library
     plutus-tx-plugin        ^>=1.27,
     vector                         ,
     zkfold-base                    ,
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs:   src
 
 test-suite test
@@ -108,6 +113,7 @@ test-suite test
 
 benchmark bench-uplc
   import:           lang
+  import:           lang-extra
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
   ghc-options:      -rtsopts
@@ -130,22 +136,11 @@ benchmark bench-uplc
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs: bench-uplc
 
 executable bench-cpu-mem
   import:           lang
+  import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
@@ -164,22 +159,11 @@ executable bench-cpu-mem
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs: bench-cpu-mem
 
 executable create-contract-transaction
   import:           lang
+  import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
@@ -206,22 +190,11 @@ executable create-contract-transaction
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs: create-contract-transaction
 
 executable create-transfer-transaction
   import:           lang
+  import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
@@ -248,22 +221,11 @@ executable create-transfer-transaction
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs: create-transfer-transaction
 
 executable create-init-transaction
   import:           lang
+  import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
@@ -279,16 +241,4 @@ executable create-init-transaction
     plutus-tx               ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -fplugin-opt PlutusTx.Plugin:defer-errors
   hs-source-dirs: create-init-transaction

@@ -6,7 +6,7 @@
 module Bench.Scripts (compiledSymbolicVerifier, compiledPlonkVerifier, compiledPlonkVerify) where
 
 import           PlutusLedgerApi.V3                       (BuiltinData)
-import           PlutusTx                                 (CompiledCode, UnsafeFromData (..))
+import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), unsafeApplyCode, liftCodeDef, toBuiltinData)
 import           PlutusTx.Prelude                         (Bool, check, ($))
 import           PlutusTx.TH                              (compile)
 
@@ -17,25 +17,29 @@ import           ZkFold.Cardano.PlonkVerifier             (plonkVerifier)
 import           ZkFold.Cardano.SymbolicVerifier          (symbolicVerifier)
 
 compiledSymbolicVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> ())
-compiledSymbolicVerifier contract = $$(compile [|| untypedSymbolicVerifier contract ||])
+compiledSymbolicVerifier contract =
+    $$(compile [|| untypedSymbolicVerifier ||])
+    `unsafeApplyCode` liftCodeDef (toBuiltinData contract)
   where
-    untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> ()
+    untypedSymbolicVerifier :: BuiltinData -> BuiltinData -> BuiltinData -> ()
     untypedSymbolicVerifier par redeemer ctx =
       check
         ( symbolicVerifier
-            par
+            (unsafeFromBuiltinData par)
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)
         )
 
 compiledPlonkVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> ())
-compiledPlonkVerifier computation = $$(compile [|| untypedPlonkVerifier computation ||])
+compiledPlonkVerifier computation =
+    $$(compile [|| untypedPlonkVerifier ||])
+    `unsafeApplyCode` liftCodeDef (toBuiltinData computation)
   where
-    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> ()
+    untypedPlonkVerifier :: BuiltinData -> BuiltinData -> BuiltinData -> ()
     untypedPlonkVerifier par redeemer ctx =
       check
         ( plonkVerifier
-            par
+            (unsafeFromBuiltinData par)
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)
         )
