@@ -4,7 +4,7 @@
 
 module Main (main) where
 
-import           Bench.Scripts                         (compiledPlonkVerifier, compiledPlonkVerify, compiledSymbolicVerifier)
+import           Bench.Scripts                         (compiledPlonkVerifier, compiledSymbolicVerifier)
 import           Cardano.Api                           (File (..), IsPlutusScriptLanguage, PlutusScript, PlutusScriptV3, writeFileTextEnvelope)
 import           Cardano.Api.Shelley                   (PlutusScript (..))
 import           Control.Monad                         (void)
@@ -22,21 +22,14 @@ import           UntypedPlutusCore                     (UnrestrictedProgram (..)
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain         (Contract (..), RowContractJSON, toContract)
 
-
-writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
-writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
-
-savePlutus :: FilePath -> CompiledCode a -> IO ()
-savePlutus filePath = let filePath' = ("./assets/" <> filePath <> ".plutus") in
-  writePlutusScriptToFile @PlutusScriptV3 filePath' . PlutusScriptSerialised . PlutusV3.serialiseCompiledCode
-
 saveFlat redeemer filePath code =
    BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
            `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
 
 main :: IO ()
 main = do
-  
+  pure ()
+  {-
   jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   case maybeRowContract of
@@ -52,3 +45,4 @@ main = do
         saveFlat proof "plonkVerifierScript"   $ compiledPlonkVerifier setup
         saveFlat redeemer "plonkVerifyScript"  $ compiledPlonkVerify `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData ())
     _ -> print ("Could not deserialize" :: String)
+  -}

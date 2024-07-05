@@ -6,6 +6,9 @@
 
 module Main where
 
+import Prelude
+
+{-
 import           Cardano.Api                                 hiding (TxId)
 import qualified Cardano.Api                                 as C
 import           Cardano.Api.Shelley                         (PlutusScriptOrReferenceInput (..), fromPlutusData, scriptDataToJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash)
@@ -28,7 +31,7 @@ import           Data.ByteString                             as BS (writeFile)
 import qualified Data.ByteString.Base16                      as B16
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Either                                 (partitionEithers)
-import           Data.Map                                    (fromList)
+import           Data.Map                                    (fromList, keys)
 import qualified Data.Map.Strict                             as Map
 import           Data.String                                 (IsString (..))
 import           GHC.ByteOrder                               (ByteOrder (..))
@@ -38,7 +41,7 @@ import           PlutusLedgerApi.V3                          (BuiltinByteString,
 import qualified PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (ToData (..))
 import qualified PlutusTx.AssocMap                           as AssocMap
-import           PlutusTx.Builtins                           (blake2b_256, byteStringToInteger, serialiseData)
+import           PlutusTx.Builtins                           (blake2b_224, byteStringToInteger, serialiseData)
 import           PlutusTx.Prelude                            (takeByteString)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 
@@ -48,14 +51,15 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_Scalar, 
 import           ZkFold.Base.Protocol.ARK.Plonk              (F, Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Cardano.ScriptsVerifier              (RedeemerVerifier (..))
-import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
+import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
+-- import           ZkFold.Cardano.ScriptsVerifier              (RedeemerSymbolic (..))
+-- import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
-import           ZkFold.Symbolic.Types                       (Symbolic)
+-- import           ZkFold.Symbolic.Types                       (Symbolic)
+import ZkFold.Base.Data.Vector (Vector(..))
 
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
@@ -157,14 +161,18 @@ final ([tx1], [tx2], [outAdr, outBob]) =
   toZp @BLS12_381_Scalar $ convertToInteger .  convertToBuiltInByteString $ ([tx1], [tx2], [outAdr, outBob], always')
   where
     convertToBuiltInByteString :: ([V3.TxOutRef], [V3.TxOutRef], [V3.TxOut], POSIXTimeRange) -> BuiltinByteString
-    convertToBuiltInByteString = blake2b_256 . serialiseData . toBuiltinData
+    convertToBuiltInByteString = blake2b_224 . serialiseData . toBuiltinData
     convertToInteger :: BuiltinByteString -> Integer
     convertToInteger = byteStringToInteger BigEndian . takeByteString 31
     always' :: POSIXTimeRange
     always' = always
+-}
+
 
 main :: IO ()
 main = do
+  pure ()
+  {-
   (ins, refs, outs) <- initCmd -- TODO: add parse range
   jsonRowContract <- BL.readFile "../test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
@@ -177,20 +185,21 @@ main = do
           Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) @Fr (TxId targetId))
           acc = applyArgs ac [targetId]
 
-          (omega, k1, k2) = getParams 5
-          inputs  = fromList [(acOutput acc, 1)] -- final (a, b, c)
-          plonk   = Plonk omega k1 k2 inputs acc x
-          setup'  = setup @Plonk32 plonk
-          w       = (PlonkWitnessInput inputs, ps)
-          (input', proof') = prove @Plonk32 setup' w
+          (omega, k1, k2)  = getParams 5
+          inputs           = fromList [(acOutput acc, 1)]
+          plonk            = Plonk @32 omega k1 k2 (Vector @1 $ keys inputs) acc x
+          setupP           = setupProve @(PlonkN 32) plonk
+          setupV           = setupVerify @(PlonkN 32) plonk
+          witness          = (PlonkWitnessInput inputs, ps)
+          (input', proof') = prove @(PlonkN 32) setupP witness
       in do
-        let setup = mkSetup setup'
-            input = mkInput input'
-            proof = mkProof setup proof'
-            redeemer = RedeemerVerifier setup input proof
+        let setup = mkSetup setupV
+            _ = mkInput input'
+            proof = mkProof @32 setup proof'
+            redeemer = RedeemerSymbolic proof
         -- print $ "input" ++ show input
         print $ "final input:" ++ show (negate $ final (ins, refs, outs))
         BS.writeFile ".././assets/redeemer.json" (prettyPrintJSON $ dataToJSON redeemer)
         BS.writeFile ".././assets/redeemer.cbor" (B16.encode (serialize' $ encode (V3.Redeemer . toBuiltinData $ redeemer)))
     _ -> print ("Could not deserialize" :: String)
-
+  -}

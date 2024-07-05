@@ -6,26 +6,35 @@ cradle:
     - path: "./test"
       component: "zkfold-cardano:test:test"
 
-    - path: "./bench-uplc/Main.hs"
-      component: "zkfold-cardano:bench:bench-uplc"
+    - path: "./benchs/bench-uplc/Main.hs"
+      component: "zkfold-cardano:exe:bench-uplc"
 
-    - path: "./bench-uplc/Bench/Scripts.hs"
-      component: "zkfold-cardano:bench:bench-uplc"
+    - path: "./benchs/bench-uplc/Bench/Scripts.hs"
+      component: "zkfold-cardano:exe:bench-uplc"
 
-    - path: "./bench-cpu-mem/Main.hs"
+    - path: "./benchs/bench-cpu-mem/Main.hs"
       component: "zkfold-cardano:exe:bench-cpu-mem"
 
-    - path: "./bench-cpu-mem/Bench/Statistics.hs"
+    - path: "./benchs/bench-cpu-mem/Bench/Statistics.hs"
       component: "zkfold-cardano:exe:bench-cpu-mem"
 
-    - path: "./bench-cpu-mem/Bench/Scripts.hs"
+    - path: "./benchs/bench-cpu-mem/Bench/Scripts.hs"
       component: "zkfold-cardano:exe:bench-cpu-mem"
 
-    - path: "./create-contract-transaction/Main.hs"
-      component: "zkfold-cardano:exe:create-contract-transaction"
+    - path: "./backends/symbolic/symbolic-init-transaction/Main.hs"
+      component: "zkfold-cardano:exe:symbolic-init-transaction"
 
-    - path: "./create-transfer-transaction/Main.hs"
-      component: "zkfold-cardano:exe:create-transfer-transaction"
+    - path: "./backends/symbolic/symbolic-transfer-transaction/Main.hs"
+      component: "zkfold-cardano:exe:symbolic-transfer-transaction"
 
-    - path: "./create-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:create-init-transaction"
+    - path: "./backends/symbolic/symbolic-withdraw-transaction/Main.hs"
+      component: "zkfold-cardano:exe:symbolic-withdraw-transaction"
+
+    - path: "./backends/plonk/plonk-init-transaction/Main.hs"
+      component: "zkfold-cardano:exe:plonk-init-transaction"
+
+    - path: "./backends/plonk/plonk-transfer-transaction/Main.hs"
+      component: "zkfold-cardano:exe:plonk-transfer-transaction"
+
+    - path: "./backends/plonk/plonk-burning-transaction/Main.hs"
+      component: "zkfold-cardano:exe:plonk-burning-transaction"

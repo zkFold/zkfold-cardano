@@ -118,13 +118,13 @@ test-suite test
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
-benchmark bench-uplc
+executable bench-uplc
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
-  type:             exitcode-stdio-1.0
   ghc-options:      -rtsopts
   main-is:          Main.hs
+  hs-source-dirs:   benchs/bench-uplc
   other-modules:    Bench.Scripts
   build-depends:
     aeson                          ,
@@ -143,7 +143,6 @@ benchmark bench-uplc
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  hs-source-dirs: bench-uplc
 
 executable bench-cpu-mem
   import:           lang
@@ -151,6 +150,7 @@ executable bench-cpu-mem
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
+  hs-source-dirs:   benchs/bench-cpu-mem
   other-modules:
     Bench.Statistics
     Bench.Scripts
@@ -166,14 +166,35 @@ executable bench-cpu-mem
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  hs-source-dirs: bench-cpu-mem
 
-executable create-contract-transaction
+executable symbolic-init-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
+  hs-source-dirs:   backends/symbolic/symbolic-init-transaction
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    base16-bytestring              ,
+    bytestring                     ,
+    cardano-api                    ,
+    cardano-binary                 ,
+    containers                     ,
+    serialise                      ,
+    plutus-ledger-api       ^>=1.27,
+    plutus-tx               ^>=1.27,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
+
+executable symbolic-transfer-transaction
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/symbolic/symbolic-transfer-transaction
   build-depends:
     aeson                          ,
     aeson-pretty                   ,
@@ -197,14 +218,14 @@ executable create-contract-transaction
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  hs-source-dirs: create-contract-transaction
 
-executable create-transfer-transaction
+executable symbolic-withdraw-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
+  hs-source-dirs:   backends/symbolic/symbolic-withdraw-transaction
   build-depends:
     aeson                          ,
     aeson-pretty                   ,
@@ -228,14 +249,14 @@ executable create-transfer-transaction
     plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  hs-source-dirs: create-transfer-transaction
 
-executable create-init-transaction
+executable plonk-init-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
+  hs-source-dirs:   backends/plonk/plonk-init-transaction
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -243,9 +264,71 @@ executable create-init-transaction
     bytestring                     ,
     cardano-api                    ,
     cardano-binary                 ,
+    containers                     ,
     serialise                      ,
     plutus-ledger-api       ^>=1.27,
     plutus-tx               ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
-  hs-source-dirs: create-init-transaction
+
+executable plonk-transfer-transaction
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/plonk/plonk-transfer-transaction
+  build-depends:
+    aeson                          ,
+    aeson-pretty                   ,
+    base              >= 4.9 && < 5,
+    base16-bytestring              ,
+    bytestring                     ,
+    cardano-api                    ,
+    cardano-binary                 ,
+    cardano-cli                    ,
+    cardano-crypto-class           ,
+    containers                     ,
+    serialise                      ,
+    transformers                   ,
+    transformers-except            ,
+    text                           ,
+    optparse-applicative-fork      ,
+    flat                           ,
+    plutus-core             ^>=1.27,
+    plutus-ledger-api       ^>=1.27,
+    plutus-tx               ^>=1.27,
+    plutus-tx-plugin        ^>=1.27,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
+
+executable plonk-burning-transaction
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/plonk/plonk-burning-transaction
+  build-depends:
+    aeson                          ,
+    aeson-pretty                   ,
+    base              >= 4.9 && < 5,
+    base16-bytestring              ,
+    bytestring                     ,
+    cardano-api                    ,
+    cardano-binary                 ,
+    cardano-cli                    ,
+    cardano-crypto-class           ,
+    containers                     ,
+    serialise                      ,
+    transformers                   ,
+    transformers-except            ,
+    text                           ,
+    optparse-applicative-fork      ,
+    flat                           ,
+    plutus-core             ^>=1.27,
+    plutus-ledger-api       ^>=1.27,
+    plutus-tx               ^>=1.27,
+    plutus-tx-plugin        ^>=1.27,
+    zkfold-base                    ,
+    zkfold-cardano                 ,

@@ -2,11 +2,11 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 module Main where
 
-import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
+import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript)
 import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
 import           Data.Aeson                                  (decode)
 import qualified Data.ByteString.Lazy                        as BL
-import           Data.Map                                    (fromList)
+import           Data.Map                                    (fromList, keys)
 import           PlutusLedgerApi.V3                          (Interval, POSIXTime, ScriptContext (..), TxInInfo, TxInfo (..), TxOut, always)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import           System.IO                                   (Handle, stdout)
@@ -18,14 +18,12 @@ import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkW
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), Plonk32, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Cardano.ScriptsVerifier              (DatumVerifier (..), RedeemerVerifier (..))
-import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
+import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
+import ZkFold.Base.Data.Vector (Vector(..))
 
 context :: ScriptContext -- fill up with data
 context = ScriptContext
@@ -37,19 +35,23 @@ context = ScriptContext
     }
   }
 
-printCostsSymbolicVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsSymbolicVerifier h s i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript DatumVerifier (RedeemerVerifier s i p) ctx)
+{-
+printCostsSymbolicVerifier :: Handle -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
+printCostsSymbolicVerifier h i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript (DatumSymbolic i) (RedeemerSymbolic p) ctx)
 
-printCostsPlonkVerifier :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript DatumVerifier (RedeemerVerifier s i p) ctx)
+printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript (RedeemerToken s i p) ctx)
 
-printCostsVerifyPlonk :: Handle -> Setup PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
-printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript (RedeemerVerifier s i p))
+printCostsVerifyPlonk :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
+printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript (RedeemerToken s i p))
+-}
 
 main :: IO ()
 main = do
   jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
+  pure ()
+  {-
   case maybeRowContract of
     Just rowContract ->
       let Contract{..} = toContract rowContract
@@ -60,15 +62,16 @@ main = do
           acc = applyArgs ac [targetId]
 
           (omega, k1, k2) = getParams 5
-          inputs  = fromList [(acOutput acc, 1)]
-          plonk   = Plonk omega k1 k2 inputs acc x
-          setup'  = setup @Plonk32 plonk
-          w       = (PlonkWitnessInput inputs, ps)
-          (input', proof') = prove @Plonk32 setup' w
+          inputs   = fromList [(acOutput acc, 1)]
+          plonk            = Plonk @32 omega k1 k2 (Vector @1 $ keys inputs) acc x
+          setupP           = setupProve @(PlonkN 32) plonk
+          setupV           = setupVerify @(PlonkN 32) plonk
+          witness          = (PlonkWitnessInput inputs, ps)
+          (input', proof') = prove @(PlonkN 32) setupP witness
       in do
-        let setup = mkSetup setup'
+        let setup = mkSetup setupV
             input = mkInput input'
-            proof = mkProof setup proof'
+            proof = mkProof @32 setup proof'
             h = stdout
         hPrintf h "\n\n"
         hPrintf h "Run plonk verify\n\n"
@@ -83,6 +86,7 @@ main = do
         hPrintf h "\n\n"
         hPrintf h "Run symbolic plonk verifier\n\n"
         printHeader h
-        printCostsSymbolicVerifier h setup input proof context
+        printCostsSymbolicVerifier h input proof context
         hPrintf h "\n\n"
     _ -> print "Could not deserialize"
+  -}
