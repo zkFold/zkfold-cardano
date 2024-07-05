@@ -33,12 +33,19 @@
       name: "Someone",
       address: "Public key hash",
       value: (
-        ada: 999
+        ada: 998
       ),
     ),
     (
-      name: "Token verifier script reference",
-      address: "Script hash",
+      name: "Plonk: setup Above 18",
+      address: "zkfold-main",
+      value: (
+        ada: 1
+      )
+    ),
+    (
+      name: "Forwarding minting",
+      address: "zkfold-main",
       value: (
         ada: 1
       )
@@ -47,7 +54,44 @@
   signatures: (
     "Someone",
   ),
-  notes: [Someone posts the Token verifier script on-chain.]
+  notes: [Someone posts the Plonk verifier script on-chain.]
+)
+#v(10em)
+
+#transaction(
+  [*Transfer transaction*],
+  inputs: (
+    (
+      name: "Charles Hoskinson",
+      address: "Public key hash",
+      value: (
+        ada: 567
+      )
+    ),
+  ),
+  outputs: (
+    (
+      name: "Symbolhash to Plonk \"Above 18?\"",
+      address: "Forwarding mint script",
+      value: (
+        ada: 100
+      ),
+      datum: (
+        "input": "<setup address>"
+      )
+    ),
+    (
+      name: "Charles Hoskinson",
+      address: "Public key hash",
+      value: (
+        ada: 467
+      ),
+    ),
+  ),
+  signatures: (
+    "Charles Hoskinson",
+  ),
+  notes: [Charles Hoskinson sents ada to a smart contract address.]
 )
 #v(10em)
 
@@ -75,15 +119,15 @@
       name: "Alice",
       address: "Public key hash",
       value: (
-        ada: 467
+        ada: 566
       ),
     ),
     (
       name: "Bob",
       address: "Public key hash",
       value: (
-        ada: 100,
-        tokenName: 5,
+        ada: 1,
+        tokenName: 1,
       )
     ),
   ),
@@ -92,7 +136,6 @@
   ),
   notes: [Alice sents ada and plonk tokens to Bob.]
 )
-#v(4em)
 
 #pagebreak()
 #transaction(
@@ -103,29 +146,44 @@
       address: "Public key hash",
       value: (
         ada: 100,
-        tokenName: 5,
+        tokenName: 1,
       )
     ),
     (
-      name: "Token verifier script reference",
+      name: "Symbolhash to Plonk \"Above 18?\"",
+      address: "Forwarding mint script",
+      value: (
+        ada: 100
+      ),
+      datum: (
+        "input": "<setup address>"
+      )
+    ),
+    (
+      name: "Plonk: setup Above 18",
+      address: "zkfold-main",
       reference: true,
-      address: "Script hash",
       value: (
         ada: 1
       )
-    )
+    ),
+    (
+      name: "Forwarding minting",
+      address: "zkfold-main",
+      reference: true,
+      value: (
+        ada: 1
+      )
+    ),
   ),
   outputs: (
     (
       name: "Bob",
       address: "Public key hash",
       value: (
-        ada: 100
+        ada: 200,
       ),
     ),
-  ),
-  staking: (
-    "zkFold Token verifier",
   ),
   signatures: (
     "Bob",

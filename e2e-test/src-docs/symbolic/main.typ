@@ -37,23 +37,17 @@
       ),
     ),
     (
-      name: "\"Above 18?\" setup datum",
-      address: "zkfold-setup",
+      name: "Symbolic: setup Above 18 + <Bob address>",
+      address: "stake pool",
       value: (
         ada: 1
-      ),
-      datum: (
-        "setup": "Above 18?"
       )
     ),
     (
-      name: "Symbolic verifier script reference",
-      address: "symbolicVerifier.plutus",
+      name: "Forwarding reward",
+      address: "zkfold-main",
       value: (
         ada: 1
-      ),
-      datum: (
-        "input": "zero hash"
       )
     ),
   ),
@@ -77,13 +71,13 @@
   ),
   outputs: (
     (
-      name: "\"Above 18?\" Input",
-      address: "symbolicVerifier.plutus",
+      name: "Scripthash to Symbolic \"Above 18?\"",
+      address: "Forwarding reward script",
       value: (
         ada: 100
       ),
       datum: (
-        "input": "<setup address> + <Bob address>"
+        "input": "<setup address>"
       )
     ),
     (
@@ -113,34 +107,31 @@
       )
     ),
     (
-      name: "\"Above 18?\" Input",
-      address: "Symbolic forwarding script",
+      name: "Scripthash to Symbolic \"Above 18?\"",
+      address: "Forwarding reward script",
       value: (
         ada: 100
       ),
       datum: (
-        "input": "<setup address> + <Bob address>"
+        "input": "<setup address>"
       )
     ),
     (
-      name: "\"Above 18?\" setup datum",
+      name: "Symbolic: setup Above 18 + <Bob address>",
       reference: true,
-      address: "zkfold-setup",
+      address: "stake pool",
       value: (
         ada: 1
-      ),
-      datum: (
-        "setup": "Above 18?"
       )
     ),
     (
-      name: "Symbolic verifier script reference",
+      name: "Forwarding reward",
       reference: true,
-      address: "symbolicVerifier.plutus",
+      address: "zkfold-main",
       value: (
         ada: 1
       )
-    )
+    ),
   ),
   outputs: (
     (
