@@ -6,19 +6,15 @@ module ZkFold.Cardano.Plonk.OnChain.Data where
 
 import           GHC.Generics                             (Generic)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
-import           PlutusTx.Builtins
+import           PlutusTx.Builtins                        (BuiltinByteString, Integer)
 import           Prelude                                  (Show)
 
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F)
 
----------------------------------- ByteString ----------------------------------
-
 data SetupBytes = SetupBytes {
     n     :: Integer
   , pow   :: Integer
-  , g0'   :: BuiltinByteString
-  , h0'   :: BuiltinByteString
-  , h1'   :: BuiltinByteString
+  , x2'   :: BuiltinByteString
   , omega :: F
   , k1    :: F
   , k2    :: F
@@ -63,4 +59,3 @@ data ProofBytes = ProofBytes {
 
 makeLift ''ProofBytes
 makeIsDataIndexed ''ProofBytes [('ProofBytes,0)]
-

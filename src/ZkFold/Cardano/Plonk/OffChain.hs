@@ -33,9 +33,7 @@ mkSetup :: SetupVerify (PlonkN n) -> SetupBytes
 mkSetup (PlonkSetupParamsVerify {..}, PlonkCircuitCommitments {..}) = SetupBytes
   { n
   , pow -- value @n == 2^pow
-  , g0'   = convertG1 g0
-  , h0'   = convertG2 h0 -- todo: bench generate on off-chain in setup vs generate on on-chain in verify
-  , h1'   = convertG2 h1 -- todo: bench generate on off-chain in setup vs generate on on-chain in verify
+  , x2'   = convertG2 x2
   , omega = F $ convertF omega
   , k1    = F $ convertF k1
   , k2    = F $ convertF k2
@@ -49,7 +47,7 @@ mkSetup (PlonkSetupParamsVerify {..}, PlonkCircuitCommitments {..}) = SetupBytes
   , cmS3' = convertG1 cmS3
   }
 
-mkInput :: Input (PlonkN n) -> InputBytes -- wPub = V.map negate wPub' -- todo: do it in off-chain when input create
+mkInput :: Input (PlonkN n) -> InputBytes
 mkInput (PlonkInput input) = InputBytes . F . convertF $ V.head input
 
 mkProof :: forall n. KnownNat n => SetupBytes -> Proof (PlonkN n) -> ProofBytes

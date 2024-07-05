@@ -14,8 +14,6 @@ import           Prelude                         (Show)
 
 import qualified ZkFold.Base.Algebra.Basic.Class as ZkFold
 
---------------------------------------- F --------------------------------------
-
 bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
@@ -110,5 +108,3 @@ instance ZkFold.MultiplicativeGroup F where
 
     {-# INLINABLE (/) #-}
     a / b = a ZkFold.* ZkFold.invert b
-
-
