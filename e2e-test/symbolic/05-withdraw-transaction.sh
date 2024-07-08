@@ -17,6 +17,29 @@ echo "someone address:"
 echo "$(cardano-cli query utxo --testnet-magic 4 --address $(cat $keypath/someone.addr))"
 echo ""
 
+#We now withdraw the rewards from our Plutus staking address
+
+cardano-cli conway transaction build \
+    --testnet-magic 4 \
+    --change-address "$(cat $keypath/someone.addr)" \
+    --tx-in $in \
+    --tx-in-collateral $txinCollateral1 \
+    --withdrawal "$(cat $keypath/symbolicVerifierStaking.addr) + 10000000 lovelace" \
+    --withdrawal-script-file "$assets/symbolicVerifier.plutus" \
+    --withdrawal-redeemer-file plutusStakingScriptRedeemer \
+    --protocol-params-file "$keypath/pparams.json" \
+    --out-file "$keypath/staking-script-withdrawal.txbody"
+
+cardano-cli conway transaction sign \
+    --testnet-magic 4 \
+    --tx-body-file "$keypath/staking-script-withdrawal.txbody" \
+    --signing-key-file "$keypath/bob.skey" \
+    --out-file "$keypath/staking-script-withdrawal.tx"
+
+cardano-cli conway transaction submit \
+    --testnet-magic 4 \
+    --tx-file "$keypath/taking-script-withdrawal.tx"
+
 #------------------------------ :create redeemer: ------------------------------
 
 cardano-cli query utxo \

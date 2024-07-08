@@ -50,19 +50,8 @@ cardano-cli conway address build \
   --out-file $keypath/zkfold-main.addr \
   --testnet-magic 4
 
-#------------------------------- :zkfold-setup: --------------------------------
-
-cardano-cli conway address key-gen \
-  --verification-key-file $keypath/zkfold-setup.vkey \
-  --signing-key-file $keypath/zkfold-setup.skey
-
-cardano-cli conway address build \
-  --payment-verification-key-file $keypath/zkfold-setup.vkey \
-  --out-file $keypath/zkfold-setup.addr \
-  --testnet-magic 4
-
 #-------------------------------------------------------------------------------
 
-echo "Put some funds in the address(zkfold-main.addr): $(cat $keypath/zkfold-main.addr)"
-echo "Put some funds in the address(alice.addr): $(cat $keypath/alice.addr)"
 echo "Put some funds in the address(someone.addr): $(cat $keypath/someone.addr)"
+echo "Put some funds in the address(alice.addr): $(cat $keypath/alice.addr)"
+echo "Put some funds in the address(bob.addr): $(cat $keypath/bob.addr)"
