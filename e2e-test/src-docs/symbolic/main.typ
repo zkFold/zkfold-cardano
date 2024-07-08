@@ -97,7 +97,7 @@
 
 #pagebreak()
 #transaction(
-  [*Smart contract transaction*],
+  [*Withdraw transaction*],
   inputs: (
     (
       name: "Bob",

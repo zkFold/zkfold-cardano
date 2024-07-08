@@ -62,7 +62,7 @@
   [*Transfer transaction*],
   inputs: (
     (
-      name: "Charles Hoskinson",
+      name: "Charles",
       address: "Public key hash",
       value: (
         ada: 567
@@ -81,7 +81,7 @@
       )
     ),
     (
-      name: "Charles Hoskinson",
+      name: "Charles",
       address: "Public key hash",
       value: (
         ada: 467
@@ -89,9 +89,9 @@
     ),
   ),
   signatures: (
-    "Charles Hoskinson",
+    "Charles",
   ),
-  notes: [Charles Hoskinson sents ada to a smart contract address.]
+  notes: [Charles sents ada to a smart contract address.]
 )
 #v(10em)
 
@@ -106,9 +106,9 @@
       )
     ),
     (
-      name: "Token verifier script reference",
+      name: "Plonk: setup Above 18",
       reference: true,
-      address: "Script hash",
+      address: "zkfold-main",
       value: (
         ada: 1
       )
