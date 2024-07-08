@@ -10,7 +10,8 @@ import           PlutusTx.Prelude                         (Bool (..), Maybe (..)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes, SetupBytes, toInput)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain.Utils       (toInput)
 
 -- | Plutus script (minting policy) for verifying computations on-chain.
 --

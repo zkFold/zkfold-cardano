@@ -2,13 +2,14 @@
 
 module ZkFold.Cardano.Scripts.SymbolicVerifier where
 
-import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..))
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxOut (..))
 import           PlutusLedgerApi.V3.Contexts              (TxInInfo (..))
 import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<$>))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes, SetupBytes, dataToBlake, toInput)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --
@@ -23,9 +24,9 @@ symbolicVerifier contract proof ctx =
         info  = scriptContextTxInfo ctx
 
         -- Extracting transaction data
-        ins   = txInInfoOutRef <$> txInfoInputs info
-        refs  = txInInfoOutRef <$> txInfoReferenceInputs info
-        outs  = txInfoOutputs info
+        ins   = txOutAddress . txInInfoResolved <$> txInfoInputs info
+        refs  = txOutAddress . txInInfoResolved <$> txInfoReferenceInputs info
+        outs  = txOutAddress <$> txInfoOutputs info
         range = txInfoValidRange info
 
         -- Computing public input from the transaction data
