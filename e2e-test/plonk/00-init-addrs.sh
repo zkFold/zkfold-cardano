@@ -6,6 +6,28 @@ echo "Create someone, zkfold-setup, alice and bob."
 
 mkdir -p $keypath
 
+#---------------------------------- :someone: ----------------------------------
+
+cardano-cli conway address key-gen \
+  --verification-key-file $keypath/someone.vkey \
+  --signing-key-file $keypath/someone.skey
+
+cardano-cli conway address build \
+  --payment-verification-key-file $keypath/someone.vkey \
+  --out-file $keypath/someone.addr \
+  --testnet-magic 4
+
+#----------------------------------- :charles: -----------------------------------
+
+cardano-cli conway address key-gen \
+  --verification-key-file $keypath/charles.vkey \
+  --signing-key-file $keypath/charles.skey
+
+cardano-cli conway address build \
+  --payment-verification-key-file $keypath/charles.vkey \
+  --out-file $keypath/charles.addr \
+  --testnet-magic 4
+
 #----------------------------------- :alice: -----------------------------------
 
 cardano-cli conway address key-gen \
@@ -41,6 +63,7 @@ cardano-cli conway address build \
 
 #-------------------------------------------------------------------------------
 
-echo "Put some funds in the address(zkfold-main.addr): $(cat $keypath/zkfold-main.addr)"
+echo "Put some funds in the address(someone.addr): $(cat $keypath/someone.addr)"
+echo "Put some funds in the address(charles.addr): $(cat $keypath/charles.addr)"
 echo "Put some funds in the address(alice.addr): $(cat $keypath/alice.addr)"
 echo "Put some funds in the address(bob.addr): $(cat $keypath/bob.addr)"
