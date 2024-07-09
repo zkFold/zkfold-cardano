@@ -3,9 +3,9 @@ module ZkFold.Cardano.Plonk.OnChain.Utils where
 
 
 import           GHC.ByteOrder                             (ByteOrder (..))
-import           PlutusTx                                  (ToData (..))
+import           PlutusLedgerApi.V3
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                          ((.))
+import           PlutusTx.Prelude                          (Bool (..), Eq (..), (.))
 
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F  (F (..), toF)
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1 (G1)
@@ -24,3 +24,15 @@ toInput = InputBytes . toF . byteStringToInteger BigEndian
 {-# INLINABLE dataToBlake #-}
 dataToBlake :: ToData a => a -> BuiltinByteString
 dataToBlake = blake2b_224 . serialiseData . toBuiltinData
+
+-- https://github.com/IntersectMBO/plutus/issues/6273
+{-# INLINABLE eqCredential #-}
+eqCredential :: Credential -> ScriptPurpose -> Bool
+eqCredential a (Rewarding b) = a == b
+eqCredential _ _             = False
+
+-- https://github.com/IntersectMBO/plutus/issues/6273
+{-# INLINABLE eqCurrencySymbol #-}
+eqCurrencySymbol :: CurrencySymbol -> ScriptPurpose -> Bool
+eqCurrencySymbol a (Minting b) = a == b
+eqCurrencySymbol _ _           = False
