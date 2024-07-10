@@ -13,7 +13,6 @@ echo "charles address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic 4)"
 echo ""
 
-
 #-------------------------------- :create datum: -------------------------------
 
 cabal run plonk-transfer-transaction

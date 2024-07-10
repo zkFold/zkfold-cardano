@@ -2,9 +2,11 @@
 
 Run the `00-init-addrs.sh` to initialize the system, you also need to transfer money to addresses on the sancho.network testnet.
 
-To start a transaction you need to run the following two scripts.
+To start a transaction you need to run the following 5 scripts.
 
-First transaction `symbolicVerifier/01-send-with-condition.sh`.
-Second transaction `symbolicVerifier/02-prove-condition.sh`.
+- `plonk/01-init-transaction.sh` for publishing Plutus scripts on the blockchain.
+- `plonk/02-transfer-transaction.sh` to create rewards when burning tokens.
+- `plonk/03-minting-transaction.sh` creation and sending of tokens.
+- `plonk/04-burning-transaction.sh` burning and receiving rewards.
 
-You can also see all wallet at `01-show-all.sh`.
+You can also see all wallet at `05-show-all.sh`.

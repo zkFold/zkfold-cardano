@@ -8,7 +8,7 @@ echo "bob burning tokens."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-collateral=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+collateral=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
 
 echo ""
 echo "bob address:"
@@ -16,9 +16,10 @@ echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magi
 echo ""
 
 plonkVerifier=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")#0
-mintpolicyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
+forwardingMint=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
+policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
 
-forwardingMintReward=$transfer-transaction.tx
+forwardingMintReward=$(cardano-cli transaction txid --tx-file "$keypath/transfer-transaction.tx")#0
 
 #-------------------------- :tokenname and redeemer: ---------------------------
 
@@ -36,11 +37,11 @@ cardano-cli conway transaction build \
     --tx-in-collateral $collateral \
     --out-file "$keypath/burning-transaction.txbody" \
     --tx-in $in \
-    --mint "-1 $mintpolicyid.$tokenname" \
+    --mint "-1 $policyid.$tokenname" \
     --mint-tx-in-reference $plonkVerifier \
     --mint-plutus-script-v3 \
     --mint-reference-tx-in-redeemer-file $redeemerUnit \
-    --policy-id $mintpolicyid \
+    --policy-id $policyid \
     --tx-in $forwardingMintReward \
     --spending-tx-in-reference $forwardingMint \
     --spending-plutus-script-v3 \

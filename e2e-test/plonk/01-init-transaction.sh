@@ -7,7 +7,8 @@ echo ""
 echo "someone wants to create an address with scripts."
 echo ""
 
-in=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+in1=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+in2=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
 
 echo "someone address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4)"
@@ -30,7 +31,7 @@ cardano-cli conway transaction build \
     --testnet-magic 4 \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/plonkVerifier.txbody" \
-    --tx-in $in \
+    --tx-in $in1 \
     --tx-out "$(cat $keypath/zkfold-main.addr) + 1 lovelace" \
     --tx-out-reference-script-file "$assets/plonkVerifier.plutus"
 
@@ -57,7 +58,7 @@ cardano-cli conway transaction build \
     --testnet-magic 4 \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/forwardingMint.txbody" \
-    --tx-in $in 
+    --tx-in $in2 \
     --tx-out "$(cat $keypath/zkfold-main.addr) + 1 lovelace" \
     --tx-out-reference-script-file "$assets/forwardingMint.plutus"
 
