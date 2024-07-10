@@ -33,6 +33,9 @@ cradle:
     - path: "./backends/plonk/plonk-init-transaction/Main.hs"
       component: "zkfold-cardano:exe:plonk-init-transaction"
 
+    - path: "./backends/plonk/plonk-init-transaction/Scripts.hs"
+      component: "zkfold-cardano:exe:plonk-init-transaction"
+
     - path: "./backends/plonk/plonk-transfer-transaction/Main.hs"
       component: "zkfold-cardano:exe:plonk-transfer-transaction"
 
