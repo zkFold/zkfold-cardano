@@ -256,6 +256,7 @@ executable plonk-init-transaction
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
+  other-modules:    Scripts
   hs-source-dirs:   backends/plonk/plonk-init-transaction
   build-depends:
     aeson                          ,
@@ -266,8 +267,10 @@ executable plonk-init-transaction
     cardano-binary                 ,
     containers                     ,
     serialise                      ,
+    plutus-core             ^>=1.27,
     plutus-ledger-api       ^>=1.27,
     plutus-tx               ^>=1.27,
+    plutus-tx-plugin        ^>=1.27,
     zkfold-base                    ,
     zkfold-cardano                 ,
 
@@ -302,13 +305,13 @@ executable plonk-transfer-transaction
     zkfold-base                    ,
     zkfold-cardano                 ,
 
-executable plonk-burning-transaction
+executable plonk-minting-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   backends/plonk/plonk-burning-transaction
+  hs-source-dirs:   backends/plonk/plonk-minting-transaction
   build-depends:
     aeson                          ,
     aeson-pretty                   ,
