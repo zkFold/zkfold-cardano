@@ -14,7 +14,7 @@ import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProo
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OffChain               (mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile, applyArgs)
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 
@@ -25,19 +25,16 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkProverSecret -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let Bool ac'' = compile @Fr (equalityCheckContract @ArithmeticCircuit @Fr targetValue) :: Bool (ArithmeticCircuit 1 Fr)
-        ac' = applyArgs ac'' [targetValue]
+    let Bool ac = compile @Fr (equalityCheckContract @ArithmeticCircuit @Fr targetValue) :: Bool (ArithmeticCircuit 1 Fr)
 
         (omega, k1, k2) = getParams 5
-        inputs  = fromList [(V.item $ acOutput ac', 1)]
-        plonk   = Plonk @32 omega k1 k2 (acOutput ac') ac' x
+        witnessInputs  = fromList [(1, targetValue), (V.item $ acOutput ac, 1)]
+        indexTargetValue = V.Vector [1]
+        plonk   = Plonk @32 omega k1 k2 indexTargetValue ac x
         setupP  = setupProve @PlonkBase32 plonk
         setupV  = setupVerify @PlonkBase32 plonk
-        witness = (PlonkWitnessInput inputs, ps)
+        witness = (PlonkWitnessInput witnessInputs, ps)
         (input, proof) = prove @PlonkBase32 setupP witness
-
-        -- `one` corresponds to `True`
-        -- circuitOutputsTrue = plonkVerifierInput $ V.singleton one
 
     in (mkSetup setupV, mkInput input, mkProof @32 (mkSetup setupV) proof)
 
