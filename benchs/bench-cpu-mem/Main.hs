@@ -1,7 +1,8 @@
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# OPTIONS_GHC -Wno-missing-fields #-}
 module Main where
 
+import           Prelude    
+
+{-
 import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript)
 import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
 import           Data.Aeson                                  (decode)
@@ -35,7 +36,6 @@ context = ScriptContext
     }
   }
 
-{-
 printCostsSymbolicVerifier :: Handle -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
 printCostsSymbolicVerifier h i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript (DatumSymbolic i) (RedeemerSymbolic p) ctx)
 
@@ -48,10 +48,11 @@ printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript 
 
 main :: IO ()
 main = do
-  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
-  let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   pure ()
   {-
+  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
+  let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
+  
   case maybeRowContract of
     Just rowContract ->
       let Contract{..} = toContract rowContract

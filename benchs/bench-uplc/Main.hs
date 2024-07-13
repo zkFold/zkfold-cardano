@@ -1,9 +1,11 @@
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-
 {-# LANGUAGE OverloadedStrings #-}
-
+-}
 module Main (main) where
 
+import           Prelude   
+
+{-
 import           Bench.Scripts                         (compiledPlonkVerifier, compiledSymbolicVerifier)
 import           Cardano.Api                           (File (..), IsPlutusScriptLanguage, PlutusScript, PlutusScriptV3, writeFileTextEnvelope)
 import           Cardano.Api.Shelley                   (PlutusScript (..))
@@ -25,6 +27,7 @@ import           ZkFold.Cardano.Plonk.OffChain         (Contract (..), RowContra
 saveFlat redeemer filePath code =
    BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
            `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
+-}
 
 main :: IO ()
 main = do
