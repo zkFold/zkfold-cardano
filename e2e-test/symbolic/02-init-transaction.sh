@@ -13,16 +13,18 @@ echo "someone address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4)"
 echo ""
 
+#-------------------------------- :staking addr: -------------------------------
+
+cardano-cli conway stake-address build \
+    --stake-script-file "$assets/symbolicVerifier.plutus" \
+    --out-file "$keypath/symbolicVerifierStaking.addr" \
+    --testnet-magic 4
+
 #------------------------------- :create scripts: ------------------------------
 
 cabal run symbolic-init-transaction
 
 #------------------------------- :symbolic setup: ------------------------------
-
-#cardano-cli conway address build \
-#    --payment-script-file "$assets/symbolicVerifier.plutus" \
-#    --out-file "$keypath/symbolicVerifier.addr" \
-#    --testnet-magic 4
 
 cardano-cli conway address build \
     --payment-verification-key-file "$keypath/bob.vkey" \

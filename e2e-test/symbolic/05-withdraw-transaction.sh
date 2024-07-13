@@ -4,31 +4,50 @@ keypath=./keys
 assets=../assets
 
 echo ""
-echo "someone has seen bob's documents and confirms the transaction."
+echo "bob withdrawal ada."
+echo ""
+
+in=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+collateral=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
+
+echo ""
+echo "bob address:"
+echo "$(cardano-cli query utxo --testnet-magic 4 --address $(cat $keypath/bob.addr))"
 echo ""
 
 symbolicVerifier=$(cardano-cli transaction txid --tx-file "$keypath/symbolicVerifier.tx")#0
-setup=$(cardano-cli transaction txid --tx-file "$keypath/setup.tx")#0
-symbolicAlice=$(cardano-cli transaction txid --tx-file "$keypath/symbolicAlice.tx")#1
-collateral=$(cardano-cli query utxo --testnet-magic 4 --address $(cat $keypath/someone.addr) --out-file  /dev/stdout | jq -r 'keys[0]')
+forwardingRewardReference=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
+base16=$(cardano-cli conway address info --address "$keypath/symbolicVerifier.addr" /dev/stdout | jq -r 'keys[0]')
 
-echo ""
-echo "someone address:"
-echo "$(cardano-cli query utxo --testnet-magic 4 --address $(cat $keypath/someone.addr))"
-echo ""
+forwardingRewardIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
 
-#We now withdraw the rewards from our Plutus staking address
+#---------------------------------- :redeemer: ---------------------------------
+
+cabal run symbolic-withdraw-transaction -- $base16
+
+plutusStakingScriptRedeemer=$assets/redeemerSymbolicVerifier.json
+
+redeemerUnit=$assets/unit.json
+
+#---------------------------------- :withdraw: ---------------------------------
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
-    --change-address "$(cat $keypath/someone.addr)" \
-    --tx-in $in \
-    --tx-in-collateral $txinCollateral1 \
-    --withdrawal "$(cat $keypath/symbolicVerifierStaking.addr) + 10000000 lovelace" \
-    --withdrawal-script-file "$assets/symbolicVerifier.plutus" \
-    --withdrawal-redeemer-file plutusStakingScriptRedeemer \
+    --change-address "$(cat $keypath/bob.addr)" \
+    --tx-in-collateral $collateral \
     --protocol-params-file "$keypath/pparams.json" \
-    --out-file "$keypath/staking-script-withdrawal.txbody"
+    --out-file "$keypath/staking-script-withdrawal.txbody" \
+    --tx-in $in \
+    --withdrawal "$(cat $keypath/symbolicVerifierStaking.addr) + 0 lovelace" \
+    --withdrawal-plutus-script-v3 \
+    --withdrawal-tx-in-reference "$assets/symbolicVerifier.plutus" \
+    --withdrawal-reference-tx-in-redeemer-file $plutusStakingScriptRedeemer \
+    --tx-in $forwardingRewardIn \
+    --spending-tx-in-reference $forwardingRewardReference \
+    --spending-plutus-script-v3 \
+    --spending-reference-tx-in-redeemer-file $redeemerUnit \
+    --spending-reference-tx-in-inline-datum-present \
+    --tx-out "$(cat $keypath/bob.addr) + 10000000 lovelace"
 
 cardano-cli conway transaction sign \
     --testnet-magic 4 \
@@ -39,45 +58,6 @@ cardano-cli conway transaction sign \
 cardano-cli conway transaction submit \
     --testnet-magic 4 \
     --tx-file "$keypath/taking-script-withdrawal.tx"
-
-#------------------------------ :create redeemer: ------------------------------
-
-cardano-cli query utxo \
-    --testnet-magic 4 \
-    --tx-in "$keypath/setup.tx" \
-    --output-json > $assets/setup.json
-
-cardano-cli query utxo \
-    --testnet-magic 4 \
-    --tx-in "$keypath/symbolicAlice.tx" \
-    --output-json > $assets/symbolicAlice.json
-
-cabal run create-contract-transaction
-
-#----------------------------------- :prover: ----------------------------------
-
-cardano-cli conway transaction build \
-    --testnet-magic 4 \
-    --change-address "$(cat $keypath/someone.addr)" \
-    --out-file "$keypath/someone.txbody" \
-    --tx-in-collateral $collateral \
-    --read-only-tx-in-reference $setup \
-    --tx-in $symbolicAlice \
-    --spending-tx-in-reference $symbolicVerifier \
-    --spending-plutus-script-v3 \
-    --spending-reference-tx-in-redeemer-file "$assets/redeemerProof.json" \
-    --spending-reference-tx-in-inline-datum-present \
-    --tx-out "$(cat $keypath/bob.addr) + 50000000 lovelace"
-    
-cardano-cli conway transaction sign \
-    --testnet-magic 4 \
-    --tx-body-file "$keypath/someone.txbody" \
-    --signing-key-file "$keypath/someone.skey" \
-    --out-file "$keypath/someone.tx"
-
-cardano-cli conway transaction submit \
-    --testnet-magic 4 \
-    --tx-file "$keypath/someone.tx"
 
 #-------------------------------------------------------------------------------
 
