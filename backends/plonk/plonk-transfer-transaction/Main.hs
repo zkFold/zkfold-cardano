@@ -1,28 +1,23 @@
 module Main where
 
-import           Cardano.Api                           (prettyPrintJSON, unsafeHashableScriptData)
-import           Cardano.Api.Shelley                   (fromPlutusData, scriptDataToJsonDetailedSchema)
-import           Data.Aeson                            (decode)
-import qualified Data.Aeson                            as Aeson
-import           Data.ByteString                       as BS (writeFile)
-import qualified Data.ByteString.Lazy                  as BL
-import qualified PlutusLedgerApi.V3                    as V3
-import           PlutusTx                              (ToData (..))
-import           Prelude                               (IO, Maybe (..), String, print, ($), (.))
-
-import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..), toContract)
+import           Cardano.Api         (prettyPrintJSON, unsafeHashableScriptData)
+import           Cardano.Api.Shelley (fromPlutusData, scriptDataToJsonDetailedSchema)
+import qualified Data.Aeson          as Aeson
+import           Data.ByteString     as BS (writeFile)
+import qualified PlutusLedgerApi.V3  as V3
+import           PlutusTx            (ToData (..))
+import           PlutusTx.Builtins   (BuiltinByteString)
+import           Prelude             (IO, String, head, undefined, ($), (.), (<$>))
+import           System.Environment  (getArgs)
 
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
 
+magic :: String -> BuiltinByteString
+magic = undefined
+
 main :: IO ()
 main = do
-  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
-  case decode jsonRowContract of
-    Just rowContract -> do
-      let Contract{..} = toContract rowContract
-          (_, input, _) = equalityCheckVerificationBytes x ps targetValue
+  policyid <- head <$> getArgs
 
-      BS.writeFile ".././assets/datum.json" (prettyPrintJSON $ dataToJSON input)
-    _ -> print ("Could not deserialize" :: String)
+  BS.writeFile ".././assets/datumPlonk.json" (prettyPrintJSON $ dataToJSON $ magic policyid)

@@ -5,9 +5,10 @@ import           Cardano.Api.Shelley                   (File (..), PlutusScript 
 import           Control.Monad                         (void)
 import           Data.Aeson                            (decode)
 import qualified Data.ByteString.Lazy                  as BL
+import           Data.Maybe                            (fromJust)
 import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
-import           Prelude                               (FilePath, IO, Maybe (..), String, print, ($), (.))
+import           Prelude                               (FilePath, IO, Maybe (..), ($), (.), (<$>))
 import           Scripts                               (compiledPlonkVerifier, compiledforwardingMint)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
@@ -22,12 +23,9 @@ savePlutus filePath =
 
 main :: IO ()
 main = do
-  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
-  case decode jsonRowContract of
-    Just rowContract -> do
-      let Contract{..} = toContract rowContract
-          (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
+  Contract{..} <- toContract . fromJust . decode <$> BL.readFile "test-data/raw-contract-data.json"
 
-      savePlutus "./assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
-      savePlutus "./assets/forwardingMint.plutus" compiledforwardingMint
-    _ -> print ("Could not deserialize" :: String)
+  let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
+
+  savePlutus "./assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
+  savePlutus "./assets/forwardingMint.plutus" compiledforwardingMint
