@@ -3,7 +3,6 @@
 module ZkFold.Cardano.Scripts.SymbolicVerifier where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxOut (..))
-import           PlutusLedgerApi.V3.Contexts              (TxInInfo (..))
 import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<$>))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
@@ -24,8 +23,8 @@ symbolicVerifier contract proof ctx =
         info  = scriptContextTxInfo ctx
 
         -- Extracting transaction data
-        ins   = txOutAddress . txInInfoResolved <$> txInfoInputs info
-        refs  = txOutAddress . txInInfoResolved <$> txInfoReferenceInputs info
+        ins   = txInfoInputs info
+        refs  = txInfoReferenceInputs info
         outs  = txOutAddress <$> txInfoOutputs info
         range = txInfoValidRange info
 
