@@ -1,23 +1,23 @@
 module Main where
 
-import           Cardano.Api         (prettyPrintJSON, unsafeHashableScriptData)
+import           Cardano.Api         (policyId, prettyPrintJSON, unsafeHashableScriptData, PolicyId(..))
 import           Cardano.Api.Shelley (fromPlutusData, scriptDataToJsonDetailedSchema)
+import           Data.Aeson          (ToJSON (..))
 import qualified Data.Aeson          as Aeson
 import           Data.ByteString     as BS (writeFile)
 import qualified PlutusLedgerApi.V3  as V3
 import           PlutusTx            (ToData (..))
-import           PlutusTx.Builtins   (BuiltinByteString)
-import           Prelude             (IO, String, head, undefined, ($), (.), (<$>))
+import           Prelude             (Either (..), IO, Show (..), head, print, ($), (++), (.), (<$>))
 import           System.Environment  (getArgs)
+import           Text.Parsec         (parse)
 
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
 
-magic :: String -> BuiltinByteString
-magic = undefined
-
 main :: IO ()
 main = do
-  base16 <- head <$> getArgs
+  policyidE <- parse policyId "" . head <$> getArgs
 
-  BS.writeFile ".././assets/datumSymbolic.json" (prettyPrintJSON $ dataToJSON $ magic base16)
+  case policyidE of
+    Right policyid -> BS.writeFile ".././assets/datumSymbolic.json" (prettyPrintJSON $ toJSON $ unPolicyId policyid)
+    Left err       -> print $ "parse" ++ show err

@@ -8,7 +8,7 @@ echo "alice wants to send money to bob, but only if someone can prove that he is
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
+policyid=$(cardano-cli conway transaction policyid --script-file "$assets/symbolicVerifier.plutus")
 
 echo "alice address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4)"
