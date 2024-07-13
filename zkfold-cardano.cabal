@@ -301,6 +301,7 @@ executable plonk-transfer-transaction
     text                           ,
     optparse-applicative-fork      ,
     flat                           ,
+    parsec                         ,
     plutus-core             ^>=1.27,
     plutus-ledger-api       ^>=1.27,
     plutus-tx               ^>=1.27,
