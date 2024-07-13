@@ -36,7 +36,7 @@ toAnonDeBruijnProg (UPLC.Program () ver body) =
 -- | Evaluate a script and return the CPU and memory costs (according to the cost model)
 getCostsCek :: UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun () -> (Integer, Integer)
 getCostsCek (UPLC.Program () _ prog) =
-    case Cek.runCekDeBruijn PLC.defaultCekParameters Cek.tallying Cek.noEmitter prog of
+    case Cek.runCekDeBruijn PLC.defaultCekParametersForTesting Cek.tallying Cek.noEmitter prog of
       (_, Cek.TallyingSt _ budget, _) ->
           let ExBudget (ExCPU cpu) (ExMemory mem) = budget
           in (fromSatInt cpu, fromSatInt mem)
