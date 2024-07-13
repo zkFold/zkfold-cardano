@@ -24,7 +24,7 @@ cabal run plonk-minting-transaction
 
 tokenname=$assets/tokenname
 
-redeemerProof=$assets/redeemerVerifier.json
+redeemerProof=$assets/redeemerPlonkVerifier.json
 
 #---------------------------------- :minting: ----------------------------------
 

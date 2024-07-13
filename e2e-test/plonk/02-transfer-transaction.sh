@@ -8,6 +8,7 @@ echo "charles wants to create an address with lock reward."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
 
 echo "charles address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic 4)"
@@ -15,29 +16,29 @@ echo ""
 
 #-------------------------------- :create datum: -------------------------------
 
-cabal run plonk-transfer-transaction
+cabal run plonk-transfer-transaction -- $policyid
 
-datum=$assets/forwardingMint-datum.json
+datum=$assets/datumForwardingMint.json
 
 #-------------------------------- :send-script: --------------------------------
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
     --change-address "$(cat $keypath/charles.addr)" \
-    --out-file "$keypath/transfer-transaction.txbody" \
+    --out-file "$keypath/plonk-transfer.txbody" \
     --tx-in $in \
     --tx-out "$(cat $keypath/forwardingMint.addr) + 1000000 lovelace" \
     --tx-out-inline-datum-file $datum
 
 cardano-cli conway transaction sign \
     --testnet-magic 4 \
-    --tx-body-file "$keypath/transfer-transaction.txbody" \
+    --tx-body-file "$keypath/plonk-transfer.txbody" \
     --signing-key-file "$keypath/charles.skey" \
-    --out-file "$keypath/transfer-transaction.tx"
+    --out-file "$keypath/plonk-transfer.tx"
 
 cardano-cli conway transaction submit \
     --testnet-magic 4 \
-    --tx-file "$keypath/transfer-transaction.tx"
+    --tx-file "$keypath/plonk-transfer.tx"
 
 #-------------------------------------------------------------------------------
 
@@ -47,7 +48,7 @@ echo ""
 sleep 60
 
 echo ""
-echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/transfer-transaction.tx")"
+echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")"
 echo ""
 echo "forwardingMint address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/forwardingMint.addr) --testnet-magic 4)"

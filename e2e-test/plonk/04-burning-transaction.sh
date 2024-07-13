@@ -16,10 +16,10 @@ echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magi
 echo ""
 
 plonkVerifier=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")#0
-forwardingMint=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
+forwardingMintReference=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
 policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
 
-forwardingMintReward=$(cardano-cli transaction txid --tx-file "$keypath/transfer-transaction.tx")#0
+forwardingMintIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
 
 #-------------------------- :tokenname and redeemer: ---------------------------
 
@@ -42,8 +42,8 @@ cardano-cli conway transaction build \
     --mint-plutus-script-v3 \
     --mint-reference-tx-in-redeemer-file $redeemerUnit \
     --policy-id $policyid \
-    --tx-in $forwardingMintReward \
-    --spending-tx-in-reference $forwardingMint \
+    --tx-in $forwardingMintIn \
+    --spending-tx-in-reference $forwardingMintReference \
     --spending-plutus-script-v3 \
     --spending-reference-tx-in-redeemer-file $redeemerUnit \
     --spending-reference-tx-in-inline-datum-present \
@@ -52,7 +52,7 @@ cardano-cli conway transaction build \
 cardano-cli conway transaction sign \
     --testnet-magic 4 \
     --tx-body-file "$keypath/burning-transaction.txbody" \
-    --signing-key-file "$keypath/burning-transaction.skey" \
+    --signing-key-file "$keypath/bob.skey" \
     --out-file "$keypath/burning-transaction.tx"
 
 cardano-cli conway transaction submit \
