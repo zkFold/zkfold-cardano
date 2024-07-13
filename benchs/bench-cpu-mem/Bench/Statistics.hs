@@ -7,8 +7,8 @@ import           PlutusCore.Default                                (DefaultFun, 
 import           PlutusCore.Evaluation.Machine.ExBudget            (ExBudget (..))
 import qualified PlutusCore.Evaluation.Machine.ExBudgetingDefaults as PLC
 import           PlutusCore.Evaluation.Machine.ExMemory            (ExCPU (..), ExMemory (..))
-import           Prelude
-import           System.IO                                         (Handle)
+import           Prelude                                           (Double, Fractional (..), Integer, Integral, Num (..), Show (..), String, fromIntegral, ($))
+import           System.IO                                         (Handle, IO)
 import           Text.Printf                                       (hPrintf, printf)
 import qualified UntypedPlutusCore                                 as UPLC
 import qualified UntypedPlutusCore.Evaluation.Machine.Cek          as Cek

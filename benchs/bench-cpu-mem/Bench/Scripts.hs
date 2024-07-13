@@ -5,18 +5,15 @@
 
 module Bench.Scripts (symbolicVerifierScript, plonkVerifierScript) where
 
-import           PlutusCore                               (DefaultFun, DefaultUni)
-import           PlutusLedgerApi.V3                       (ScriptContext)
-import           PlutusTx                                 (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (($))
-import qualified UntypedPlutusCore                        as UPLC
+import           PlutusCore                              (DefaultFun, DefaultUni)
+import           PlutusLedgerApi.V3                      (ScriptContext)
+import           PlutusTx                                (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                        (($))
+import qualified UntypedPlutusCore                       as UPLC
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Scripts.ForwardingScripts
-import           ZkFold.Cardano.Scripts.PlonkVerifier
-import           ZkFold.Cardano.Scripts.SymbolicVerifier
-import           ZkFold.Cardano.Plonk.OnChain
+import           ZkFold.Cardano.Plonk.OnChain.Data       (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.Scripts.PlonkVerifier    (plonkVerifier)
+import           ZkFold.Cardano.Scripts.SymbolicVerifier (symbolicVerifier)
 
 symbolicVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
 symbolicVerifierScript paramsSetup redeemerProof ctx =
