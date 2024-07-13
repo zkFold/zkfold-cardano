@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-
 module ZkFold.Cardano.Scripts.SymbolicVerifier where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), TxOut (..))
