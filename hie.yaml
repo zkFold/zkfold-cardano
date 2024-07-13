@@ -24,6 +24,9 @@ cradle:
     - path: "./backends/symbolic/symbolic-init-transaction/Main.hs"
       component: "zkfold-cardano:exe:symbolic-init-transaction"
 
+    - path: "./backends/symbolic/symbolic-init-transaction/Scripts.hs"
+      component: "zkfold-cardano:exe:symbolic-init-transaction"
+
     - path: "./backends/symbolic/symbolic-transfer-transaction/Main.hs"
       component: "zkfold-cardano:exe:symbolic-transfer-transaction"
 
