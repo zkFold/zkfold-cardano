@@ -27,5 +27,5 @@ main = do
 
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
-  savePlutus "./assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
-  savePlutus "./assets/forwardingReward.plutus" compiledForwardingReward
+  savePlutus ".././assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
+  savePlutus ".././assets/forwardingReward.plutus" compiledForwardingReward
