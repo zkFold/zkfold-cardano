@@ -6,7 +6,7 @@ import           Prelude                                     hiding (Bool, Eq (.
 import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
 import qualified ZkFold.Base.Data.Vector                     as V
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkProverSecret, PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
@@ -18,12 +18,12 @@ import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit 
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 
-type PlonkBase32 = Plonk 32 1 ByteString
+type PlonkBase32 = Plonk 32 1 BLS12_381_G1 BLS12_381_G2 ByteString
 
 equalityCheckContract :: forall b a a' . (FromConstant a' (b 1 a), Eq (Bool (b 1 a)) (b 1 a)) => a' -> b 1 a -> Bool (b 1 a)
 equalityCheckContract targetValue inputValue = inputValue == fromConstant targetValue
 
-equalityCheckVerificationBytes :: Fr -> PlonkProverSecret -> Fr -> (SetupBytes, InputBytes, ProofBytes)
+equalityCheckVerificationBytes :: Fr -> PlonkProverSecret BLS12_381_G1 -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
     let Bool ac = compile @Fr (equalityCheckContract @ArithmeticCircuit @Fr targetValue) :: Bool (ArithmeticCircuit 1 Fr)
 
@@ -38,7 +38,7 @@ equalityCheckVerificationBytes x ps targetValue =
 
     in (mkSetup setupV, mkInput input, mkProof @32 (mkSetup setupV) proof)
 
-testEqualityCheckContract :: Fr -> PlonkProverSecret -> Fr -> Haskell.Bool
+testEqualityCheckContract :: Fr -> PlonkProverSecret BLS12_381_G1 -> Fr -> Haskell.Bool
 testEqualityCheckContract x ps targetValue =
     let (s, i, p) = equalityCheckVerificationBytes x ps targetValue
     in verify @PlonkPlutus s i p
