@@ -18,6 +18,12 @@ source-repository-package
   location: https://github.com/zkFold/zkfold-base.git
   tag: b4f9307349990a64633cc7524ca3a5a21314c491
 
+source-repository-package
+  type: git
+  location: https://github.com/IntersectMBO/cardano-node.git
+  tag: 5e787e8f3c874cc609c4a7f79acb4a944e8ae65b
+  subdir: cardano-testnet
+
 packages: .
 
 write-ghc-environment-files: never
