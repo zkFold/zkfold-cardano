@@ -197,6 +197,7 @@ executable symbolic-init-transaction
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
     zkfold-cardano                 ,
+    QuickCheck                     ,
 
 executable symbolic-transfer-transaction
   import:           lang
@@ -229,6 +230,7 @@ executable symbolic-withdraw-transaction
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,
+    QuickCheck                     ,
 
 executable plonk-init-transaction
   import:           lang
@@ -247,6 +249,7 @@ executable plonk-init-transaction
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
     zkfold-cardano                 ,
+    QuickCheck                     ,
 
 executable plonk-transfer-transaction
   import:           lang
@@ -279,3 +282,4 @@ executable plonk-minting-transaction
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,
+    QuickCheck                     ,

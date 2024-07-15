@@ -3,16 +3,15 @@ module Main where
 import           Cardano.Api                           (IsPlutusScriptLanguage, PlutusScriptV3, writeFileTextEnvelope)
 import           Cardano.Api.Shelley                   (File (..), PlutusScript (..))
 import           Control.Monad                         (void)
-import           Data.Aeson                            (decode)
-import qualified Data.ByteString.Lazy                  as BL
-import           Data.Maybe                            (fromJust)
 import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
-import           Prelude                               (FilePath, IO, Maybe (..), ($), (.), (<$>))
+import           Prelude                               (FilePath, IO, Integer, Maybe (..), Show (..), print, ($), (++), (.))
 import           Scripts                               (compiledPlonkVerifier, compiledforwardingMint)
+import           Test.QuickCheck                       (variant)
+import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
+import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..), toContract)
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -23,7 +22,11 @@ savePlutus filePath =
 
 main :: IO ()
 main = do
-  Contract{..} <- toContract . fromJust . decode <$> BL.readFile "test-data/raw-contract-data.json"
+  let seed = 5 :: Integer
+  x           <- generate $ variant seed arbitrary
+  ps          <- generate $ variant seed arbitrary
+  targetValue <- generate $ variant seed arbitrary
+  print $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue
 
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
