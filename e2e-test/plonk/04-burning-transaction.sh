@@ -7,14 +7,14 @@ set -u
 set -o pipefail
 
 keypath=./keys
-assets=../assets
+assets=../../assets
 
 echo ""
 echo "bob burning tokens."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-collateral=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
+collateral=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
 
 echo ""
 echo "bob address:"

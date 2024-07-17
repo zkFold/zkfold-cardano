@@ -7,14 +7,14 @@ set -u
 set -o pipefail
 
 keypath=./keys
-assets=../assets
+assets=../../assets
 
 echo ""
 echo "alice minting tokens for bob."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-collateral=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
+collateral=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
 
 echo ""
 echo "alice address:"
@@ -28,9 +28,12 @@ policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkV
 
 cabal run plonk-minting-transaction
 
-tokenname=$assets/tokenname
+# tokenname=$(head -n 1 $assets/tokenname)
+tokenname=22506f5bb2164d2cd3de3ef082bb9e75a43d1cf0992a0f2f08ca0f52cdbc838f
 
 redeemerProof=$assets/redeemerPlonkVerifier.json
+
+echo "$policyid.$tokenname"
 
 #---------------------------------- :minting: ----------------------------------
 

@@ -7,7 +7,7 @@ set -u
 set -o pipefail
 
 keypath=./keys
-assets=../assets
+assets=../../assets
 
 echo ""
 echo "someone wants to create an address with scripts."
@@ -38,7 +38,7 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/plonkVerifier.txbody" \
     --tx-in $in1 \
-    --tx-out "$(cat $keypath/zkfold-main.addr) + 1 lovelace" \
+    --tx-out "$(cat $keypath/zkfold-main.addr) + 47220360 lovelace" \
     --tx-out-reference-script-file "$assets/plonkVerifier.plutus"
 
 cardano-cli conway transaction sign \
@@ -65,7 +65,7 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/forwardingMint.txbody" \
     --tx-in $in2 \
-    --tx-out "$(cat $keypath/zkfold-main.addr) + 1 lovelace" \
+    --tx-out "$(cat $keypath/zkfold-main.addr) + 47220360 lovelace" \
     --tx-out-reference-script-file "$assets/forwardingMint.plutus"
 
 cardano-cli conway transaction sign \

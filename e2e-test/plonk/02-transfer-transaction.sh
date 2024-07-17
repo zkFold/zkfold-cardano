@@ -7,7 +7,7 @@ set -u
 set -o pipefail
 
 keypath=./keys
-assets=../assets
+assets=../../assets
 
 echo ""
 echo "charles wants to create an address with lock reward."
@@ -24,7 +24,7 @@ echo ""
 
 cabal run plonk-transfer-transaction -- $policyid
 
-datum=$assets/datumForwardingMint.json
+datum=$assets/datumPlonk.cbor
 
 #-------------------------------- :send-script: --------------------------------
 
@@ -33,8 +33,8 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/charles.addr)" \
     --out-file "$keypath/plonk-transfer.txbody" \
     --tx-in $in \
-    --tx-out "$(cat $keypath/forwardingMint.addr) + 1000000 lovelace" \
-    --tx-out-inline-datum-file $datum
+    --tx-out "$(cat $keypath/forwardingMint.addr) + 1017160 lovelace" \
+    --tx-out-inline-datum-cbor-file $datum
 
 cardano-cli conway transaction sign \
     --testnet-magic 4 \
