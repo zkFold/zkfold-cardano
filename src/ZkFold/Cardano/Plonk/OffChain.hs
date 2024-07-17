@@ -18,9 +18,8 @@ import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Field             (Ext2 (..), Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (EllipticCurve (..), Point (..))
-import           ZkFold.Base.Protocol.ARK.Plonk              hiding (PlonkProverSecret)
-import qualified ZkFold.Base.Protocol.ARK.Plonk.Internal     as Plonk
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..))
+import           ZkFold.Base.Protocol.ARK.Plonk
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1   (G1)
@@ -86,10 +85,10 @@ challenge ts =
 
 ------------------------------- Base Conversions -------------------------------
 
-convertF :: ScalarField BLS12_381_G1 -> Integer
+convertF :: Fr -> Integer
 convertF = naturalToInteger . fromZp
 
-convertPlonkF :: F -> ScalarField BLS12_381_G1
+convertPlonkF :: F -> Fr
 convertPlonkF (F n) = toZp n
 
 convertZp :: Zp p -> Integer
@@ -145,39 +144,11 @@ instance FromTranscript BuiltinByteString Fr where
 ------------------------------------ Bench -------------------------------------
 
 data Contract = Contract {
-    x           :: ScalarField BLS12_381_G1
-  , ps          :: Plonk.PlonkProverSecret BLS12_381_G1
-  , targetValue :: ScalarField BLS12_381_G1
-} deriving stock (Show)
-
-------------------------------------- JSON -------------------------------------
-
-data PlonkProverSecret = PlonkProverSecret F F F F F F F F F F F
-  deriving stock (Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
-
-data RowContractJSON = RowContractJSON {
-    x'           :: F
-  , ps'          :: PlonkProverSecret
-  , targetValue' :: F
+    x           :: Fr
+  , ps          :: PlonkProverSecret BLS12_381_G1
+  , targetValue :: Fr
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-toPlonkPlonkProverSecret :: PlonkProverSecret -> Plonk.PlonkProverSecret BLS12_381_G1
-toPlonkPlonkProverSecret (PlonkProverSecret b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) =
-  Plonk.PlonkProverSecret
-    (convertPlonkF b1)
-    (convertPlonkF b2)
-    (convertPlonkF b3)
-    (convertPlonkF b4)
-    (convertPlonkF b5)
-    (convertPlonkF b6)
-    (convertPlonkF b7)
-    (convertPlonkF b8)
-    (convertPlonkF b9)
-    (convertPlonkF b10)
-    (convertPlonkF b11)
-
-toContract :: RowContractJSON -> Contract
-toContract (RowContractJSON x' ps' targetId') =
-  Contract (convertPlonkF x') (toPlonkPlonkProverSecret ps') (convertPlonkF targetId')
+deriving anyclass instance ToJSON (PlonkProverSecret BLS12_381_G1)
+deriving anyclass instance FromJSON (PlonkProverSecret BLS12_381_G1)

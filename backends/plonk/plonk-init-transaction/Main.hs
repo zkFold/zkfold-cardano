@@ -3,15 +3,17 @@ module Main where
 import           Cardano.Api                           (IsPlutusScriptLanguage, PlutusScriptV3, writeFileTextEnvelope)
 import           Cardano.Api.Shelley                   (File (..), PlutusScript (..))
 import           Control.Monad                         (void)
+import           Data.Aeson                            (encode)
+import qualified Data.ByteString.Lazy                  as BL
 import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
-import           Prelude                               (FilePath, IO, Integer, Maybe (..), Show (..), print, ($), (++), (.))
+import           Prelude                               (FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
 import           Scripts                               (compiledPlonkVerifier, compiledforwardingMint)
-import           Test.QuickCheck                       (variant)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
+import           ZkFold.Cardano.Plonk.OffChain         (Contract (..))
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -22,13 +24,16 @@ savePlutus filePath =
 
 main :: IO ()
 main = do
-  let seed = 5 :: Integer
-  x           <- generate $ variant seed arbitrary
-  ps          <- generate $ variant seed arbitrary
-  targetValue <- generate $ variant seed arbitrary
-  print $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue
+  x           <- generate arbitrary
+  ps          <- generate arbitrary
+  targetValue <- generate arbitrary
+
+  let contract = Contract x ps targetValue
+  BL.writeFile "../../test-data/plonk-raw-contract-data.json" $ encode contract
+
+  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
-  savePlutus ".././assets/assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
-  savePlutus ".././assets/assets/forwardingMint.plutus" compiledforwardingMint
+  savePlutus "../.././assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
+  savePlutus "../.././assets/forwardingMint.plutus" compiledforwardingMint
