@@ -97,7 +97,6 @@ test-suite test
   ghc-options:      -rtsopts
   main-is:          Main.hs
   other-modules:
-    Tests.Data
     Tests.Verifier
   build-depends:
     aeson                          ,
@@ -230,7 +229,6 @@ executable symbolic-withdraw-transaction
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,
-    QuickCheck                     ,
 
 executable plonk-init-transaction
   import:           lang
@@ -263,6 +261,7 @@ executable plonk-transfer-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
+    cborg                          ,
     parsec                         ,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
@@ -282,4 +281,3 @@ executable plonk-minting-transaction
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,
-    QuickCheck                     ,
