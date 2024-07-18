@@ -28,5 +28,6 @@ main = do
 
   let (_, input, proof) = equalityCheckVerificationBytes x ps targetValue
 
-  BS.writeFile "../.././assets/tokenname" $ fromString $ show $ UsingRawBytesHex $ AssetName $ fromBuiltin $ fromInput input
-  BS.writeFile "../.././assets/redeemerPlonkVerifier.json" (prettyPrintJSON $ dataToJSON proof)
+  BS.writeFile "../../assets/tokenname" $ fromString $ show $ UsingRawBytesHex $ AssetName $ fromBuiltin $ fromInput input
+  BS.writeFile "../../assets/unit.json" $ prettyPrintJSON $ dataToJSON ()
+  BS.writeFile "../../assets/redeemerPlonkVerifier.json" $ prettyPrintJSON $ dataToJSON proof

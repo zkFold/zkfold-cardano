@@ -25,4 +25,5 @@ main = do
 
   let (_, _, proof) = equalityCheckVerificationBytes x ps targetValue
 
-  BS.writeFile ".././assets/redeemerSymbolicVerifier.json" (prettyPrintJSON $ dataToJSON proof)
+  BS.writeFile "../../assets/unit.json" $ prettyPrintJSON $ dataToJSON ()
+  BS.writeFile "../../assets/redeemerSymbolicVerifier.json" $ prettyPrintJSON $ dataToJSON proof

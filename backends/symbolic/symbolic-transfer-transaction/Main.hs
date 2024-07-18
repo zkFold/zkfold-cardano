@@ -19,5 +19,5 @@ main = do
   policyidE <- parse policyId "" . head <$> getArgs
 
   case policyidE of
-    Right policyid -> BS.writeFile ".././assets/datumSymbolic.json" (prettyPrintJSON $ toJSON $ unPolicyId policyid)
+    Right policyid -> BS.writeFile "../../assets/datumSymbolic.json" $ prettyPrintJSON $ toJSON $ unPolicyId policyid
     Left err       -> print $ "parse" ++ show err
