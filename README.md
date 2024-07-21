@@ -8,22 +8,6 @@ An integration of zkFold Symbolic smart contracts with the Cardano blockchain. T
 
 This project can be built with Cabal 3.10.2.1 and GHC 9.6.3.
 
-### With `nix`
-
-With nix it is as easy as:
-
-```
-$ nix develop
-...
-$ cabal update
-$ cabal build
-```
-
-We provide packaged versions for common Operating Systems for all of the above
-dependencies: [Download](https://github.com/input-output-hk/iohk-nix/releases/latest)
-
-### Without `nix`
-
 Crypotgraphic depencencies needed for building Haskell packages:
 
 * [`libsodium`](https://github.com/jedisct1/libsodium)
@@ -37,6 +21,29 @@ $ cabal build
 
 ## To run
 
-1. `cabal run test`  to check the implementations against the test data.
-2. `cabal run bench-uplc`        to compile the fast implementation to UPLC (`.flat`) for further processing.
-3. `cabal run bench-cpu-mem`        to calculate the cpu/mem units of the tests in the plutus-benchmark package.
+## Import circom from zkfold-base
+
+TODO
+
+### local-testnet
+
+Create local testnet with `local-testnet/scripts/babbage/mkfiles.sh`.
+And run with `local-testnet/example/run/all.sh`
+
+### e2e-test
+
+1) Plonk for minting tokens
+2) Symbolic for certificate and withdraw
+
+Create trusted setup (power of tau) and compile the script.
+Generate a proof from a witness and create redeemer.
+Deploy a local testnet or sancho.network testnet.
+
+### benchs
+
+`cabal run bench-cpu-mem` to calculate the cpu/mem units of the tests in the plutus-benchmark package.
+`cabal run bench-uplc` to compile the fast implementation to UPLC (`.flat`) for further processing.
+
+### test
+
+`cabal run test` to check the implementations against the test data.

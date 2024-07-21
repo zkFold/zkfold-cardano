@@ -1,6 +1,16 @@
 # Cli scripts
 
-Run the `00-init-addrs.sh` to initialize the system, you also need to transfer money to addresses on the sancho.network testnet.
+## Docs
+
+We have a description of transactions in `src-docs`.
+
+## Scripts
+
+Here we will describe bash scripts for executing transactions on the sancho.network testnet.
+
+### Plonk
+
+Run the `00-init-addrs.sh` to initialize the system, you also need to transfer money to addresses.
 
 To start a transaction you need to run the following 5 scripts.
 
@@ -10,3 +20,5 @@ To start a transaction you need to run the following 5 scripts.
 - `plonk/04-burning-transaction.sh` burning and receiving rewards.
 
 You can also see all wallet at `05-show-all.sh`.
+
+### Symbolic
