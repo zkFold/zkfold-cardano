@@ -24,7 +24,7 @@ import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Types                       (Symbolic)
-import ZkFold.Base.Data.Vector (Vector(..))
+import           ZkFold.Base.Data.Vector                     (Vector(..))
 
 context :: ScriptContext -- fill up with data
 context = ScriptContext
