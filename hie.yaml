@@ -6,41 +6,26 @@ cradle:
     - path: "./test"
       component: "zkfold-cardano:test:test"
 
-    - path: "./benchs/bench-uplc/Main.hs"
+    - path: "./benchs/bench-uplc"
       component: "zkfold-cardano:exe:bench-uplc"
 
-    - path: "./benchs/bench-uplc/Bench/Scripts.hs"
-      component: "zkfold-cardano:exe:bench-uplc"
-
-    - path: "./benchs/bench-cpu-mem/Main.hs"
+    - path: "./benchs/bench-cpu-mem"
       component: "zkfold-cardano:exe:bench-cpu-mem"
 
-    - path: "./benchs/bench-cpu-mem/Bench/Statistics.hs"
-      component: "zkfold-cardano:exe:bench-cpu-mem"
-
-    - path: "./benchs/bench-cpu-mem/Bench/Scripts.hs"
-      component: "zkfold-cardano:exe:bench-cpu-mem"
-
-    - path: "./backends/symbolic/symbolic-init-transaction/Main.hs"
+    - path: "./backends/symbolic/symbolic-init-transaction"
       component: "zkfold-cardano:exe:symbolic-init-transaction"
 
-    - path: "./backends/symbolic/symbolic-init-transaction/Scripts.hs"
-      component: "zkfold-cardano:exe:symbolic-init-transaction"
-
-    - path: "./backends/symbolic/symbolic-transfer-transaction/Main.hs"
+    - path: "./backends/symbolic/symbolic-transfer-transaction"
       component: "zkfold-cardano:exe:symbolic-transfer-transaction"
 
-    - path: "./backends/symbolic/symbolic-withdraw-transaction/Main.hs"
+    - path: "./backends/symbolic/symbolic-withdraw-transaction"
       component: "zkfold-cardano:exe:symbolic-withdraw-transaction"
 
-    - path: "./backends/plonk/plonk-init-transaction/Main.hs"
+    - path: "./backends/plonk/plonk-init-transaction"
       component: "zkfold-cardano:exe:plonk-init-transaction"
 
-    - path: "./backends/plonk/plonk-init-transaction/Scripts.hs"
-      component: "zkfold-cardano:exe:plonk-init-transaction"
-
-    - path: "./backends/plonk/plonk-transfer-transaction/Main.hs"
+    - path: "./backends/plonk/plonk-transfer-transaction"
       component: "zkfold-cardano:exe:plonk-transfer-transaction"
 
-    - path: "./backends/plonk/plonk-minting-transaction/Main.hs"
+    - path: "./backends/plonk/plonk-minting-transaction"
       component: "zkfold-cardano:exe:plonk-minting-transaction"

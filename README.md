@@ -56,5 +56,5 @@ General workflow:
 - Deploy a local testnet or use sancho.network testnet;
 - Fund a public key address on the testnet;
 - Generate a proof from a witness and create the redeemer data for the Plutus scripts;
-- Construct a transaction with the Plutus scripts;
+- Construct a transaction with the Plutus scripts using `cardano-cli`;
 - Submit transactions using `cardano-cli`.
