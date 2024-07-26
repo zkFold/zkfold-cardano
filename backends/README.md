@@ -1,10 +1,6 @@
-# Off-chain code for constructing zkFold Symbolic smart contract transactions
+# Off-chain code for constructing zkFold Symbolic transactions
 
-All backends for basic transactions in zkfold-cardano.
+Contains off-chain code for different types of zkFold Symbolic transactions.
 
-Now we have two backends written to create tokens and withdraw money.
-
-Soon this place will become a library, and the executable files will be part of the zk infrastructure.
-
-1) Plonk for minting tokens
-2) Symbolic for certificate and withdraw
+- `plonk` folder contains backend code for the _plonk verifier transactions_.
+- `symbolic` folder contains backend code for the _symbolic verifier transactions_.
