@@ -1,8 +1,10 @@
 # zkFold: Cardano integration library
-An integration of zkFold Symbolic smart contracts with the Cardano blockchain. The repository contains
+Integration of zkFold Symbolic smart contracts with the Cardano blockchain. The repository contains
 - the Plutus script for the zkFold Symbolic verifier;
 - the Plutus script for the Plonk proof verification token;
-- the off-chain code for transaction building.
+- the off-chain code for transaction building;
+- benchmarks for the Plutus scripts;
+- end-to-end tests for the zkFold Symbolic smart contracts.
 
 ## Building the project
 
@@ -19,30 +21,36 @@ $ cabal update
 $ cabal build
 ```
 
-## To run
+## Running end-to-end tests and benchmarks
 
-## Import circuit from zkfold-base
+### Importing circuits from `zkfold-base`
 
 TODO
 
-### local-testnet
+### Setting up a local testnet
 
-Create local testnet with `local-testnet/scripts/babbage/mkfiles.sh`.
-And run with `local-testnet/example/run/all.sh`
+Create a local testnet with `local-testnet/scripts/babbage/mkfiles.sh`.
+Run with `local-testnet/example/run/all.sh`.
 
-### e2e-test (in progress)
+### End-to-end test (in progress)
 
-1) Plonk for minting tokens
-2) Symbolic for certificate and withdraw
+We have two types of Plutus scripts that facilitate zero-knowledge smart contracts:
 
-Create trusted setup (power of tau) and compile the script.
-Generate a proof from a witness and create redeemer.
-Deploy a local testnet or sancho.network testnet.
+1) _Plonk verifier_ mints a token if the statement expressed as an arithmetic circuit is correct. The token name plays the role of the public input to the ZKP protocol.
+2) _Symbolic verifier_ validates a transaction that withdraws ada rewards. The transaction data is hashed and supplied as a public input to the ZKP protocol.
 
-### benchs (in progress)
+General workflow:
+- Create a trusted setup for the Plonk protocol;
+- Compile the zero-knowledge smart contract into an arithmetic circuit;
+- Deploy a local testnet or use sancho.network testnet;
+- Generate a proof from a witness and create redeemer;
+- Construct a transaction with the Plutus scripts;
+- Submit transactions using `cardano-cli`.
+
+### Benchmarks (in progress)
 
 `cabal run bench-cpu-mem` to calculate the cpu/mem units of the tests in the plutus-benchmark package.
-`cabal run bench-uplc` to compile the fast implementation to UPLC (`.flat`) for further processing.
+`cabal run bench-uplc` to compile the fast implementation to UPLC (`.flat`) for the further processing.
 
 ### test
 
