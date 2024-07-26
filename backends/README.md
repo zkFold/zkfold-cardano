@@ -1,4 +1,4 @@
-# Off-chain for transactions
+# Off-chain code for constructing zkFold Symbolic smart contract transactions
 
 All backends for basic transactions in zkfold-cardano.
 
