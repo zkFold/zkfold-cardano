@@ -4,12 +4,12 @@
 
 #set align(center)
 #set text(size: 18pt)
-*End-to-end zkFold Token test*
+*End-to-end test for the Plonk verifier*
 
 #set align(start)
 #set text(size: 12pt)
 
-*A ZK-KYC example:* Alice wants to send ada to Bob, and some tokens which confirm that a proof of the scheme exists.
+*A ZK-KYC example:* Alice wants to mint and send Bob a token that represents a proof of some statement about Bob.
 
 - The first transaction is a setup that needs to be performed only once for this application;
 - In the second transaction, Alice minting tokens and sends ada + tokens to Bob;

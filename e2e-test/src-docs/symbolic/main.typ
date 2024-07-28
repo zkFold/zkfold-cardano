@@ -4,7 +4,7 @@
 
 #set align(center)
 #set text(size: 18pt)
-*End-to-end zkFold Symbolic test*
+*End-to-end test for the Symbolic verifier*
 
 #set align(start)
 #set text(size: 12pt)
