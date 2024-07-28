@@ -1,4 +1,4 @@
-# Benchmark of plonk
+# Benchmarks for different Plutus scripts
 
 `cabal run bench-cpu-mem`        to calculate the cpu/mem units of the tests in the plutus-benchmark package.
 

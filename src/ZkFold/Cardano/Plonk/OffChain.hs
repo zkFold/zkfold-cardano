@@ -143,6 +143,7 @@ instance FromTranscript BuiltinByteString Fr where
 
 ------------------------------------ Bench -------------------------------------
 
+-- TODO: Refactor it. Name `Contract` does not make much sense. This type can only be used for testing.
 data Contract = Contract {
     x           :: Fr
   , ps          :: PlonkProverSecret BLS12_381_G1

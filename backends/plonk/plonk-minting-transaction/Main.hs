@@ -17,6 +17,7 @@ import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificatio
 import           ZkFold.Cardano.Plonk.OffChain         (Contract (..))
 import           ZkFold.Cardano.Plonk.OnChain.Utils    (fromInput)
 
+-- | Serialise data to CBOR and then wrap it in a JSON object.
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
 
