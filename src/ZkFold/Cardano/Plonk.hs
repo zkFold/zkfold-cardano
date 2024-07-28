@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies   #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -6,12 +6,14 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<>))
+import           PlutusTx.Prelude                         (Bool (..), Eq (..), ($), (&&), (.), (<>))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OnChain
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.Plonk.OnChain.Utils       (mul)
 
 data PlonkPlutus
 
@@ -34,12 +36,12 @@ instance NonInteractiveProof PlonkPlutus where
 
     {-# INLINABLE verify #-}
     verify :: SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
-    verify SetupBytes{..} InputBytes{..} ProofBytes{..} = bls12_381_finalVerify p1 p2
-        where
+    verify SetupBytes{..} InputBytes{..} ProofBytes{..} =
+        let bls12_381_G1_generator = bls12_381_G1_uncompress bls12_381_G1_compressed_generator
+            bls12_381_G2_generator = bls12_381_G2_uncompress bls12_381_G2_compressed_generator
+
             -- uncompress Setup G1 elements
-            g0    = bls12_381_G1_uncompress g0'
-            h0    = bls12_381_G2_uncompress h0'
-            h1    = bls12_381_G2_uncompress h1'
+            x2    = bls12_381_G2_uncompress x2'
             cmQl  = bls12_381_G1_uncompress cmQl'
             cmQr  = bls12_381_G1_uncompress cmQr'
             cmQo  = bls12_381_G1_uncompress cmQo'
@@ -91,7 +93,7 @@ instance NonInteractiveProof PlonkPlutus where
             u = F . byteStringToInteger LittleEndian . blake2b_224 $ t4 <> proof1' <> proof2'
 
             -- common varibles for r0, d, f, e
-            
+
             xi_n = xi `powTwo` pow
             xi_m_one = xi_n - one
 
@@ -113,7 +115,7 @@ instance NonInteractiveProof PlonkPlutus where
 
             -- final calculations
             r0 =
-                  pubInput * lagrange1_xi
+                  negate pubInput * lagrange1_xi
                 - alphaSquare * lagrange1_xi
                 - alphaEvalZOmega
                     * gamma_beta_a_s1
@@ -157,7 +159,9 @@ instance NonInteractiveProof PlonkPlutus where
                 + v * (s1_xi
                 + v * s2_xi))))
                 + u * z_xi
-                ) `mul` g0
+                ) `mul` bls12_381_G1_generator
 
-            p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
-            p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
+            p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) bls12_381_G2_generator
+            p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) x2
+
+        in bls12_381_finalVerify p1 p2 && lagsInv * F n * (xi - omega) == one

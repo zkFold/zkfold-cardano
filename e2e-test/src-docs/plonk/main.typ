@@ -4,16 +4,16 @@
 
 #set align(center)
 #set text(size: 18pt)
-*End-to-end test for the Symbolic verifier*
+*End-to-end test for the Plonk verifier*
 
 #set align(start)
 #set text(size: 12pt)
 
-*A ZK-KYC example:* Alice wants to send ada to Bob, which he can then use on the condition that he is above 18 years old.
+*A ZK-KYC example:* Alice wants to mint and send Bob a token that represents a proof of some statement about Bob.
 
 - The first transaction is a setup that needs to be performed only once for this application;
-- In the second transaction, Alice sends ada to a smart contract;
-- In the third transaction, Bob proves that he is above 18 year old and withdraws the funds to his wallet address.
+- In the second transaction, Alice minting tokens and sends ada + tokens to Bob;
+- In the third transaction, Bob burning tokens.
 
 #set text(size: small-size)
 #v(3em)
@@ -37,14 +37,14 @@
       ),
     ),
     (
-      name: "Symbolic: setup Above 18 + <Bob address>",
-      address: "stake pool",
+      name: "Plonk: setup Above 18",
+      address: "zkfold-main",
       value: (
         ada: 1
       )
     ),
     (
-      name: "Forwarding reward",
+      name: "Forwarding minting",
       address: "zkfold-main",
       value: (
         ada: 1
@@ -54,7 +54,7 @@
   signatures: (
     "Someone",
   ),
-  notes: [Someone posts the Symbolic verifier script and the "Above 18?" forwarding script on-chain.]
+  notes: [Someone posts the Plonk verifier script on-chain.]
 )
 #v(10em)
 
@@ -62,7 +62,7 @@
   [*Transfer transaction*],
   inputs: (
     (
-      name: "Alice",
+      name: "Charles",
       address: "Public key hash",
       value: (
         ada: 567
@@ -71,8 +71,8 @@
   ),
   outputs: (
     (
-      name: "Scripthash to Symbolic \"Above 18?\"",
-      address: "Forwarding reward script",
+      name: "Symbolhash to Plonk \"Above 18?\"",
+      address: "Forwarding mint script",
       value: (
         ada: 100
       ),
@@ -81,7 +81,7 @@
       )
     ),
     (
-      name: "Alice",
+      name: "Charles",
       address: "Public key hash",
       value: (
         ada: 467
@@ -89,26 +89,69 @@
     ),
   ),
   signatures: (
+    "Charles",
+  ),
+  notes: [Charles sents ada to a smart contract address.]
+)
+#v(10em)
+
+#transaction(
+  [*Minting transaction*],
+  inputs: (
+    (
+      name: "Alice",
+      address: "Public key hash",
+      value: (
+        ada: 567
+      )
+    ),
+    (
+      name: "Plonk: setup Above 18",
+      reference: true,
+      address: "zkfold-main",
+      value: (
+        ada: 1
+      )
+    )
+  ),
+  outputs: (
+    (
+      name: "Alice",
+      address: "Public key hash",
+      value: (
+        ada: 566
+      ),
+    ),
+    (
+      name: "Bob",
+      address: "Public key hash",
+      value: (
+        ada: 1,
+        tokenName: 1,
+      )
+    ),
+  ),
+  signatures: (
     "Alice",
   ),
-  notes: [Alice sents ada to a smart contract address.]
+  notes: [Alice sents ada and plonk tokens to Bob.]
 )
-#v(4em)
 
 #pagebreak()
 #transaction(
-  [*Withdraw transaction*],
+  [*Burning transaction*],
   inputs: (
     (
       name: "Bob",
       address: "Public key hash",
       value: (
-        ada: 123
+        ada: 100,
+        tokenName: 1,
       )
     ),
     (
-      name: "Scripthash to Symbolic \"Above 18?\"",
-      address: "Forwarding reward script",
+      name: "Symbolhash to Plonk \"Above 18?\"",
+      address: "Forwarding mint script",
       value: (
         ada: 100
       ),
@@ -117,17 +160,17 @@
       )
     ),
     (
-      name: "Symbolic: setup Above 18 + <Bob address>",
+      name: "Plonk: setup Above 18",
+      address: "zkfold-main",
       reference: true,
-      address: "stake pool",
       value: (
         ada: 1
       )
     ),
     (
-      name: "Forwarding reward",
-      reference: true,
+      name: "Forwarding minting",
       address: "zkfold-main",
+      reference: true,
       value: (
         ada: 1
       )
@@ -138,15 +181,12 @@
       name: "Bob",
       address: "Public key hash",
       value: (
-        ada: 223
+        ada: 200,
       ),
     ),
-  ),
-  staking: (
-    "zkFold Symbolic verifier",
   ),
   signatures: (
     "Bob",
   ),
-  notes: [Bob must prove that he is above 18 to withdraw ada sent by Alice.]
+  notes: [Bob burn plonk tokens.]
 )

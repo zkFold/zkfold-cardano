@@ -4,38 +4,39 @@
 
 module ZkFold.Cardano.Plonk.OffChain where
 
-import           Data.Aeson                               (FromJSON, ToJSON)
-import qualified Data.Vector                              as V
-import           GHC.ByteOrder                            (ByteOrder (..))
-import           GHC.Generics                             (Generic)
-import           GHC.Natural                              (naturalToInteger)
+import           Data.Aeson                                  (FromJSON, ToJSON)
+import qualified Data.Vector                                 as V
+import           GHC.ByteOrder                               (ByteOrder (..))
+import           GHC.Generics                                (Generic)
+import           GHC.Natural                                 (naturalToInteger)
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Semigroup (..), ($), (.))
-import           Prelude                                  (Show)
-import qualified Prelude                                  as Haskell
+import           PlutusTx.Prelude                            (Semigroup (..), ($), (.))
+import           Prelude                                     (Show)
+import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Algebra.Basic.Field          (Ext2 (..), Zp, fromZp, toZp)
-import           ZkFold.Base.Algebra.Basic.Number         (KnownNat, value)
-import           ZkFold.Base.Algebra.EllipticCurve.Class  (Point (..))
-import qualified ZkFold.Base.Protocol.ARK.Plonk           as Plonk
-import           ZkFold.Base.Protocol.ARK.Plonk           hiding (F, G1, PlonkProverSecret)
-import           ZkFold.Base.Protocol.NonInteractiveProof (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
-import           ZkFold.Cardano.Plonk.OnChain             (F (..), G1, InputBytes (..), ProofBytes (..), SetupBytes (..))
+import           ZkFold.Base.Algebra.Basic.Field             (Ext2 (..), Zp, fromZp, toZp)
+import           ZkFold.Base.Algebra.Basic.Number            (KnownNat, value)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..))
+import           ZkFold.Base.Protocol.ARK.Plonk
+import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1   (G1)
+import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkN n = Plonk n 1 BuiltinByteString
+type PlonkN n = Plonk n 1 BLS12_381_G1 BLS12_381_G2 BuiltinByteString
 
 mkSetup :: SetupVerify (PlonkN n) -> SetupBytes
 mkSetup (PlonkSetupParamsVerify {..}, PlonkCircuitCommitments {..}) = SetupBytes
-  { pow -- value @n == 2^pow
-  , g0'   = convertG1 g0
-  , h0'   = convertG2 h0 -- todo: bench generate on off-chain in setup vs gengerate on on-chain in verify
-  , h1'   = convertG2 h1 -- todo: bench generate on off-chain in setup vs gengerate on on-chain in verify
-  , omega = F $ convertF omega
-  , k1    = F $ convertF k1
-  , k2    = F $ convertF k2
+  { n     = n''
+  , pow   = pow''
+  , x2'   = convertG2 x2''
+  , omega = F $ convertF omega''
+  , k1    = F $ convertF k1''
+  , k2    = F $ convertF k2''
   , cmQl' = convertG1 cmQl
   , cmQr' = convertG1 cmQr
   , cmQo' = convertG1 cmQo
@@ -46,7 +47,7 @@ mkSetup (PlonkSetupParamsVerify {..}, PlonkCircuitCommitments {..}) = SetupBytes
   , cmS3' = convertG1 cmS3
   }
 
-mkInput :: Input (PlonkN n) -> InputBytes -- wPub = V.map negate wPub' -- todo: do it in off-chain when input create
+mkInput :: Input (PlonkN n) -> InputBytes
 mkInput (PlonkInput input) = InputBytes . F . convertF $ V.head input
 
 mkProof :: forall n. KnownNat n => SetupBytes -> Proof (PlonkN n) -> ProofBytes
@@ -84,17 +85,17 @@ challenge ts =
 
 ------------------------------- Base Conversions -------------------------------
 
-convertF :: Plonk.F -> Integer
+convertF :: Fr -> Integer
 convertF = naturalToInteger . fromZp
 
-convertPlonkF :: F -> Plonk.F
+convertPlonkF :: F -> Fr
 convertPlonkF (F n) = toZp n
 
 convertZp :: Zp p -> Integer
 convertZp = naturalToInteger . fromZp
 
 -- See CIP-0381 for the conversion specification
-convertG1 :: Plonk.G1 -> BuiltinByteString
+convertG1 :: Point BLS12_381_G1 -> BuiltinByteString
 convertG1 Inf = bls12_381_G1_compressed_zero
 convertG1 (Point x y) = bs
     where
@@ -104,7 +105,7 @@ convertG1 (Point x y) = bs
         bs  = consByteString b' $ sliceByteString 1 47 bsX
 
 -- See CIP-0381 for the conversion specification
-convertG2 :: Plonk.G2 -> BuiltinByteString
+convertG2 :: Point BLS12_381_G2 -> BuiltinByteString
 convertG2 Inf = bls12_381_G2_compressed_zero
 convertG2 (Point x y) = bs
     where
@@ -129,53 +130,26 @@ instance FromTranscript BuiltinByteString F where
 
     fromTranscript = F . byteStringToInteger LittleEndian . blake2b_224
 
-instance ToTranscript BuiltinByteString Plonk.F where
+instance ToTranscript BuiltinByteString Fr where
     toTranscript = integerToByteString LittleEndian 32 . convertZp
 
-instance ToTranscript BuiltinByteString Plonk.G1 where
+instance ToTranscript BuiltinByteString (Point BLS12_381_G1) where
     toTranscript = convertG1
 
-instance FromTranscript BuiltinByteString Plonk.F where
+instance FromTranscript BuiltinByteString Fr where
     newTranscript = consByteString 0
 
     fromTranscript = toZp . byteStringToInteger LittleEndian . blake2b_224
 
 ------------------------------------ Bench -------------------------------------
 
+-- TODO: Refactor it. Name `Contract` does not make much sense. This type can only be used for testing.
 data Contract = Contract {
-    x           :: Plonk.F
-  , ps          :: Plonk.PlonkProverSecret
-  , targetValue :: Plonk.F
-} deriving stock (Show)
-
-------------------------------------- JSON -------------------------------------
-
-data PlonkProverSecret = PlonkProverSecret F F F F F F F F F F F
-  deriving stock (Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
-
-data RowContractJSON = RowContractJSON {
-    x'           :: F
-  , ps'          :: PlonkProverSecret
-  , targetValue' :: F
+    x           :: Fr
+  , ps          :: PlonkProverSecret BLS12_381_G1
+  , targetValue :: Fr
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-toPlonkPlonkProverSecret :: PlonkProverSecret -> Plonk.PlonkProverSecret
-toPlonkPlonkProverSecret (PlonkProverSecret b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) =
-  Plonk.PlonkProverSecret
-    (convertPlonkF b1)
-    (convertPlonkF b2)
-    (convertPlonkF b3)
-    (convertPlonkF b4)
-    (convertPlonkF b5)
-    (convertPlonkF b6)
-    (convertPlonkF b7)
-    (convertPlonkF b8)
-    (convertPlonkF b9)
-    (convertPlonkF b10)
-    (convertPlonkF b11)
-
-toContract :: RowContractJSON -> Contract
-toContract (RowContractJSON x' ps' targetId') =
-  Contract (convertPlonkF x') (toPlonkPlonkProverSecret ps') (convertPlonkF targetId')
+deriving anyclass instance ToJSON (PlonkProverSecret BLS12_381_G1)
+deriving anyclass instance FromJSON (PlonkProverSecret BLS12_381_G1)
