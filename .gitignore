@@ -28,3 +28,4 @@ e2e-test/*/keys
 local-testnet/example
 assets
 test-data
+.DS_Store
