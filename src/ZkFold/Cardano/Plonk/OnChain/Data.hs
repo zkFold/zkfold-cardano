@@ -14,6 +14,8 @@ import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F)
 data SetupBytes = SetupBytes {
     n     :: Integer
   , pow   :: Integer
+  , g0'   :: BuiltinByteString
+  , h0'   :: BuiltinByteString
   , x2'   :: BuiltinByteString
   , omega :: F
   , k1    :: F
