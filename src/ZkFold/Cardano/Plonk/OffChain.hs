@@ -18,7 +18,7 @@ import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Field             (Ext2 (..), Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..))
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), EllipticCurve (..))
 import           ZkFold.Base.Protocol.ARK.Plonk
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
@@ -33,6 +33,8 @@ mkSetup :: SetupVerify (PlonkN n) -> SetupBytes
 mkSetup (PlonkSetupParamsVerify {..}, PlonkCircuitCommitments {..}) = SetupBytes
   { n     = n''
   , pow   = pow''
+  , g0'   = convertG1 gen
+  , h0'   = convertG2 gen
   , x2'   = convertG2 x2''
   , omega = F $ convertF omega''
   , k1    = F $ convertF k1''
