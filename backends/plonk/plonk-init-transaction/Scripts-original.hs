@@ -9,7 +9,6 @@ import           PlutusLedgerApi.V3                      (BuiltinData)
 import           PlutusTx                                (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                        (check, BuiltinUnit)
 import           PlutusTx.TH                             (compile)
-import           PlutusTx.Builtins.Internal qualified as BI
 
 import           ZkFold.Cardano.Plonk.OnChain.Data       (SetupBytes)
 import           ZkFold.Cardano.Scripts.PlonkVerifier    (plonkVerifier)
@@ -20,13 +19,13 @@ compiledforwardingMint =
     $$(compile [|| untypedforwardingMint ||])
   where
     untypedforwardingMint :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
-    untypedforwardingMint _datum _redeemer _ctx = BI.unitval
---      check
---        ( forwardingMint
---            (unsafeFromBuiltinData datum)
---            (unsafeFromBuiltinData redeemer)
---            (unsafeFromBuiltinData ctx)
---        )
+    untypedforwardingMint datum redeemer ctx =
+      check
+        ( forwardingMint
+            (unsafeFromBuiltinData datum)
+            (unsafeFromBuiltinData redeemer)
+            (unsafeFromBuiltinData ctx)
+        )
 
 compiledPlonkVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
 compiledPlonkVerifier computation =
@@ -34,10 +33,10 @@ compiledPlonkVerifier computation =
     `unsafeApplyCode` liftCodeDef computation
   where
     untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-    untypedPlonkVerifier _computation' _redeemer _ctx = BI.unitval
---      check
---        ( plonkVerifier
---            computation'
---            (unsafeFromBuiltinData redeemer)
---            (unsafeFromBuiltinData ctx)
---        )
+    untypedPlonkVerifier computation' redeemer ctx =
+      check
+        ( plonkVerifier
+            computation'
+            (unsafeFromBuiltinData redeemer)
+            (unsafeFromBuiltinData ctx)
+        )

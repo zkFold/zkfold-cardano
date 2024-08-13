@@ -14,7 +14,6 @@ echo "someone wants to create an address with scripts."
 echo ""
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-in2=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
 
 echo "someone address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4)"
@@ -51,6 +50,11 @@ cardano-cli conway transaction submit \
     --testnet-magic 4 \
     --tx-file "$keypath/plonkVerifier.tx"
 
+echo ""
+echo "Pausing for 40 seconds..."
+echo ""
+sleep 40
+
 #------------------------------ :forwarding mint: ------------------------------
 
 cardano-cli conway address build \
@@ -59,6 +63,8 @@ cardano-cli conway address build \
     --testnet-magic 4
 
 #-------------------------------- :send-script: --------------------------------
+
+in2=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \

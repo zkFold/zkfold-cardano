@@ -49,9 +49,9 @@ cardano-cli conway transaction submit \
 #-------------------------------------------------------------------------------
 
 echo ""
-echo "Pausing for 60 seconds..."
+echo "Pausing for 80 seconds..."
 echo ""
-sleep 60
+sleep 80
 
 echo ""
 echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")"
