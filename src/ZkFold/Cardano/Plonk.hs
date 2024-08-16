@@ -6,12 +6,12 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), Eq (..), ($), (&&), (.), (<>))
+import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<>))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo, powMod)
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powMod)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (mul)
 

@@ -5,7 +5,7 @@
 module ZkFold.Cardano.Plonk.OffChain where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)
-import           Data.Binary
+-- import           Data.Binary
 import qualified Data.Vector                                 as V
 import           GHC.ByteOrder                               (ByteOrder (..))
 import           GHC.Generics                                (Generic)
@@ -19,15 +19,12 @@ import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Field             (Ext2 (..), Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), EllipticCurve (..), compress)
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), EllipticCurve (..))
 import           ZkFold.Base.Protocol.ARK.Plonk
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1   (G1)
 import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
-import           Data.ByteString.Lazy (toStrict)
-import           Debug.Trace (trace)
-import qualified Data.ByteArray as BA
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 

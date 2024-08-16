@@ -17,7 +17,7 @@ import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OffChain               (mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes, ProofBytes, SetupBytes)
 import           ZkFold.Symbolic.Class
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compileSafeZero)
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compileForceOne)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement
@@ -29,7 +29,7 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkProverSecret BLS12_381_G1 -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let Bool ac = compileSafeZero @Fr (equalityCheckContract @Fr @(ArithmeticCircuit Fr) targetValue) :: Bool (ArithmeticCircuit Fr)
+    let Bool ac = compileForceOne @Fr (equalityCheckContract @Fr @(ArithmeticCircuit Fr) targetValue) :: Bool (ArithmeticCircuit Fr)
 
         (omega, k1, k2) = getParams 32
         witnessInputs  = fromList [(1, targetValue), (unPar1 $ acOutput ac, 1)]
