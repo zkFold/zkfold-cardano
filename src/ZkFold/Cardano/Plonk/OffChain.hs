@@ -99,12 +99,26 @@ convertZp = naturalToInteger . fromZp
 
 -- See CIP-0381 for the conversion specification
 convertG1 :: Point BLS12_381_G1 -> BuiltinByteString
-convertG1 p = let len = BA.length $ toBuiltin $ toStrict $ encode $ compress p
-              in Debug.Trace.trace (Haskell.show len) $ (toBuiltin . toStrict . encode . compress) p
+convertG1 Inf = bls12_381_G1_compressed_zero
+convertG1 (Point x y) = bs
+    where
+        bsX = integerToByteString BigEndian 48 $ convertZp x
+        b   = indexByteString bsX 0
+        b'  = b + 128 + 32 * (if y Haskell.> negate y then 1 else 0)
+        bs  = consByteString b' $ sliceByteString 1 47 bsX
 
 -- See CIP-0381 for the conversion specification
 convertG2 :: Point BLS12_381_G2 -> BuiltinByteString
-convertG2 = toBuiltin . toStrict . encode . compress
+convertG2 Inf = bls12_381_G2_compressed_zero
+convertG2 (Point x y) = bs
+    where
+        f (Ext2 a0 a1) = integerToByteString BigEndian 48 (convertZp a1) <> integerToByteString BigEndian 48 (convertZp a0)
+        bsX  = f x
+        bsY  = f y
+        bsY' = f $ negate y
+        b   = indexByteString bsX 0
+        b'  = b + 128 + 32 * (if bsY `greaterThanByteString` bsY' then 1 else 0)
+        bs  = consByteString b' $ sliceByteString 1 95 bsX
 
 ------------------ Transcript for NonInteractiveProof Plonk32 ------------------
 
