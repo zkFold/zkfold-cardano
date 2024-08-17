@@ -5,7 +5,6 @@
 module ZkFold.Cardano.Plonk.OffChain where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)
--- import           Data.Binary
 import qualified Data.Vector                                 as V
 import           GHC.ByteOrder                               (ByteOrder (..))
 import           GHC.Generics                                (Generic)
@@ -13,13 +12,13 @@ import           GHC.Natural                                 (naturalToInteger)
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                            (Semigroup (..), ($), (.))
 import           Prelude                                     (Show)
-import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Algebra.Basic.Field             (Ext2 (..), Zp, fromZp, toZp)
+import           ZkFold.Base.Algebra.Basic.Field             (Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), EllipticCurve (..))
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), EllipticCurve (..), compress)
+import           ZkFold.Base.Data.ByteString                 (toByteString)
 import           ZkFold.Base.Protocol.ARK.Plonk
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
@@ -96,26 +95,11 @@ convertZp = naturalToInteger . fromZp
 
 -- See CIP-0381 for the conversion specification
 convertG1 :: Point BLS12_381_G1 -> BuiltinByteString
-convertG1 Inf = bls12_381_G1_compressed_zero
-convertG1 (Point x y) = bs
-    where
-        bsX = integerToByteString BigEndian 48 $ convertZp x
-        b   = indexByteString bsX 0
-        b'  = b + 128 + 32 * (if y Haskell.> negate y then 1 else 0)
-        bs  = consByteString b' $ sliceByteString 1 47 bsX
+convertG1 = toBuiltin . toByteString . compress
 
 -- See CIP-0381 for the conversion specification
 convertG2 :: Point BLS12_381_G2 -> BuiltinByteString
-convertG2 Inf = bls12_381_G2_compressed_zero
-convertG2 (Point x y) = bs
-    where
-        f (Ext2 a0 a1) = integerToByteString BigEndian 48 (convertZp a1) <> integerToByteString BigEndian 48 (convertZp a0)
-        bsX  = f x
-        bsY  = f y
-        bsY' = f $ negate y
-        b   = indexByteString bsX 0
-        b'  = b + 128 + 32 * (if bsY `greaterThanByteString` bsY' then 1 else 0)
-        bs  = consByteString b' $ sliceByteString 1 95 bsX
+convertG2 = toBuiltin . toByteString . compress
 
 ------------------ Transcript for NonInteractiveProof Plonk32 ------------------
 
@@ -141,7 +125,7 @@ instance FromTranscript BuiltinByteString Fr where
 
     fromTranscript = toZp . byteStringToInteger LittleEndian . blake2b_224
 
------------------------------------- Bench -------------------------------------
+------------------------------------ E2E test -------------------------------------
 
 -- TODO: Refactor it. Name `Contract` does not make much sense. This type can only be used for testing.
 data Contract = Contract {

@@ -6,7 +6,7 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<>))
+import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<>), (&&), (==))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -37,8 +37,8 @@ instance NonInteractiveProof PlonkPlutus where
     {-# INLINABLE verify #-}
     verify :: SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
     verify SetupBytes{..} InputBytes{..} ProofBytes{..} =
-        let g0 = bls12_381_G1_uncompress g0' -- bls12_381_G1_uncompress bls12_381_G1_compressed_generator
-            h0 = bls12_381_G2_uncompress h0' -- bls12_381_G2_uncompress bls12_381_G2_compressed_generator
+        let g0 = bls12_381_G1_uncompress bls12_381_G1_compressed_generator
+            h0 = bls12_381_G2_uncompress bls12_381_G2_compressed_generator
 
             -- uncompress Setup G1 elements
             h1    = bls12_381_G2_uncompress x2'
@@ -90,7 +90,9 @@ instance NonInteractiveProof PlonkPlutus where
                 <> integerToByteString LittleEndian 32 z_xi'
             v = F . byteStringToInteger LittleEndian . blake2b_224 $ t4
 
-            u = F . byteStringToInteger LittleEndian . blake2b_224 $ t4 <> proof1' <> proof2'
+            t5 = consByteString 0 $ proof1'
+                -- consByteString 0 $ t4 <> proof1' <> proof2'
+            u = F . byteStringToInteger LittleEndian . blake2b_224 $ t5
 
             -- common varibles for r0, d, f, e
 
@@ -164,4 +166,4 @@ instance NonInteractiveProof PlonkPlutus where
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
             p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
 
-        in bls12_381_finalVerify p1 p2 -- && lagsInv * F n * (xi - omega) == one
+        in bls12_381_finalVerify p1 p2 && (lagsInv * F n * (xi - omega) == one)
