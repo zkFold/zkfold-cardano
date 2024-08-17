@@ -1,6 +1,10 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoStarIsType         #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-orphans                 #-}
 
 module ZkFold.Cardano.Plonk where
 
@@ -10,12 +14,14 @@ import           PlutusTx.Prelude                         (Bool (..), ($), (.), 
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powMod)
+import           ZkFold.Base.Algebra.Basic.Number
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), CompatibleNonInteractiveProofs (..))
+import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkSetup, mkInput, mkProof)
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..))
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (mul)
 
-data PlonkPlutus
+data PlonkPlutus = PlonkPlutus
 
 instance NonInteractiveProof PlonkPlutus where
     type Transcript PlonkPlutus  = BuiltinByteString
@@ -90,16 +96,17 @@ instance NonInteractiveProof PlonkPlutus where
                 <> integerToByteString LittleEndian 32 z_xi'
             v = F . byteStringToInteger LittleEndian . blake2b_224 $ t4
 
-            t5 = consByteString 0 $ proof1'
-                -- consByteString 0 $ t4 <> proof1' <> proof2'
+            t5 = consByteString 0 $ t4 <> proof1' <> proof2'
             u = F . byteStringToInteger LittleEndian . blake2b_224 $ t5
 
             -- common varibles for r0, d, f, e
 
-            xi_n = xi `powMod` n
+            sq a 0 = a
+            sq a k = sq (a * a) (k - 1)
+            xi_n = xi `sq` pow
             xi_m_one = xi_n - one
 
-            lagrange1_xi = omega * xi_m_one * lagsInv
+            lagrange1_xi = omega * xi_m_one * l1_xi_mul'
 
             alphaSquare = alpha * alpha
             alphaEvalZOmega = alpha * z_xi
@@ -166,4 +173,9 @@ instance NonInteractiveProof PlonkPlutus where
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
             p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
 
-        in bls12_381_finalVerify p1 p2 && (lagsInv * F n * (xi - omega) == one)
+        in bls12_381_finalVerify p1 p2 && (l1_xi_mul' * F n * (xi - omega) == one)
+
+instance (KnownNat n, KnownNat (3 * n), KnownNat ((4 * n) + 6)) => CompatibleNonInteractiveProofs (PlonkN n) PlonkPlutus where
+    nipSetupTransform = mkSetup
+    nipInputTransform = mkInput
+    nipProofTransform = mkProof
