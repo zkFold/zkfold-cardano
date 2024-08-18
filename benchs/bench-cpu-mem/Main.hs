@@ -19,7 +19,7 @@ import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkW
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
+import           ZkFold.Cardano.Plonk.OffChain               (EqualityCheckContract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
 import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
@@ -55,7 +55,7 @@ main = do
   
   case maybeRowContract of
     Just rowContract ->
-      let Contract{..} = toContract rowContract
+      let EqualityCheckContract{..} = toContract rowContract
           lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
           lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
 

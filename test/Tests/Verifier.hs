@@ -6,7 +6,7 @@ import           Test.QuickCheck                          (Testable (property))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProofTestData (..), nipCompatibility)
 import           ZkFold.Cardano.Plonk.OffChain            (PlonkN)
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus(..))
+import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 
 specVerifier :: IO ()
 specVerifier = hspec $ do

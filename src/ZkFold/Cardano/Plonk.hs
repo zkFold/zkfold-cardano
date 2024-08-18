@@ -10,18 +10,18 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (.), (<>), (&&), (==))
+import           PlutusTx.Prelude                         (Bool (..), ($), (&&), (.), (<>), (==))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), CompatibleNonInteractiveProofs (..))
-import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkSetup, mkInput, mkProof)
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..), NonInteractiveProof (..))
+import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (mul)
 
-data PlonkPlutus = PlonkPlutus
+data PlonkPlutus
 
 instance NonInteractiveProof PlonkPlutus where
     type Transcript PlonkPlutus  = BuiltinByteString
@@ -101,9 +101,7 @@ instance NonInteractiveProof PlonkPlutus where
 
             -- common varibles for r0, d, f, e
 
-            sq a 0 = a
-            sq a k = sq (a * a) (k - 1)
-            xi_n = xi `sq` pow
+            xi_n = xi `powTwo` pow
             xi_m_one = xi_n - one
 
             lagrange1_xi = omega * xi_m_one * l1_xi_mul'

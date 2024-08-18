@@ -22,7 +22,7 @@ import           Prelude                               hiding (Bool, Eq (..), Fr
 import           UntypedPlutusCore                     (UnrestrictedProgram (..))
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..), RowContractJSON, toContract)
+import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..), RowContractJSON, toContract)
 
 saveFlat redeemer filePath code =
    BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
@@ -37,7 +37,7 @@ main = do
   let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
   case maybeRowContract of
     Just rowContract ->
-      let Contract{..} = toContract rowContract
+      let EqualityCheckContract{..} = toContract rowContract
       in do
         let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
             redeemer = (setup, input, proof)

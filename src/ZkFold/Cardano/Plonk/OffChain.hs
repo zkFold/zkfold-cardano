@@ -14,7 +14,7 @@ import           Prelude                                     (Show)
 
 import           ZkFold.Base.Algebra.Basic.Field             (Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), compress, PointCompressed)
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), PointCompressed, compress)
 import           ZkFold.Base.Data.ByteString                 (toByteString)
 import           ZkFold.Base.Protocol.ARK.Plonk
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
@@ -95,7 +95,7 @@ instance ToTranscript BuiltinByteString Fr where
     toTranscript = integerToByteString LittleEndian 32 . convertZp
 
 instance ToTranscript BuiltinByteString (PointCompressed BLS12_381_G1) where
-    toTranscript = toBuiltin . toByteString 
+    toTranscript = toBuiltin . toByteString
 
 instance FromTranscript BuiltinByteString Fr where
     newTranscript = consByteString 0
@@ -104,8 +104,8 @@ instance FromTranscript BuiltinByteString Fr where
 
 ------------------------------------ E2E test -------------------------------------
 
--- TODO: Refactor it. Name `Contract` does not make much sense. This type can only be used for testing.
-data Contract = Contract {
+-- This type can only be used for testing.
+data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr
   , ps          :: PlonkProverSecret BLS12_381_G1
   , targetValue :: Fr
