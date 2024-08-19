@@ -9,20 +9,18 @@
 #set align(start)
 #set text(size: 12pt)
 
-*A ZK-KYC example:* Alice wants to mint and send Bob a token that represents a proof of some statement about Bob.
+*A ZK-KYC scenario:* Alice issues a token that represents a cryptographic proof of some statement (KYC info) about Bob and sends the token to him. The minting policy of the token is the Plonk `verify` algorithm for that statement. Bob can then burn the token in exchange for a reward in ada.
 
-- The first transaction is a setup that needs to be performed only once for this application;
-- In the second transaction, Alice minting tokens and sends ada + tokens to Bob;
-- In the third transaction, Bob burning tokens.
+First, we perform a setup transaction that posts the Plonk verifier script on-chain. 
 
 #set text(size: small-size)
 #v(3em)
 #transaction(
-  [*Init transaction*],
+  [*Script setup transaction*],
   inputs: (
     (
       name: "Someone",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 1000
       )
@@ -31,39 +29,39 @@
   outputs: (
     (
       name: "Someone",
-      address: "Public key hash",
+      address: "Public key",
       value: (
-        ada: 998
+        ada: 999
       ),
     ),
     (
-      name: "Plonk: setup Above 18",
-      address: "zkfold-main",
+      name: "Always fails",
+      address: "Plutus script",
       value: (
         ada: 1
+      ),
+      datum: (
+        "script": "<Plonk verifier>"
       )
-    ),
-    (
-      name: "Forwarding minting",
-      address: "zkfold-main",
-      value: (
-        ada: 1
-      )
-    ),
+    )
   ),
   signatures: (
     "Someone",
   ),
   notes: [Someone posts the Plonk verifier script on-chain.]
 )
-#v(10em)
+#v(5em)
 
+#set text(size: 12pt)
+In the second transaction, Charles sets up a reward for doing the ZK-KYC process. He sends 100 ada to a Plutus script address. The script unlocks the funds if and only if the KYC token is burned.
+
+#set text(size: small-size)
 #transaction(
-  [*Transfer transaction*],
+  [*Reward setup transaction*],
   inputs: (
     (
       name: "Charles",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 567
       )
@@ -71,13 +69,10 @@
   ),
   outputs: (
     (
-      name: "Symbolhash to Plonk \"Above 18?\"",
-      address: "Forwarding mint script",
+      name: "Burns a ZK-KYC token?",
+      address: "Plutus script",
       value: (
         ada: 100
-      ),
-      datum: (
-        "input": "<setup address>"
       )
     ),
     (
@@ -91,102 +86,113 @@
   signatures: (
     "Charles",
   ),
-  notes: [Charles sents ada to a smart contract address.]
+  notes: [Charles sets up a reward for burning a ZK-KYC token.]
 )
-#v(10em)
+#v(5em)
 
+#pagebreak()
+#set text(size: 12pt)
+Alice can now mint a token that represents a cryptographic proof of some statement about Bob. The minting policy of the token is the Plonk `verify` algorithm for that statement. In the same transaction, she sends the token to Bob.
+
+#set text(size: small-size)
 #transaction(
-  [*Minting transaction*],
+  [*ZK-KYC transaction*],
   inputs: (
     (
       name: "Alice",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 567
       )
     ),
     (
-      name: "Plonk: setup Above 18",
+      name: "Always fails",
+      address: "Plutus script",
       reference: true,
-      address: "zkfold-main",
       value: (
         ada: 1
+      ),
+      datum: (
+        "script": "<Plonk verifier>"
       )
     )
   ),
   outputs: (
     (
       name: "Alice",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 566
       ),
     ),
     (
       name: "Bob",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 1,
-        tokenName: 1,
+        "Bob's ZK-KYC": 1,
       )
     ),
   ),
   signatures: (
     "Alice",
   ),
-  notes: [Alice sents ada and plonk tokens to Bob.]
+  notes: [Alice mints a ZK-KYC token and sends it to Bob.]
 )
+#v(5em)
 
-#pagebreak()
+#set text(size: 12pt)
+Bob can now burn the token and claim the reward.
+
+#set text(size: small-size)
 #transaction(
   [*Burning transaction*],
   inputs: (
     (
       name: "Bob",
-      address: "Public key hash",
-      value: (
-        ada: 100,
-        tokenName: 1,
-      )
-    ),
-    (
-      name: "Symbolhash to Plonk \"Above 18?\"",
-      address: "Forwarding mint script",
+      address: "Public key",
       value: (
         ada: 100
+      )
+    ),
+    (
+      name: "Bob",
+      address: "Public key",
+      value: (
+        ada: 1,
+        "Bob's ZK-KYC": 1,
+      )
+    ),
+    (
+      name: "Burns a ZK-KYC token?",
+      address: "Plutus script",
+      value: (
+        ada: 100
+      )
+    ),
+    (
+      name: "Always fails",
+      address: "Plutus script",
+      reference: true,
+      value: (
+        ada: 1
       ),
       datum: (
-        "input": "<setup address>"
+        "script": "<Plonk verifier>"
       )
-    ),
-    (
-      name: "Plonk: setup Above 18",
-      address: "zkfold-main",
-      reference: true,
-      value: (
-        ada: 1
-      )
-    ),
-    (
-      name: "Forwarding minting",
-      address: "zkfold-main",
-      reference: true,
-      value: (
-        ada: 1
-      )
-    ),
+    )
   ),
   outputs: (
     (
       name: "Bob",
       address: "Public key hash",
       value: (
-        ada: 200,
+        ada: 201,
       ),
     ),
   ),
   signatures: (
     "Bob",
   ),
-  notes: [Bob burn plonk tokens.]
+  notes: [Bob burns a ZK-KYC token and claims the reward.]
 )

@@ -14,7 +14,7 @@ import           PlutusTx                              (ToData (..))
 import           Prelude                               (IO, putStr, show, ($), (++), (.), (<$>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..))
+import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
 import           ZkFold.Cardano.Plonk.OnChain.Utils    (fromInput)
 
 -- | Serialise data to CBOR and then wrap it in a JSON object.
@@ -23,7 +23,7 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 
 main :: IO ()
 main = do
-  Contract{..} <- fromJust . decode <$> BL.readFile "../../test-data/plonk-raw-contract-data.json"
+  EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile "../../test-data/plonk-raw-contract-data.json"
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 

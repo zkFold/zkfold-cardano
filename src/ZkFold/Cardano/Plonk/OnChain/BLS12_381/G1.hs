@@ -16,7 +16,7 @@ instance ZkFold.AdditiveSemigroup G1 where
     (+) = bls12_381_G1_add
 
 instance ZkFold.FromConstant Natural G1 where
-    fromConstant = traceError "not supported on onchain"
+    fromConstant = traceError "not supported on on-chain"
 
 instance ZkFold.Scale Natural G1 where
     scale n = ZkFold.scale (naturalToInteger n)
@@ -25,7 +25,7 @@ instance ZkFold.AdditiveMonoid G1 where
     zero = bls12_381_G1_uncompress bls12_381_G1_compressed_zero
 
 instance ZkFold.FromConstant Integer G1 where
-    fromConstant = traceError "not supported on onchain"
+    fromConstant = traceError "not supported on on-chain"
 
 instance ZkFold.Scale Integer G1 where
     {-# INLINABLE scale #-}
