@@ -35,7 +35,7 @@ TODO
 
 `cabal run bench-cpu-mem` to calculate the cpu/mem units of the tests in the plutus-benchmark package.
 
-`cabal run bench-uplc` to compile the fast implementation to UPLC (`.flat`) for the further processing.
+`cabal run bench-analyze-uplc` to compile the fast implementation to UPLC (`.flat`) for the further processing.
 
 ### Setting up a local testnet
 

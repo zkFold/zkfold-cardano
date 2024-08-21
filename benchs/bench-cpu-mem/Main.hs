@@ -45,7 +45,7 @@ main = do
     putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
-    let h = stdout
+        h = stdout
 
     hPrintf h "\n\n"
     hPrintf h "Run plonk verify\n\n"

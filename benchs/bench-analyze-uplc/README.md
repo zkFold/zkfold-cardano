@@ -1,6 +1,6 @@
 # Analyze uplc
 
-`cabal run bench-uplc` to compile the fast implementation to UPLC (`.flat`) for further processing.
+`cabal run bench-analyze-uplc` to compile the fast implementation to UPLC (`.flat`) for further processing.
 
 This repository will follow [plutus-plonk-poc](https://github.com/perturbing/plutus-plonk-poc).
 

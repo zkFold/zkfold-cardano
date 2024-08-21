@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Bench.Scripts (compiledSymbolicVerifier, compiledPlonkVerifier) where
+module Bench.Scripts (compiledSymbolicVerifier, compiledPlonkVerifier, compiledVerifyPlonk) where
 
 import           PlutusLedgerApi.V3                      (BuiltinData)
 import           PlutusTx                                (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
@@ -13,6 +13,8 @@ import           PlutusTx.TH                             (compile)
 import           ZkFold.Cardano.Plonk.OnChain.Data       (SetupBytes)
 import           ZkFold.Cardano.Scripts.PlonkVerifier    (plonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier (symbolicVerifier)
+import ZkFold.Cardano.Plonk
+import ZkFold.Base.Protocol.NonInteractiveProof (verify)
 
 compiledSymbolicVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
 compiledSymbolicVerifier contract =
@@ -40,4 +42,18 @@ compiledPlonkVerifier computation =
             computation'
             (unsafeFromBuiltinData redeemer)
             (unsafeFromBuiltinData ctx)
+        )
+
+compiledVerifyPlonk :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+compiledVerifyPlonk computation =
+    $$(compile [|| untypedVerifyPlonk ||])
+    `unsafeApplyCode` liftCodeDef computation
+  where
+    untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+    untypedVerifyPlonk computation' input proof =
+      check
+        ( verify @PlonkPlutus
+            computation'
+            (unsafeFromBuiltinData input)
+            (unsafeFromBuiltinData proof)
         )

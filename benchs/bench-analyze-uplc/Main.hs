@@ -1,12 +1,9 @@
-{-
 {-# LANGUAGE OverloadedStrings #-}
--}
+
 module Main (main) where
 
-import           Prelude   
 
-{-
-import           Bench.Scripts                         (compiledPlonkVerifier, compiledSymbolicVerifier)
+import           Bench.Scripts                         (compiledPlonkVerifier, compiledSymbolicVerifier, compiledVerifyPlonk)
 import           Cardano.Api                           (File (..), IsPlutusScriptLanguage, PlutusScript, PlutusScriptV3, writeFileTextEnvelope)
 import           Cardano.Api.Shelley                   (PlutusScript (..))
 import           Control.Monad                         (void)
@@ -22,30 +19,34 @@ import           Prelude                               hiding (Bool, Eq (..), Fr
 import           UntypedPlutusCore                     (UnrestrictedProgram (..))
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..), RowContractJSON, toContract)
+import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
+import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
+import           Test.QuickCheck.Gen                         (generate)
 
 saveFlat redeemer filePath code =
    BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
            `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
--}
+
+writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
+writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
+
+savePlutus :: FilePath -> CompiledCode a -> IO ()
+savePlutus filePath =
+  writePlutusScriptToFile @PlutusScriptV3 filePath . PlutusScriptSerialised . PlutusV3.serialiseCompiledCode
+
 
 main :: IO ()
 main = do
-  pure ()
-  {-
-  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
-  let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
-  case maybeRowContract of
-    Just rowContract ->
-      let EqualityCheckContract{..} = toContract rowContract
-      in do
-        let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
-            redeemer = (setup, input, proof)
-        savePlutus "symbolicVerifier" $ compiledSymbolicVerifier setup
-        savePlutus "plonkVerifier"    $ compiledPlonkVerifier setup
-        savePlutus "plonkVerify"      compiledPlonkVerify
-        saveFlat proof "plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
-        saveFlat proof "plonkVerifierScript"   $ compiledPlonkVerifier setup
-        saveFlat redeemer "plonkVerifyScript"  $ compiledPlonkVerify `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData ())
-    _ -> print ("Could not deserialize" :: String)
-  -}
+    x           <- generate arbitrary
+    ps          <- generate arbitrary
+    targetValue <- generate arbitrary
+
+    let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
+        redeemer = (setup, input, proof)
+
+    savePlutus "symbolicVerifier" $ compiledSymbolicVerifier setup
+    savePlutus "plonkVerifier"    $ compiledPlonkVerifier setup
+    savePlutus "plonkVerify"      $ compiledVerifyPlonk setup
+    saveFlat proof "plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
+    saveFlat proof "plonkVerifierScript"   $ compiledPlonkVerifier setup
+    saveFlat redeemer "plonkVerifyScript"  $ compiledVerifyPlonk setup
