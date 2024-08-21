@@ -176,6 +176,7 @@ executable bench-cpu-mem
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
+    QuickCheck                     ,
     zkfold-base                    ,
     zkfold-cardano                 ,
 

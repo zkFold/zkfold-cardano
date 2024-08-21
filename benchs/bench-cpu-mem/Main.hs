@@ -1,30 +1,20 @@
 module Main where
 
-import           Prelude    
 
-{-
-import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript)
+import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
 import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
-import           Data.Aeson                                  (decode)
-import qualified Data.ByteString.Lazy                        as BL
-import           Data.Map                                    (fromList, keys)
 import           PlutusLedgerApi.V3                          (Interval, POSIXTime, ScriptContext (..), TxInInfo, TxInfo (..), TxOut, always)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import           System.IO                                   (Handle, stdout)
 import           Text.Printf                                 (hPrintf)
 
-import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
-import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkWitnessInput (..))
-import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OffChain               (EqualityCheckContract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
-import           ZkFold.Symbolic.Compiler.ArithmeticCircuit  (applyArgs)
-import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
-import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
-import           ZkFold.Symbolic.Types                       (Symbolic)
-import           ZkFold.Base.Data.Vector                     (Vector(..))
+
+import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
+import           Test.QuickCheck.Gen                         (generate)
+import           ZkFold.Cardano.Examples.EqualityCheck       (equalityCheckVerificationBytes)
+
 
 context :: ScriptContext -- fill up with data
 context = ScriptContext
@@ -36,58 +26,40 @@ context = ScriptContext
     }
   }
 
-printCostsSymbolicVerifier :: Handle -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsSymbolicVerifier h i p ctx = printSizeStatistics h NoSize (symbolicVerifierScript (DatumSymbolic i) (RedeemerSymbolic p) ctx)
+printCostsSymbolicVerifier :: Handle -> SetupVerify PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
+printCostsSymbolicVerifier h s p ctx = printSizeStatistics h NoSize (symbolicVerifierScript s p ctx)
 
-printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifier h s i p ctx = printSizeStatistics h NoSize (plonkVerifierScript (RedeemerToken s i p) ctx)
+printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifier h s p ctx = printSizeStatistics h NoSize (plonkVerifierScript s p ctx)
 
 printCostsVerifyPlonk :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
-printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript (RedeemerToken s i p))
--}
+printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
+
 
 main :: IO ()
 main = do
-  pure ()
-  {-
-  jsonRowContract <- BL.readFile "test-data/raw-contract-data.json"
-  let maybeRowContract = decode jsonRowContract :: Maybe RowContractJSON
-  
-  case maybeRowContract of
-    Just rowContract ->
-      let EqualityCheckContract{..} = toContract rowContract
-          lockedByTxId :: forall a a' . (Symbolic a , FromConstant a' a) => TxId a' -> TxId a -> Bool a
-          lockedByTxId (TxId targetId) (TxId txId) = txId == fromConstant targetId
+    x           <- generate arbitrary
+    ps          <- generate arbitrary
+    targetValue <- generate arbitrary
+    
+    putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-          Bool ac = compile @Fr (lockedByTxId @(ArithmeticCircuit Fr) @Fr (TxId targetId))
-          acc = applyArgs ac [targetId]
+    let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
+    let h = stdout
 
-          (omega, k1, k2) = getParams 5
-          inputs   = fromList [(acOutput acc, 1)]
-          plonk            = Plonk @32 omega k1 k2 (Vector @1 $ keys inputs) acc x
-          setupP           = setupProve @(PlonkN 32) plonk
-          setupV           = setupVerify @(PlonkN 32) plonk
-          witness          = (PlonkWitnessInput inputs, ps)
-          (input', proof') = prove @(PlonkN 32) setupP witness
-      in do
-        let setup = mkSetup setupV
-            input = mkInput input'
-            proof = mkProof @32 setup proof'
-            h = stdout
-        hPrintf h "\n\n"
-        hPrintf h "Run plonk verify\n\n"
-        printHeader h
-        printCostsVerifyPlonk h setup input proof
-        hPrintf h "\n\n"
-        hPrintf h "\n\n"
-        hPrintf h "Run plonk verifier\n\n"
-        printHeader h
-        printCostsPlonkVerifier h setup input proof context
-        hPrintf h "\n\n"
-        hPrintf h "\n\n"
-        hPrintf h "Run symbolic plonk verifier\n\n"
-        printHeader h
-        printCostsSymbolicVerifier h input proof context
-        hPrintf h "\n\n"
-    _ -> print "Could not deserialize"
-  -}
+    hPrintf h "\n\n"
+    hPrintf h "Run plonk verify\n\n"
+    printHeader h
+    printCostsVerifyPlonk h setup input proof
+    hPrintf h "\n\n"
+    hPrintf h "\n\n"
+    hPrintf h "Run plonk verifier\n\n"
+    printHeader h
+    printCostsPlonkVerifier h setup proof context
+    hPrintf h "\n\n"
+    hPrintf h "\n\n"
+    hPrintf h "Run symbolic plonk verifier\n\n"
+    printHeader h
+    printCostsSymbolicVerifier h setup proof context
+    hPrintf h "\n\n"
+
