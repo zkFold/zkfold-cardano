@@ -31,7 +31,7 @@ forwardingMintIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transf
 
 cabal run plonk-minting-transaction
 
-tokenname=$assets/tokenname
+tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
 redeemerUnit=$assets/unit.json
 

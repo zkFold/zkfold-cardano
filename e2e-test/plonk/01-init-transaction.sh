@@ -31,13 +31,14 @@ cardano-cli conway address build \
     --testnet-magic 4
 
 #-------------------------------- :send-script: --------------------------------
+#    --tx-out "$(cat $keypath/zkfold-main.addr) + 48487500 lovelace" \
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/plonkVerifier.txbody" \
     --tx-in $in1 \
-    --tx-out "$(cat $keypath/zkfold-main.addr) + 47220360 lovelace" \
+    --tx-out "$(cat $keypath/zkfold-main.addr) + 48513360 lovelace" \
     --tx-out-reference-script-file "$assets/plonkVerifier.plutus"
 
 cardano-cli conway transaction sign \
@@ -51,9 +52,9 @@ cardano-cli conway transaction submit \
     --tx-file "$keypath/plonkVerifier.tx"
 
 echo ""
-echo "Pausing for 40 seconds..."
+echo "Pausing for 50 seconds..."
 echo ""
-sleep 40
+sleep 50
 
 #------------------------------ :forwarding mint: ------------------------------
 

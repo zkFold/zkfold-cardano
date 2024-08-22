@@ -9,7 +9,6 @@ import           PlutusLedgerApi.V3                       (BuiltinData, ScriptCo
 import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                         (check, error, ($), (.), BuiltinUnit, Maybe(..))
 import           PlutusTx.TH                              (compile)
-import           PlutusTx.Builtins.Internal qualified as BI
 
 import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
@@ -36,10 +35,10 @@ compiledPlonkVerifier computation =
     `unsafeApplyCode` liftCodeDef computation
   where
     untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-    untypedPlonkVerifier _computation' _ctx' = BI.unitval
-      -- let ctx = unsafeFromBuiltinData ctx' in
-      --   check $
-      --     plonkVerifier
-      --       computation'
-      --       (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
-      --       ctx
+    untypedPlonkVerifier computation' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+        check $
+          plonkVerifier
+            computation'
+            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+            ctx

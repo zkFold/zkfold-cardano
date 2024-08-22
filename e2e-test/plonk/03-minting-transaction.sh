@@ -13,7 +13,8 @@ echo ""
 echo "alice minting tokens for bob."
 echo ""
 
-in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
+in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+collateral=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
 
 echo ""
 echo "alice address:"
@@ -31,20 +32,23 @@ tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
 redeemerProof=$assets/redeemerPlonkVerifier.json
 
+echo "PolicyID & TokenName:"
 echo "$policyid.$tokenname"
 
 #---------------------------------- :minting: ----------------------------------
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
-    --tx-in $in \
-    --tx-in-collateral $in \
-    --tx-out "$(cat $keypath/bob.addr) + 1142150 lovelace + 1 $policyid.$tokenname" \
     --change-address "$(cat $keypath/alice.addr)" \
+    --tx-in-collateral $collateral \
+    --out-file "$keypath/minting-transaction.txbody" \
+    --tx-in $in \
     --mint "1 $policyid.$tokenname" \
-    --mint-script-file $assets/plonkVerifier.plutus \
-    --mint-redeemer-file $redeemerProof \
-    --out-file "$keypath/minting-transaction.txbody"
+    --mint-tx-in-reference $plonkVerifier \
+    --mint-plutus-script-v3 \
+    --mint-reference-tx-in-redeemer-file $redeemerProof \
+    --policy-id $policyid \
+    --tx-out "$(cat $keypath/bob.addr) + 1142150 lovelace + 1 $policyid.$tokenname"
 
 cardano-cli conway transaction sign \
     --testnet-magic 4 \
@@ -65,6 +69,7 @@ sleep 60
 
 echo ""
 echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")"
+# maybe should be: echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/minting-transaction.tx")"
 echo ""
 echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4)"
