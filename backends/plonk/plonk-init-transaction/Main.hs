@@ -41,4 +41,4 @@ main = do
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
   savePlutus "../../assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
-  savePlutus "../../assets/forwardingMint.plutus" compiledforwardingMint
+  savePlutus "../../assets/forwardingMint.plutus" $ compiledforwardingMint 0
