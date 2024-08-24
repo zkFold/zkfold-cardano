@@ -52,9 +52,9 @@ cardano-cli conway transaction submit \
     --tx-file "$keypath/plonkVerifier.tx"
 
 echo ""
-echo "Pausing for 50 seconds..."
+echo "Pausing for 60 seconds..."
 echo ""
-sleep 50
+sleep 60
 
 #------------------------------ :forwarding mint: ------------------------------
 

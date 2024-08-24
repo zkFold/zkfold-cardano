@@ -90,7 +90,6 @@ powMod b e
 {-# INLINABLE powTwo #-}
 powTwo :: F -> Integer -> F
 powTwo x k
-    | k < 0     = error ()
     | k == 0    = x
     | otherwise = powTwo (x ZkFold.* x) (k - 1)
 

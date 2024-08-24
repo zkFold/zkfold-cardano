@@ -12,14 +12,14 @@ import           PlutusTx                              (ToData (..))
 import           Prelude                               (IO, Show (..), putStr, ($), (++), (.), (<$>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..))
+import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
 
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
 
 main :: IO ()
 main = do
-  Contract{..} <- fromJust . decode <$> BL.readFile "test-data/symbolic-raw-contract-data.json"
+  EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile "test-data/symbolic-raw-contract-data.json"
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 

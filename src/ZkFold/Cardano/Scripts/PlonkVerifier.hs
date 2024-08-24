@@ -6,7 +6,7 @@ import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..))
 import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
 import qualified PlutusTx.AssocMap                        as AssocMap
-import           PlutusTx.Prelude                         (Bool (..), Maybe (..), Ord (..), ($), (||), not)
+import           PlutusTx.Prelude                         (Bool (..), Maybe (..), Ord (..), ($), (||))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
@@ -35,4 +35,4 @@ plonkVerifier computation proof ctx =
         conditionBurning   = n < 0
 
         -- Verifying the Plonk `proof` for the `computation` on `input`
-        conditionVerifying = not $ verify @PlonkPlutus computation input proof
+        conditionVerifying = verify @PlonkPlutus computation input proof

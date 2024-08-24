@@ -14,7 +14,7 @@ import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..))
+import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -29,7 +29,7 @@ main = do
   ps          <- generate arbitrary
   targetValue <- generate arbitrary
 
-  let contract = Contract x ps targetValue
+  let contract = EqualityCheckContract x ps targetValue
 
   createDirectoryIfMissing True "../../test-data"
   createDirectoryIfMissing True "../../assets"

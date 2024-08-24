@@ -14,7 +14,7 @@ import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (Contract (..))
+import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
 
 {-
 import           Cardano.Api                                 hiding (TxId)
@@ -59,7 +59,7 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_Scalar, 
 import           ZkFold.Base.Protocol.ARK.Plonk              (F, Plonk (..), PlonkWitnessInput (..))
 import           ZkFold.Base.Protocol.ARK.Plonk.Internal     (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OffChain               (Contract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
+import           ZkFold.Cardano.Plonk.OffChain               (EqualityCheckContract (..), PlonkN, RowContractJSON, mkInput, mkProof, mkSetup, toContract)
 import           ZkFold.Cardano.ScriptsVerifier              (RedeemerSymbolic (..))
 import           ZkFold.Symbolic.Cardano.Types               (TxId (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
@@ -189,7 +189,7 @@ main = do
   ps          <- generate arbitrary
   targetValue <- generate arbitrary
 
-  let contract = Contract x ps targetValue
+  let contract = EqualityCheckContract x ps targetValue
 
   createDirectoryIfMissing True "../../test-data"
   createDirectoryIfMissing True "../../assets"

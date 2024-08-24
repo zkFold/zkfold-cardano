@@ -39,22 +39,22 @@ makeLift ''InputBytes
 makeIsDataIndexed ''InputBytes [('InputBytes,0)]
 
 data ProofBytes = ProofBytes {
-    cmA'    :: BuiltinByteString
-  , cmB'    :: BuiltinByteString
-  , cmC'    :: BuiltinByteString
-  , cmZ'    :: BuiltinByteString
-  , cmT1'   :: BuiltinByteString
-  , cmT2'   :: BuiltinByteString
-  , cmT3'   :: BuiltinByteString
-  , proof1' :: BuiltinByteString
-  , proof2' :: BuiltinByteString
-  , a_xi'   :: Integer
-  , b_xi'   :: Integer
-  , c_xi'   :: Integer
-  , s1_xi'  :: Integer
-  , s2_xi'  :: Integer
-  , z_xi'   :: Integer
-  , lagsInv :: F
+    cmA'       :: BuiltinByteString
+  , cmB'       :: BuiltinByteString
+  , cmC'       :: BuiltinByteString
+  , cmZ'       :: BuiltinByteString
+  , cmT1'      :: BuiltinByteString
+  , cmT2'      :: BuiltinByteString
+  , cmT3'      :: BuiltinByteString
+  , proof1'    :: BuiltinByteString
+  , proof2'    :: BuiltinByteString
+  , a_xi'      :: Integer
+  , b_xi'      :: Integer
+  , c_xi'      :: Integer
+  , s1_xi'     :: Integer
+  , s2_xi'     :: Integer
+  , z_xi'      :: Integer
+  , l1_xi_mul' :: F
 } deriving stock (Show, Generic)
 
 makeLift ''ProofBytes
