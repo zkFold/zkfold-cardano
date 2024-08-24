@@ -36,7 +36,7 @@ tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
 redeemerUnit=$assets/unit.json
 redeemerProof=$assets/redeemerPlonkVerifier.json
-redeemerDummy=$assets/redeemerDummy.json
+redeemerDummy=$assets/dummy-redeemer.json
 
 #---------------------------------- :burning: ----------------------------------
 
