@@ -10,7 +10,7 @@ import           PlutusTx                                 (CompiledCode, UnsafeF
 import           PlutusTx.Prelude                         (check, error, ($), (.), BuiltinUnit, Maybe(..), Integer)
 import           PlutusTx.TH                              (compile)
 
-import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (FMLabel, SetupBytes)
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.ForwardingScripts (forwardingMint)
 
@@ -19,7 +19,7 @@ compiledforwardingMint label =
     $$(compile [|| untypedforwardingMint ||])
     `unsafeApplyCode` liftCodeDef label
   where
-    untypedforwardingMint :: Integer -> BuiltinData -> BuiltinUnit
+    untypedforwardingMint :: FMLabel -> BuiltinData -> BuiltinUnit
     untypedforwardingMint label' ctx' =
       let ctx = unsafeFromBuiltinData ctx' in
         case scriptContextScriptInfo ctx of

@@ -2,8 +2,9 @@ module ZkFold.Cardano.Scripts.ForwardingScripts where
 
 import           PlutusLedgerApi.V3
 import           PlutusTx.AssocMap                  (keys)
-import           PlutusTx.Prelude                   (Bool (..), find, isJust, ($), Integer)
+import           PlutusTx.Prelude                   (Bool (..), find, isJust, ($))
 
+import           ZkFold.Cardano.Plonk.OnChain.Data  (FMLabel)
 import           ZkFold.Cardano.Plonk.OnChain.Utils (eqCredential, eqCurrencySymbol)
 
 -- | The Plutus spending script that forwards verification to a rewarding script.
@@ -21,7 +22,7 @@ forwardingReward contractHash _ ctx =
 
 -- | The Plutus spending script that forwards verification to a minting script.
 {-# INLINABLE forwardingMint #-}
-forwardingMint :: Integer -> BuiltinByteString -> () -> ScriptContext -> Bool
+forwardingMint :: FMLabel -> BuiltinByteString -> () -> ScriptContext -> Bool
 forwardingMint _label symbolHash _ ctx =
     -- Searching for the minting script with a specific hash
     isJust $ find (eqCurrencySymbol sc) reds

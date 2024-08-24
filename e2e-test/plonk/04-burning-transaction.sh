@@ -13,8 +13,9 @@ echo ""
 echo "bob burning tokens."
 echo ""
 
-in=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-collateral=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[4]')
+in1=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r 'to_entries | map(select(.value.value | keys | length > 1)) | .[0].key')
+in2=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r 'to_entries | map(select((.value.value | keys | length) == 1 and .value.value.lovelace > 10000000)) | .[0].key')
+collateral=$in2
 
 echo ""
 echo "bob address:"
@@ -34,16 +35,15 @@ cabal run plonk-minting-transaction
 tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
 redeemerUnit=$assets/unit.json
-redeemerUnit2=$assets/unit2.json
 redeemerProof=$assets/redeemerPlonkVerifier.json
-redeemerProofDummy=$assets/redeemerPlonkVerifierDummy.json
+redeemerDummy=$assets/redeemerDummy.json
 
 #---------------------------------- :burning: ----------------------------------
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
-    --tx-in $in \
-    --tx-in $collateral \
+    --tx-in $in1 \
+    --tx-in $in2 \
     --tx-in $forwardingMintIn \
     --spending-tx-in-reference $forwardingMintReference \
     --spending-plutus-script-v3 \
@@ -55,7 +55,7 @@ cardano-cli conway transaction build \
     --mint "-1 $policyid.$tokenname" \
     --mint-tx-in-reference $plonkVerifier \
     --mint-plutus-script-v3 \
-    --mint-reference-tx-in-redeemer-file $redeemerProofDummy \
+    --mint-reference-tx-in-redeemer-file $redeemerDummy \
     --policy-id $policyid \
     --out-file "$keypath/burning-transaction.txbody"    
     

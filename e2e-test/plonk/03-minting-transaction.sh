@@ -68,7 +68,6 @@ echo ""
 sleep 60
 
 echo ""
-# echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")"
 echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/minting-transaction.tx")"
 echo ""
 echo "bob address:"

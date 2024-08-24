@@ -40,5 +40,7 @@ main = do
 
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
+  let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
+
   savePlutus "../../assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
-  savePlutus "../../assets/forwardingMint.plutus" $ compiledforwardingMint 0
+  savePlutus "../../assets/forwardingMint.plutus" $ compiledforwardingMint fmLabel
