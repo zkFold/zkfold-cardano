@@ -22,9 +22,10 @@ import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificatio
 import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
+import           System.Directory
 
 saveFlat redeemer filePath code =
-   BS.writeFile ("./assets/" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
+   BS.writeFile ("./" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> P.getPlcNoAnn $ code
            `Tx.unsafeApplyCode` Tx.liftCodeDef (toBuiltinData redeemer)
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -43,10 +44,12 @@ main = do
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
         redeemer = (setup, input, proof)
+    
+    createDirectoryIfMissing True "assets"
 
-    savePlutus "symbolicVerifier" $ compiledSymbolicVerifier setup
-    savePlutus "plonkVerifier"    $ compiledPlonkVerifier setup
-    savePlutus "plonkVerify"      $ compiledVerifyPlonk setup
-    saveFlat proof "plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
-    saveFlat proof "plonkVerifierScript"   $ compiledPlonkVerifier setup
-    saveFlat redeemer "plonkVerifyScript"  $ compiledVerifyPlonk setup
+    savePlutus "assets/symbolicVerifier" $ compiledSymbolicVerifier setup
+    savePlutus "assets/plonkVerifier"    $ compiledPlonkVerifier setup
+    savePlutus "assets/verifyPlonk"      $ compiledVerifyPlonk setup
+    saveFlat proof "assets/plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
+    saveFlat proof "assets/plonkVerifierScript"   $ compiledPlonkVerifier setup
+    saveFlat redeemer "assets/verifyPlonkScript"  $ compiledVerifyPlonk setup

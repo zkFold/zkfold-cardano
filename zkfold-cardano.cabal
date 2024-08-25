@@ -131,13 +131,13 @@ test-suite test
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
-executable bench-analyze-uplc
+executable analyze-uplc
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   benchs/bench-analyze-uplc
+  hs-source-dirs:   benchs/analyze-uplc
   other-modules:    Bench.Scripts
   build-depends:
     aeson                          ,
@@ -147,6 +147,7 @@ executable bench-analyze-uplc
     bytestring                     ,
     cardano-api                    ,
     containers                     ,
+    directory                      ,
     serialise                      ,
     flat                           ,
     plutus-core             ^>=1.30,
