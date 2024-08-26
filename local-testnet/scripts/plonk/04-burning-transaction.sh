@@ -6,20 +6,20 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./plonk/keys
+keypath=./example/keys
 assets=../assets
 
 echo ""
 echo "bob burning tokens."
 echo ""
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r 'to_entries | map(select(.value.value | keys | length > 1)) | .[0].key')
-in2=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r 'to_entries | map(select((.value.value | keys | length) == 1 and .value.value.lovelace > 10000000)) | .[0].key')
+in1=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 42 --out-file /dev/stdout | jq -r 'to_entries | map(select(.value.value | keys | length > 1)) | .[0].key')
+in2=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 42 --out-file /dev/stdout | jq -r 'to_entries | map(select((.value.value | keys | length) == 1 and .value.value.lovelace > 10000000)) | .[0].key')
 collateral=$in2
 
 echo ""
 echo "bob address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 42)"
 echo ""
 
 plonkVerifier=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")#0
@@ -41,7 +41,7 @@ redeemerDummy=$assets/dummy-redeemer.json
 #---------------------------------- :burning: ----------------------------------
 
 cardano-cli conway transaction build \
-    --testnet-magic 4 \
+    --testnet-magic 42 \
     --tx-in $in1 \
     --tx-in $in2 \
     --tx-in $forwardingMintIn \
@@ -60,23 +60,23 @@ cardano-cli conway transaction build \
     --out-file "$keypath/burning-transaction.txbody"    
     
 cardano-cli conway transaction sign \
-    --testnet-magic 4 \
+    --testnet-magic 42 \
     --tx-body-file "$keypath/burning-transaction.txbody" \
     --signing-key-file "$keypath/bob.skey" \
     --out-file "$keypath/burning-transaction.tx"
 
 cardano-cli conway transaction submit \
-    --testnet-magic 4 \
+    --testnet-magic 42 \
     --tx-file "$keypath/burning-transaction.tx"
 
 #-------------------------------------------------------------------------------
 
 echo ""
-echo "Pausing for 60 seconds..."
+echo "Pausing for 5 seconds..."
 echo ""
-sleep 60
+sleep 5
 
 echo ""
 echo "bob address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 42)"
 echo ""

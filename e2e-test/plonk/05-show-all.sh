@@ -6,7 +6,7 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
+keypath=./plonk/keys
 
 echo ""
 echo "someone address: $(cat $keypath/someone.addr)"

@@ -31,14 +31,14 @@ dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F.F 0)
 
 main :: IO ()
 main = do
-  EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile "../../test-data/plonk-raw-contract-data.json"
+  EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile "../test-data/plonk-raw-contract-data.json"
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
   let (_, input, proof) = equalityCheckVerificationBytes x ps targetValue
 
-  BS.writeFile "../../assets/tokenname" $ fromString $ show $ UsingRawBytesHex $ AssetName $ fromBuiltin $ fromInput input
-  BS.writeFile "../../assets/unit.json" $ prettyPrintJSON $ dataToJSON ()
-  BS.writeFile "../../assets/redeemerPlonkVerifier.json" $ prettyPrintJSON $ dataToJSON proof
-  BS.writeFile "../../assets/dummy-redeemer.json" $ prettyPrintJSON $ dataToJSON dummyRedeemer
+  BS.writeFile "../assets/tokenname" $ fromString $ show $ UsingRawBytesHex $ AssetName $ fromBuiltin $ fromInput input
+  BS.writeFile "../assets/unit.json" $ prettyPrintJSON $ dataToJSON ()
+  BS.writeFile "../assets/redeemerPlonkVerifier.json" $ prettyPrintJSON $ dataToJSON proof
+  BS.writeFile "../assets/dummy-redeemer.json" $ prettyPrintJSON $ dataToJSON dummyRedeemer
   

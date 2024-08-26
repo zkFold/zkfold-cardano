@@ -95,6 +95,7 @@ $SED -i "${ROOT}/configuration.yaml" \
      -e 's/LastKnownBlockVersion-Major: 0/LastKnownBlockVersion-Major: 8/' \
      -e 's/LastKnownBlockVersion-Minor: 2/LastKnownBlockVersion-Minor: 0/'
 
+  echo -e "\n" >> "${ROOT}/configuration.yaml"
   echo "TestShelleyHardForkAtEpoch: 0" >> "${ROOT}/configuration.yaml"
   echo "TestAllegraHardForkAtEpoch: 0" >> "${ROOT}/configuration.yaml"
   echo "TestMaryHardForkAtEpoch: 0" >> "${ROOT}/configuration.yaml"

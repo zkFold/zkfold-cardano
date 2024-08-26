@@ -6,19 +6,19 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./plonk/keys
+keypath=./example/keys
 assets=../assets
 
 echo ""
 echo "alice minting tokens for bob."
 echo ""
 
-in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-collateral=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 42 --out-file  /dev/stdout | jq -r 'keys[0]')
+collateral=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 42 --out-file  /dev/stdout | jq -r 'keys[0]')
 
 echo ""
 echo "alice address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 42)"
 echo ""
 
 plonkVerifier=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")#0
@@ -38,7 +38,7 @@ echo "$policyid.$tokenname"
 #---------------------------------- :minting: ----------------------------------
 
 cardano-cli conway transaction build \
-    --testnet-magic 4 \
+    --testnet-magic 42 \
     --change-address "$(cat $keypath/alice.addr)" \
     --tx-in-collateral $collateral \
     --out-file "$keypath/minting-transaction.txbody" \
@@ -51,25 +51,25 @@ cardano-cli conway transaction build \
     --tx-out "$(cat $keypath/bob.addr) + 1142150 lovelace + 1 $policyid.$tokenname"
 
 cardano-cli conway transaction sign \
-    --testnet-magic 4 \
+    --testnet-magic 42 \
     --tx-body-file "$keypath/minting-transaction.txbody" \
     --signing-key-file "$keypath/alice.skey" \
     --out-file "$keypath/minting-transaction.tx"
 
 cardano-cli conway transaction submit \
-    --testnet-magic 4 \
+    --testnet-magic 42 \
     --tx-file "$keypath/minting-transaction.tx"
 
 #-------------------------------------------------------------------------------
 
 echo ""
-echo "Pausing for 60 seconds..."
+echo "Pausing for 5 seconds..."
 echo ""
-sleep 60
+sleep 5
 
 echo ""
 echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/minting-transaction.tx")"
 echo ""
 echo "bob address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 42)"
 echo ""

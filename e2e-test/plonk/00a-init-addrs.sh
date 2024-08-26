@@ -6,7 +6,7 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
+keypath=./plonk/keys
 
 echo "Create someone, zkfold-setup, alice and bob."
 
@@ -70,6 +70,6 @@ cardano-cli conway address build \
 #-------------------------------------------------------------------------------
 
 echo "Put some funds in the address(someone.addr): $(cat $keypath/someone.addr)"
-echo "Put some funds in the address(charles.addr): $(cat $keypath/charles.addr)"
-echo "Put some funds in the address(alice.addr): $(cat $keypath/alice.addr)"
-echo "Put some funds in the address(bob.addr): $(cat $keypath/bob.addr)"
+# echo "Put some funds in the address(charles.addr): $(cat $keypath/charles.addr)"
+# echo "Put some funds in the address(alice.addr): $(cat $keypath/alice.addr)"
+# echo "Put some funds in the address(bob.addr): $(cat $keypath/bob.addr)"
