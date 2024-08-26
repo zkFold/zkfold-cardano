@@ -9,20 +9,18 @@
 #set align(start)
 #set text(size: 12pt)
 
-*A ZK-KYC example:* Alice wants to send ada to Bob, which he can then use on the condition that he is above 18 years old.
+*A ZK-KYC scenario:* Charles sets up a reward in ada that can be claimed by proving (using the Plonk `verify` algorithm) the completion of a KYC process.
 
-- The first transaction is a setup that needs to be performed only once for this application;
-- In the second transaction, Alice sends ada to a smart contract;
-- In the third transaction, Bob proves that he is above 18 year old and withdraws the funds to his wallet address.
+First, we perform a setup transaction that posts the Symbolic verifier script on-chain.
 
 #set text(size: small-size)
 #v(3em)
 #transaction(
-  [*Init transaction*],
+  [*Script setup transaction*],
   inputs: (
     (
       name: "Someone",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 1000
       )
@@ -31,39 +29,39 @@
   outputs: (
     (
       name: "Someone",
-      address: "Public key hash",
+      address: "Public key",
       value: (
-        ada: 998
+        ada: 999
       ),
     ),
     (
-      name: "Symbolic: setup Above 18 + <Bob address>",
-      address: "stake pool",
+      name: "Always fails",
+      address: "Plutus script",
       value: (
         ada: 1
+      ),
+      datum: (
+        "script": "<Symbolic verifier>"
       )
-    ),
-    (
-      name: "Forwarding reward",
-      address: "zkfold-main",
-      value: (
-        ada: 1
-      )
-    ),
+    )
   ),
   signatures: (
     "Someone",
   ),
-  notes: [Someone posts the Symbolic verifier script and the "Above 18?" forwarding script on-chain.]
+  notes: [Someone posts the Symbolic verifier script on-chain.]
 )
-#v(10em)
+#v(5em)
 
+#set text(size: 12pt)
+In the second transaction, Charles sets up a reward for doing the ZK-KYC process. He sends 100 ada to a Plutus script address. The script unlocks the funds if and only if the respective Symbolic verifier is executed successfully.
+
+#set text(size: small-size)
 #transaction(
-  [*Transfer transaction*],
+  [*Reward setup transaction*],
   inputs: (
     (
-      name: "Alice",
-      address: "Public key hash",
+      name: "Charles",
+      address: "Public key",
       value: (
         ada: 567
       )
@@ -71,82 +69,75 @@
   ),
   outputs: (
     (
-      name: "Scripthash to Symbolic \"Above 18?\"",
-      address: "Forwarding reward script",
+      name: "Forward to Symbolic verifier",
+      address: "Plutus script",
       value: (
         ada: 100
-      ),
-      datum: (
-        "input": "<setup address>"
       )
     ),
     (
-      name: "Alice",
-      address: "Public key hash",
+      name: "Charles",
+      address: "Public key",
       value: (
         ada: 467
       ),
     ),
   ),
   signatures: (
-    "Alice",
+    "Charles",
   ),
-  notes: [Alice sents ada to a smart contract address.]
+  notes: [Charles sets up a reward for proving completion of a ZK-KYC process.]
 )
-#v(4em)
+#v(5em)
 
 #pagebreak()
+#set text(size: 12pt)
+Bob proves KYC process completion and claims the reward.
+
+#set text(size: small-size)
 #transaction(
   [*Withdraw transaction*],
   inputs: (
     (
       name: "Bob",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 123
       )
     ),
     (
-      name: "Scripthash to Symbolic \"Above 18?\"",
-      address: "Forwarding reward script",
+      name: "Forward to Symbolic verifier",
+      address: "Plutus script",
       value: (
         ada: 100
+      )
+    ),
+    (
+      name: "Always fails",
+      reference: true,
+      address: "Plutus script",
+      value: (
+        ada: 1
       ),
       datum: (
-        "input": "<setup address>"
+        "script": "<Symbolic verifier>"
       )
-    ),
-    (
-      name: "Symbolic: setup Above 18 + <Bob address>",
-      reference: true,
-      address: "stake pool",
-      value: (
-        ada: 1
-      )
-    ),
-    (
-      name: "Forwarding reward",
-      reference: true,
-      address: "zkfold-main",
-      value: (
-        ada: 1
-      )
-    ),
+    )
   ),
   outputs: (
     (
       name: "Bob",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 223
       ),
     ),
   ),
   staking: (
-    "zkFold Symbolic verifier",
+    "Symbolic verifier for ZK-KYC",
   ),
   signatures: (
     "Bob",
   ),
-  notes: [Bob must prove that he is above 18 to withdraw ada sent by Alice.]
+  notes: [Bob proves completion of the ZK-KYC process and claims the reward.]
 )

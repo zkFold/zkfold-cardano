@@ -11,7 +11,7 @@
 
 *A ZK-KYC scenario:* Alice issues a token that represents a cryptographic proof of some statement (KYC info) about Bob and sends the token to him. The minting policy of the token is the Plonk `verify` algorithm for that statement. Bob can then burn the token in exchange for a reward in ada.
 
-First, we perform a setup transaction that posts the Plonk verifier script on-chain. 
+First, we perform a setup transaction that posts the Plonk verifier script on-chain.
 
 #set text(size: small-size)
 #v(3em)
@@ -77,7 +77,7 @@ In the second transaction, Charles sets up a reward for doing the ZK-KYC process
     ),
     (
       name: "Charles",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 467
       ),
@@ -185,7 +185,7 @@ Bob can now burn the token and claim the reward.
   outputs: (
     (
       name: "Bob",
-      address: "Public key hash",
+      address: "Public key",
       value: (
         ada: 201,
       ),
