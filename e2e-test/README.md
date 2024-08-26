@@ -12,7 +12,7 @@ We have a description of transactions in `src-docs`.
 
 We have scripts for executing transactions on both **SanchoNet** and **local** testnets.
 
-#### <u>SanchoNet</u>
+#### SanchoNet
 
 Make `e2e-test` your active directory.  It is assumed that you have *cardano-node* running and have executed
 
@@ -36,13 +36,13 @@ To perform the transactions, execute the following 4 scripts.
 
 You can also see the state of all wallets with `./plonk/05-show-all.sh`.
 
-#### <u>Local testnet</u>
+#### Local testnet
 
 Make `local-testnet` your active directory.
 
 Create a local testnet with `./scripts/babbage/mkfiles.sh`.
 
-Run with `./example/run/all.sh`.  (To stop the testnet, type ^C twice.)
+Start the testnet with `./example/run/all.sh`.  (To stop the testnet, type ^C twice.)
 
 Open another shell (where you are going to run the transactions) and execute
 ```shell
@@ -53,7 +53,7 @@ After a few moments, execute
 ```shell
 cardano-cli conway query tip --testnet-magic 42
 ```
-If "syncProgress" is less than 100%, stop the testnet, `sudo rm -r ./example`, and restart the testnet.
+If "syncProgress" is less than 100%, stop the testnet, `sudo rm -r ./example`, `./scripts/babbage/mkfiles.sh`, and restart the testnet.
 
 Run `./scripts/plonk/00-init-system.sh` to initialize the system.
 
