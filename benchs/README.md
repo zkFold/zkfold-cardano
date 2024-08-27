@@ -8,4 +8,4 @@ Plonk benchmark results in `bench-cpu-mem`.
 
 ## Analyze uplc
 
-Benchmarks for profiling scripts in `analyze_uplc`.
+Benchmarks for profiling scripts in `analyze-uplc`.
