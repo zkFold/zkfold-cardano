@@ -6,18 +6,22 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
-assets=../../assets
+sanchomagic=4
+keypath=./plonk/keys
+privpath=./plonk/priv
+assets=../assets
+
+magic=$(cat $privpath/testnet.flag)
 
 echo ""
 echo "charles wants to create an address with lock reward."
 echo ""
 
-in=$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
+in=$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic $magic --out-file  /dev/stdout | jq -r 'keys[0]')
 policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
 
 echo "charles address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic $magic)"
 echo ""
 
 #-------------------------------- :create datum: -------------------------------
@@ -29,7 +33,7 @@ datum=$assets/datumPlonk.cbor
 #-------------------------------- :send-script: --------------------------------
 
 cardano-cli conway transaction build \
-    --testnet-magic 4 \
+    --testnet-magic $magic \
     --change-address "$(cat $keypath/charles.addr)" \
     --out-file "$keypath/plonk-transfer.txbody" \
     --tx-in $in \
@@ -37,25 +41,31 @@ cardano-cli conway transaction build \
     --tx-out-inline-datum-cbor-file $datum
 
 cardano-cli conway transaction sign \
-    --testnet-magic 4 \
+    --testnet-magic $magic \
     --tx-body-file "$keypath/plonk-transfer.txbody" \
     --signing-key-file "$keypath/charles.skey" \
     --out-file "$keypath/plonk-transfer.tx"
 
 cardano-cli conway transaction submit \
-    --testnet-magic 4 \
+    --testnet-magic $magic \
     --tx-file "$keypath/plonk-transfer.tx"
 
 #-------------------------------------------------------------------------------
 
+if [ $magic == $sanchomagic ]; then
+    pause=75
+else
+    pause=5
+fi
+
 echo ""
-echo "Pausing for 60 seconds..."
+echo "Pausing for $pause seconds..."
 echo ""
-sleep 60
+sleep $pause
 
 echo ""
 echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")"
 echo ""
 echo "forwardingMint address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/forwardingMint.addr) --testnet-magic 4)"
+echo "$(cardano-cli query utxo --address $(cat $keypath/forwardingMint.addr) --testnet-magic $magic)"
 echo ""

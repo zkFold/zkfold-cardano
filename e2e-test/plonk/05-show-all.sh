@@ -6,21 +6,24 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
+keypath=./plonk/keys
+privpath=./plonk/priv
+
+magic=$(cat $privpath/testnet.flag)
 
 echo ""
 echo "someone address: $(cat $keypath/someone.addr)"
-echo "$(cardano-cli conway query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4)"
+echo "$(cardano-cli conway query utxo --address $(cat $keypath/someone.addr) --testnet-magic $magic)"
 echo ""
 echo "charles address: $(cat $keypath/charles.addr)"
-echo "$(cardano-cli conway query utxo --address $(cat $keypath/charles.addr) --testnet-magic 4)"
+echo "$(cardano-cli conway query utxo --address $(cat $keypath/charles.addr) --testnet-magic $magic)"
 echo ""
 echo "alice address: $(cat $keypath/alice.addr)"
-echo "$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4)"
+echo "$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $magic)"
 echo ""
 echo "bob address: $(cat $keypath/bob.addr)"
-echo "$(cardano-cli conway query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4)"
+echo "$(cardano-cli conway query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"
 echo ""
 echo "zkfold-main address: $(cat $keypath/zkfold-main.addr)"
-echo "$(cardano-cli conway query utxo --address $(cat $keypath/zkfold-main.addr) --testnet-magic 4)"
+echo "$(cardano-cli conway query utxo --address $(cat $keypath/zkfold-main.addr) --testnet-magic $magic)"
 echo ""

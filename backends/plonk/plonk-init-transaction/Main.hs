@@ -31,14 +31,16 @@ main = do
 
   let contract = EqualityCheckContract x ps targetValue
 
-  createDirectoryIfMissing True "../../test-data"
-  createDirectoryIfMissing True "../../assets"
+  createDirectoryIfMissing True "../test-data"
+  createDirectoryIfMissing True "../assets"
 
-  BL.writeFile "../../test-data/plonk-raw-contract-data.json" $ encode contract
+  BL.writeFile "../test-data/plonk-raw-contract-data.json" $ encode contract
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
-  savePlutus "../../assets/forwardingMint.plutus" compiledforwardingMint
+  let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
+
+  savePlutus "../assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
+  savePlutus "../assets/forwardingMint.plutus" $ compiledforwardingMint fmLabel
