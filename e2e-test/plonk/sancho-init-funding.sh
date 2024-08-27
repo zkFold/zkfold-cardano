@@ -16,12 +16,16 @@ if [ $magic -ne $sanchomagic ]; then
     exit 1
 fi
 
-echo "Fund alice, bob and charles"
-echo "(Assuming someone has been funded from Faucet.)"
-
 #----------------------------------- :funding: -----------------------------------
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 500000000)) | .[0].key')
+echo "Fund alice, bob and charles"
+echo "(Assuming someone has been funded from Faucet.)"
+echo ""
+echo "someone address:"
+echo "$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic $magic)"
+echo ""
+
+in1=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic $magic --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 500000000)) | .[0].key')
 
 cardano-cli conway transaction build \
   --tx-in $in1 \

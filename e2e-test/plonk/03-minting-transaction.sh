@@ -34,7 +34,7 @@ cabal run plonk-minting-transaction
 
 tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
-redeemerProof=$assets/redeemerPlonkVerifier.json
+redeemerProof=$assets/redeemerPlonkVerifier.cbor
 
 echo "PolicyID & TokenName:"
 echo "$policyid.$tokenname"
@@ -50,7 +50,7 @@ cardano-cli conway transaction build \
     --mint "1 $policyid.$tokenname" \
     --mint-tx-in-reference $plonkVerifier \
     --mint-plutus-script-v3 \
-    --mint-reference-tx-in-redeemer-file $redeemerProof \
+    --mint-reference-tx-in-redeemer-cbor-file $redeemerProof \
     --policy-id $policyid \
     --tx-out "$(cat $keypath/bob.addr) + 1142150 lovelace + 1 $policyid.$tokenname"
 

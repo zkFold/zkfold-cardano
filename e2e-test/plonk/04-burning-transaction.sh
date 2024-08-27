@@ -38,9 +38,8 @@ cabal run plonk-minting-transaction
 
 tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
-redeemerUnit=$assets/unit.json
-redeemerProof=$assets/redeemerPlonkVerifier.json
-redeemerDummy=$assets/dummy-redeemer.json
+redeemerUnit=$assets/unit.cbor
+redeemerDummy=$assets/dummy-redeemer.cbor
 
 #---------------------------------- :burning: ----------------------------------
 
@@ -52,14 +51,14 @@ cardano-cli conway transaction build \
     --spending-tx-in-reference $forwardingMintReference \
     --spending-plutus-script-v3 \
     --spending-reference-tx-in-inline-datum-present \
-    --spending-reference-tx-in-redeemer-file $redeemerUnit \
+    --spending-reference-tx-in-redeemer-cbor-file $redeemerUnit \
     --tx-in-collateral $collateral \
     --tx-out "$(cat $keypath/bob.addr) + 10000000 lovelace" \
     --change-address "$(cat $keypath/bob.addr)" \
     --mint "-1 $policyid.$tokenname" \
     --mint-tx-in-reference $plonkVerifier \
     --mint-plutus-script-v3 \
-    --mint-reference-tx-in-redeemer-file $redeemerDummy \
+    --mint-reference-tx-in-redeemer-cbor-file $redeemerDummy \
     --policy-id $policyid \
     --out-file "$keypath/burning-transaction.txbody"    
     
