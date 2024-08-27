@@ -6,11 +6,22 @@ set -e
 set -u
 set -o pipefail
 
+sanchomagic=4
 keypath=./plonk/keys
+privpath=./plonk/priv
 
 echo "Create someone, zkfold-setup, alice and bob."
 
-mkdir -p $keypath
+if [ -d "./plonk" ]; then
+    mkdir -p $keypath
+    mkdir -p $privpath
+else
+    echo "Please run script from directory 'e2e-test'."
+    exit 1
+fi
+
+printf "$sanchomagic" > $privpath/testnet.flag
+magic=$sanchomagic
 
 #---------------------------------- :someone: ----------------------------------
 
@@ -21,7 +32,7 @@ cardano-cli conway address key-gen \
 cardano-cli conway address build \
   --payment-verification-key-file $keypath/someone.vkey \
   --out-file $keypath/someone.addr \
-  --testnet-magic 4
+  --testnet-magic $magic
 
 #----------------------------------- :charles: -----------------------------------
 
@@ -32,7 +43,7 @@ cardano-cli conway address key-gen \
 cardano-cli conway address build \
   --payment-verification-key-file $keypath/charles.vkey \
   --out-file $keypath/charles.addr \
-  --testnet-magic 4
+  --testnet-magic $magic
 
 #----------------------------------- :alice: -----------------------------------
 
@@ -43,7 +54,7 @@ cardano-cli conway address key-gen \
 cardano-cli conway address build \
   --payment-verification-key-file $keypath/alice.vkey \
   --out-file $keypath/alice.addr \
-  --testnet-magic 4
+  --testnet-magic $magic
 
 #------------------------------------ :bob: ------------------------------------
 
@@ -54,7 +65,7 @@ cardano-cli conway address key-gen \
 cardano-cli conway address build \
   --payment-verification-key-file $keypath/bob.vkey \
   --out-file $keypath/bob.addr \
-  --testnet-magic 4
+  --testnet-magic $magic
 
 #-------------------------------- :zkfold-main: --------------------------------
 
@@ -65,7 +76,7 @@ cardano-cli conway address key-gen \
 cardano-cli conway address build \
   --payment-verification-key-file $keypath/zkfold-main.vkey \
   --out-file $keypath/zkfold-main.addr \
-  --testnet-magic 4
+  --testnet-magic $magic
 
 #-------------------------------------------------------------------------------
 

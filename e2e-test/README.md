@@ -10,11 +10,15 @@ We have a description of transactions in `src-docs`.
 
 ### Plonk
 
-We have scripts for executing transactions on both **SanchoNet** and **local** testnets.
+You can choose to run the plonk verifier example on either **SanchoNet** or a **local** testnet.  The initial-setup depends on your choice.
+
+In either case, make `e2e-test` your active directory.
+
+### Initial setup
 
 #### SanchoNet
 
-Make `e2e-test` your active directory.  It is assumed that you have *cardano-node* running and have executed
+It is assumed that you have *cardano-node* running and have executed
 
 ```shell
 export CARDANO_NODE_SOCKET_PATH=<path-to-node.socket>
@@ -23,11 +27,32 @@ on your working shell.
 
 To initialize the system:
 
-- Execute `./plonk/00a-init-addrs.sh` to initialize needed wallets.  The address of *someone*'s wallet will be displayed.
+- Execute `./plonk/sancho-init-addrs.sh` to initialize needed wallets.  The address of *someone*'s wallet will be displayed.
 - Fund *someone*'s wallet (typically using SanchoNet's public [Faucet](https://sancho.network/faucet)).
-- Execute `./plonk/00b-init-funding.sh` to fund the remaining wallets.  (Alternatively, manually transfer some Ada to all generated wallets, but make sure *someone*'s wallet gets at least two UTxO's with funds.)
+- Execute `./plonk/sancho-init-funding.sh` to fund the remaining wallets.  (Alternatively, manually transfer some Ada to all generated wallets, but make sure *someone*'s wallet gets at least two UTxO's with funds.)
 
-To perform the transactions, execute the following 4 scripts.
+#### Local testnet
+
+Create a local testnet with `./local-testnet/scripts/babbage/mkfiles.sh`.
+
+Start the testnet with `./local-testnet/example/run/all.sh`.  (To stop the testnet, press ^C twice.)
+
+Open another shell (where you are going to run the transactions, making `e2e-test` the active directory), and execute
+```shell
+export CARDANO_NODE_SOCKET_PATH=<path-to-e2e-test>/local-testnet/example/main.sock
+```
+
+After a few moments, execute
+```shell
+cardano-cli conway query tip --testnet-magic 42
+```
+If "syncProgress" is less than 100%, stop the testnet, `sudo rm -r ./local-testnet/example`, `./local-testnet/scripts/babbage/mkfiles.sh`, and restart the testnet.
+
+Run `./plonk/local-init-system.sh` to initialize the system.
+
+### Transactions
+
+To perform the transactions (on either SanchoNet or local testnet), execute the following 4 scripts.
 
 - `./plonk/01-init-transaction.sh` to publish Plutus scripts on the blockchain.
 - `./plonk/02-transfer-transaction.sh` to set up a reward for burning a token.
@@ -36,35 +61,5 @@ To perform the transactions, execute the following 4 scripts.
 
 You can also see the state of all wallets with `./plonk/05-show-all.sh`.
 
-#### Local testnet
-
-Make `local-testnet` your active directory.
-
-Create a local testnet with `./scripts/babbage/mkfiles.sh`.
-
-Start the testnet with `./example/run/all.sh`.  (To stop the testnet, type ^C twice.)
-
-Open another shell (where you are going to run the transactions) and execute
-```shell
-export CARDANO_NODE_SOCKET_PATH=<path-to-zkfold-cardano>/local-testnet/example/main.sock
-```
-
-After a few moments, execute
-```shell
-cardano-cli conway query tip --testnet-magic 42
-```
-If "syncProgress" is less than 100%, stop the testnet, `sudo rm -r ./example`, `./scripts/babbage/mkfiles.sh`, and restart the testnet.
-
-Run `./scripts/plonk/00-init-system.sh` to initialize the system.
-
-To perform the transactions, run the following 4 scripts.
-
-- `./scripts/plonk/01-init-transaction.sh` to publish Plutus scripts on the blockchain.
-- `./scripts/plonk/02-transfer-transaction.sh` to set up a reward for burning a token.
-- `./scripts/plonk/03-minting-transaction.sh` to mint and send a token to the owner.
-- `./scripts/plonk/04-burning-transaction.sh` to burn the token and receive the reward.
-
-You can also see the state of all wallets with `./scripts/plonk/05-show-all.sh`.
 
 ### Symbolic
-
