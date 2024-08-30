@@ -20,8 +20,8 @@ import qualified Data.Maybe as Haskell
 import Flat.Types ()
 import Data.String ( IsString(fromString) )
 import qualified Data.ByteString as BS
-import ZkFold.Cardano.Plonk.OnChain.Data (ProofBytes(..))
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import ZkFold.Cardano.Plonk.OnChain ( ProofBytes(..) )
 
 contextPlonk :: ScriptContext
 contextPlonk = ScriptContext
@@ -30,12 +30,12 @@ contextPlonk = ScriptContext
     , txInfoReferenceInputs = []            :: [TxInInfo]
     , txInfoOutputs = []                    :: [V2.TxOut]
     , txInfoFee = V2.Lovelace 0
-    , txInfoMint = Value $ unsafeFromList [(CurrencySymbol (toBuiltin (fromString "cursymbol" :: BS.ByteString)), unsafeFromList [(TokenName (toBuiltin (fromString "token" :: BS.ByteString)), 1)])]
+    , txInfoMint = Value $ unsafeFromList [(dummyCurrencySymbol, unsafeFromList [(TokenName (toBuiltin (fromString "token" :: BS.ByteString)), 1)])]
     , txInfoTxCerts = []
     , txInfoWdrl = unsafeFromList []
     , txInfoValidRange = always
     , txInfoSignatories = []
-    , txInfoRedeemers = unsafeFromList [(Spending (TxOutRef (fromString "00") 0), Redeemer (toBuiltinData dummyRedeemer))]
+    , txInfoRedeemers = unsafeFromList [(Minting dummyCurrencySymbol, Redeemer (toBuiltinData dummyRedeemer))]
     , txInfoData = unsafeFromList []
     , txInfoId = fromString "00" :: TxId
     , txInfoVotes = unsafeFromList []
@@ -44,8 +44,11 @@ contextPlonk = ScriptContext
     , txInfoTreasuryDonation = Nothing      :: Haskell.Maybe V2.Lovelace
     },
     scriptContextRedeemer = Redeemer (toBuiltinData dummyRedeemer),
-    scriptContextScriptInfo = SpendingScript (TxOutRef (fromString "00") 0) (Just (Datum (toBuiltinData (0 :: Integer))))
+    scriptContextScriptInfo = MintingScript dummyCurrencySymbol
   }
+
+dummyCurrencySymbol :: CurrencySymbol
+dummyCurrencySymbol = CurrencySymbol $ toBuiltin (fromString "cursymbol" :: BS.ByteString)
 
 dummyRedeemer :: ProofBytes
 dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F.F 0)
