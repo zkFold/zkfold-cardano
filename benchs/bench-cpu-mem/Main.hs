@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 
 
-import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript)
+import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript, compiledSymbolicVerifier, compiledPlonkVerifier, compiledVerifyPlonk)
 import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
 import           PlutusLedgerApi.V3
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
@@ -22,6 +23,13 @@ import Data.String ( IsString(fromString) )
 import qualified Data.ByteString as BS
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
 import ZkFold.Cardano.Plonk.OnChain ( ProofBytes(..) )
+import Cardano.Api (IsPlutusScriptLanguage, PlutusScriptV3, PlutusScript, writeFileTextEnvelope, File (..))
+import PlutusTx (CompiledCode, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
+import Flat (flat)
+import UntypedPlutusCore (UnrestrictedProgram(..))
+import Control.Monad (void)
+import Cardano.Api.Shelley (PlutusScript(..))
+import System.Directory (createDirectoryIfMissing)
 
 contextPlonk :: ScriptContext
 contextPlonk = ScriptContext
@@ -89,6 +97,16 @@ printCostsPlonkVerifier h s p ctx = printSizeStatistics h NoSize (plonkVerifierS
 printCostsVerifyPlonk :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
 
+saveFlat redeemer filePath code =
+   BS.writeFile ("./" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> getPlcNoAnn $ code
+           `unsafeApplyCode` liftCodeDef (toBuiltinData redeemer)
+
+writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
+writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
+
+savePlutus :: FilePath -> CompiledCode a -> IO ()
+savePlutus filePath =
+  writePlutusScriptToFile @PlutusScriptV3 filePath . PlutusScriptSerialised . serialiseCompiledCode
 
 main :: IO ()
 main = do
@@ -98,6 +116,16 @@ main = do
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
         h = stdout
+        redeemer = (setup, input, proof)
+
+    createDirectoryIfMissing True "assets"
+
+    savePlutus "assets/symbolicVerifier" $ compiledSymbolicVerifier setup
+    savePlutus "assets/plonkVerifier"    $ compiledPlonkVerifier setup
+    savePlutus "assets/verifyPlonk"      $ compiledVerifyPlonk setup
+    saveFlat proof "assets/plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
+    saveFlat proof "assets/plonkVerifierScript"   $ compiledPlonkVerifier setup
+    saveFlat redeemer "assets/verifyPlonkScript"  $ compiledVerifyPlonk setup
 
     hPrintf h "\n\n"
     hPrintf h "Run plonk verify\n\n"
@@ -108,10 +136,10 @@ main = do
     hPrintf h "Run plonk verifier\n\n"
     printHeader h
     printCostsPlonkVerifier h setup proof contextPlonk
-    hPrintf h "\n\n"
-    hPrintf h "\n\n"
-    hPrintf h "Run symbolic plonk verifier\n\n"
-    printHeader h
+    -- hPrintf h "\n\n"
+    -- hPrintf h "\n\n"
+    -- hPrintf h "Run symbolic plonk verifier\n\n"
+    -- printHeader h
     -- printCostsSymbolicVerifier h setup proof contextSymbolic
     hPrintf h "\n\n"
 
