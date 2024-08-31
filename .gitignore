@@ -29,3 +29,5 @@ e2e-test/*/keys
 local-testnet/example
 assets
 test-data
+e2e-test/local-testnet/example/
+e2e-test/*/priv

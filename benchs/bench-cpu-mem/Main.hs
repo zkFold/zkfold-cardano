@@ -38,7 +38,7 @@ contextPlonk = ScriptContext
     , txInfoReferenceInputs = []            :: [TxInInfo]
     , txInfoOutputs = []                    :: [V2.TxOut]
     , txInfoFee = V2.Lovelace 0
-    , txInfoMint = Value $ unsafeFromList [(dummyCurrencySymbol, unsafeFromList [(TokenName (toBuiltin (fromString "token" :: BS.ByteString)), 1)])]
+    , txInfoMint = Value $ unsafeFromList [(dummyCurrencySymbol, unsafeFromList [(dummyTokenName, 1)])]
     , txInfoTxCerts = []
     , txInfoWdrl = unsafeFromList []
     , txInfoValidRange = always
@@ -56,7 +56,10 @@ contextPlonk = ScriptContext
   }
 
 dummyCurrencySymbol :: CurrencySymbol
-dummyCurrencySymbol = CurrencySymbol $ toBuiltin (fromString "cursymbol" :: BS.ByteString)
+dummyCurrencySymbol = CurrencySymbol $ toBuiltin (fromString "264ac730a6d3dacd0be8f9948e161aa151fd49d5e48203c31b2ae5eb" :: BS.ByteString)
+
+dummyTokenName :: TokenName
+dummyTokenName = TokenName $ toBuiltin (fromString "34ad74db78700c335968ca0898f2953adba88f368efa0541b98897e2668090bd" :: BS.ByteString)
 
 dummyRedeemer :: ProofBytes
 dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F.F 0)
