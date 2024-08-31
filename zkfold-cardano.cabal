@@ -258,6 +258,7 @@ executable plonk-minting-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
+    cborg                          ,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,

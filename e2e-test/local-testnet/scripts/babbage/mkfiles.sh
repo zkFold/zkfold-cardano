@@ -37,8 +37,15 @@ SECURITY_PARAM=10
 NUM_SPO_NODES=3
 INIT_SUPPLY=12000000
 START_TIME="$(${DATE} -d "now + 30 seconds" +%s)"
-ROOT=example
-mkdir -p "${ROOT}"
+LOCDIR=local-testnet
+ROOT=${LOCDIR}/example
+
+if [ -d "./${LOCDIR}" ]; then
+    mkdir -p "${ROOT}"
+else
+    echo "Please run script from directory 'e2e-test'."
+    exit 1
+fi
 
 cat > "${ROOT}/byron.genesis.spec.json" <<EOF
 {
@@ -79,10 +86,10 @@ $CARDANO_CLI byron genesis genesis \
   --protocol-parameters-file "${ROOT}/byron.genesis.spec.json" \
   --genesis-output-dir "${ROOT}/byron-gen-command"
 
-cp scripts/babbage/alonzo-babbage-test-genesis.json "${ROOT}/genesis.alonzo.spec.json"
-cp scripts/babbage/conway-babbage-test-genesis.json "${ROOT}/genesis.conway.spec.json"
+cp ${LOCDIR}/scripts/babbage/alonzo-babbage-test-genesis.json "${ROOT}/genesis.alonzo.spec.json"
+cp ${LOCDIR}/scripts/babbage/conway-babbage-test-genesis.json "${ROOT}/genesis.conway.spec.json"
 
-cp configuration/defaults/byron-mainnet/configuration.yaml "${ROOT}/"
+cp ${LOCDIR}/configuration/defaults/byron-mainnet/configuration.yaml "${ROOT}/"
 $SED -i "${ROOT}/configuration.yaml" \
      -e 's/Protocol: RealPBFT/Protocol: Cardano/' \
      -e '/Protocol/ aPBftSignatureThreshold: 0.6' \
@@ -95,6 +102,7 @@ $SED -i "${ROOT}/configuration.yaml" \
      -e 's/LastKnownBlockVersion-Major: 0/LastKnownBlockVersion-Major: 8/' \
      -e 's/LastKnownBlockVersion-Minor: 2/LastKnownBlockVersion-Minor: 0/'
 
+  echo -e "\n" >> "${ROOT}/configuration.yaml"
   echo "TestShelleyHardForkAtEpoch: 0" >> "${ROOT}/configuration.yaml"
   echo "TestAllegraHardForkAtEpoch: 0" >> "${ROOT}/configuration.yaml"
   echo "TestMaryHardForkAtEpoch: 0" >> "${ROOT}/configuration.yaml"

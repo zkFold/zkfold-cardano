@@ -5,38 +5,42 @@
 
 module Scripts (compiledforwardingMint, compiledPlonkVerifier) where
 
-import           PlutusLedgerApi.V3                      (BuiltinData)
-import           PlutusTx                                (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                        (check, BuiltinUnit)
-import           PlutusTx.TH                             (compile)
+import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext(..), ScriptInfo(..), getDatum, getRedeemer)
+import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                         (check, error, ($), (.), BuiltinUnit, Maybe(..), Integer)
+import           PlutusTx.TH                              (compile)
 
-import           ZkFold.Cardano.Plonk.OnChain.Data       (SetupBytes)
-import           ZkFold.Cardano.Scripts.PlonkVerifier    (plonkVerifier)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (FMLabel, SetupBytes)
+import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.ForwardingScripts (forwardingMint)
 
-compiledforwardingMint :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit)
-compiledforwardingMint =
+compiledforwardingMint :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+compiledforwardingMint label =
     $$(compile [|| untypedforwardingMint ||])
+    `unsafeApplyCode` liftCodeDef label
   where
-    untypedforwardingMint :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
-    untypedforwardingMint datum redeemer ctx =
-      check
-        ( forwardingMint
-            (unsafeFromBuiltinData datum)
-            (unsafeFromBuiltinData redeemer)
-            (unsafeFromBuiltinData ctx)
-        )
+    untypedforwardingMint :: FMLabel -> BuiltinData -> BuiltinUnit
+    untypedforwardingMint label' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+        case scriptContextScriptInfo ctx of
+          SpendingScript _ (Just dat) -> check $
+            forwardingMint
+              label'
+              (unsafeFromBuiltinData . getDatum $ dat)
+              (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+              ctx
+          _                             -> error ()
 
-compiledPlonkVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+compiledPlonkVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 compiledPlonkVerifier computation =
     $$(compile [|| untypedPlonkVerifier ||])
     `unsafeApplyCode` liftCodeDef computation
   where
-    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-    untypedPlonkVerifier computation' redeemer ctx =
-      check
-        ( plonkVerifier
+    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
+    untypedPlonkVerifier computation' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+        check $
+          plonkVerifier
             computation'
-            (unsafeFromBuiltinData redeemer)
-            (unsafeFromBuiltinData ctx)
-        )
+            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+            ctx

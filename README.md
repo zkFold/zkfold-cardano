@@ -39,9 +39,7 @@ TODO
 
 ### Setting up a local testnet
 
-Create a local testnet with `local-testnet/scripts/babbage/mkfiles.sh`.
-
-Run with `local-testnet/example/run/all.sh`.
+To run a local testnet, follow instructions in `e2e-test/README.md`.
 
 ### End-to-end tests (in progress)
 
