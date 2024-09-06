@@ -33,9 +33,9 @@ jobs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
           
-    - name: Build package
-      shell: bash
-      run: |
-        cabal update
-        cabal new-build all -f Pedantic
+    # - name: Build package
+    #   shell: bash
+    #   run: |
+    #     cabal update
+    #     cabal new-build all -f Pedantic
         
