@@ -34,10 +34,10 @@ jobs:
       run: |
         cabal configure --enable-tests --enable-benchmarks --enable-documentation
     
-    - name: Generate cache key
-      # Creates plan.json file
-      run: |
-        cabal build all --dry-run
+    # - name: Generate cache key
+    #   # Creates plan.json file
+    #   run: |
+    #     cabal build all --dry-run
 
     - name: Restore cached dependencies
       uses: actions/cache/restore@v4.0.1
