@@ -34,10 +34,78 @@ jobs:
       run: |
         cabal configure --enable-tests --enable-benchmarks --enable-documentation
     
-    # - name: Generate cache key
-    #   # Creates plan.json file
-    #   run: |
-    #     cabal build all --dry-run
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install automake build-essential pkg-config libffi-dev libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev make g++ tmux git jq wget libncursesw5 libtool autoconf liblmdb-dev -y
+        
+    - name: Install C dependencies
+      run: |
+        CARDANO_NODE_VERSION='8.7.3'
+        IOHKNIX_VERSION=$(curl https://raw.githubusercontent.com/IntersectMBO/cardano-node/$CARDANO_NODE_VERSION/flake.lock | jq -r '.nodes.iohkNix.locked.rev')
+        echo "iohk-nix version: $IOHKNIX_VERSION"
+
+        mkdir -p ~/src
+        cd ~/src
+
+        SODIUM_VERSION=$(curl https://raw.githubusercontent.com/input-output-hk/iohk-nix/$IOHKNIX_VERSION/flake.lock | jq -r '.nodes.sodium.original.rev')
+        echo "Using sodium version: $SODIUM_VERSION"
+
+        : ${SODIUM_VERSION:='dbb48cc'}
+        git clone https://github.com/intersectmbo/libsodium
+        cd libsodium
+        git checkout $SODIUM_VERSION
+        ./autogen.sh
+        ./configure
+        make
+        make check
+        sudo make install
+
+        export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+        source ~/.bashrc
+
+        SECP256K1_VERSION=$(curl https://raw.githubusercontent.com/input-output-hk/iohk-nix/$IOHKNIX_VERSION/flake.lock | jq -r '.nodes.secp256k1.original.ref')
+        echo "Using secp256k1 version: ${SECP256K1_VERSION}"
+
+        : ${SECP256K1_VERSION:='v0.3.2'}
+        git clone --depth 1 --branch ${SECP256K1_VERSION} https://github.com/bitcoin-core/secp256k1
+        cd secp256k1
+        ./autogen.sh
+        ./configure --enable-module-schnorrsig --enable-experimental
+        make
+        make check
+        sudo make install
+
+        BLST_VERSION=$(curl https://raw.githubusercontent.com/input-output-hk/iohk-nix/master/flake.lock | jq -r '.nodes.blst.original.ref')
+        echo "Using blst version: ${BLST_VERSION}"
+
+        : ${BLST_VERSION:='v0.3.11'}
+        git clone --depth 1 --branch ${BLST_VERSION} https://github.com/supranational/blst
+        cd blst
+        ./build.sh
+        cat > libblst.pc << EOF
+        prefix=/usr/local
+        exec_prefix=\${prefix}
+        libdir=\${exec_prefix}/lib
+        includedir=\${prefix}/include
+
+        Name: libblst
+        Description: Multilingual BLS12-381 signature library
+        URL: https://github.com/supranational/blst
+        Version: ${BLST_VERSION#v}
+        Cflags: -I\${includedir}
+        Libs: -L\${libdir} -lblst
+        EOF
+        sudo cp libblst.pc /usr/local/lib/pkgconfig/
+        sudo cp bindings/blst_aux.h bindings/blst.h bindings/blst.hpp  /usr/local/include/
+        sudo cp libblst.a /usr/local/lib
+        sudo chmod u=rw,go=r /usr/local/{lib/{libblst.a,pkgconfig/libblst.pc},include/{blst.{h,hpp},blst_aux.h}}
+
+    - name: Generate cache key
+      # Creates plan.json file
+      run: |
+        cabal build all --dry-run
 
     - name: Restore cached dependencies
       uses: actions/cache/restore@v4.0.1
