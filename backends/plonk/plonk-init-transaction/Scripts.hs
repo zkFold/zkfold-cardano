@@ -5,14 +5,16 @@
 
 module Scripts (compiledforwardingMint, compiledPlonkVerifier) where
 
-import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext(..), ScriptInfo(..), getDatum, getRedeemer)
-import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (check, error, ($), (.), BuiltinUnit, Maybe(..), Integer)
+import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext (..), ScriptInfo (..), getDatum,
+                                                           getRedeemer)
+import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef,
+                                                           unsafeApplyCode)
+import           PlutusTx.Prelude                         (BuiltinUnit, Integer, Maybe (..), check, error, ($), (.))
 import           PlutusTx.TH                              (compile)
 
 import           ZkFold.Cardano.Plonk.OnChain.Data        (FMLabel, SetupBytes)
-import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.ForwardingScripts (forwardingMint)
+import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 
 compiledforwardingMint :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
 compiledforwardingMint label =

@@ -6,8 +6,9 @@
 module Scripts (compiledForwardingReward, compiledSymbolicVerifier) where
 
 import           PlutusLedgerApi.V3                       (BuiltinData)
-import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (check, BuiltinUnit)
+import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef,
+                                                           unsafeApplyCode)
+import           PlutusTx.Prelude                         (BuiltinUnit, check)
 import           PlutusTx.TH                              (compile)
 
 import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)

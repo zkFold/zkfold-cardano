@@ -7,7 +7,8 @@ import           Data.Aeson                            (encode)
 import qualified Data.ByteString.Lazy                  as BL
 import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
-import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
+import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
+                                                        (++), (.))
 import           Scripts                               (compiledPlonkVerifier, compiledforwardingMint)
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))

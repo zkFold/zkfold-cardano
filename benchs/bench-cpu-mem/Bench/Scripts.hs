@@ -5,20 +5,19 @@
 
 module Bench.Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkScript, compiledPlonkVerifier, compiledSymbolicVerifier, compiledVerifyPlonk) where
 
-import           PlutusCore                              (DefaultFun, DefaultUni)
-import PlutusLedgerApi.V3
-    ( ScriptContext, getRedeemer, BuiltinData )
-import           PlutusTx                                (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode, CompiledCode, UnsafeFromData (..))
-import           PlutusTx.Prelude                        (($), BuiltinUnit, check, (.))
-import qualified UntypedPlutusCore                       as UPLC
+import           PlutusCore                               (DefaultFun, DefaultUni)
+import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext, getRedeemer)
+import           PlutusLedgerApi.V3.Contexts              (ScriptContext (..))
+import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), compile, getPlcNoAnn,
+                                                           liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
+import qualified UntypedPlutusCore                        as UPLC
 
-import           ZkFold.Cardano.Scripts.PlonkVerifier    (plonkVerifier)
-import           ZkFold.Cardano.Scripts.SymbolicVerifier (symbolicVerifier)
-import ZkFold.Base.Protocol.NonInteractiveProof (verify, NonInteractiveProof (..))
-import ZkFold.Cardano.Plonk.OnChain.Data
-    ( SetupBytes, ProofBytes, InputBytes )
-import ZkFold.Cardano.Plonk ( PlonkPlutus )
-import PlutusLedgerApi.V3.Contexts (ScriptContext(..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), verify)
+import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
+import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
 
 -- bench-cpu-mem
 

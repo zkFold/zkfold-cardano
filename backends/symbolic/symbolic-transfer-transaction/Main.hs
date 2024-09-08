@@ -1,6 +1,6 @@
 module Main where
 
-import           Cardano.Api         (policyId, prettyPrintJSON, unsafeHashableScriptData, PolicyId(..))
+import           Cardano.Api         (PolicyId (..), policyId, prettyPrintJSON, unsafeHashableScriptData)
 import           Cardano.Api.Shelley (fromPlutusData, scriptDataToJsonDetailedSchema)
 import           Data.Aeson          (ToJSON (..))
 import qualified Data.Aeson          as Aeson

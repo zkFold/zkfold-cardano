@@ -3,33 +3,35 @@
 module Main where
 
 
-import           Bench.Scripts                               (plonkVerifierScript, symbolicVerifierScript, verifyPlonkScript, compiledSymbolicVerifier, compiledPlonkVerifier, compiledVerifyPlonk)
-import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
+import           Bench.Scripts                            (compiledPlonkVerifier, compiledSymbolicVerifier,
+                                                           compiledVerifyPlonk, plonkVerifierScript,
+                                                           symbolicVerifierScript, verifyPlonkScript)
+import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
+import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
+                                                           PlutusScriptV3, writeFileTextEnvelope)
+import           Cardano.Api.Shelley                      (PlutusScript (..))
+import           Control.Monad                            (void)
+import qualified Data.ByteString                          as BS
+import qualified Data.Maybe                               as Haskell
+import           Data.String                              (IsString (fromString))
+import           Flat                                     (flat)
+import           Flat.Types                               ()
+import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
-import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           System.IO                                   (Handle, stdout)
-import           Text.Printf                                 (hPrintf)
+import           PlutusTx                                 (CompiledCode, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
+import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import           System.Directory                         (createDirectoryIfMissing)
+import           System.IO                                (Handle, stdout)
+import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
+import           Test.QuickCheck.Gen                      (generate)
+import           Text.Printf                              (hPrintf)
+import           UntypedPlutusCore                        (UnrestrictedProgram (..))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
-
-import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
-import           Test.QuickCheck.Gen                         (generate)
-import           ZkFold.Cardano.Examples.EqualityCheck       (equalityCheckVerificationBytes)
-import qualified PlutusLedgerApi.V2 as V2
-import qualified Data.Maybe as Haskell
-import Flat.Types ()
-import Data.String ( IsString(fromString) )
-import qualified Data.ByteString as BS
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
+import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..))
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
-import ZkFold.Cardano.Plonk.OnChain ( ProofBytes(..) )
-import Cardano.Api (IsPlutusScriptLanguage, PlutusScriptV3, PlutusScript, writeFileTextEnvelope, File (..))
-import PlutusTx (CompiledCode, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import Flat (flat)
-import UntypedPlutusCore (UnrestrictedProgram(..))
-import Control.Monad (void)
-import Cardano.Api.Shelley (PlutusScript(..))
-import System.Directory (createDirectoryIfMissing)
 
 contextPlonk :: ScriptContext
 contextPlonk = ScriptContext
