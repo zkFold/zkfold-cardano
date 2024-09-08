@@ -1,12 +1,11 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- {-# LANGUAGE DeriveGeneric   #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module ZkFold.Cardano.Plonk.OnChain.Data where
 
 import           GHC.Generics                             (Generic)
--- import           Data.Aeson                               (ToJSON)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins                        (BuiltinByteString, Integer)
 import           Prelude                                  (Show)

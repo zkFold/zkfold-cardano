@@ -17,7 +17,8 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS1
 import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), PointCompressed, compress)
 import           ZkFold.Base.Data.ByteString                 (toByteString)
 import           ZkFold.Base.Protocol.ARK.Plonk
-import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..), ToTranscript (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..),
+                                                              ToTranscript (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1   (G1)
 import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
