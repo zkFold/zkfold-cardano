@@ -155,9 +155,9 @@ jobs:
         path: ${{ steps.setup.outputs.cabal-store }}
         key: ${{ steps.cache.outputs.cache-primary-key }}
 
-    # - name: Build
-    #   run: |
-    #     cabal build all -f Pedantic
+    - name: Build
+      run: |
+        cabal build all -f Pedantic
 
     # - name: Test
     #   run: cabal test all

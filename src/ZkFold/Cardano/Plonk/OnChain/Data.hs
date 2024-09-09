@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE TemplateHaskell #-}
--- {-# LANGUAGE DeriveGeneric   #-}
+
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module ZkFold.Cardano.Plonk.OnChain.Data where
