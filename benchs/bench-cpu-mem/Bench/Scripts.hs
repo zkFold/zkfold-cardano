@@ -5,22 +5,18 @@
 
 module Bench.Scripts (symbolicVerifierCompiled, plonkVerifierCompiled, verifyPlonkCompiled) where
 
-import PlutusTx
-    ( compile,
-      liftCodeDef,
-      unsafeApplyCode,
-      CompiledCode,
-      CompiledCode )
-import PlutusTx.Prelude ( ($), BuiltinUnit, check, (.) )
+import           Flat.Types                               ()
+import           PlutusLedgerApi.V3
+import           PlutusTx                                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
+import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
+                                                           (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), verify)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
-import           Flat.Types                               ()
-import           PlutusLedgerApi.V3
-import           Prelude                                  hiding ((.), ($), Bool, Eq (..), Fractional (..), Num (..), length)
 
 
 symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
