@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 
 
-import           Bench.Scripts                            (compiledPlonkVerifier, compiledSymbolicVerifier,
-                                                           compiledVerifyPlonk, plonkVerifierScript,
+import           Bench.Scripts                            (plonkVerifierScript,
                                                            symbolicVerifierScript, verifyPlonkScript)
 import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
 import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
@@ -18,8 +18,17 @@ import           Flat                                     (flat)
 import           Flat.Types                               ()
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import PlutusTx
+    ( CompiledCode,
+      getPlcNoAnn,
+      liftCodeDef,
+      unsafeApplyCode,
+      CompiledCode,
+      compile,
+      getPlcNoAnn,
+      liftCodeDef,
+      unsafeApplyCode )
+import           Prelude                                  hiding ((.), ($), Bool, Eq (..), Fractional (..), Num (..), length)
 import           System.Directory                         (createDirectoryIfMissing)
 import           System.IO                                (Handle, stdout)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
@@ -30,8 +39,12 @@ import           UntypedPlutusCore                        (UnrestrictedProgram (
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..))
+import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
+import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
+import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
+
 
 contextPlonk :: ScriptContext
 contextPlonk = ScriptContext
@@ -93,6 +106,48 @@ contextSymbolic = ScriptContext
   }
 -}
 
+symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+symbolicVerifierCompiled contract =
+    $$(compile [|| untypedSymbolicVerifier ||])
+    `unsafeApplyCode` liftCodeDef contract
+  where
+    untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
+    untypedSymbolicVerifier contract' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+      check $
+        symbolicVerifier
+            contract'
+            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+            ctx
+
+plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+plonkVerifierCompiled computation =
+    $$(compile [|| untypedPlonkVerifier ||])
+    `unsafeApplyCode` liftCodeDef computation
+  where
+    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
+    untypedPlonkVerifier computation' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+      check $
+        plonkVerifier
+            computation'
+            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+            ctx
+
+verifyPlonkCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+verifyPlonkCompiled computation =
+    $$(compile [|| untypedVerifyPlonk ||])
+    `unsafeApplyCode` liftCodeDef computation
+  where
+    untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+    untypedVerifyPlonk computation' input proof =
+      check
+        ( verify @PlonkPlutus
+            computation'
+            (unsafeFromBuiltinData input)
+            (unsafeFromBuiltinData proof)
+        )
+
 printCostsSymbolicVerifier :: Handle -> SetupVerify PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
 printCostsSymbolicVerifier h s p ctx = printSizeStatistics h NoSize (symbolicVerifierScript s p ctx)
 
@@ -125,12 +180,12 @@ main = do
 
     createDirectoryIfMissing True "assets"
 
-    savePlutus "assets/symbolicVerifier" $ compiledSymbolicVerifier setup
-    savePlutus "assets/plonkVerifier"    $ compiledPlonkVerifier setup
-    savePlutus "assets/verifyPlonk"      $ compiledVerifyPlonk setup
-    saveFlat proof "assets/plonkSymbolicVerifier" $ compiledSymbolicVerifier setup
-    saveFlat proof "assets/plonkVerifierScript"   $ compiledPlonkVerifier setup
-    saveFlat redeemer "assets/verifyPlonkScript"  $ compiledVerifyPlonk setup
+    savePlutus "assets/symbolicVerifier" $ symbolicVerifierCompiled setup
+    savePlutus "assets/plonkVerifier"    $ plonkVerifierCompiled setup
+    savePlutus "assets/verifyPlonk"      $ verifyPlonkCompiled setup
+    saveFlat proof "assets/plonkSymbolicVerifier" $ symbolicVerifierCompiled setup
+    saveFlat proof "assets/plonkVerifierScript"   $ plonkVerifierCompiled setup
+    saveFlat redeemer "assets/verifyPlonkScript"  $ verifyPlonkCompiled setup
 
     hPrintf h "\n\n"
     hPrintf h "Run plonk verify\n\n"

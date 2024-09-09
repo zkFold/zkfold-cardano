@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Scripts (compiledforwardingMint, compiledPlonkVerifier) where
+module Scripts (compiledforwardingMint, plonkVerifierCompiled) where
 
 import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext (..), ScriptInfo (..), getDatum,
                                                            getRedeemer)
@@ -33,8 +33,8 @@ compiledforwardingMint label =
               ctx
           _                             -> error ()
 
-compiledPlonkVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-compiledPlonkVerifier computation =
+plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+plonkVerifierCompiled computation =
     $$(compile [|| untypedPlonkVerifier ||])
     `unsafeApplyCode` liftCodeDef computation
   where

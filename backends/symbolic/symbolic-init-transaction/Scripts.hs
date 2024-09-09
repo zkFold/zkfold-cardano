@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Scripts (compiledForwardingReward, compiledSymbolicVerifier) where
+module Scripts (compiledForwardingReward, symbolicVerifierCompiled) where
 
 import           PlutusLedgerApi.V3                       (BuiltinData)
 import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef,
@@ -28,8 +28,8 @@ compiledForwardingReward =
             (unsafeFromBuiltinData ctx)
         )
 
-compiledSymbolicVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
-compiledSymbolicVerifier computation =
+symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+symbolicVerifierCompiled computation =
     $$(compile [|| untypedSymbolicVerifier ||])
     `unsafeApplyCode` liftCodeDef computation
   where

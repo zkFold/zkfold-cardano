@@ -3,14 +3,13 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Bench.Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkScript, compiledPlonkVerifier, compiledSymbolicVerifier, compiledVerifyPlonk) where
+module Bench.Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkScript) where
 
 import           PlutusCore                               (DefaultFun, DefaultUni)
-import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext, getRedeemer)
-import           PlutusLedgerApi.V3.Contexts              (ScriptContext (..))
-import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), compile, getPlcNoAnn,
+import           PlutusLedgerApi.V3                       (ScriptContext)
+import           PlutusTx                                 (compile, getPlcNoAnn,
                                                            liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
+import           PlutusTx.Prelude                         (($))
 import qualified UntypedPlutusCore                        as UPLC
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), verify)
@@ -19,7 +18,6 @@ import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes, ProofByte
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
 
--- bench-cpu-mem
 
 symbolicVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
 symbolicVerifierScript paramsSetup redeemerProof ctx =
@@ -42,47 +40,3 @@ verifyPlonkScript paramsSetup input redeemerProof =
        `unsafeApplyCode` liftCodeDef input
        `unsafeApplyCode` liftCodeDef redeemerProof
 
-
--- analyze-uplc
-
-compiledSymbolicVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-compiledSymbolicVerifier contract =
-    $$(compile [|| untypedSymbolicVerifier ||])
-    `unsafeApplyCode` liftCodeDef contract
-  where
-    untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-    untypedSymbolicVerifier contract' ctx' =
-      let ctx = unsafeFromBuiltinData ctx' in
-      check $
-        symbolicVerifier
-            contract'
-            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
-            ctx
-
-compiledPlonkVerifier :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-compiledPlonkVerifier computation =
-    $$(compile [|| untypedPlonkVerifier ||])
-    `unsafeApplyCode` liftCodeDef computation
-  where
-    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-    untypedPlonkVerifier computation' ctx' =
-      let ctx = unsafeFromBuiltinData ctx' in
-      check $
-        plonkVerifier
-            computation'
-            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
-            ctx
-
-compiledVerifyPlonk :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
-compiledVerifyPlonk computation =
-    $$(compile [|| untypedVerifyPlonk ||])
-    `unsafeApplyCode` liftCodeDef computation
-  where
-    untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-    untypedVerifyPlonk computation' input proof =
-      check
-        ( verify @PlonkPlutus
-            computation'
-            (unsafeFromBuiltinData input)
-            (unsafeFromBuiltinData proof)
-        )
