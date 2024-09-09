@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell   #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 
 
-import           Bench.Scripts                            (plonkVerifierScript,
-                                                           symbolicVerifierScript, verifyPlonkScript)
+import           Bench.Scripts                            (plonkVerifierScript, symbolicVerifierScript,
+                                                           verifyPlonkScript)
 import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
 import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
                                                            PlutusScriptV3, writeFileTextEnvelope)
@@ -18,17 +18,11 @@ import           Flat                                     (flat)
 import           Flat.Types                               ()
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
-import PlutusTx
-    ( CompiledCode,
-      getPlcNoAnn,
-      liftCodeDef,
-      unsafeApplyCode,
-      CompiledCode,
-      compile,
-      getPlcNoAnn,
-      liftCodeDef,
-      unsafeApplyCode )
-import           Prelude                                  hiding ((.), ($), Bool, Eq (..), Fractional (..), Num (..), length)
+import           PlutusTx                                 (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
+                                                           unsafeApplyCode)
+import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
+import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
+                                                           (.))
 import           System.Directory                         (createDirectoryIfMissing)
 import           System.IO                                (Handle, stdout)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
@@ -41,7 +35,6 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerifica
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
-import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
 

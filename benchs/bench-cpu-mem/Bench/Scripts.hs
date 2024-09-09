@@ -7,8 +7,7 @@ module Bench.Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkSc
 
 import           PlutusCore                               (DefaultFun, DefaultUni)
 import           PlutusLedgerApi.V3                       (ScriptContext)
-import           PlutusTx                                 (compile, getPlcNoAnn,
-                                                           liftCodeDef, unsafeApplyCode)
+import           PlutusTx                                 (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                         (($))
 import qualified UntypedPlutusCore                        as UPLC
 
