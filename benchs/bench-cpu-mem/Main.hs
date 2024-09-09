@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 
 
-import           Bench.Scripts                            (plonkVerifierScript, symbolicVerifierScript,
-                                                           verifyPlonkScript)
+import           Bench.Scripts                            (symbolicVerifierCompiled, plonkVerifierCompiled, verifyPlonkCompiled)
 import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
 import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
                                                            PlutusScriptV3, writeFileTextEnvelope)
@@ -18,11 +17,17 @@ import           Flat                                     (flat)
 import           Flat.Types                               ()
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
-                                                           unsafeApplyCode)
-import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
-import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                           (.))
+import PlutusTx
+    ( CompiledCode,
+      getPlcNoAnn,
+      liftCodeDef,
+      unsafeApplyCode,
+      CompiledCode,
+      compile,
+      getPlcNoAnn,
+      liftCodeDef,
+      unsafeApplyCode )
+import           Prelude                                  hiding ((.), ($), Bool, Eq (..), Fractional (..), Num (..), length)
 import           System.Directory                         (createDirectoryIfMissing)
 import           System.IO                                (Handle, stdout)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
@@ -33,10 +38,14 @@ import           UntypedPlutusCore                        (UnrestrictedProgram (
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes, InputBytes)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import           PlutusTx.Prelude                         (($), (.))
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
+import qualified UntypedPlutusCore                        as UPLC
+import PlutusCore ( DefaultUni, DefaultFun )
+
 
 
 contextPlonk :: ScriptContext
@@ -99,47 +108,26 @@ contextSymbolic = ScriptContext
   }
 -}
 
-symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-symbolicVerifierCompiled contract =
-    $$(compile [|| untypedSymbolicVerifier ||])
-    `unsafeApplyCode` liftCodeDef contract
-  where
-    untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-    untypedSymbolicVerifier contract' ctx' =
-      let ctx = unsafeFromBuiltinData ctx' in
-      check $
-        symbolicVerifier
-            contract'
-            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
-            ctx
+symbolicVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+symbolicVerifierScript paramsSetup redeemerProof ctx =
+    getPlcNoAnn $ $$(compile [|| symbolicVerifier ||])
+       `unsafeApplyCode` liftCodeDef paramsSetup
+       `unsafeApplyCode` liftCodeDef redeemerProof
+       `unsafeApplyCode` liftCodeDef ctx
 
-plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-plonkVerifierCompiled computation =
-    $$(compile [|| untypedPlonkVerifier ||])
-    `unsafeApplyCode` liftCodeDef computation
-  where
-    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-    untypedPlonkVerifier computation' ctx' =
-      let ctx = unsafeFromBuiltinData ctx' in
-      check $
-        plonkVerifier
-            computation'
-            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
-            ctx
+plonkVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkVerifierScript paramsSetup redeemerProof ctx =
+    getPlcNoAnn $ $$(compile [|| plonkVerifier ||])
+       `unsafeApplyCode` liftCodeDef paramsSetup
+       `unsafeApplyCode` liftCodeDef redeemerProof
+       `unsafeApplyCode` liftCodeDef ctx
 
-verifyPlonkCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
-verifyPlonkCompiled computation =
-    $$(compile [|| untypedVerifyPlonk ||])
-    `unsafeApplyCode` liftCodeDef computation
-  where
-    untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-    untypedVerifyPlonk computation' input proof =
-      check
-        ( verify @PlonkPlutus
-            computation'
-            (unsafeFromBuiltinData input)
-            (unsafeFromBuiltinData proof)
-        )
+verifyPlonkScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+verifyPlonkScript paramsSetup input redeemerProof =
+    getPlcNoAnn $ $$(compile [|| verify @PlonkPlutus ||])
+       `unsafeApplyCode` liftCodeDef paramsSetup
+       `unsafeApplyCode` liftCodeDef input
+       `unsafeApplyCode` liftCodeDef redeemerProof
 
 printCostsSymbolicVerifier :: Handle -> SetupVerify PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
 printCostsSymbolicVerifier h s p ctx = printSizeStatistics h NoSize (symbolicVerifierScript s p ctx)

@@ -3,39 +3,64 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Bench.Scripts (symbolicVerifierScript, plonkVerifierScript, verifyPlonkScript) where
+module Bench.Scripts (symbolicVerifierCompiled, plonkVerifierCompiled, verifyPlonkCompiled) where
 
-import           PlutusCore                               (DefaultFun, DefaultUni)
-import           PlutusLedgerApi.V3                       (ScriptContext)
-import           PlutusTx                                 (compile, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (($))
-import qualified UntypedPlutusCore                        as UPLC
+import PlutusTx
+    ( compile,
+      liftCodeDef,
+      unsafeApplyCode,
+      CompiledCode,
+      CompiledCode )
+import PlutusTx.Prelude ( ($), BuiltinUnit, check, (.) )
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), verify)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
+import           Flat.Types                               ()
+import           PlutusLedgerApi.V3
+import           Prelude                                  hiding ((.), ($), Bool, Eq (..), Fractional (..), Num (..), length)
 
 
-symbolicVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-symbolicVerifierScript paramsSetup redeemerProof ctx =
-    getPlcNoAnn $ $$(compile [|| symbolicVerifier ||])
-       `unsafeApplyCode` liftCodeDef paramsSetup
-       `unsafeApplyCode` liftCodeDef redeemerProof
-       `unsafeApplyCode` liftCodeDef ctx
+symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+symbolicVerifierCompiled contract =
+    $$(compile [|| untypedSymbolicVerifier ||])
+    `unsafeApplyCode` liftCodeDef contract
+  where
+    untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
+    untypedSymbolicVerifier contract' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+      check $
+        symbolicVerifier
+            contract'
+            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+            ctx
 
-plonkVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierScript paramsSetup redeemerProof ctx =
-    getPlcNoAnn $ $$(compile [|| plonkVerifier ||])
-       `unsafeApplyCode` liftCodeDef paramsSetup
-       `unsafeApplyCode` liftCodeDef redeemerProof
-       `unsafeApplyCode` liftCodeDef ctx
+plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+plonkVerifierCompiled computation =
+    $$(compile [|| untypedPlonkVerifier ||])
+    `unsafeApplyCode` liftCodeDef computation
+  where
+    untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
+    untypedPlonkVerifier computation' ctx' =
+      let ctx = unsafeFromBuiltinData ctx' in
+      check $
+        plonkVerifier
+            computation'
+            (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+            ctx
 
-verifyPlonkScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-verifyPlonkScript paramsSetup input redeemerProof =
-    getPlcNoAnn $ $$(compile [|| verify @PlonkPlutus ||])
-       `unsafeApplyCode` liftCodeDef paramsSetup
-       `unsafeApplyCode` liftCodeDef input
-       `unsafeApplyCode` liftCodeDef redeemerProof
-
+verifyPlonkCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+verifyPlonkCompiled computation =
+    $$(compile [|| untypedVerifyPlonk ||])
+    `unsafeApplyCode` liftCodeDef computation
+  where
+    untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+    untypedVerifyPlonk computation' input proof =
+      check
+        ( verify @PlonkPlutus
+            computation'
+            (unsafeFromBuiltinData input)
+            (unsafeFromBuiltinData proof)
+        )
