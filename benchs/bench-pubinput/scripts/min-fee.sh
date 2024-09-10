@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-keypath="./Scripts/keys"
+keypath="./scripts/keys"
 assetspath="../../assets"
 
 # payment=$(jq -r '.payment' assets/config.json)

@@ -10,7 +10,7 @@ module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (&&), (.), (<>), (==))
+import           PlutusTx.Prelude                         (Bool (..), ($), (&&), (.), (<>), (==), not)
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -171,7 +171,7 @@ instance NonInteractiveProof PlonkPlutus where
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (u * xi * omega) `mul` proof2 + f - e) h0
             p2 = bls12_381_millerLoop (proof1 + u `mul` proof2) h1
 
-        in bls12_381_finalVerify p1 p2 && (l1_xi_mul' * F n * (xi - omega) == one)
+        in (not $ bls12_381_finalVerify p1 p2) && (not (l1_xi_mul' * F n * (xi - omega) == one))
 
 instance (KnownNat n, KnownNat (3 * n), KnownNat ((4 * n) + 6)) => CompatibleNonInteractiveProofs (PlonkN n) PlonkPlutus where
     nipSetupTransform = mkSetup

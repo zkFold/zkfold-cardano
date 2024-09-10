@@ -4,18 +4,20 @@ set -e
 set -u
 set -o pipefail
 
-keyspath="./Scripts/keys"
+keypath="./scripts/keys"
 assetspath="../../assets"
 
 cardano-cli conway address build \
     --payment-script-file "$assetspath/pubInput.plutus" \
-    --out-file "$keyspath/pubInput.addr" \
+    --out-file "$keypath/pubInput.addr" \
     --testnet-magic 4
-
 
 cardano-cli conway address build \
     --payment-script-file "$assetspath/alwaysSucceeds.plutus" \
-    --out-file "$keyspath/alwaysSucceeds.addr" \
+    --out-file "$keypath/alwaysSucceeds.addr" \
     --testnet-magic 4
 
-
+cardano-cli conway address build \
+    --payment-script-file "$assetspath/symbolicVerifierBench1.plutus" \
+    --out-file "$keypath/symbolicVerifierBench1.addr" \
+    --testnet-magic 4

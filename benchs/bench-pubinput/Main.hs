@@ -10,18 +10,21 @@ import qualified Data.ByteString.Lazy                     as BL
 import qualified Data.ByteString                          as BS
 import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import           Prelude                                  (Bool (..), FilePath, IO, Int, Integer, Maybe (..), Show (..), putStr, 
+import           PlutusTx.Builtins                        (bls12_381_G1_compressed_generator, bls12_381_G1_compress,
+                                                           bls12_381_G1_scalarMul, bls12_381_G1_uncompress)
+-- import           PlutusTx.Prelude                         (Integer)
+import           Prelude                                  (Bool (..), FilePath, IO, Int, Maybe (..), Show (..), putStr, 
                                                            (-), ($), (++), (.))
 import           System.Directory                         (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
-import           Bench.Scripts                            (compiledPubInput, compiledSymbolicVerifierBench1)
+import           Bench.Scripts                            (compiledAlwaysSucceeds, compiledPubInput, compiledSymbolicVerifierBench1)
 import           Bench.Utils                              (memToBS)
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
-import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes, ProofBytes(..))
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes(..))
+-- import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
 
 
@@ -43,35 +46,36 @@ inputData :: V3.BuiltinData
 inputData = V3.toBuiltinData . V3.toBuiltin . memToBS $ dataSize
 
 genericRedeemer :: ProofBytes
-genericRedeemer = ProofBytes a a a a a a a b b n n n n n n (F.F m)
-  where a = V3.toBuiltin $ memToBS 48   -- element on G1
-        b = V3.toBuiltin $ memToBS 96   -- element on G2
+genericRedeemer = ProofBytes b b b b b b b b b n n n n n n (F.F m)
+  where a = bls12_381_G1_compressed_generator
+        b = bls12_381_G1_compress (bls12_381_G1_scalarMul 1 (bls12_381_G1_uncompress a))
         n = 0xffffffffffffffffffffffff  -- 32-byte number
         m = F.bls12_381_field_prime - 1
 
-inputBytes :: InputBytes
-inputBytes = toInput $ dataToBlake (0 :: Integer)
+-- inputBytes :: InputBytes
+-- inputBytes = toInput $ dataToBlake (0 :: Integer)
 
 main :: IO ()
 main = do
-  x           <- generate arbitrary
-  ps          <- generate arbitrary
-  targetValue <- generate arbitrary
+  -- x           <- generate arbitrary
+  -- ps          <- generate arbitrary
+  -- targetValue <- generate arbitrary
 
-  let contract = EqualityCheckContract x ps targetValue
+  -- let contract = EqualityCheckContract x ps targetValue
 
   createDirectoryIfMissing True "../../test-data"
   createDirectoryIfMissing True "../../assets"
 
-  BL.writeFile "../../test-data/symbolic-raw-contract-data.json" $ encode contract
+  -- BL.writeFile "../../test-data/symbolic-raw-contract-data.json" $ encode contract
 
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
+  -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-  let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
+  -- let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/pubInput.plutus" compiledPubInput
-  savePlutus "../../assets/compiledSymbolicVerifierBench1.plutus" $ compiledSymbolicVerifierBench1 setup inputBytes
+  savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1843
+  -- savePlutus "../../assets/pubInput.plutus" compiledPubInput
+  -- savePlutus "../../assets/symbolicVerifierBench1.plutus" $ compiledSymbolicVerifierBench1 setup
 
   -- BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
   BS.writeFile "../../assets/input-data.cbor" $ dataToCBOR inputData
-  BS.writeFile "../../assets/genericRedeemer" $ dataToCBOR genericRedeemer
+  BS.writeFile "../../assets/genericRedeemer.cbor" $ dataToCBOR genericRedeemer

@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell #-}
-
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
@@ -7,10 +6,10 @@ module Bench.Scripts where
 
 import           PlutusLedgerApi.V3                (BuiltinData, getRedeemer, scriptContextRedeemer)
 import           PlutusTx                          (CompiledCode, liftCodeDef, unsafeApplyCode, unsafeFromBuiltinData)
-import           PlutusTx.Prelude                  (Bool (..), BuiltinUnit, check, not, ($), (.))
+import           PlutusTx.Prelude                  (Bool (..), BuiltinUnit, Integer, check, ($), (.))
 import           PlutusTx.TH                       (compile)
 
-import           ZkFold.Cardano.Plonk.OnChain.Data (InputBytes, SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain.Data (SetupBytes)
 import           ZkFold.Cardano.Benchs.PubInput    (pubInput, symbolicVerifierBench1)
 
 
@@ -21,26 +20,25 @@ compiledPubInput =
     untypedPubInput :: BuiltinData -> BuiltinUnit
     untypedPubInput = check . pubInput . unsafeFromBuiltinData
 
-compiledAlwaysSucceeds :: CompiledCode (BuiltinData -> BuiltinUnit)
-compiledAlwaysSucceeds =
+compiledAlwaysSucceeds :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+compiledAlwaysSucceeds n =
     $$(compile [|| untypedAlwaysSucceeds ||])
+    `unsafeApplyCode` liftCodeDef n
   where
-    untypedAlwaysSucceeds :: BuiltinData -> BuiltinUnit
-    untypedAlwaysSucceeds _ = check True
+    untypedAlwaysSucceeds :: Integer -> BuiltinData -> BuiltinUnit
+    untypedAlwaysSucceeds _ _ = check True
 
-compiledSymbolicVerifierBench1 :: SetupBytes -> InputBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-compiledSymbolicVerifierBench1 computation input =
+compiledSymbolicVerifierBench1 :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+compiledSymbolicVerifierBench1 computation =
     $$(compile [|| untypedSymbolicVerifierBench1 ||])
     `unsafeApplyCode` liftCodeDef computation
-    `unsafeApplyCode` liftCodeDef input
   where
-    untypedSymbolicVerifierBench1 :: SetupBytes -> InputBytes -> BuiltinData -> BuiltinUnit
-    untypedSymbolicVerifierBench1 computation' input' ctx' =
+    untypedSymbolicVerifierBench1 :: SetupBytes -> BuiltinData -> BuiltinUnit
+    untypedSymbolicVerifierBench1 computation' ctx' =
       let ctx = unsafeFromBuiltinData ctx' in
-        check . not $
+        check $
           symbolicVerifierBench1
             computation'
-            input'
             (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
             ctx
 
