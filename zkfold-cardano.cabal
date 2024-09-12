@@ -70,6 +70,7 @@ library
     ZkFold.Cardano.Scripts.ForwardingScripts
     ZkFold.Cardano.Scripts.PlonkVerifier
     ZkFold.Cardano.Scripts.SymbolicVerifier
+    ZkFold.Cardano.UPLC
     ZkFold.Cardano.Plonk
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OnChain.BLS12_381.F
@@ -83,6 +84,7 @@ library
     base              >= 4.9 && < 5,
     bytestring                     ,
     containers                     ,
+    flat                           ,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
@@ -140,7 +142,6 @@ executable bench-cpu-mem
   hs-source-dirs:   benchs/bench-cpu-mem
   other-modules:
     Bench.Statistics
-    Bench.Scripts
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,

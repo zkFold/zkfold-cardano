@@ -9,7 +9,7 @@ import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
 import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
                                                         (++), (.))
-import           Scripts                               (compiledForwardingReward, symbolicVerifierCompiled)
+import           Scripts                               (forwardingRewardCompiled, symbolicVerifierCompiled)
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
@@ -202,4 +202,4 @@ main = do
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
   savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
-  savePlutus "../../assets/forwardingReward.plutus" compiledForwardingReward
+  savePlutus "../../assets/forwardingReward.plutus" forwardingRewardCompiled

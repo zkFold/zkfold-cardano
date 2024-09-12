@@ -1,12 +1,13 @@
 module ZkFold.Cardano.Scripts.SymbolicVerifier where
 
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..))
-import           PlutusTx.Prelude                         (Bool (..), ($), (.))
+import           PlutusTx.Prelude                         (Bool (..), ($), (.), BuiltinData, BuiltinUnit, check)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
+import PlutusTx (unsafeFromBuiltinData)
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --
@@ -28,3 +29,13 @@ symbolicVerifier contract proof ctx =
 
         -- Computing public input from the transaction data
         input = toInput . dataToBlake $ (ins, refs, outs, range)
+
+untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedSymbolicVerifier contract' redeemerProof' ctx' =
+    let ctx = unsafeFromBuiltinData ctx'
+        redeemerProof = unsafeFromBuiltinData redeemerProof' in
+    check $
+    symbolicVerifier
+        contract'
+        redeemerProof
+        ctx

@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Scripts (compiledForwardingReward, symbolicVerifierCompiled) where
+module Scripts (forwardingRewardCompiled, symbolicVerifierCompiled) where
 
 import           PlutusLedgerApi.V3                       (BuiltinData)
 import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), liftCodeDef,
@@ -15,8 +15,8 @@ import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import           ZkFold.Cardano.Scripts.ForwardingScripts (forwardingReward)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (symbolicVerifier)
 
-compiledForwardingReward :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit)
-compiledForwardingReward =
+forwardingRewardCompiled :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit)
+forwardingRewardCompiled =
     $$(compile [|| untypedForwardingReward ||])
   where
     untypedForwardingReward :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit

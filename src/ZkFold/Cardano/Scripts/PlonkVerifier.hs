@@ -6,12 +6,13 @@ import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..))
 import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
 import qualified PlutusTx.AssocMap                        as AssocMap
-import           PlutusTx.Prelude                         (Bool (..), Maybe (..), Ord (..), ($), (||))
+import           PlutusTx.Prelude                         (Bool (..), Maybe (..), Ord (..), ($), (||), BuiltinData, BuiltinUnit, check)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (toInput)
+import PlutusTx (UnsafeFromData(..))
 
 -- | Plutus script (minting policy) for verifying computations on-chain.
 --
@@ -36,3 +37,13 @@ plonkVerifier computation proof ctx =
 
         -- Verifying the Plonk `proof` for the `computation` on `input`
         conditionVerifying = verify @PlonkPlutus computation input proof
+
+untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedPlonkVerifier computation' redeemerProof' ctx' =
+    let ctx = unsafeFromBuiltinData ctx'
+        redeemerProof = unsafeFromBuiltinData redeemerProof' in
+    check $
+    plonkVerifier
+        computation'
+        redeemerProof
+        ctx

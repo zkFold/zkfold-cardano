@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module Scripts (compiledforwardingMint, plonkVerifierCompiled) where
+module Scripts (forwardingMintCompiled, plonkVerifierCompiled) where
 
 import           PlutusLedgerApi.V3                       (BuiltinData, ScriptContext (..), ScriptInfo (..), getDatum,
                                                            getRedeemer)
@@ -16,8 +16,8 @@ import           ZkFold.Cardano.Plonk.OnChain.Data        (FMLabel, SetupBytes)
 import           ZkFold.Cardano.Scripts.ForwardingScripts (forwardingMint)
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (plonkVerifier)
 
-compiledforwardingMint :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
-compiledforwardingMint label =
+forwardingMintCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+forwardingMintCompiled label =
     $$(compile [|| untypedforwardingMint ||])
     `unsafeApplyCode` liftCodeDef label
   where

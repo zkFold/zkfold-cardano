@@ -9,7 +9,7 @@ import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
 import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
                                                         (++), (.))
-import           Scripts                               (compiledforwardingMint, plonkVerifierCompiled)
+import           Scripts                               (forwardingMintCompiled, plonkVerifierCompiled)
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
@@ -44,4 +44,4 @@ main = do
   let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
 
   savePlutus "../assets/plonkVerifier.plutus" $ plonkVerifierCompiled setup
-  savePlutus "../assets/forwardingMint.plutus" $ compiledforwardingMint fmLabel
+  savePlutus "../assets/forwardingMint.plutus" $ forwardingMintCompiled fmLabel
