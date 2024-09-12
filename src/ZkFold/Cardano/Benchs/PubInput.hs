@@ -7,11 +7,13 @@ import           PlutusTx.Prelude                         (Bool (..), Integer, (
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 
 
--- ZkFold Symbolic smart contracts have access to inputs, reference inputs, outputs and the transaction validity range.
+-- | We use 'pubInput' to estimate the exec units cost of (blake2b_224) hashing
+-- the data passed in redeemer, and subsequent conversion to Integer.  By
+-- controlling byte-size of redeemer we can obtain a model for hashing cost.
 
 {-# INLINABLE pubInput #-}
 pubInput :: ScriptContext -> Bool
@@ -21,6 +23,10 @@ pubInput ctx = greaterThanInteger input 0
 
         -- Computing public input from the transaction data
         input = byteStringToInteger BigEndian . dataToBlake $ redm
+
+-- | We use 'symbolicVerifierBench' to estimate exec units associated to
+-- execution of 'verify @PlonkPlutus'.  Note that "input" size, being a hash
+-- digest, is constant.
 
 {-# INLINABLE symbolicVerifierBench1 #-}
 symbolicVerifierBench1 :: SetupBytes -> ProofBytes -> ScriptContext -> Bool

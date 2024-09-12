@@ -19,6 +19,7 @@ import           System.Directory                         (createDirectoryIfMiss
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
+import           Scripts                                  (compiledSymbolicVerifier)
 import           Bench.Scripts                            (compiledAlwaysSucceeds, compiledPubInput, compiledSymbolicVerifierBench1)
 import           Bench.Utils                              (memToBS)
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
@@ -39,6 +40,8 @@ savePlutus filePath =
 dataToCBOR :: ToData a => a -> BS.ByteString
 dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . V3.toData
 
+-- | We sampled results obtaining with several values of 'dataSize' to obtain a
+-- model for cost of (blake2b_224) hashing subsequent conversion to Integer.
 dataSize :: Int
 dataSize = 1
 
@@ -49,33 +52,31 @@ genericRedeemer :: ProofBytes
 genericRedeemer = ProofBytes b b b b b b b b b n n n n n n (F.F m)
   where a = bls12_381_G1_compressed_generator
         b = bls12_381_G1_compress (bls12_381_G1_scalarMul 1 (bls12_381_G1_uncompress a))
-        n = 0xffffffffffffffffffffffff  -- 32-byte number
+        n = 0xffffffffffffffffffffffff   -- 32-byte number
         m = F.bls12_381_field_prime - 1
-
--- inputBytes :: InputBytes
--- inputBytes = toInput $ dataToBlake (0 :: Integer)
 
 main :: IO ()
 main = do
-  -- x           <- generate arbitrary
-  -- ps          <- generate arbitrary
-  -- targetValue <- generate arbitrary
+  x           <- generate arbitrary
+  ps          <- generate arbitrary
+  targetValue <- generate arbitrary
 
-  -- let contract = EqualityCheckContract x ps targetValue
+  let contract = EqualityCheckContract x ps targetValue
 
   createDirectoryIfMissing True "../../test-data"
   createDirectoryIfMissing True "../../assets"
 
-  -- BL.writeFile "../../test-data/symbolic-raw-contract-data.json" $ encode contract
+  BL.writeFile "../../test-data/symbolic-raw-contract-data.json" $ encode contract
 
-  -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
+  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-  -- let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
+  let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
   savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1843
-  -- savePlutus "../../assets/pubInput.plutus" compiledPubInput
-  -- savePlutus "../../assets/symbolicVerifierBench1.plutus" $ compiledSymbolicVerifierBench1 setup
+  savePlutus "../../assets/pubInput.plutus" compiledPubInput
+  savePlutus "../../assets/symbolicVerifierBench1.plutus" $ compiledSymbolicVerifierBench1 setup
+  savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
 
-  -- BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
+  BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
   BS.writeFile "../../assets/input-data.cbor" $ dataToCBOR inputData
   BS.writeFile "../../assets/genericRedeemer.cbor" $ dataToCBOR genericRedeemer
