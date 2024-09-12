@@ -4,8 +4,6 @@
 module Main where
 
 
-import           ZkFold.Cardano.UPLC                            (plonkVerifierCompiled, symbolicVerifierCompiled,
-                                                           verifyPlonkCompiled)
 import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
 import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
                                                            PlutusScriptV3, writeFileTextEnvelope)
@@ -19,8 +17,7 @@ import           Flat.Types                               ()
 import           PlutusCore                               (DefaultFun, DefaultUni)
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, getPlcNoAnn, liftCodeDef,
-                                                           unsafeApplyCode)
+import           PlutusTx                                 (CompiledCode, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                         (($), (.))
 import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
                                                            (.))
@@ -37,6 +34,8 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerifica
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain             (InputBytes, ProofBytes (..), SetupBytes)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, symbolicVerifierCompiled,
+                                                           verifyPlonkCompiled)
 
 
 contextPlonk :: ScriptContext

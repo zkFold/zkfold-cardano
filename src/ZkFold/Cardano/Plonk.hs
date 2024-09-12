@@ -9,8 +9,9 @@
 module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
+import           PlutusTx                                 (UnsafeFromData (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (&&), (.), (<>), (==), BuiltinUnit, check)
+import           PlutusTx.Prelude                         (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
@@ -21,7 +22,6 @@ import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkInput, mkPr
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (mul)
-import PlutusTx (UnsafeFromData(..))
 
 data PlonkPlutus
 

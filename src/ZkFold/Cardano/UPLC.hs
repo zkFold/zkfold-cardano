@@ -5,12 +5,12 @@
 
 module ZkFold.Cardano.UPLC (symbolicVerifierCompiled, plonkVerifierCompiled, verifyPlonkCompiled, forwardingRewardCompiled, forwardingMintCompiled) where
 
-import           Flat.Types                               ()
+import           Flat.Types                              ()
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (BuiltinUnit)
-import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                           (.))
+import           PlutusTx                                (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                        (BuiltinUnit)
+import           Prelude                                 hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
+                                                          (.))
 
 import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import ZkFold.Cardano.Plonk (untypedVerifyPlonk)
