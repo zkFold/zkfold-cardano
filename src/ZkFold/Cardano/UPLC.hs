@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 
-module ZkFold.Cardano.UPLC (symbolicVerifierCompiled, plonkVerifierCompiled, verifyPlonkCompiled) where
+module ZkFold.Cardano.UPLC (symbolicVerifierCompiled, plonkVerifierCompiled, verifyPlonkCompiled, forwardingRewardCompiled, forwardingMintCompiled) where
 
 import           Flat.Types                               ()
 import           PlutusLedgerApi.V3
@@ -16,6 +16,8 @@ import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import ZkFold.Cardano.Plonk (untypedVerifyPlonk)
 import ZkFold.Cardano.Scripts.PlonkVerifier (untypedPlonkVerifier)
 import ZkFold.Cardano.Scripts.SymbolicVerifier (untypedSymbolicVerifier)
+import ZkFold.Cardano.Scripts.ForwardingScripts
+    ( untypedForwardingReward, untypedForwardingMint )
 
 
 symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
@@ -32,3 +34,12 @@ verifyPlonkCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData ->
 verifyPlonkCompiled computation =
     $$(compile [|| untypedVerifyPlonk ||])
     `unsafeApplyCode` liftCodeDef computation
+
+forwardingRewardCompiled :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit)
+forwardingRewardCompiled =
+    $$(compile [|| untypedForwardingReward ||])
+
+forwardingMintCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+forwardingMintCompiled label =
+    $$(compile [|| untypedForwardingMint ||])
+    `unsafeApplyCode` liftCodeDef label

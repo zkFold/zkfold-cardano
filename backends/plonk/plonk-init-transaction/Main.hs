@@ -9,7 +9,7 @@ import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
 import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
                                                         (++), (.))
-import           Scripts                               (forwardingMintCompiled, plonkVerifierCompiled)
+import           ZkFold.Cardano.UPLC                               (forwardingMintCompiled, plonkVerifierCompiled)
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
