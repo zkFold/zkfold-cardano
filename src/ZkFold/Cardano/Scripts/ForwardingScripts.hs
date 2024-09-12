@@ -2,7 +2,8 @@ module ZkFold.Cardano.Scripts.ForwardingScripts where
 
 import           PlutusLedgerApi.V3
 import           PlutusTx.AssocMap                  (keys)
-import           PlutusTx.Prelude                   (Bool (..), find, isJust, ($), BuiltinUnit, Maybe (..), check, (.), error)
+import           PlutusTx.Prelude                   (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust,
+                                                     ($), (.))
 
 import           ZkFold.Cardano.Plonk.OnChain.Data  (FMLabel)
 import           ZkFold.Cardano.Plonk.OnChain.Utils (eqCredential, eqCurrencySymbol)
