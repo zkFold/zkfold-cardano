@@ -69,6 +69,7 @@ library
     ZkFold.Cardano.Examples.EqualityCheck
     ZkFold.Cardano.Scripts.ForwardingScripts
     ZkFold.Cardano.Scripts.PlonkVerifier
+    ZkFold.Cardano.Scripts.Rollup
     ZkFold.Cardano.Scripts.SymbolicVerifier
     ZkFold.Cardano.Plonk
     ZkFold.Cardano.Plonk.OnChain
