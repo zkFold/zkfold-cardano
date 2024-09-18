@@ -6,9 +6,6 @@ cradle:
     - path: "./test"
       component: "zkfold-cardano:test:test"
 
-    - path: "./benchs/bench-uplc"
-      component: "zkfold-cardano:exe:bench-uplc"
-
     - path: "./benchs/bench-cpu-mem"
       component: "zkfold-cardano:exe:bench-cpu-mem"
 

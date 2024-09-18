@@ -71,6 +71,7 @@ library
     ZkFold.Cardano.Scripts.PlonkVerifier
     ZkFold.Cardano.Scripts.Rollup
     ZkFold.Cardano.Scripts.SymbolicVerifier
+    ZkFold.Cardano.UPLC
     ZkFold.Cardano.Plonk
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OnChain.BLS12_381.F
@@ -84,6 +85,7 @@ library
     base              >= 4.9 && < 5,
     bytestring                     ,
     containers                     ,
+    flat                           ,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
@@ -132,31 +134,6 @@ test-suite test
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
-executable bench-uplc
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   benchs/bench-uplc
-  other-modules:    Bench.Scripts
-  build-depends:
-    aeson                          ,
-    aeson-pretty                   ,
-    base              >= 4.9 && < 5,
-    base16-bytestring              ,
-    bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
-    serialise                      ,
-    flat                           ,
-    plutus-core             ^>=1.30,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    zkfold-base                    ,
-    zkfold-cardano                 ,
-
 executable bench-cpu-mem
   import:           lang
   import:           lang-extra
@@ -166,17 +143,19 @@ executable bench-cpu-mem
   hs-source-dirs:   benchs/bench-cpu-mem
   other-modules:
     Bench.Statistics
-    Bench.Scripts
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
     bytestring                     ,
+    cardano-api                    ,
     containers                     ,
+    directory                      ,
     flat                           ,
     plutus-core             ^>=1.30,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
+    QuickCheck                     ,
     zkfold-base                    ,
     zkfold-cardano                 ,
 
@@ -186,7 +165,6 @@ executable symbolic-init-transaction
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  other-modules:    Scripts
   hs-source-dirs:   backends/symbolic/symbolic-init-transaction
   build-depends:
     aeson                          ,
@@ -238,7 +216,6 @@ executable plonk-init-transaction
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  other-modules:    Scripts
   hs-source-dirs:   backends/plonk/plonk-init-transaction
   build-depends:
     aeson                          ,

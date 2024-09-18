@@ -2,7 +2,8 @@ module ZkFold.Cardano.Scripts.ForwardingScripts where
 
 import           PlutusLedgerApi.V3
 import           PlutusTx.AssocMap                  (keys)
-import           PlutusTx.Prelude                   (Bool (..), find, isJust, ($))
+import           PlutusTx.Prelude                   (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust,
+                                                     ($), (.))
 
 import           ZkFold.Cardano.Plonk.OnChain.Data  (FMLabel)
 import           ZkFold.Cardano.Plonk.OnChain.Utils (eqCredential, eqCurrencySymbol)
@@ -32,3 +33,24 @@ forwardingMint _label symbolHash _ ctx =
 
         -- Finding scripts to be executed
         reds = keys $ txInfoRedeemers $ scriptContextTxInfo ctx
+
+untypedForwardingReward :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedForwardingReward datum redeemer ctx =
+  check
+    ( forwardingReward
+        (unsafeFromBuiltinData datum)
+        (unsafeFromBuiltinData redeemer)
+        (unsafeFromBuiltinData ctx)
+    )
+
+untypedForwardingMint :: FMLabel -> BuiltinData -> BuiltinUnit
+untypedForwardingMint label' ctx' =
+  let ctx = unsafeFromBuiltinData ctx' in
+    case scriptContextScriptInfo ctx of
+      SpendingScript _ (Just dat) -> check $
+        forwardingMint
+          label'
+          (unsafeFromBuiltinData . getDatum $ dat)
+          (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+          ctx
+      _                             -> error ()
