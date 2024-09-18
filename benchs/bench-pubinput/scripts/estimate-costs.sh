@@ -9,8 +9,8 @@ set -o pipefail
 keypath="./scripts/keys"
 assetspath="../../assets"
 
-in1=$(jq -r '.inputs[0]' $keypath/inputs.json)  # Bob
-in2=$(jq -r '.inputs[1]' $keypath/inputs.json)  # Unit
+in1=$(jq -r '.inputs[0]' $assetspath/inputs.json)  # Bob
+in2=$(jq -r '.inputs[1]' $assetspath/inputs.json)  # Unit
 
 #----------------------------- :'pubInput': -----------------------------
 

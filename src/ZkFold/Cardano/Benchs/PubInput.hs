@@ -6,7 +6,7 @@ import           PlutusTx.Builtins                        (byteStringToInteger, 
 import           PlutusTx.Prelude                         (Bool (..), Integer, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+import           ZkFold.Cardano.Benchs.PlonkAlt           (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 
