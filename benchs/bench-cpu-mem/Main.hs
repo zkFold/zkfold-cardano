@@ -160,12 +160,12 @@ main = do
     saveFlat2 input proof "assets/verifyPlonkScript"  $ verifyPlonkCompiled setup
 
     hPrintf h "\n\n"
-    hPrintf h "Run plonk verify\n\n"
+    hPrintf h "Run \'verifyPlonk\'\n\n"
     printHeader h
     printCostsVerifyPlonk h setup input proof
     hPrintf h "\n\n"
     hPrintf h "\n\n"
-    hPrintf h "Run plonk verifier\n\n"
+    hPrintf h "Run \'plonkVerifier\'\n\n"
     printHeader h
     printCostsPlonkVerifier h setup $ contextPlonk proof
     -- hPrintf h "\n\n"
