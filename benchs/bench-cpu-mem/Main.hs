@@ -38,8 +38,8 @@ import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled
                                                            verifyPlonkCompiled)
 
 
-contextPlonk :: ScriptContext
-contextPlonk = ScriptContext
+contextPlonk :: ProofBytes -> ScriptContext
+contextPlonk redeemerProof = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs = []                     :: [TxInInfo]
     , txInfoReferenceInputs = []            :: [TxInInfo]
@@ -58,7 +58,7 @@ contextPlonk = ScriptContext
     , txInfoCurrentTreasuryAmount = Nothing :: Haskell.Maybe V2.Lovelace
     , txInfoTreasuryDonation = Nothing      :: Haskell.Maybe V2.Lovelace
     },
-    scriptContextRedeemer = Redeemer (toBuiltinData dummyRedeemer),
+    scriptContextRedeemer = Redeemer (toBuiltinData redeemerProof),
     scriptContextScriptInfo = MintingScript dummyCurrencySymbol
   }
 
@@ -72,62 +72,66 @@ dummyRedeemer :: ProofBytes
 dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F.F 0)
   where e = ""
 
-{-
-contextSymbolic :: ScriptContext
-contextSymbolic = ScriptContext
+dummyCredential :: Credential
+dummyCredential = ScriptCredential . ScriptHash $ toBuiltin (fromString "deadbeef" :: BS.ByteString)
+
+contextSymbolic :: ProofBytes -> ScriptContext
+contextSymbolic redeemerProof = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs = []                     :: [TxInInfo]
     , txInfoReferenceInputs = []            :: [TxInInfo]
     , txInfoOutputs = []                    :: [V2.TxOut]
-    , txInfoFee = _                         :: V2.Lovelace
-    , txInfoMint = _                        :: V2.Value
+    , txInfoFee = V2.Lovelace 0             :: V2.Lovelace
+    , txInfoMint = mempty                   :: V2.Value
     , txInfoTxCerts = []                    :: [TxCert]
-    , txInfoWdrl = _                        :: Map V2.Credential V2.Lovelace
+    , txInfoWdrl = unsafeFromList []        :: Map V2.Credential V2.Lovelace
     , txInfoValidRange = always             :: V2.POSIXTimeRange
     , txInfoSignatories = []                :: [V2.PubKeyHash]
-    , txInfoRedeemers = _                   :: Map ScriptPurpose V2.Redeemer
-    , txInfoData = _                        :: Map V2.DatumHash V2.Datum
-    , txInfoId = _                          :: V3.TxId
-    , txInfoVotes = _                       :: Map Voter (Map GovernanceActionId Vote)
+    , txInfoRedeemers = unsafeFromList []   :: Map ScriptPurpose V2.Redeemer
+    , txInfoData = unsafeFromList []        :: Map V2.DatumHash V2.Datum
+    , txInfoId = fromString "00"            :: TxId
+    , txInfoVotes = unsafeFromList []       :: Map Voter (Map GovernanceActionId Vote)
     , txInfoProposalProcedures = []         :: [ProposalProcedure]
     , txInfoCurrentTreasuryAmount = Nothing :: Haskell.Maybe V2.Lovelace
     , txInfoTreasuryDonation = Nothing      :: Haskell.Maybe V2.Lovelace
     },
-    scriptContextRedeemer = Redeemer _,
-    scriptContextScriptInfo = RewardingScript _
+    scriptContextRedeemer = Redeemer (toBuiltinData redeemerProof),
+    scriptContextScriptInfo = RewardingScript dummyCredential
   }
--}
 
-symbolicVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-symbolicVerifierScript paramsSetup redeemerProof ctx =
+symbolicVerifierScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+symbolicVerifierScript paramsSetup ctx =
     getPlcNoAnn $ symbolicVerifierCompiled paramsSetup
-       `unsafeApplyCode` liftCodeDef (toBuiltinData redeemerProof)
        `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-plonkVerifierScript :: SetupBytes -> ProofBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierScript paramsSetup redeemerProof ctx =
-    getPlcNoAnn $ symbolicVerifierCompiled paramsSetup
-       `unsafeApplyCode` liftCodeDef (toBuiltinData redeemerProof)
+plonkVerifierScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkVerifierScript paramsSetup ctx =
+    getPlcNoAnn $ plonkVerifierCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
 verifyPlonkScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-verifyPlonkScript paramsSetup input redeemerProof =
+verifyPlonkScript paramsSetup input proof =
     getPlcNoAnn $ verifyPlonkCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData input)
-       `unsafeApplyCode` liftCodeDef (toBuiltinData redeemerProof)
+       `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
-printCostsSymbolicVerifier :: Handle -> SetupVerify PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsSymbolicVerifier h s p ctx = printSizeStatistics h NoSize (symbolicVerifierScript s p ctx)
+printCostsSymbolicVerifier :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
+printCostsSymbolicVerifier h s ctx = printSizeStatistics h NoSize (symbolicVerifierScript s ctx)
 
-printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> Proof PlonkPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifier h s p ctx = printSizeStatistics h NoSize (plonkVerifierScript s p ctx)
+printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifier h s ctx = printSizeStatistics h NoSize (plonkVerifierScript s ctx)
 
 printCostsVerifyPlonk :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
 printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
 
-saveFlat redeemer filePath code =
+saveFlat ctx filePath code =
    BS.writeFile ("./" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> getPlcNoAnn $ code
-           `unsafeApplyCode` liftCodeDef (toBuiltinData redeemer)
+           `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
+
+saveFlat2 input proof filePath code =
+   BS.writeFile ("./" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> getPlcNoAnn $ code
+           `unsafeApplyCode` liftCodeDef (toBuiltinData input)
+           `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -144,16 +148,16 @@ main = do
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
         h = stdout
-        redeemer = (setup, input, proof)
+        -- redeemer = (setup, input, proof)
 
     createDirectoryIfMissing True "assets"
 
     savePlutus "assets/symbolicVerifier" $ symbolicVerifierCompiled setup
     savePlutus "assets/plonkVerifier"    $ plonkVerifierCompiled setup
     savePlutus "assets/verifyPlonk"      $ verifyPlonkCompiled setup
-    saveFlat proof "assets/plonkSymbolicVerifier" $ symbolicVerifierCompiled setup
-    saveFlat proof "assets/plonkVerifierScript"   $ plonkVerifierCompiled setup
-    saveFlat redeemer "assets/verifyPlonkScript"  $ verifyPlonkCompiled setup
+    saveFlat (contextSymbolic proof) "assets/plonkSymbolicVerifier" $ symbolicVerifierCompiled setup
+    saveFlat (contextPlonk proof) "assets/plonkVerifierScript"   $ plonkVerifierCompiled setup
+    saveFlat2 input proof "assets/verifyPlonkScript"  $ verifyPlonkCompiled setup
 
     hPrintf h "\n\n"
     hPrintf h "Run plonk verify\n\n"
@@ -163,7 +167,7 @@ main = do
     hPrintf h "\n\n"
     hPrintf h "Run plonk verifier\n\n"
     printHeader h
-    printCostsPlonkVerifier h setup proof contextPlonk
+    printCostsPlonkVerifier h setup $ contextPlonk proof
     -- hPrintf h "\n\n"
     -- hPrintf h "\n\n"
     -- hPrintf h "Run symbolic plonk verifier\n\n"

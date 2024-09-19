@@ -19,12 +19,12 @@ import           ZkFold.Cardano.Scripts.PlonkVerifier     (untypedPlonkVerifier)
 import           ZkFold.Cardano.Scripts.SymbolicVerifier  (untypedSymbolicVerifier)
 
 
-symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 symbolicVerifierCompiled contract =
     $$(compile [|| untypedSymbolicVerifier ||])
     `unsafeApplyCode` liftCodeDef contract
 
-plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 plonkVerifierCompiled computation =
     $$(compile [|| untypedPlonkVerifier ||])
     `unsafeApplyCode` liftCodeDef computation
@@ -34,7 +34,7 @@ verifyPlonkCompiled computation =
     $$(compile [|| untypedVerifyPlonk ||])
     `unsafeApplyCode` liftCodeDef computation
 
-forwardingRewardCompiled :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit)
+forwardingRewardCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
 forwardingRewardCompiled =
     $$(compile [|| untypedForwardingReward ||])
 
