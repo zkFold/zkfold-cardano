@@ -8,7 +8,7 @@ import           PlutusLedgerApi.V3.Contexts              (ownCurrencySymbol)
 import           PlutusTx                                 (UnsafeFromData (..))
 import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Maybe (..), Ord (..),
-                                                           check, ($), (||), (.))
+                                                           check, ($), (.), (||))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
