@@ -2,7 +2,7 @@
 
 module ZkFold.Cardano.Scripts.Rollup where
 
-import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx.Prelude                         hiding ((*), (+))
@@ -10,8 +10,8 @@ import           PlutusTx.Prelude                         hiding ((*), (+))
 import           ZkFold.Base.Algebra.Basic.Class          ((*), (+))
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (F(..))
-import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes, InputBytes (..))
+import           ZkFold.Cardano.Plonk.OnChain             (F (..))
+import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake)
 
 -- | Plutus script for verifying a ZkFold Rollup state transition.

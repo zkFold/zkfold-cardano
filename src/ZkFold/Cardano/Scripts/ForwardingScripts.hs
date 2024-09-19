@@ -34,15 +34,19 @@ forwardingMint _label symbolHash _ ctx =
         -- Finding scripts to be executed
         reds = keys $ txInfoRedeemers $ scriptContextTxInfo ctx
 
-untypedForwardingReward :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
-untypedForwardingReward datum redeemer ctx =
-  check
-    ( forwardingReward
-        (unsafeFromBuiltinData datum)
-        (unsafeFromBuiltinData redeemer)
-        (unsafeFromBuiltinData ctx)
-    )
+{-# INLINABLE untypedForwardingReward #-}
+untypedForwardingReward :: BuiltinData -> BuiltinUnit
+untypedForwardingReward ctx' =
+  let ctx = unsafeFromBuiltinData ctx' in
+    case scriptContextScriptInfo ctx of
+      SpendingScript _ (Just dat) -> check $
+        forwardingReward
+          (unsafeFromBuiltinData . getDatum $ dat)
+          (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
+          ctx
+      _                           -> error ()
 
+{-# INLINABLE untypedForwardingMint #-}
 untypedForwardingMint :: FMLabel -> BuiltinData -> BuiltinUnit
 untypedForwardingMint label' ctx' =
   let ctx = unsafeFromBuiltinData ctx' in
@@ -53,4 +57,4 @@ untypedForwardingMint label' ctx' =
           (unsafeFromBuiltinData . getDatum $ dat)
           (unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx)
           ctx
-      _                             -> error ()
+      _                           -> error ()

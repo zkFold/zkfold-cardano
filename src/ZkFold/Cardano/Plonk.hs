@@ -181,10 +181,10 @@ instance (KnownNat n, KnownNat (3 * n), KnownNat ((4 * n) + 6)) => CompatibleNon
     nipProofTransform = mkProof
 
 untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-untypedVerifyPlonk computation' input proof =
+untypedVerifyPlonk computation input' proof' =
     check
     ( verify @PlonkPlutus
-        computation'
-        (unsafeFromBuiltinData input)
-        (unsafeFromBuiltinData proof)
+        computation
+        (unsafeFromBuiltinData input')
+        (unsafeFromBuiltinData proof')
     )
