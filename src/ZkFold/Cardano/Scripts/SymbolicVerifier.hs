@@ -1,6 +1,6 @@
 module ZkFold.Cardano.Scripts.SymbolicVerifier where
 
-import           PlutusLedgerApi.V3                       (ScriptContext(..), TxInfo (..), getRedeemer)
+import           PlutusLedgerApi.V3                       (ScriptContext (..), TxInfo (..), getRedeemer)
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, check, ($), (.))
 
