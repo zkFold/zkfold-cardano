@@ -18,11 +18,11 @@ import           System.Directory                         (createDirectoryIfMiss
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
-import           Scripts                                  (compiledSymbolicVerifier)
 import           Bench.Scripts                            (compiledAlwaysSucceeds)
 -- import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Benchs.EmptyCircuit       (tautologyVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
+import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
 -- import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes(..))
 -- import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
 
@@ -56,7 +56,7 @@ main = do
   let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
 
   savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1845
-  savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
+  savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
 
   BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
   BS.writeFile "../../assets/redeemerSymbolicVerifier.cbor" $ dataToCBOR proof

@@ -9,13 +9,15 @@
 module ZkFold.Cardano.Plonk where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
+import           PlutusTx                                 (UnsafeFromData (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (&&), (.), (<>), (==))
+import           PlutusTx.Prelude                         (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..), NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..),
+                                                           NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
@@ -177,3 +179,12 @@ instance (KnownNat n, KnownNat (3 * n), KnownNat ((4 * n) + 6)) => CompatibleNon
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof
+
+untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedVerifyPlonk computation input' proof' =
+    check
+    ( verify @PlonkPlutus
+        computation
+        (unsafeFromBuiltinData input')
+        (unsafeFromBuiltinData proof')
+    )

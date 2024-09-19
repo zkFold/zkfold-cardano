@@ -7,14 +7,15 @@ import           Data.Aeson                            (encode)
 import qualified Data.ByteString.Lazy                  as BL
 import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
-import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
-import           Scripts                               (compiledPlonkVerifier, compiledforwardingMint)
+import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
+                                                        (++), (.))
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
+import           ZkFold.Cardano.UPLC                   (forwardingMintCompiled, plonkVerifierCompiled)
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -42,5 +43,5 @@ main = do
 
   let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
 
-  savePlutus "../assets/plonkVerifier.plutus" $ compiledPlonkVerifier setup
-  savePlutus "../assets/forwardingMint.plutus" $ compiledforwardingMint fmLabel
+  savePlutus "../assets/plonkVerifier.plutus" $ plonkVerifierCompiled setup
+  savePlutus "../assets/forwardingMint.plutus" $ forwardingMintCompiled fmLabel

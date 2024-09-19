@@ -7,8 +7,8 @@ import           Data.Aeson                            (encode)
 import qualified Data.ByteString.Lazy                  as BL
 import qualified PlutusLedgerApi.V3                    as PlutusV3
 import           PlutusTx                              (CompiledCode)
-import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
-import           Scripts                               (compiledForwardingReward, compiledSymbolicVerifier)
+import           Prelude                               (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
+                                                        (++), (.))
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
@@ -16,6 +16,7 @@ import           Test.QuickCheck.Gen                   (generate)
 -- import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Benchs.EmptyCircuit    (tautologyVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
+import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, symbolicVerifierCompiled)
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -42,5 +43,5 @@ main = do
 
   let (setup, _, _) = tautologyVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
-  savePlutus "../../assets/forwardingReward.plutus" compiledForwardingReward
+  savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
+  savePlutus "../../assets/forwardingReward.plutus" forwardingRewardCompiled

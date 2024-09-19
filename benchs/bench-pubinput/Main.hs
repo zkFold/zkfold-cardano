@@ -19,7 +19,6 @@ import           System.Directory                         (createDirectoryIfMiss
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
-import           Scripts                                  (compiledSymbolicVerifier)
 import           Bench.Scripts                            (compiledAlwaysSucceeds, compiledPubInput, compiledSymbolicVerifierBench1)
 import           Bench.Utils                              (memToBS)
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
@@ -27,6 +26,7 @@ import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes(..))
 -- import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -75,7 +75,7 @@ main = do
   savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1843
   savePlutus "../../assets/pubInput.plutus" compiledPubInput
   savePlutus "../../assets/symbolicVerifierBench1.plutus" $ compiledSymbolicVerifierBench1 setup
-  savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
+  savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
 
   BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
   BS.writeFile "../../assets/input-data.cbor" $ dataToCBOR inputData
