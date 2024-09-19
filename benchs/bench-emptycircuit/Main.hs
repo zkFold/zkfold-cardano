@@ -55,7 +55,7 @@ main = do
 
   let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1844
+  savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1845
   savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
 
   BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
@@ -69,7 +69,8 @@ main = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-  let (_, _, proof) = tautologyVerificationBytes x ps targetValue
+  let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
 
+  savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
   BS.writeFile "../../assets/redeemerSymbolicVerifier.cbor" $ dataToCBOR proof
 -}
