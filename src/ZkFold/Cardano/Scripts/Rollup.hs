@@ -1,11 +1,17 @@
+{-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 module ZkFold.Cardano.Scripts.Rollup where
 
+import           GHC.Generics                             (Generic)
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
+import           PlutusTx                                 (makeIsDataIndexed)
 import           PlutusTx.Prelude                         hiding ((*), (+))
+import           Prelude                                  (Show)
 
 import           ZkFold.Base.Algebra.Basic.Class          ((*), (+))
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
@@ -14,10 +20,20 @@ import           ZkFold.Cardano.Plonk.OnChain             (F (..))
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake)
 
+data RollupRedeemer = RollupRedeemer
+  { rrProof   :: ProofBytes
+  , rrAddress :: Address
+  , rrValue   :: Value
+  , rrState   :: F
+  , rrUpdate  :: [F]
+  } deriving stock (Show, Generic)
+
+makeIsDataIndexed ''RollupRedeemer [('RollupRedeemer,0)]
+
 -- | Plutus script for verifying a ZkFold Rollup state transition.
 {-# INLINABLE rollup #-}
-rollup :: SetupBytes -> (ProofBytes, Address, Value, F, [F]) -> ScriptContext -> Bool
-rollup ledgerRules (proof, addr, val, state, update) ctx =
+rollup :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
+rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
         -- Verify the transition from the current state to the next state
         verify @PlonkPlutus ledgerRules input proof
         -- Check the current rollup output
@@ -38,3 +54,12 @@ rollup ledgerRules (proof, addr, val, state, update) ctx =
 
         -- Computing public input from the transaction data
         input  = InputBytes state'
+
+{-# INLINABLE untypedRollup #-}
+untypedRollup :: SetupBytes -> BuiltinData -> BuiltinUnit
+untypedRollup computation ctx' =
+  let
+    ctx      = unsafeFromBuiltinData ctx'
+    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+  in
+    check $ rollup computation redeemer ctx
