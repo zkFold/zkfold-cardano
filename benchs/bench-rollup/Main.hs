@@ -3,17 +3,10 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 
-import           Bench.Statistics                         (getCostsCek)
--- import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
---                                                            PlutusScriptV3, writeFileTextEnvelope)
--- import           Cardano.Api.Shelley                      (PlutusScript (..))
--- import           Control.Monad                            (void)
+import           Data.Aeson                               (encode)
 import qualified Data.ByteString                          as BS
-import           Data.Maybe                               (fromJust)
+import qualified Data.ByteString.Lazy                     as BL
 import           Data.String                              (IsString (fromString))
-import           Data.Text                                (pack)
--- import           Flat                                     (flat)
--- import           Flat.Types                               ()
 import           PlutusCore                               (DefaultFun, DefaultUni)
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
@@ -21,38 +14,26 @@ import           PlutusTx                                 (getPlcNoAnn, liftCode
 import           PlutusTx.Prelude                         (($), (.))
 import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
                                                            (.))
--- import           System.Directory                         (createDirectoryIfMissing)
--- import           System.IO                                (Handle, stdout)
--- import           System.IO                                (writeFile)
+import           System.Directory                         (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
-import           Text.Hex                                 (decodeHex)
--- import           Text.Printf                              (hPrintf)
 import qualified UntypedPlutusCore                        as UPLC
--- import           UntypedPlutusCore                        (UnrestrictedProgram (..))
 
--- import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           Bench.Statistics                         (getCostsCek)
+import           Bench.Utils                              (printCSVWithHeaders, writeCSV)
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
--- import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
 import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..))
 import           ZkFold.Cardano.Scripts.Rollup            (RollupRedeemer (..))
 import           ZkFold.Cardano.UPLC                      (rollupCompiled)
 
 
-writeCSV :: FilePath -> [(Int, Integer, Integer)] -> IO ()
-writeCSV path tuples = do
-    let csvLines = map (\(n, x, y) -> show n ++ "," ++ show x ++ "," ++ show y) tuples
-    writeFile path (unlines csvLines)
-
-hexConvert :: String -> BuiltinByteString
-hexConvert = toBuiltin . fromJust . decodeHex . pack
-
 sampleRedeemer :: ProofBytes -> Int -> Redeemer
 sampleRedeemer proof n =
-  let sampleAddress = Address
-        (PubKeyCredential . PubKeyHash . hexConvert $ "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc")
-        Nothing
+  let sampleAddress = Address (PubKeyCredential . PubKeyHash $
+                                toBuiltin (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BS.ByteString)
+                              ) Nothing
       sampleValue   = V2.singleton V2.adaSymbol V2.adaToken 100000000
       sampleState   = F 25154496976141666116585768883114414650575212708960519991881605349447581737748
   in Redeemer . toBuiltinData $ RollupRedeemer
@@ -72,9 +53,6 @@ dummyTokenName = TokenName $ toBuiltin (fromString "34ad74db78700c335968ca0898f2
 dummyRedeemer :: ProofBytes
 dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F 0)
   where e = ""
-
--- dummyCredential :: Credential
--- dummyCredential = ScriptCredential . ScriptHash $ toBuiltin (fromString "deadbeef" :: BS.ByteString)
 
 contextRollup :: ProofBytes -> Int -> ScriptContext
 contextRollup proof n = ScriptContext
@@ -115,11 +93,31 @@ costsRollup s proof sizes = (\n -> (n, cpu n, mem n)) <$> sizes
 testUpdateSizes :: [Int]
 testUpdateSizes = [0, 1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
+dataHeaders :: [String]
+dataHeaders = ["Update length", "Exec Steps", "Exec Memory"]
+
+dataOutputFile :: FilePath
+dataOutputFile = "./data-analysis/rollupBench.csv"
+
 main :: IO ()
 main = do
     x           <- generate arbitrary
     ps          <- generate arbitrary
     targetValue <- generate arbitrary
 
+    let contract = EqualityCheckContract x ps targetValue
+
+    createDirectoryIfMissing True "./data-analysis"
+    createDirectoryIfMissing True "./data-analysis/test-data"
+
+    BL.writeFile "./data-analysis/test-data/rollup-raw-contract-data.json" $ encode contract
+
+    putStrLn $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
+
     let (setup, _, proof) = equalityCheckVerificationBytes x ps targetValue
-    writeCSV "./rollupBench.csv" $ costsRollup setup proof testUpdateSizes
+
+    writeCSV dataOutputFile $ costsRollup setup proof testUpdateSizes
+    printCSVWithHeaders dataOutputFile dataHeaders
+    putStrLn ""
+    putStrLn $ "Data exported to " ++ dataOutputFile
+    putStrLn ""

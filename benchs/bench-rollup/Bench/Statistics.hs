@@ -10,9 +10,10 @@ import qualified UntypedPlutusCore                                 as UPLC
 import qualified UntypedPlutusCore.Evaluation.Machine.Cek          as Cek
 
 
--- Reference protocol parameters (June 2023)
+-- Reference protocol parameters (June 2023):
 -- maxTxExSteps = 10_000_000_000
 -- maxTxExMem   = 14_000_000
+
 
 -- | Evaluate a script and return the CPU and memory costs (according to the cost model)
 getCostsCek :: UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun () -> (Integer, Integer)

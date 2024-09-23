@@ -169,6 +169,7 @@ executable bench-rollup
   hs-source-dirs:   benchs/bench-rollup
   other-modules:
     Bench.Statistics
+    Bench.Utils
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
@@ -176,14 +177,11 @@ executable bench-rollup
     cardano-api                    ,
     containers                     ,
     directory                      ,
---    flat                           ,
-    hex-text                       ,
     plutus-core             ^>=1.30,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
     QuickCheck                     ,
-    text                           ,
     zkfold-base                    ,
     zkfold-cardano                 ,
 
