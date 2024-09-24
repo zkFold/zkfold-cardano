@@ -7,6 +7,8 @@ set -o pipefail
 keypath="./scripts/keys"
 assetspath="../../assets"
 
+cabal run bench-emptycircuit
+
 cardano-cli conway query protocol-parameters \
   --testnet-magic 4 \
   --out-file $assetspath/protocol.json

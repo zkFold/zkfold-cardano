@@ -6,6 +6,7 @@ set -o pipefail
 
 keypath="./scripts/keys"
 assetspath="../../assets"
+pause=50
 
 unitDatum=$assetspath/unit.cbor
 
@@ -41,3 +42,7 @@ cardano-cli conway transaction submit \
     --tx-file "$keypath/transferScript.tx"
 
 echo "transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/transferScript.tx")"
+echo ""
+echo "Pausing for $pause seconds..."
+echo ""
+sleep $pause

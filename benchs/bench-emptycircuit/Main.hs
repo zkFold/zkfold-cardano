@@ -5,13 +5,12 @@ import           Cardano.Api.Ledger                       (toCBOR)
 import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData)
 import           Control.Monad                            (void)
 import           Codec.CBOR.Write                         (toStrictByteString)
-import           Data.Aeson                               (encode)  -- decode
+import           Data.Aeson                               (encode)
 import qualified Data.ByteString.Lazy                     as BL
 import qualified Data.ByteString                          as BS
--- import           Data.Maybe                               (fromJust)
 import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))  -- (<$>)
+import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
 import           System.Directory                         (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
@@ -56,16 +55,3 @@ main = do
 
   BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
   BS.writeFile "../../assets/redeemerSymbolicVerifier.cbor" $ dataToCBOR proof
-
-{-
-main :: IO ()
-main = do
-  EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile "../../test-data/plonk-raw-contract-data.json"
-
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
-
-  let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
-
-  savePlutus "../../assets/symbolicVerifier.plutus" $ compiledSymbolicVerifier setup
-  BS.writeFile "../../assets/redeemerSymbolicVerifier.cbor" $ dataToCBOR proof
--}
