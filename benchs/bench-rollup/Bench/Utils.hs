@@ -1,8 +1,8 @@
 module Bench.Utils (printCSVWithHeaders, writeCSV) where
 
-import           Data.List                                         (transpose)
-import           Prelude                                           
-import           Text.Printf                                       (printf)
+import           Data.List   (transpose)
+import           Prelude
+import           Text.Printf (printf)
 
 
 -- Write benchmark data to a CSV file
@@ -34,5 +34,5 @@ formatRow widths row = unwords [printf ("%-" ++ show width ++ "s") col | (width,
 -- Split a string on a delimiter
 splitOn :: Char -> String -> [String]
 splitOn delim str = case break (== delim) str of
-    (before, "")    -> [before]
+    (before, "")      -> [before]
     (before, _:after) -> before : splitOn delim after

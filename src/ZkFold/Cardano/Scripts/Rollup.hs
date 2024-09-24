@@ -5,8 +5,8 @@
 
 module ZkFold.Cardano.Scripts.Rollup where
 
-import           GHC.Generics                             (Generic)
 import           GHC.ByteOrder                            (ByteOrder (..))
+import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed)

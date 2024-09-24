@@ -3,6 +3,8 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 module Main where
 
+import           Bench.Statistics                         (getCostsCek)
+import           Bench.Utils                              (printCSVWithHeaders, writeCSV)
 import           Data.Aeson                               (encode)
 import qualified Data.ByteString                          as BS
 import qualified Data.ByteString.Lazy                     as BL
@@ -19,8 +21,6 @@ import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 import qualified UntypedPlutusCore                        as UPLC
 
-import           Bench.Statistics                         (getCostsCek)
-import           Bench.Utils                              (printCSVWithHeaders, writeCSV)
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
 import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
@@ -41,7 +41,7 @@ sampleRedeemer proof n =
        , rrAddress = sampleAddress
        , rrValue   = sampleValue
        , rrState   = sampleState
-       , rrUpdate  = replicate n sampleState 
+       , rrUpdate  = replicate n sampleState
        }
 
 dummyCurrencySymbol :: CurrencySymbol
