@@ -9,8 +9,8 @@ import           PlutusTx                          (CompiledCode, liftCodeDef, u
 import           PlutusTx.Prelude                  (Bool (..), BuiltinUnit, Integer, check, ($), (.))
 import           PlutusTx.TH                       (compile)
 
-import           ZkFold.Cardano.Plonk.OnChain.Data (SetupBytes)
 import           ZkFold.Cardano.Benchs.PubInput    (pubInput, symbolicVerifierBench1)
+import           ZkFold.Cardano.Plonk.OnChain.Data (SetupBytes)
 
 
 compiledPubInput :: CompiledCode (BuiltinData -> BuiltinUnit)

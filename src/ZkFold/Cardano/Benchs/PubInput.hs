@@ -1,6 +1,6 @@
 module ZkFold.Cardano.Benchs.PubInput where
 
-import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..))
 import           PlutusTx.Builtins                        (byteStringToInteger, greaterThanInteger)
 import           PlutusTx.Prelude                         (Bool (..), Integer, ($), (.))

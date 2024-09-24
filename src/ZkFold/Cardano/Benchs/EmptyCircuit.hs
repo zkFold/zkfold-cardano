@@ -4,6 +4,7 @@ import           Data.Map                                    (fromList)
 import           GHC.Generics                                (Par1 (..))
 import           GHC.Natural                                 (Natural)
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import qualified ZkFold.Base.Data.Vector                     as V
 import           ZkFold.Base.Protocol.ARK.Plonk              (Plonk (..), PlonkProverSecret, PlonkWitnessInput (..))

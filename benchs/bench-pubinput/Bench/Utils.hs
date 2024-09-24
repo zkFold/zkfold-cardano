@@ -1,7 +1,7 @@
 module Bench.Utils where
 
-import Data.ByteString as BS
-import Prelude
+import           Data.ByteString as BS
+import           Prelude
 
 
 -- | Generate a ByteString occupying exactly `m` bytes of memory

@@ -1,31 +1,31 @@
 module Main where
 
-import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3, writeFileTextEnvelope)
+import           Bench.Scripts                            (compiledAlwaysSucceeds, compiledPubInput,
+                                                           compiledSymbolicVerifierBench1)
+import           Bench.Utils                              (memToBS)
+import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
+                                                           writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
 import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData)
-import           Control.Monad                            (void)
 import           Codec.CBOR.Write                         (toStrictByteString)
+import           Control.Monad                            (void)
 import           Data.Aeson                               (encode)
-import qualified Data.ByteString.Lazy                     as BL
 import qualified Data.ByteString                          as BS
+import qualified Data.ByteString.Lazy                     as BL
 import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import           PlutusTx.Builtins                        (bls12_381_G1_compressed_generator, bls12_381_G1_compress,
+import           PlutusTx.Builtins                        (bls12_381_G1_compress, bls12_381_G1_compressed_generator,
                                                            bls12_381_G1_scalarMul, bls12_381_G1_uncompress)
--- import           PlutusTx.Prelude                         (Integer)
-import           Prelude                                  (Bool (..), FilePath, IO, Int, Maybe (..), Show (..), putStr, 
-                                                           (-), ($), (++), (.))
+import           Prelude                                  (Bool (..), FilePath, IO, Int, Maybe (..), Show (..), putStr,
+                                                           ($), (++), (-), (.))
 import           System.Directory                         (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
-import           Bench.Scripts                            (compiledAlwaysSucceeds, compiledPubInput, compiledSymbolicVerifierBench1)
-import           Bench.Utils                              (memToBS)
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
-import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes(..))
--- import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes (..))
 import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
 
 

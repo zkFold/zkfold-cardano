@@ -10,12 +10,13 @@ module ZkFold.Cardano.Benchs.PlonkAlt where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), ($), (&&), (.), (<>), (==), not)
+import           PlutusTx.Prelude                         (Bool (..), not, ($), (&&), (.), (<>), (==))
 import           Prelude                                  (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..), NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..),
+                                                           NonInteractiveProof (..))
 import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))

@@ -4,10 +4,10 @@
 
 module Bench.Scripts where
 
-import           PlutusLedgerApi.V3                (BuiltinData)
-import           PlutusTx                          (CompiledCode, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                  (Bool (..), BuiltinUnit, Integer, check)
-import           PlutusTx.TH                       (compile)
+import           PlutusLedgerApi.V3 (BuiltinData)
+import           PlutusTx           (CompiledCode, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude   (Bool (..), BuiltinUnit, Integer, check)
+import           PlutusTx.TH        (compile)
 
 
 compiledAlwaysSucceeds :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
