@@ -35,6 +35,26 @@ cardano-cli conway address build \
     --out-file "$keypath/plonkVerifier.addr" \
     --testnet-magic $magic
 
+#-------------------------------- :min-required-utxo: --------------------------
+
+cardano-cli conway query protocol-parameters \
+  --testnet-magic $magic \
+  --out-file $assets/protocol.json
+
+plonkVerifierSize=$(stat -c%s "$assets/plonkVerifier.plutus")
+
+forwardingMintSize=$(stat -c%s "$assets/forwardingMint.plutus")
+
+plonkVerifierRequiredUtxo=$(cardano-cli conway transaction calculate-min-required-utxo \
+  --protocol-params-file $assets/protocol.json \
+  --tx-out $(cat $keypath/zkfold-main.addr)+0 \
+  --tx-out-reference-script-file "$assets/plonkVerifier.plutus" | sed 's/^[^ ]* //')
+
+forwardingMintRequiredUtxo=$(cardano-cli conway transaction calculate-min-required-utxo \
+  --protocol-params-file $assets/protocol.json \
+  --tx-out $(cat $keypath/zkfold-main.addr)+0 \
+  --tx-out-reference-script-file "$assets/forwardingMint.plutus" | sed 's/^[^ ]* //')
+
 #-------------------------------- :send-script: --------------------------------
 
 cardano-cli conway transaction build \
@@ -42,7 +62,7 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/plonkVerifier.txbody" \
     --tx-in $in1 \
-    --tx-out "$(cat $keypath/zkfold-main.addr) + 47991850 lovelace" \
+    --tx-out "$(cat $keypath/zkfold-main.addr) + $plonkVerifierRequiredUtxo lovelace" \
     --tx-out-reference-script-file "$assets/plonkVerifier.plutus"
 
 cardano-cli conway transaction sign \
@@ -71,7 +91,7 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/someone.addr)" \
     --out-file "$keypath/forwardingMint.txbody" \
     --tx-in $in2 \
-    --tx-out "$(cat $keypath/zkfold-main.addr) + 37703880 lovelace" \
+    --tx-out "$(cat $keypath/zkfold-main.addr) + $forwardingMintRequiredUtxo lovelace" \
     --tx-out-reference-script-file "$assets/forwardingMint.plutus"
 
 cardano-cli conway transaction sign \

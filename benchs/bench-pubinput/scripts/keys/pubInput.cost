@@ -1,0 +1,10 @@
+[
+    {
+        "executionUnits": {
+            "memory": 555652,
+            "steps": 2911493667
+        },
+        "lovelaceCost": 241980,
+        "scriptHash": "bfd22215927b95490abd863848e70af5e4064bf850e04910eeb67a97"
+    }
+]
