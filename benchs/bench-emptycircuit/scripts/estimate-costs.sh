@@ -40,8 +40,11 @@ symbolicVerifier=$(cardano-cli transaction txid --tx-file "$keypath/transferScri
 
 #-------------------------- :'symbolicVerifier': ---------------------------
 
-in1=$(jq -r '.inputs[0]' $assetspath/inputs.json)  # Bob
-in2=$(jq -r '.inputs[1]' $assetspath/inputs.json)  # symbolicVerifier
+# in1=$(jq -r '.inputs[0]' $assetspath/inputs.json)  # Bob
+# in2=$(jq -r '.inputs[1]' $assetspath/inputs.json)  # symbolicVerifier
+
+in1=$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')  # Bob
+in2=$(cardano-cli transaction txid --tx-file "$keypath/fundSymbolic.tx")#0
 
 cardano-cli conway transaction build \
   --testnet-magic 4 \

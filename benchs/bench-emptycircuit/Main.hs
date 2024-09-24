@@ -11,8 +11,6 @@ import qualified Data.ByteString                          as BS
 -- import           Data.Maybe                               (fromJust)
 import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
--- import           PlutusTx.Builtins                        (bls12_381_G1_compressed_generator, bls12_381_G1_compress,
---                                                            bls12_381_G1_scalarMul, bls12_381_G1_uncompress)
 import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))  -- (<$>)
 import           System.Directory                         (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
@@ -23,8 +21,6 @@ import           Bench.Scripts                            (compiledAlwaysSucceed
 import           ZkFold.Cardano.Benchs.EmptyCircuit       (tautologyVerificationBytes)
 import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
--- import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes(..))
--- import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -55,12 +51,11 @@ main = do
 
   let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 1845
+  savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 17
   savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
 
   BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
   BS.writeFile "../../assets/redeemerSymbolicVerifier.cbor" $ dataToCBOR proof
-
 
 {-
 main :: IO ()

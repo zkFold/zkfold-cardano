@@ -5,7 +5,8 @@ import           PlutusTx                                 (unsafeFromBuiltinData
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, check, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+-- import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
+import           ZkFold.Cardano.Benchs.PlonkAlt           (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 

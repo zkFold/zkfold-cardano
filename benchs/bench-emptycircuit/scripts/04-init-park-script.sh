@@ -41,5 +41,3 @@ cardano-cli conway transaction submit \
     --tx-file "$keypath/transferScript.tx"
 
 echo "transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/transferScript.tx")"
-
-# transaction id: c497159622f52b745d4f8f97c7c79aa5d4e2e8a91153f9cf1b06021126e9a509

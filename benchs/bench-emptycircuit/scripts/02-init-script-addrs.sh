@@ -7,6 +7,8 @@ set -o pipefail
 keypath="./scripts/keys"
 assetspath="../../assets"
 
+cabal run bench-emptycircuit
+
 cardano-cli conway address build \
     --payment-script-file "$assetspath/alwaysSucceeds.plutus" \
     --out-file "$keypath/alwaysSucceeds.addr" \
