@@ -9,7 +9,7 @@ import           ZkFold.Base.Data.Vector                     (Vector(..), unsafe
 import           ZkFold.Base.Protocol.Plonk
 import           ZkFold.Base.Protocol.Plonkup.Witness
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
-import           ZkFold.Base.Protocol.Plonkup.Utils     (getParams)
+import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OffChain               (PlonkN, mkInput, mkProof, mkSetup)
