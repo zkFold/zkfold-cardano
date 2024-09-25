@@ -4,7 +4,7 @@ import           PlutusLedgerApi.V3                       (ScriptContext (..), T
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, check, ($), (.))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
@@ -17,7 +17,7 @@ import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 symbolicVerifier :: SetupBytes -> ProofBytes -> ScriptContext -> Bool
 symbolicVerifier contract proof ctx =
     -- Verifying the Plonk `proof` for the `contract` on the transaction data encoded as `input`
-    verify @PlonkPlutus contract input proof
+    verify @PlonkPlutus @HaskellCore contract input proof
     where
         info  = scriptContextTxInfo ctx
 
