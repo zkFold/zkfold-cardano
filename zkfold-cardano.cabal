@@ -73,7 +73,6 @@ library
     ZkFold.Cardano.Scripts.SymbolicVerifier
     ZkFold.Cardano.UPLC
     ZkFold.Cardano.Plonk
-    ZkFold.Cardano.Benchs.PlonkAlt
     ZkFold.Cardano.Plonk.OnChain
     ZkFold.Cardano.Plonk.OnChain.BLS12_381.F
     ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1
