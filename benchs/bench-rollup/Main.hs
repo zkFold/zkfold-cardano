@@ -30,25 +30,49 @@ import           ZkFold.Cardano.UPLC                      (rollupCompiled)
 
 
 sampleRedeemer :: ProofBytes -> Int -> Redeemer
-sampleRedeemer proof n =
-  let sampleAddress = Address (PubKeyCredential . PubKeyHash $
-                                toBuiltin (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BS.ByteString)
-                              ) Nothing
-      sampleValue   = V2.singleton V2.adaSymbol V2.adaToken 100000000
-      sampleState   = F 25154496976141666116585768883114414650575212708960519991881605349447581737748
-  in Redeemer . toBuiltinData $ RollupRedeemer
-       { rrProof   = proof
-       , rrAddress = sampleAddress
-       , rrValue   = sampleValue
-       , rrState   = sampleState
-       , rrUpdate  = replicate n sampleState
-       }
+sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupRedeemer
+  { rrProof   = proof
+  , rrAddress = sampleAddress
+  , rrValue   = sampleValue
+  , rrState   = sampleState
+  , rrUpdate  = replicate n sampleState
+  }
 
-dummyCurrencySymbol :: CurrencySymbol
-dummyCurrencySymbol = CurrencySymbol $ toBuiltin (fromString "264ac730a6d3dacd0be8f9948e161aa151fd49d5e48203c31b2ae5eb" :: BS.ByteString)
+unitDatum :: OutputDatum
+unitDatum = OutputDatum . Datum . toBuiltin . toData $ ()
 
-dummyTokenName :: TokenName
-dummyTokenName = TokenName $ toBuiltin (fromString "34ad74db78700c335968ca0898f2953adba88f368efa0541b98897e2668090bd" :: BS.ByteString)
+{-
+sampleDatum :: OutputDatum
+sampleDatum = OutputDatum . Datum . toBuiltin . B $
+  (fromString "0000000000000000000000000000000000000000000000000000000000000000" :: BS.ByteString)  -- 32 bytes datum
+-}
+
+sampleAddress :: Address
+sampleAddress = Address (PubKeyCredential . PubKeyHash $
+                          toBuiltin (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BS.ByteString)
+                        ) Nothing
+
+sampleValue :: V2.Value
+sampleValue = V2.singleton V2.adaSymbol V2.adaToken 100000000
+
+sampleState :: F
+sampleState = F 25154496976141666116585768883114414650575212708960519991881605349447581737748
+
+sampleTxId :: TxId
+sampleTxId = TxId $ toBuiltin (fromString "25923f589a26311e87fb37bb41cb1dadf9a90166775f9f3b303cfe24e4fb95f8" :: BS.ByteString)
+
+-- | Sample script output
+sampleScriptTxOut :: TxOut
+sampleScriptTxOut = TxOut sampleAddress sampleValue unitDatum Nothing
+
+-- | Sample pub key output
+samplePubTxOut :: TxOut
+samplePubTxOut = TxOut sampleAddress sampleValue NoOutputDatum Nothing
+
+-- | Sample reference output
+sampleReferenceTxOut :: TxOut
+sampleReferenceTxOut = TxOut sampleAddress sampleValue unitDatum $
+  Just . ScriptHash $ toBuiltin (fromString "264ac730a6d3dacd0be8f9948e161aa151fd49d5e48203c31b2ae5eb" :: BS.ByteString)
 
 dummyRedeemer :: ProofBytes
 dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F 0)
@@ -57,16 +81,16 @@ dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F 0)
 contextRollup :: ProofBytes -> Int -> ScriptContext
 contextRollup proof n = ScriptContext
   { scriptContextTxInfo = TxInfo
-    { txInfoInputs = []                     :: [TxInInfo]
-    , txInfoReferenceInputs = []            :: [TxInInfo]
-    , txInfoOutputs = []                    :: [V2.TxOut]
+    { txInfoInputs = [TxInInfo (TxOutRef sampleTxId 0) sampleScriptTxOut, TxInInfo (TxOutRef sampleTxId 1) samplePubTxOut]
+    , txInfoReferenceInputs = [TxInInfo (TxOutRef sampleTxId 2) sampleReferenceTxOut]
+    , txInfoOutputs = [sampleScriptTxOut, samplePubTxOut]
     , txInfoFee = V2.Lovelace 0
-    , txInfoMint = Value $ unsafeFromList [(dummyCurrencySymbol, unsafeFromList [(dummyTokenName, 1)])]
+    , txInfoMint = mempty
     , txInfoTxCerts = []
     , txInfoWdrl = unsafeFromList []
     , txInfoValidRange = always
     , txInfoSignatories = []
-    , txInfoRedeemers = unsafeFromList [(Minting dummyCurrencySymbol, Redeemer (toBuiltinData dummyRedeemer))]
+    , txInfoRedeemers = unsafeFromList [(Spending (TxOutRef sampleTxId 3), Redeemer (toBuiltinData dummyRedeemer))]
     , txInfoData = unsafeFromList []
     , txInfoId = fromString "00" :: TxId
     , txInfoVotes = unsafeFromList []
@@ -75,7 +99,7 @@ contextRollup proof n = ScriptContext
     , txInfoTreasuryDonation = Nothing      :: Maybe V2.Lovelace
     },
     scriptContextRedeemer = sampleRedeemer proof n,
-    scriptContextScriptInfo = MintingScript dummyCurrencySymbol
+    scriptContextScriptInfo = SpendingScript (TxOutRef sampleTxId 3) Nothing
   }
 
 rollupScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
