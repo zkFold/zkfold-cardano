@@ -11,7 +11,7 @@ Instructions for running the benchmarks and summary of results.
 
 Assuming `bench-rollup` is your active directory, execute:
 
-```haskell
+```shell
 cabal run bench-rollup
 ```
 
