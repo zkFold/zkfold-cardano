@@ -28,8 +28,7 @@ import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..),
                                                               ToTranscript (..))
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..))
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1   (G1)
+import           ZkFold.Cardano.OnChain.BLS12_381
 import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Prelude                              (log2ceiling)
 

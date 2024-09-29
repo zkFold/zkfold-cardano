@@ -4,7 +4,7 @@
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module ZkFold.Cardano.Plonk.OnChain.BLS12_381.F where
+module ZkFold.Cardano.OnChain.BLS12_381.F where
 
 import           Data.Aeson                      (FromJSON, ToJSON)
 import           GHC.Generics                    (Generic)

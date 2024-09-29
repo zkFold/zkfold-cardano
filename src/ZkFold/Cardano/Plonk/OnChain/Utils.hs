@@ -7,8 +7,8 @@ import           PlutusLedgerApi.V3
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                          (Bool (..), Eq (..), (.))
 
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F  (F (..))
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1 (G1)
+import           ZkFold.Cardano.OnChain.BLS12_381.F        (F (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.G1       (G1)
 import           ZkFold.Cardano.Plonk.OnChain.Data         (InputBytes (..))
 
 {-# INLINABLE mul #-}

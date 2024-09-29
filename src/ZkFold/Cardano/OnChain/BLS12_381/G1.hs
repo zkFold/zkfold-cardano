@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-orphans   #-}
 
-module ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1 where
+module ZkFold.Cardano.OnChain.BLS12_381.G1 where
 
 import           GHC.Natural                     (Natural, naturalToInteger)
 import           PlutusTx.Builtins
