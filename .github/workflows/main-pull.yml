@@ -41,7 +41,7 @@ jobs:
         
     - name: Install C dependencies
       run: |
-        CARDANO_NODE_VERSION='8.7.3'
+        CARDANO_NODE_VERSION='9.1.0'
         IOHKNIX_VERSION=$(curl https://raw.githubusercontent.com/IntersectMBO/cardano-node/$CARDANO_NODE_VERSION/flake.lock | jq -r '.nodes.iohkNix.locked.rev')
         echo "iohk-nix version: $IOHKNIX_VERSION"
 
@@ -109,20 +109,20 @@ jobs:
 
         cd
 
-    # - name: Generate cache key
-    #   # Creates plan.json file
-    #   run: |
-    #     cabal build all --dry-run
+    - name: Generate cache key
+      # Creates plan.json file
+      run: |
+        cabal build all --dry-run
 
-    # - name: Restore cached dependencies
-    #   uses: actions/cache/restore@v4.0.1
-    #   id: cache
-    #   env:
-    #     key: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-cabal-${{ matrix.cabal }}
-    #   with:
-    #     path: ${{ steps.setup.outputs.cabal-store }}
-    #     key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
-    #     restore-keys: ${{ env.key }}-
+    - name: Restore cached dependencies
+      uses: actions/cache/restore@v4.0.1
+      id: cache
+      env:
+        key: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-cabal-${{ matrix.cabal }}
+      with:
+        path: ${{ steps.setup.outputs.cabal-store }}
+        key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
+        restore-keys: ${{ env.key }}-
 
     - name: Install stylish-haskell
       run: |
