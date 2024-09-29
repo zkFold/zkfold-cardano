@@ -159,6 +159,31 @@ executable bench-cpu-mem
     zkfold-base                    ,
     zkfold-cardano                 ,
 
+executable bench-rollup
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   benchs/bench-rollup
+  other-modules:
+    Bench.Statistics
+    Bench.Utils
+  build-depends:
+    aeson                          ,
+    base                >=4.9 && <5,
+    bytestring                     ,
+    cardano-api                    ,
+    containers                     ,
+    directory                      ,
+    plutus-core             ^>=1.30,
+    plutus-ledger-api       ^>=1.30,
+    plutus-tx               ^>=1.30,
+    plutus-tx-plugin        ^>=1.30,
+    QuickCheck                     ,
+    zkfold-base                    ,
+    zkfold-cardano                 ,
+
 executable symbolic-init-transaction
   import:           lang
   import:           lang-extra
