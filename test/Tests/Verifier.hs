@@ -5,8 +5,8 @@ import           Test.Hspec                               (describe, hspec, it)
 import           Test.QuickCheck                          (Testable (property))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProofTestData (..), HaskellCore, nipCompatibility)
+import           ZkFold.Cardano.OffChain.Plonk            (PlonkN)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OffChain            (PlonkN)
 
 propCompatibility :: NonInteractiveProofTestData (PlonkN 1 32) HaskellCore -> Bool
 propCompatibility (TestData a w) = nipCompatibility @(PlonkN 1 32) @PlonkPlutus @HaskellCore a w

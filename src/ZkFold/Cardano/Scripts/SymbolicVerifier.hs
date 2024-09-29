@@ -5,9 +5,10 @@ import           PlutusTx                                 (unsafeFromBuiltinData
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, check, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
+import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonk.Utils       (toInput)
+import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake, toInput)
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --

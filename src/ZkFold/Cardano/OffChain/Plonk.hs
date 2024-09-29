@@ -3,7 +3,7 @@
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module ZkFold.Cardano.Plonk.OffChain where
+module ZkFold.Cardano.OffChain.Plonk where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)
 import           Data.Word                                   (Word8)
@@ -29,7 +29,7 @@ import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..),
                                                               ToTranscript (..))
 import           ZkFold.Cardano.OnChain.BLS12_381
-import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Prelude                              (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------

@@ -16,9 +16,9 @@ import           Prelude                                  (Show)
 import           ZkFold.Base.Algebra.Basic.Class          ((*), (+))
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (F (..))
-import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes, SetupBytes)
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (dataToBlake)
+import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
+import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes (..), ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 
 data RollupRedeemer = RollupRedeemer
   { rrProof   :: ProofBytes

@@ -3,7 +3,7 @@
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module ZkFold.Cardano.Plonk.OnChain.Data where
+module ZkFold.Cardano.OnChain.Plonk.Data where
 
 import           GHC.Generics                             (Generic)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
@@ -60,5 +60,3 @@ data ProofBytes = ProofBytes {
 
 makeLift ''ProofBytes
 makeIsDataIndexed ''ProofBytes [('ProofBytes,0)]
-
-type FMLabel = Integer  -- Implements distinct 'forwardingMint' addresses

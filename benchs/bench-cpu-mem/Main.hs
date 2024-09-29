@@ -33,8 +33,8 @@ import           UntypedPlutusCore                        (UnrestrictedProgram (
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
+import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes, ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (InputBytes, ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, symbolicVerifierCompiled,
                                                            verifyPlonkCompiled)
 

@@ -11,9 +11,9 @@ import           PlutusTx.Prelude                         (Bool (..), BuiltinDat
                                                            check, ($), (.), (||))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
+import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonk.Utils       (toInput)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (toInput)
 
 -- | Plutus script (minting policy) for verifying computations on-chain.
 --

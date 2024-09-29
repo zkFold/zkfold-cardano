@@ -19,8 +19,8 @@ import           PlutusTx.Prelude                         (BuiltinUnit)
 import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
                                                            (.))
 
+import           ZkFold.Cardano.OnChain.Plonk.Data        (SetupBytes)
 import           ZkFold.Cardano.Plonk                     (untypedVerifyPlonk)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
 import           ZkFold.Cardano.Scripts.ForwardingScripts (untypedForwardingMint, untypedForwardingReward)
 import           ZkFold.Cardano.Scripts.PlonkVerifier     (untypedPlonkVerifier)
 import           ZkFold.Cardano.Scripts.Rollup            (untypedRollup)

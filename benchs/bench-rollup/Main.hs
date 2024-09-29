@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Main where
 
 import           Bench.Statistics                         (getCostsCek)
@@ -23,8 +25,8 @@ import qualified UntypedPlutusCore                        as UPLC
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (F (..))
-import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
-import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.OffChain.Plonk            (EqualityCheckContract (..))
+import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.Scripts.Rollup            (RollupRedeemer (..))
 import           ZkFold.Cardano.UPLC                      (rollupCompiled)
 

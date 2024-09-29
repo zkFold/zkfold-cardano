@@ -73,14 +73,14 @@ library
     ZkFold.Cardano.Scripts.SymbolicVerifier
     ZkFold.Cardano.UPLC
     ZkFold.Cardano.Plonk
-    ZkFold.Cardano.Plonk.OnChain
+    ZkFold.Cardano.OffChain.Plonk
     ZkFold.Cardano.OnChain.BLS12_381
     ZkFold.Cardano.OnChain.BLS12_381.F
     ZkFold.Cardano.OnChain.BLS12_381.G1
     ZkFold.Cardano.OnChain.BLS12_381.G2
-    ZkFold.Cardano.Plonk.OnChain.Data
-    ZkFold.Cardano.Plonk.OnChain.Utils
-    ZkFold.Cardano.Plonk.OffChain
+    ZkFold.Cardano.OnChain.Plonk.Data
+    ZkFold.Cardano.OnChain.Plonk.Utils
+    ZkFold.Cardano.OnChain.Utils
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,

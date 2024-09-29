@@ -21,10 +21,9 @@ import           ZkFold.Base.Protocol.NonInteractiveProof
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
 
-import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), powTwo)
-import           ZkFold.Cardano.Plonk.OffChain               (PlonkN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
-import           ZkFold.Cardano.Plonk.OnChain.Utils          (mul)
+import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), powTwo, mul)
+import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, mkProof, mkSetup)
 
 data PlonkPlutus
 
