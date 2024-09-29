@@ -10,7 +10,7 @@ import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Maybe (..), Ord (..),
                                                            check, ($), (.), (||))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.Plonk.OnChain.Utils       (toInput)
@@ -37,7 +37,7 @@ plonkVerifier computation proof ctx =
         conditionBurning   = n < 0
 
         -- Verifying the Plonk `proof` for the `computation` on `input`
-        conditionVerifying = verify @PlonkPlutus computation input proof
+        conditionVerifying = verify @PlonkPlutus @HaskellCore computation input proof
 
 {-# INLINABLE untypedPlonkVerifier #-}
 untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit

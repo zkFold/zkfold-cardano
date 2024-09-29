@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Main where
 
 
@@ -36,7 +37,6 @@ import           ZkFold.Cardano.Plonk.OnChain             (InputBytes, ProofByte
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
 import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, symbolicVerifierCompiled,
                                                            verifyPlonkCompiled)
-
 
 contextPlonk :: ProofBytes -> ScriptContext
 contextPlonk redeemerProof = ScriptContext

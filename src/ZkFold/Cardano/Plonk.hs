@@ -8,24 +8,27 @@
 
 module ZkFold.Cardano.Plonk where
 
-import           GHC.ByteOrder                            (ByteOrder (..))
-import           PlutusTx                                 (UnsafeFromData (..))
+import           GHC.ByteOrder                               (ByteOrder (..))
+import           PlutusTx                                    (UnsafeFromData (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                         (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
-import           Prelude                                  (undefined)
+import           PlutusTx.Prelude                            (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
+import           Prelude                                     (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..),
-                                                           NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk.OffChain            (PlonkN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..), powTwo)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes (..), SetupBytes (..))
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (mul)
+import           ZkFold.Base.Protocol.NonInteractiveProof
+import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
+import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
+
+import           ZkFold.Cardano.Plonk.OffChain               (PlonkN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F    (F (..), powTwo)
+import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.Plonk.OnChain.Utils          (mul)
 
 data PlonkPlutus
 
-instance NonInteractiveProof PlonkPlutus where
+instance NonInteractiveProof PlonkPlutus core where
     type Transcript PlonkPlutus  = BuiltinByteString
     type SetupProve PlonkPlutus  = ()
     type SetupVerify PlonkPlutus = SetupBytes
@@ -50,10 +53,10 @@ instance NonInteractiveProof PlonkPlutus where
 
             -- uncompress Setup G1 elements
             h1    = bls12_381_G2_uncompress x2'
+            cmQm  = bls12_381_G1_uncompress cmQm'
             cmQl  = bls12_381_G1_uncompress cmQl'
             cmQr  = bls12_381_G1_uncompress cmQr'
             cmQo  = bls12_381_G1_uncompress cmQo'
-            cmQm  = bls12_381_G1_uncompress cmQm'
             cmQc  = bls12_381_G1_uncompress cmQc'
             cmS1  = bls12_381_G1_uncompress cmS1'
             cmS2  = bls12_381_G1_uncompress cmS2'
@@ -77,33 +80,34 @@ instance NonInteractiveProof PlonkPlutus where
             z_xi   = F z_xi'
 
             -- create beta, gamma, alpha, xi, v, u from Transcript
-            t0 = consByteString 0 $ cmA' <> cmB' <> cmC'
-            beta = F . byteStringToInteger LittleEndian . blake2b_224 $ t0
+            ts1 = cmA' <> cmB' <> cmC'
 
-            t1 = consByteString 0 t0
-            gamma = F . byteStringToInteger LittleEndian . blake2b_224 $ t1
+            ts2 = ts1
+            beta  = F . byteStringToInteger LittleEndian . blake2b_224 $ ts2 <> consByteString 1 emptyByteString
+            gamma = F . byteStringToInteger LittleEndian . blake2b_224 $ ts2 <> consByteString 2 emptyByteString
 
-            t2 = consByteString 0 $ t1 <> cmZ'
-            alpha = F . byteStringToInteger LittleEndian . blake2b_224 $ t2
+            ts3 = ts2 <> cmZ'
+            alpha = F . byteStringToInteger LittleEndian . blake2b_224 $ ts3
 
-            t3 = consByteString 0 $ t2 <> cmT1' <> cmT2' <> cmT3'
-            xi = F . byteStringToInteger LittleEndian . blake2b_224 $ t3
+            ts4 = ts3 <> cmT1' <> cmT2' <> cmT3'
+            xi = F . byteStringToInteger LittleEndian . blake2b_224 $ ts4
 
-            t4 = consByteString 0 $ t3
+            ts5 = ts4
                 <> integerToByteString LittleEndian 32 a_xi'
                 <> integerToByteString LittleEndian 32 b_xi'
                 <> integerToByteString LittleEndian 32 c_xi'
                 <> integerToByteString LittleEndian 32 s1_xi'
                 <> integerToByteString LittleEndian 32 s2_xi'
                 <> integerToByteString LittleEndian 32 z_xi'
-            v = F . byteStringToInteger LittleEndian . blake2b_224 $ t4
+            v = F . byteStringToInteger LittleEndian . blake2b_224 $ ts5
 
-            t5 = consByteString 0 $ t4 <> proof1' <> proof2'
-            u = F . byteStringToInteger LittleEndian . blake2b_224 $ t5
+            ts6 = ts5 <> proof1' <> proof2'
+            u = F . byteStringToInteger LittleEndian . blake2b_224 $ ts6
 
             -- common varibles for r0, d, f, e
 
             xi_n = xi `powTwo` pow
+            xi_n2 = xi_n * (xi * xi)
             xi_m_one = xi_n - one
 
             lagrange1_xi = omega * xi_m_one * l1_xi_mul'
@@ -124,7 +128,7 @@ instance NonInteractiveProof PlonkPlutus where
 
             -- final calculations
             r0 =
-                  pubInput * lagrange1_xi
+                  negate pubInput * lagrange1_xi
                 - alphaSquare * lagrange1_xi
                 - alphaEvalZOmega
                     * gamma_beta_a_s1
@@ -151,7 +155,7 @@ instance NonInteractiveProof PlonkPlutus where
                     * gamma_beta_a_s1
                     * gamma_beta_b_s2
                     ) cmS3
-                - mul xi_m_one (cmT1 + xi_n `mul` cmT2 + (xi_n * xi_n) `mul` cmT3)
+                - mul xi_m_one (cmT1 + xi_n2 `mul` cmT2 + (xi_n2 * xi_n2) `mul` cmT3)
 
             f  = d
                 + v `mul` (cmA
@@ -175,7 +179,14 @@ instance NonInteractiveProof PlonkPlutus where
 
         in bls12_381_finalVerify p1 p2 && (l1_xi_mul' * F n * (xi - omega) == one)
 
-instance (KnownNat n, KnownNat (3 * n), KnownNat ((4 * n) + 6)) => CompatibleNonInteractiveProofs (PlonkN n) PlonkPlutus where
+instance
+        ( KnownNat i
+        , KnownNat n
+        , KnownNat (3 * n)
+        , KnownNat ((4 * n) + 6)
+        , SetupVerify (Plonkup i n 1 c1 c2 ts) ~ PlonkupVerifierSetup i n 1 c1 c2
+        , CoreFunction BLS12_381_G1 core
+        ) => CompatibleNonInteractiveProofs (PlonkN i n) PlonkPlutus core where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof
@@ -183,7 +194,7 @@ instance (KnownNat n, KnownNat (3 * n), KnownNat ((4 * n) + 6)) => CompatibleNon
 untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
 untypedVerifyPlonk computation input' proof' =
     check
-    ( verify @PlonkPlutus
+    ( verify @PlonkPlutus @HaskellCore
         computation
         (unsafeFromBuiltinData input')
         (unsafeFromBuiltinData proof')

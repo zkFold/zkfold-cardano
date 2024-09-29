@@ -1,6 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies    #-}
+
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module ZkFold.Cardano.Plonk.OnChain.BLS12_381.F where
 
@@ -10,7 +12,7 @@ import           GHC.Natural                     (Natural, naturalToInteger)
 import           PlutusTx                        (makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude
-import           Prelude                         (Show)
+import qualified Prelude                         as Haskell
 
 import qualified ZkFold.Base.Algebra.Basic.Class as ZkFold
 
@@ -18,7 +20,7 @@ bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 newtype F = F Integer
-  deriving stock (Show, Generic)
+  deriving stock (Haskell.Show, Generic)
   deriving newtype (ToJSON, FromJSON)
 makeLift ''F
 makeIsDataIndexed ''F [('F,0)]
@@ -107,3 +109,11 @@ instance ZkFold.MultiplicativeGroup F where
 
     {-# INLINABLE (/) #-}
     a / b = a ZkFold.* ZkFold.invert b
+
+--------------------------------------------------------------------------------
+
+instance Haskell.Eq F where
+    (F a) == (F b) = a == b
+
+instance ZkFold.Finite F where
+    type Order F = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001

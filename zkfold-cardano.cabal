@@ -134,15 +134,16 @@ test-suite test
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
-executable bench-cpu-mem
+benchmark bench-cpu-mem
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   benchs/bench-cpu-mem
   other-modules:
     Bench.Statistics
+  hs-source-dirs:   benchs/bench-cpu-mem
+  type:             exitcode-stdio-1.0
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,

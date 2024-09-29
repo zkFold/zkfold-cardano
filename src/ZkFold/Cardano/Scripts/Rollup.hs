@@ -14,7 +14,7 @@ import           PlutusTx.Prelude                         hiding ((*), (+))
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Algebra.Basic.Class          ((*), (+))
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.Plonk.OnChain             (F (..))
 import           ZkFold.Cardano.Plonk.OnChain.Data        (InputBytes (..), ProofBytes, SetupBytes)
@@ -35,7 +35,7 @@ makeIsDataIndexed ''RollupRedeemer [('RollupRedeemer,0)]
 rollup :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
 rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
         -- Verify the transition from the current state to the next state
-        verify @PlonkPlutus ledgerRules input proof
+        verify @PlonkPlutus @HaskellCore ledgerRules input proof
         -- Check the current rollup output
         && out  == TxOut addr val (OutputDatum $ Datum $ toBuiltinData state)  Nothing
         -- Check the next rollup output
