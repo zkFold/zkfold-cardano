@@ -1,12 +1,12 @@
 module ZkFold.Cardano.OnChain.Plonk.Utils where
 
-import           GHC.ByteOrder                             (ByteOrder (..))
+import           GHC.ByteOrder                      (ByteOrder (..))
 import           PlutusLedgerApi.V3
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                          ((.))
+import           PlutusTx.Prelude                   ((.))
 
-import           ZkFold.Cardano.OnChain.BLS12_381.F        (F (..))
-import           ZkFold.Cardano.OnChain.Plonk.Data         (InputBytes (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.F (F (..))
+import           ZkFold.Cardano.OnChain.Plonk.Data  (InputBytes (..))
 
 -- | convert hash into Zp BLS12_381_Scalar
 {-# INLINABLE toInput #-}

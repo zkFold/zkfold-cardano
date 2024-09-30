@@ -5,12 +5,12 @@
 
 module ZkFold.Cardano.OnChain.Plonk.Data where
 
-import           GHC.Generics                             (Generic)
-import           PlutusTx                                 (makeIsDataIndexed, makeLift)
-import           PlutusTx.Builtins                        (BuiltinByteString, Integer)
-import           Prelude                                  (Show)
+import           GHC.Generics                       (Generic)
+import           PlutusTx                           (makeIsDataIndexed, makeLift)
+import           PlutusTx.Builtins                  (BuiltinByteString, Integer)
+import           Prelude                            (Show)
 
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (F)
+import           ZkFold.Cardano.OnChain.BLS12_381.F (F)
 
 data SetupBytes = SetupBytes {
     n     :: Integer

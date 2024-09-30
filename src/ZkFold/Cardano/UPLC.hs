@@ -20,7 +20,7 @@ import           PlutusLedgerApi.V3
 import           PlutusTx                              (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                      (BuiltinUnit)
 import           Prelude                               hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                       (.))
+                                                        (.))
 
 import           ZkFold.Cardano.OnChain.Plonk          (untypedVerifyPlonk)
 import           ZkFold.Cardano.OnChain.Plonk.Data     (SetupBytes)

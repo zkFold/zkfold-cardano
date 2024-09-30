@@ -5,32 +5,32 @@
 
 module ZkFold.Cardano.OffChain.Plonk where
 
-import           Data.Aeson                                  (FromJSON, ToJSON)
-import           Data.Word                                   (Word8)
-import           GHC.ByteOrder                               (ByteOrder (..))
-import           GHC.Generics                                (Generic)
-import           GHC.Natural                                 (naturalToInteger)
+import           Data.Aeson                                        (FromJSON, ToJSON)
+import           Data.Word                                         (Word8)
+import           GHC.ByteOrder                                     (ByteOrder (..))
+import           GHC.Generics                                      (Generic)
+import           GHC.Natural                                       (naturalToInteger)
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                            (($), (.))
-import           Prelude                                     (Show, fromIntegral)
+import           PlutusTx.Prelude                                  (($), (.))
+import           Prelude                                           (Show, fromIntegral)
 
-import           ZkFold.Base.Algebra.Basic.Field             (Zp, fromZp, toZp)
+import           ZkFold.Base.Algebra.Basic.Field                   (Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (Point (..), PointCompressed, compress)
-import           ZkFold.Base.Data.ByteString                 (toByteString)
-import qualified ZkFold.Base.Data.Vector                     as V
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.Class           (Point (..), PointCompressed, compress)
+import           ZkFold.Base.Data.ByteString                       (toByteString)
+import qualified ZkFold.Base.Data.Vector                           as V
+import           ZkFold.Base.Protocol.NonInteractiveProof          (FromTranscript (..), NonInteractiveProof (..),
+                                                                    ToTranscript (..))
 import           ZkFold.Base.Protocol.Plonk
 import           ZkFold.Base.Protocol.Plonkup.Input
 import           ZkFold.Base.Protocol.Plonkup.Proof
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
-import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), NonInteractiveProof (..),
-                                                              ToTranscript (..))
 import           ZkFold.Cardano.OnChain.BLS12_381
-import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
-import           ZkFold.Prelude                              (log2ceiling)
+import           ZkFold.Cardano.OnChain.Plonk.Data                 (InputBytes (..), ProofBytes (..), SetupBytes (..))
+import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 

@@ -10,7 +10,7 @@ import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Maybe (..), Ord (..),
                                                            check, ($), (.), (||))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
+import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Plonk.Utils       (toInput)

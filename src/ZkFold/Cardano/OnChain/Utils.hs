@@ -2,7 +2,7 @@ module ZkFold.Cardano.OnChain.Utils where
 
 import           PlutusLedgerApi.V3
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                          (Bool (..), Eq (..), (.))
+import           PlutusTx.Prelude   (Bool (..), Eq (..), (.))
 
 type FMLabel = Integer  -- Implements distinct 'forwardingMint' addresses
 

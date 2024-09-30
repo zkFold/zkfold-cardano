@@ -1,11 +1,10 @@
 module ZkFold.Cardano.UPLC.ForwardingScripts where
 
 import           PlutusLedgerApi.V3
-import           PlutusTx.AssocMap                  (keys)
-import           PlutusTx.Prelude                   (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust,
-                                                     ($), (.))
+import           PlutusTx.AssocMap            (keys)
+import           PlutusTx.Prelude             (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust, ($), (.))
 
-import           ZkFold.Cardano.OnChain.Utils       (FMLabel, eqRewardingPurpose, eqMintingPurpose)
+import           ZkFold.Cardano.OnChain.Utils (FMLabel, eqMintingPurpose, eqRewardingPurpose)
 
 -- | The Plutus spending script that forwards verification to a rewarding script.
 {-# INLINABLE forwardingReward #-}

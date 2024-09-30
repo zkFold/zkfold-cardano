@@ -15,15 +15,14 @@ import           PlutusTx.Prelude                            (Bool (..), Builtin
 import           Prelude                                     (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Algebra.Basic.Number
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Protocol.NonInteractiveProof
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
-
-import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), powTwo, mul)
-import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), mul, powTwo)
+import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes (..), ProofBytes (..), SetupBytes (..))
 
 data PlonkPlutus
 
