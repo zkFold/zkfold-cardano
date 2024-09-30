@@ -4,7 +4,7 @@ import           PlutusLedgerApi.V3
 import           PlutusTx.AssocMap            (keys)
 import           PlutusTx.Prelude             (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust, ($), (.))
 
-import           ZkFold.Cardano.OnChain.Utils       (ScriptLabel, eqRewardingPurpose, eqMintingPurpose)
+import           ZkFold.Cardano.OnChain.Utils (ScriptLabel, eqMintingPurpose, eqRewardingPurpose)
 
 -- | The Plutus spending script that forwards verification to a rewarding script.
 {-# INLINABLE forwardingReward #-}

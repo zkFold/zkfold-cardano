@@ -7,7 +7,7 @@
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
 import           Data.Aeson                      (FromJSON, ToJSON)
-import           GHC.ByteOrder                   (ByteOrder(..))
+import           GHC.ByteOrder                   (ByteOrder (..))
 import           GHC.Generics                    (Generic)
 import           GHC.Natural                     (Natural, naturalToInteger)
 import           PlutusTx                        (makeIsDataIndexed, makeLift)

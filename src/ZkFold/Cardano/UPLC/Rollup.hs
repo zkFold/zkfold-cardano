@@ -12,7 +12,7 @@ import           PlutusTx                                 (makeIsDataIndexed)
 import           PlutusTx.Prelude                         hiding ((*), (+))
 import           Prelude                                  (Show)
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
+import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381         (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
