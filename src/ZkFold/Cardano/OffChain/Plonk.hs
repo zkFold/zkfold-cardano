@@ -29,8 +29,8 @@ import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
 import           ZkFold.Cardano.OnChain.BLS12_381
-import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes (..), SetupBytes (..))
-import           ZkFold.Prelude                              (log2ceiling)
+import           ZkFold.Cardano.OnChain.Plonk.Data                 (InputBytes, ProofBytes (..), SetupBytes (..))
+import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 

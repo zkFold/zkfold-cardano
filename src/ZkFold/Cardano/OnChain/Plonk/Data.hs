@@ -13,11 +13,11 @@ import           Prelude                            (Show)
 import           ZkFold.Cardano.OnChain.BLS12_381.F (F)
 
 data SetupBytes = SetupBytes {
-    n         :: Integer
-  , pow       :: Integer
-  , omega     :: F
-  , k1        :: F
-  , k2        :: F
+    n          :: Integer
+  , pow        :: Integer
+  , omega      :: F
+  , k1         :: F
+  , k2         :: F
   , h1_bytes   :: BuiltinByteString
   , cmQm_bytes :: BuiltinByteString
   , cmQl_bytes :: BuiltinByteString
