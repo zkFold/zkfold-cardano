@@ -4,7 +4,7 @@ import           PlutusLedgerApi.V3
 import           PlutusTx.AssocMap            (keys)
 import           PlutusTx.Prelude             (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust, ($), (.))
 
-import           ZkFold.Cardano.OnChain.Utils (FMLabel, eqMintingPurpose, eqRewardingPurpose)
+import           ZkFold.Cardano.OnChain.Utils       (ScriptLabel, eqRewardingPurpose, eqMintingPurpose)
 
 -- | The Plutus spending script that forwards verification to a rewarding script.
 {-# INLINABLE forwardingReward #-}
@@ -21,7 +21,7 @@ forwardingReward contractHash _ ctx =
 
 -- | The Plutus spending script that forwards verification to a minting script.
 {-# INLINABLE forwardingMint #-}
-forwardingMint :: FMLabel -> BuiltinByteString -> () -> ScriptContext -> Bool
+forwardingMint :: ScriptLabel -> BuiltinByteString -> () -> ScriptContext -> Bool
 forwardingMint _label symbolHash _ ctx =
     -- Searching for the minting script with a specific hash
     isJust $ find (eqMintingPurpose sc) reds
@@ -45,7 +45,7 @@ untypedForwardingReward ctx' =
       _                           -> error ()
 
 {-# INLINABLE untypedForwardingMint #-}
-untypedForwardingMint :: FMLabel -> BuiltinData -> BuiltinUnit
+untypedForwardingMint :: ScriptLabel -> BuiltinData -> BuiltinUnit
 untypedForwardingMint label' ctx' =
   let ctx = unsafeFromBuiltinData ctx' in
     case scriptContextScriptInfo ctx of

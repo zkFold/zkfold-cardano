@@ -7,6 +7,7 @@
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
 import           Data.Aeson                      (FromJSON, ToJSON)
+import           GHC.ByteOrder                   (ByteOrder(..))
 import           GHC.Generics                    (Generic)
 import           GHC.Natural                     (Natural, naturalToInteger)
 import           PlutusTx                        (makeIsDataIndexed, makeLift)
@@ -28,6 +29,16 @@ makeIsDataIndexed ''F [('F,0)]
 {-# INLINABLE toF #-}
 toF :: Integer -> F
 toF = F . (`modulo` bls12_381_field_prime)
+
+-- | convert hash into Zp BLS12_381_Scalar
+{-# INLINABLE toInput #-}
+toInput :: BuiltinByteString -> F
+toInput = F . byteStringToInteger BigEndian
+
+-- | convert Zp BLS12_381_Scalar into hash
+{-# INLINABLE fromInput #-}
+fromInput :: F -> BuiltinByteString
+fromInput (F input) = integerToByteString BigEndian 32 input
 
 instance Eq F where
     {-# INLINABLE (==) #-}

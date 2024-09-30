@@ -13,49 +13,44 @@ import           Prelude                            (Show)
 import           ZkFold.Cardano.OnChain.BLS12_381.F (F)
 
 data SetupBytes = SetupBytes {
-    n     :: Integer
-  , pow   :: Integer
-  , x2'   :: BuiltinByteString
-  , omega :: F
-  , k1    :: F
-  , k2    :: F
-  , cmQl' :: BuiltinByteString
-  , cmQr' :: BuiltinByteString
-  , cmQo' :: BuiltinByteString
-  , cmQm' :: BuiltinByteString
-  , cmQc' :: BuiltinByteString
-  , cmS1' :: BuiltinByteString
-  , cmS2' :: BuiltinByteString
-  , cmS3' :: BuiltinByteString
+    n         :: Integer
+  , pow       :: Integer
+  , omega     :: F
+  , k1        :: F
+  , k2        :: F
+  , h1_bytes   :: BuiltinByteString
+  , cmQm_bytes :: BuiltinByteString
+  , cmQl_bytes :: BuiltinByteString
+  , cmQr_bytes :: BuiltinByteString
+  , cmQo_bytes :: BuiltinByteString
+  , cmQc_bytes :: BuiltinByteString
+  , cmS1_bytes :: BuiltinByteString
+  , cmS2_bytes :: BuiltinByteString
+  , cmS3_bytes :: BuiltinByteString
 } deriving stock (Show, Generic)
 
 makeLift ''SetupBytes
 makeIsDataIndexed ''SetupBytes [('SetupBytes,0)]
 
-newtype InputBytes = InputBytes {
-  pubInput :: F
-} deriving stock (Show, Generic)
-
-makeLift ''InputBytes
-makeIsDataIndexed ''InputBytes [('InputBytes,0)]
+type InputBytes = F
 
 data ProofBytes = ProofBytes {
-    cmA'       :: BuiltinByteString
-  , cmB'       :: BuiltinByteString
-  , cmC'       :: BuiltinByteString
-  , cmZ'       :: BuiltinByteString
-  , cmT1'      :: BuiltinByteString
-  , cmT2'      :: BuiltinByteString
-  , cmT3'      :: BuiltinByteString
-  , proof1'    :: BuiltinByteString
-  , proof2'    :: BuiltinByteString
-  , a_xi'      :: Integer
-  , b_xi'      :: Integer
-  , c_xi'      :: Integer
-  , s1_xi'     :: Integer
-  , s2_xi'     :: Integer
-  , z_xi'      :: Integer
-  , l1_xi_mul' :: F
+    cmA_bytes     :: BuiltinByteString
+  , cmB_bytes     :: BuiltinByteString
+  , cmC_bytes     :: BuiltinByteString
+  , cmZ1_bytes    :: BuiltinByteString
+  , cmQlow_bytes  :: BuiltinByteString
+  , cmQmid_bytes  :: BuiltinByteString
+  , cmQhigh_bytes :: BuiltinByteString
+  , proof1_bytes  :: BuiltinByteString
+  , proof2_bytes  :: BuiltinByteString
+  , a_xi_int      :: Integer
+  , b_xi_int      :: Integer
+  , c_xi_int      :: Integer
+  , s1_xi_int     :: Integer
+  , s2_xi_int     :: Integer
+  , z1_xi'_int    :: Integer
+  , l1_xi         :: F
 } deriving stock (Show, Generic)
 
 makeLift ''ProofBytes

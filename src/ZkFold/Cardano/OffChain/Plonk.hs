@@ -29,8 +29,8 @@ import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
 import           ZkFold.Cardano.OnChain.BLS12_381
-import           ZkFold.Cardano.OnChain.Plonk.Data                 (InputBytes (..), ProofBytes (..), SetupBytes (..))
-import           ZkFold.Prelude                                    (log2ceiling)
+import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes (..), SetupBytes (..))
+import           ZkFold.Prelude                              (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
@@ -40,43 +40,43 @@ mkSetup :: forall i n . KnownNat n => SetupVerify (PlonkN i n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
-    { n     = fromIntegral (value @n)
-    , pow   = log2ceiling (value @n)
-    , x2'   = convertG2 h1
-    , omega = F $ convertZp omega
-    , k1    = F $ convertZp k1
-    , k2    = F $ convertZp k2
-    , cmQm' = convertG1 cmQm
-    , cmQl' = convertG1 cmQl
-    , cmQr' = convertG1 cmQr
-    , cmQo' = convertG1 cmQo
-    , cmQc' = convertG1 cmQc
-    , cmS1' = convertG1 cmS1
-    , cmS2' = convertG1 cmS2
-    , cmS3' = convertG1 cmS3
+    { n          = fromIntegral (value @n)
+    , pow        = log2ceiling (value @n)
+    , omega      = F $ convertZp omega
+    , k1         = F $ convertZp k1
+    , k2         = F $ convertZp k2
+    , h1_bytes   = convertG2 h1
+    , cmQm_bytes = convertG1 cmQm
+    , cmQl_bytes = convertG1 cmQl
+    , cmQr_bytes = convertG1 cmQr
+    , cmQo_bytes = convertG1 cmQo
+    , cmQc_bytes = convertG1 cmQc
+    , cmS1_bytes = convertG1 cmS1
+    , cmS2_bytes = convertG1 cmS2
+    , cmS3_bytes = convertG1 cmS3
     }
 
 mkInput :: Input (PlonkN i n) -> InputBytes
-mkInput (PlonkupInput input) = InputBytes . F . convertZp $ V.head input
+mkInput (PlonkupInput input) = F . convertZp $ V.head input
 
 mkProof :: Proof (PlonkN i n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes
-  { cmA'       = convertG1 cmA
-  , cmB'       = convertG1 cmB
-  , cmC'       = convertG1 cmC
-  , cmZ'       = convertG1 cmZ1
-  , cmT1'      = convertG1 cmQlow
-  , cmT2'      = convertG1 cmQmid
-  , cmT3'      = convertG1 cmQhigh
-  , proof1'    = convertG1 proof1
-  , proof2'    = convertG1 proof2
-  , a_xi'      = convertZp a_xi
-  , b_xi'      = convertZp b_xi
-  , c_xi'      = convertZp c_xi
-  , s1_xi'     = convertZp s1_xi
-  , s2_xi'     = convertZp s2_xi
-  , z_xi'      = convertZp z1_xi'
-  , l1_xi_mul' = F $ convertZp l1_xi
+  { cmA_bytes     = convertG1 cmA
+  , cmB_bytes     = convertG1 cmB
+  , cmC_bytes     = convertG1 cmC
+  , cmZ1_bytes    = convertG1 cmZ1
+  , cmQlow_bytes  = convertG1 cmQlow
+  , cmQmid_bytes  = convertG1 cmQmid
+  , cmQhigh_bytes = convertG1 cmQhigh
+  , proof1_bytes  = convertG1 proof1
+  , proof2_bytes  = convertG1 proof2
+  , a_xi_int      = convertZp a_xi
+  , b_xi_int      = convertZp b_xi
+  , c_xi_int      = convertZp c_xi
+  , s1_xi_int     = convertZp s1_xi
+  , s2_xi_int     = convertZp s2_xi
+  , z1_xi'_int    = convertZp z1_xi'
+  , l1_xi         = F $ convertZp l1_xi
   }
 
 ------------------------------- Base Conversions -------------------------------

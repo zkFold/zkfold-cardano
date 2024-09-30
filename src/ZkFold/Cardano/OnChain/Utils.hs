@@ -4,7 +4,7 @@ import           PlutusLedgerApi.V3
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude   (Bool (..), Eq (..), (.))
 
-type FMLabel = Integer  -- Implements distinct 'forwardingMint' addresses
+type ScriptLabel = Integer  -- Implements distinct addresses for scripts
 
 -- | hash transaction data with blake2b_224
 {-# INLINABLE dataToBlake #-}
