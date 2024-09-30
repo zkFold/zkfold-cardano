@@ -24,8 +24,8 @@ import           Test.QuickCheck.Gen                      (generate)
 import qualified UntypedPlutusCore                        as UPLC
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (F (..))
 import           ZkFold.Cardano.OffChain.Plonk            (EqualityCheckContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (F (..))
 import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.UPLC                      (rollupCompiled)
 import           ZkFold.Cardano.UPLC.Rollup               (RollupRedeemer (..))
