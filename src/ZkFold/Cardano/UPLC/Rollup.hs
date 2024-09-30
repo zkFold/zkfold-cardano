@@ -13,7 +13,6 @@ import           PlutusTx                                 (makeIsDataIndexed)
 import           PlutusTx.Prelude                         hiding ((*), (+))
 import           Prelude                                  (Show)
 
-import           ZkFold.Base.Algebra.Basic.Class          ((*), (+))
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
@@ -49,8 +48,7 @@ rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
         out'   = head $ txInfoOutputs $ scriptContextTxInfo ctx
 
         -- Compute the next state
-        x      = F . byteStringToInteger BigEndian $ dataToBlake (state, update)
-        state' = foldl (\acc u -> x * acc + u) state update
+        state' = F . byteStringToInteger BigEndian $ dataToBlake (state, update)
 
         -- Computing public input from the transaction data
         input  = InputBytes state'
