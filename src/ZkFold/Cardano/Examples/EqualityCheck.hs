@@ -12,8 +12,8 @@ import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..), HaskellCore)
 import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OnChain.Plonk                (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
 import           ZkFold.Symbolic.Class
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compileForceOne)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))

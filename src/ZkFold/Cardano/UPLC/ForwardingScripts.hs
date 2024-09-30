@@ -1,4 +1,4 @@
-module ZkFold.Cardano.Scripts.ForwardingScripts where
+module ZkFold.Cardano.UPLC.ForwardingScripts where
 
 import           PlutusLedgerApi.V3
 import           PlutusTx.AssocMap                  (keys)

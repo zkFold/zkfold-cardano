@@ -6,7 +6,7 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans                 #-}
 
-module ZkFold.Cardano.Plonk where
+module ZkFold.Cardano.OnChain.Plonk where
 
 import           GHC.ByteOrder                               (ByteOrder (..))
 import           PlutusTx                                    (UnsafeFromData (..))

@@ -3,7 +3,7 @@
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-module ZkFold.Cardano.Scripts.Rollup where
+module ZkFold.Cardano.UPLC.Rollup where
 
 import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Generics                             (Generic)
@@ -15,8 +15,8 @@ import           Prelude                                  (Show)
 
 import           ZkFold.Base.Algebra.Basic.Class          ((*), (+))
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
+import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes (..), ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 

@@ -67,20 +67,20 @@ library
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.Examples.EqualityCheck
-    ZkFold.Cardano.Scripts.ForwardingScripts
-    ZkFold.Cardano.Scripts.PlonkVerifier
-    ZkFold.Cardano.Scripts.Rollup
-    ZkFold.Cardano.Scripts.SymbolicVerifier
-    ZkFold.Cardano.UPLC
-    ZkFold.Cardano.Plonk
     ZkFold.Cardano.OffChain.Plonk
     ZkFold.Cardano.OnChain.BLS12_381
     ZkFold.Cardano.OnChain.BLS12_381.F
     ZkFold.Cardano.OnChain.BLS12_381.G1
     ZkFold.Cardano.OnChain.BLS12_381.G2
+    ZkFold.Cardano.OnChain.Plonk
     ZkFold.Cardano.OnChain.Plonk.Data
     ZkFold.Cardano.OnChain.Plonk.Utils
     ZkFold.Cardano.OnChain.Utils
+    ZkFold.Cardano.UPLC
+    ZkFold.Cardano.UPLC.ForwardingScripts
+    ZkFold.Cardano.UPLC.PlonkVerifier
+    ZkFold.Cardano.UPLC.Rollup
+    ZkFold.Cardano.UPLC.SymbolicVerifier
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
