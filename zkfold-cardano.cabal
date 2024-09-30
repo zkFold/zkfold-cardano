@@ -68,12 +68,15 @@ library
   exposed-modules:
     ZkFold.Cardano.Examples.EqualityCheck
     ZkFold.Cardano.OffChain.Plonk
+    ZkFold.Cardano.OffChain.Plonkup
     ZkFold.Cardano.OnChain.BLS12_381
     ZkFold.Cardano.OnChain.BLS12_381.F
     ZkFold.Cardano.OnChain.BLS12_381.G1
     ZkFold.Cardano.OnChain.BLS12_381.G2
     ZkFold.Cardano.OnChain.Plonk
     ZkFold.Cardano.OnChain.Plonk.Data
+    ZkFold.Cardano.OnChain.Plonkup
+    ZkFold.Cardano.OnChain.Plonkup.Data
     ZkFold.Cardano.OnChain.Utils
     ZkFold.Cardano.UPLC
     ZkFold.Cardano.UPLC.ForwardingScripts
@@ -100,7 +103,8 @@ test-suite test
   ghc-options:      -rtsopts
   main-is:          Main.hs
   other-modules:
-    Tests.Verifier
+    Tests.Plonk
+    Tests.Plonkup
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
