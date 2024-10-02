@@ -168,10 +168,10 @@ main = do
     hPrintf h "Run \'plonkVerifier\'\n\n"
     printHeader h
     printCostsPlonkVerifier h setup $ contextPlonk proof
-    -- hPrintf h "\n\n"
-    -- hPrintf h "\n\n"
-    -- hPrintf h "Run symbolic plonk verifier\n\n"
-    -- printHeader h
-    -- printCostsSymbolicVerifier h setup proof contextSymbolic
+    hPrintf h "\n\n"
+    hPrintf h "\n\n"
+    hPrintf h "Run symbolic plonk verifier\n\n"
+    printHeader h
+    printCostsSymbolicVerifier h setup $ contextSymbolic proof
     hPrintf h "\n\n"
 
