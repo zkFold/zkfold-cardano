@@ -1,4 +1,4 @@
-module ZkFold.Cardano.Scripts.SymbolicVerifier where
+module ZkFold.Cardano.UPLC.SymbolicVerifier where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
@@ -6,9 +6,9 @@ import           PlutusTx.Prelude                         (BuiltinData, BuiltinU
                                                            (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
+import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
+import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --

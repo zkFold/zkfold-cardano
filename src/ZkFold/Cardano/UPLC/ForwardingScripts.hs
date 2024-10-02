@@ -1,19 +1,17 @@
-module ZkFold.Cardano.Scripts.ForwardingScripts where
+module ZkFold.Cardano.UPLC.ForwardingScripts where
 
 import           PlutusLedgerApi.V3
-import           PlutusTx.AssocMap                  (keys)
-import           PlutusTx.Prelude                   (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust,
-                                                     ($), (.))
+import           PlutusTx.AssocMap            (keys)
+import           PlutusTx.Prelude             (Bool (..), BuiltinUnit, Maybe (..), check, error, find, isJust, ($), (.))
 
-import           ZkFold.Cardano.Plonk.OnChain.Data  (FMLabel)
-import           ZkFold.Cardano.Plonk.OnChain.Utils (eqCredential, eqCurrencySymbol)
+import           ZkFold.Cardano.OnChain.Utils (ScriptLabel, eqMintingPurpose, eqRewardingPurpose)
 
 -- | The Plutus spending script that forwards verification to a rewarding script.
 {-# INLINABLE forwardingReward #-}
 forwardingReward :: BuiltinByteString -> () -> ScriptContext -> Bool
 forwardingReward contractHash _ ctx =
     -- Searching for the rewarding script with a specific hash
-    isJust $ find (eqCredential sc) reds
+    isJust $ find (eqRewardingPurpose sc) reds
     where
         -- Constructing the rewarding script purpose
         sc = ScriptCredential $ ScriptHash contractHash
@@ -23,10 +21,10 @@ forwardingReward contractHash _ ctx =
 
 -- | The Plutus spending script that forwards verification to a minting script.
 {-# INLINABLE forwardingMint #-}
-forwardingMint :: FMLabel -> BuiltinByteString -> () -> ScriptContext -> Bool
+forwardingMint :: ScriptLabel -> BuiltinByteString -> () -> ScriptContext -> Bool
 forwardingMint _label symbolHash _ ctx =
     -- Searching for the minting script with a specific hash
-    isJust $ find (eqCurrencySymbol sc) reds
+    isJust $ find (eqMintingPurpose sc) reds
     where
         -- Constructing the minting script purpose
         sc = CurrencySymbol symbolHash
@@ -47,7 +45,7 @@ untypedForwardingReward ctx' =
       _                           -> error ()
 
 {-# INLINABLE untypedForwardingMint #-}
-untypedForwardingMint :: FMLabel -> BuiltinData -> BuiltinUnit
+untypedForwardingMint :: ScriptLabel -> BuiltinData -> BuiltinUnit
 untypedForwardingMint label' ctx' =
   let ctx = unsafeFromBuiltinData ctx' in
     case scriptContextScriptInfo ctx of

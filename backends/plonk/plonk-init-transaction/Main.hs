@@ -14,7 +14,7 @@ import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
+import           ZkFold.Cardano.OffChain.Plonk         (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                   (forwardingMintCompiled, plonkVerifierCompiled)
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()

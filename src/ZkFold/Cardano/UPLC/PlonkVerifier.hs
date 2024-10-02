@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-module ZkFold.Cardano.Scripts.PlonkVerifier where
+module ZkFold.Cardano.UPLC.PlonkVerifier where
 
 import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..), getRedeemer)
@@ -10,10 +10,10 @@ import qualified PlutusTx.AssocMap                        as AssocMap
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Maybe (..), Ord (..),
                                                            check, ($), (.), (||))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..), HaskellCore)
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.Plonk.OnChain.Utils       (toInput)
+import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
+import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
+import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
 
 -- | Plutus script (minting policy) for verifying computations on-chain.
 --

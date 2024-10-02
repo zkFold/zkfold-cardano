@@ -5,15 +5,15 @@ import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
-import           ZkFold.Base.Data.Vector                     (Vector(..), unsafeToVector)
+import           ZkFold.Base.Data.Vector                     (Vector (..), unsafeToVector)
+import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonk
-import           ZkFold.Base.Protocol.Plonkup.Witness
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
-import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..), HaskellCore)
-import           ZkFold.Cardano.Plonk                        (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OffChain               (PlonkN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.Plonk.OnChain.Data           (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Base.Protocol.Plonkup.Witness
+import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OnChain.Plonk                (PlonkPlutus)
+import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes, SetupBytes)
 import           ZkFold.Symbolic.Class
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compileForceOne)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))

@@ -1,33 +1,34 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Main where
 
-import           Bench.Statistics                         (getCostsCek)
-import           Bench.Utils                              (printCSVWithHeaders, writeCSV)
-import           Data.Aeson                               (encode)
-import qualified Data.ByteString                          as BS
-import qualified Data.ByteString.Lazy                     as BL
-import           Data.String                              (IsString (fromString))
-import           PlutusCore                               (DefaultFun, DefaultUni)
-import qualified PlutusLedgerApi.V2                       as V2
+import           Bench.Statistics                      (getCostsCek)
+import           Bench.Utils                           (printCSVWithHeaders, writeCSV)
+import           Data.Aeson                            (encode)
+import qualified Data.ByteString                       as BS
+import qualified Data.ByteString.Lazy                  as BL
+import           Data.String                           (IsString (fromString))
+import           PlutusCore                            (DefaultFun, DefaultUni)
+import qualified PlutusLedgerApi.V2                    as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (($), (.))
-import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                           (.))
-import           System.Directory                         (createDirectoryIfMissing)
-import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
-import           Test.QuickCheck.Gen                      (generate)
-import qualified UntypedPlutusCore                        as UPLC
+import           PlutusTx                              (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                      (($), (.))
+import           Prelude                               hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
+                                                        (.))
+import           System.Directory                      (createDirectoryIfMissing)
+import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
+import           Test.QuickCheck.Gen                   (generate)
+import qualified UntypedPlutusCore                     as UPLC
 
-import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
-import           ZkFold.Cardano.Plonk.OnChain             (ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.Plonk.OnChain.BLS12_381.F (F (..))
-import           ZkFold.Cardano.Scripts.Rollup            (RollupRedeemer (..))
-import           ZkFold.Cardano.UPLC                      (rollupCompiled)
-
+import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Plonk         (EqualityCheckContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.F    (F (..))
+import           ZkFold.Cardano.OnChain.Plonk.Data     (ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.UPLC                   (rollupCompiled)
+import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..))
 
 sampleRedeemer :: ProofBytes -> Int -> Redeemer
 sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupRedeemer

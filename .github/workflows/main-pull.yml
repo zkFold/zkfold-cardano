@@ -124,21 +124,21 @@ jobs:
         key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
         restore-keys: ${{ env.key }}-
 
-    # - name: Install stylish-haskell
-    #   run: |
-    #     cabal install stylish-haskell
+    - name: Install stylish-haskell
+      run: |
+        cabal install stylish-haskell-0.14.5.0
 
-    # - name: Lint Haskell
-    #   run: |
-    #     find . -name '*.hs' -exec sh -c 'for file do stylish-haskell --inplace "$file"; done' sh {} +
+    - name: Lint Haskell
+      run: |
+        find . -name '*.hs' -exec sh -c 'for file do stylish-haskell --inplace "$file"; done' sh {} +
 
-    # - name: Auto-commit lint
-    #   uses: stefanzweifel/git-auto-commit-action@v4
-    #   with:
-    #     commit_message: stylish-haskell auto-commit
-    #     commit_user_name: GitHub Action
-    #     commit_user_email: action@github.com
-    #     branch: ${{ github.head_ref }}
+    - name: Auto-commit lint
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: stylish-haskell auto-commit
+        commit_user_name: GitHub Action
+        commit_user_email: action@github.com
+        branch: ${{ github.head_ref }}
 
     - name: Install dependencies
       # If we had an exact cache hit, the dependencies will be up to date.

@@ -2,6 +2,9 @@
 
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module ZkFold.Cardano.UPLC
   ( symbolicVerifierCompiled
@@ -12,19 +15,19 @@ module ZkFold.Cardano.UPLC
   , rollupCompiled
   ) where
 
-import           Flat.Types                               ()
+import           Flat.Types                            ()
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (BuiltinUnit)
-import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                           (.))
+import           PlutusTx                              (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Prelude                      (BuiltinUnit)
+import           Prelude                               hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
+                                                        (.))
 
-import           ZkFold.Cardano.Plonk                     (untypedVerifyPlonk)
-import           ZkFold.Cardano.Plonk.OnChain.Data        (SetupBytes)
-import           ZkFold.Cardano.Scripts.ForwardingScripts (untypedForwardingMint, untypedForwardingReward)
-import           ZkFold.Cardano.Scripts.PlonkVerifier     (untypedPlonkVerifier)
-import           ZkFold.Cardano.Scripts.Rollup            (untypedRollup)
-import           ZkFold.Cardano.Scripts.SymbolicVerifier  (untypedSymbolicVerifier)
+import           ZkFold.Cardano.OnChain.Plonk          (untypedVerifyPlonk)
+import           ZkFold.Cardano.OnChain.Plonk.Data     (SetupBytes)
+import           ZkFold.Cardano.UPLC.ForwardingScripts (untypedForwardingMint, untypedForwardingReward)
+import           ZkFold.Cardano.UPLC.PlonkVerifier     (untypedPlonkVerifier)
+import           ZkFold.Cardano.UPLC.Rollup            (untypedRollup)
+import           ZkFold.Cardano.UPLC.SymbolicVerifier  (untypedSymbolicVerifier)
 
 
 symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
