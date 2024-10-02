@@ -26,6 +26,8 @@ cabal.project.local~
 compiled_scripts/*
 logs
 *.svg
+
+data-analysis
 e2e-test/*/keys
 local-testnet/example
 assets

@@ -12,7 +12,7 @@ import           PlutusTx                              (ToData (..))
 import           Prelude                               (IO, Show (..), putStr, ($), (++), (.), (<$>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain         (EqualityCheckContract (..))
+import           ZkFold.Cardano.OffChain.Plonk         (EqualityCheckContract (..))
 
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
