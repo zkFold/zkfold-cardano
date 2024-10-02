@@ -2,8 +2,7 @@ module ZkFold.Cardano.UPLC.SymbolicVerifier where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($),
-                                                           (.))
+import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
@@ -40,7 +39,7 @@ untypedSymbolicVerifier contract ctx =
       infBeforeReInputs    = BI.tail infoFields
       infoBeforeOutputs    = BI.tail infBeforeReInputs
 
-      -- Some hepers functions  
+      -- Some hepers functions
       tail5 = BI.tail . BI.tail . BI.tail . BI.tail . BI.tail
 
       mkTuple4 a b c d =
