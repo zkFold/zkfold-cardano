@@ -38,7 +38,11 @@ data ProofBytes = ProofBytes {
     cmA_bytes     :: BuiltinByteString
   , cmB_bytes     :: BuiltinByteString
   , cmC_bytes     :: BuiltinByteString
+  , cmF_bytes     :: BuiltinByteString
+  , cmH1_bytes    :: BuiltinByteString
+  , cmH2_bytes    :: BuiltinByteString
   , cmZ1_bytes    :: BuiltinByteString
+  , cmZ2_bytes    :: BuiltinByteString
   , cmQlow_bytes  :: BuiltinByteString
   , cmQmid_bytes  :: BuiltinByteString
   , cmQhigh_bytes :: BuiltinByteString
@@ -49,7 +53,13 @@ data ProofBytes = ProofBytes {
   , c_xi_int      :: Integer
   , s1_xi_int     :: Integer
   , s2_xi_int     :: Integer
+  , f_xi_int      :: Integer
+  , t_xi_int      :: Integer
+  , t_xi'_int     :: Integer
   , z1_xi'_int    :: Integer
+  , z2_xi'_int    :: Integer
+  , h1_xi'_int    :: Integer
+  , h2_xi_int     :: Integer
   , l1_xi         :: F
 } deriving stock (Show, Generic)
 

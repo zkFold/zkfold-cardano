@@ -20,6 +20,7 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Protocol.NonInteractiveProof
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
+import           ZkFold.Cardano.OffChain.Transcript          ()
 import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), mul, powTwo)
 import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes (..), SetupBytes (..))

@@ -5,29 +5,20 @@
 
 module ZkFold.Cardano.OffChain.Plonk where
 
-import           Data.Aeson                                        (FromJSON, ToJSON)
-import           Data.Word                                         (Word8)
-import           GHC.ByteOrder                                     (ByteOrder (..))
-import           GHC.Generics                                      (Generic)
-import           GHC.Natural                                       (naturalToInteger)
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                                  (($), (.))
-import           Prelude                                           (Show, fromIntegral)
+import           Prelude                                           (fromIntegral)
 
-import           ZkFold.Base.Algebra.Basic.Field                   (Zp, fromZp, toZp)
 import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class           (Point (..), PointCompressed, compress)
-import           ZkFold.Base.Data.ByteString                       (toByteString)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2)
 import qualified ZkFold.Base.Data.Vector                           as V
-import           ZkFold.Base.Protocol.NonInteractiveProof          (FromTranscript (..), NonInteractiveProof (..),
-                                                                    ToTranscript (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonk
 import           ZkFold.Base.Protocol.Plonkup.Input
 import           ZkFold.Base.Protocol.Plonkup.Proof
-import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
+import           ZkFold.Cardano.OffChain.ECC                       (convertZp, convertG1, convertG2)
 import           ZkFold.Cardano.OnChain.BLS12_381
 import           ZkFold.Cardano.OnChain.Plonk.Data                 (InputBytes, ProofBytes (..), SetupBytes (..))
 import           ZkFold.Prelude                                    (log2ceiling)
@@ -78,52 +69,3 @@ mkProof PlonkupProof {..} = ProofBytes
   , z1_xi'_int    = convertZp z1_xi'
   , l1_xi         = F $ convertZp l1_xi
   }
-
-------------------------------- Base Conversions -------------------------------
-
-convertZp :: Zp p -> Integer
-convertZp = naturalToInteger . fromZp
-
-convertG1 :: Point BLS12_381_G1 -> BuiltinByteString
-convertG1 = toBuiltin . toByteString . compress
-
-convertG2 :: Point BLS12_381_G2 -> BuiltinByteString
-convertG2 = toBuiltin . toByteString . compress
-
------------------- Transcript for NonInteractiveProof Plonk32 ------------------
-
-instance ToTranscript BuiltinByteString Word8 where
-    toTranscript = toBuiltin . toByteString
-
-instance ToTranscript BuiltinByteString F where
-    toTranscript (F n) = integerToByteString LittleEndian 32 n
-
-instance ToTranscript BuiltinByteString G1 where
-    toTranscript = bls12_381_G1_compress
-
-instance FromTranscript BuiltinByteString F where
-    fromTranscript = F . byteStringToInteger LittleEndian . blake2b_224
-
-instance ToTranscript BuiltinByteString Fr where
-    toTranscript = integerToByteString LittleEndian 32 . convertZp
-
-instance ToTranscript BuiltinByteString (PointCompressed BLS12_381_G1) where
-    toTranscript = toBuiltin . toByteString
-
-instance FromTranscript BuiltinByteString Fr where
-    fromTranscript = toZp . byteStringToInteger LittleEndian . blake2b_224
-
------------------------------------- E2E test -------------------------------------
-
--- This type can only be used for testing.
-data EqualityCheckContract = EqualityCheckContract {
-    x           :: Fr
-  , ps          :: PlonkupProverSecret BLS12_381_G1
-  , targetValue :: Fr
-} deriving stock (Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
-
-deriving anyclass instance FromJSON (V.Vector 19 Fr)
-
-deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
-deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)

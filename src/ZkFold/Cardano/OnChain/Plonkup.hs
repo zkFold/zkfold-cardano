@@ -20,7 +20,8 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Protocol.NonInteractiveProof
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
-import           ZkFold.Cardano.OffChain.Plonkup             (PlonkN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OffChain.Transcript          ()
+import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), powTwo, mul)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes (..))
 
@@ -184,7 +185,7 @@ instance
         , KnownNat ((4 * n) + 6)
         , SetupVerify (Plonkup i n 1 c1 c2 ts) ~ PlonkupVerifierSetup i n 1 c1 c2
         , CoreFunction BLS12_381_G1 core
-        ) => CompatibleNonInteractiveProofs (PlonkN i n) PlonkupPlutus core where
+        ) => CompatibleNonInteractiveProofs (PlonkupN i n) PlonkupPlutus core where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof

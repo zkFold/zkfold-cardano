@@ -18,7 +18,7 @@ import           PlutusTx                              (ToData (..))
 import           Prelude                               (IO, putStr, show, ($), (++), (.), (<$>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Plonk         (EqualityCheckContract (..))
+import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F    as F
 import           ZkFold.Cardano.OnChain.Plonk.Data     (ProofBytes (..))
 

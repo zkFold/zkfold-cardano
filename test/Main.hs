@@ -1,10 +1,8 @@
 module Main where
 
 import           Prelude
-import           Tests.Plonk (specPlonk)
-import           Tests.Plonkup (specPlonkup)
+import           Tests.Compatibility (specCompatibility)
 
 main :: IO ()
 main = do
-    -- specPlonk
-    specPlonkup
+    specCompatibility
