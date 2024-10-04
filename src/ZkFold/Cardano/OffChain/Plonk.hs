@@ -1,5 +1,3 @@
-{-# LANGUAGE PartialTypeSignatures #-}
-
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module ZkFold.Cardano.OffChain.Plonk where
