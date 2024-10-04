@@ -23,18 +23,7 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install automake build-essential pkg-config libffi-dev libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev make g++ tmux git jq wget libncursesw5 libtool autoconf liblmdb-dev -y
-
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
-
-    - name: Set up Haskell
-      uses: haskell-actions/setup@v2.6.2
-      id: setup
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
-        cabal-update: true
-
+        
     - name: Install C dependencies
       run: |
         CARDANO_NODE_VERSION='9.1.0'
@@ -104,6 +93,17 @@ jobs:
         sudo chmod u=rw,go=r /usr/local/{lib/{libblst.a,pkgconfig/libblst.pc},include/{blst.{h,hpp},blst_aux.h}}
 
         cd
+
+    - name: Checkout code
+      uses: actions/checkout@v4.1.1
+
+    - name: Set up Haskell
+      uses: haskell-actions/setup@v2.6.2
+      id: setup
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+        cabal-update: true
 
     - name: Configure Cabal
       run: |
