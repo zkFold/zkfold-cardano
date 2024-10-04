@@ -1,7 +1,7 @@
 # Rollups benchmarks
 
 
-Here we benchmark `rollup` script defined in `../../src/ZkFold/Cardano/Scripts/Rollup.hs`.
+Here we benchmark `rollup` script defined in `../../src/ZkFold/Cardano/UPLC/Rollup.hs`.
 
 ## Exec units as a function of *update length*
 
