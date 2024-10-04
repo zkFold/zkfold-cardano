@@ -17,7 +17,7 @@ import           ZkFold.Base.Protocol.Plonkup.Input
 import           ZkFold.Base.Protocol.Plonkup.Proof
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
-import           ZkFold.Cardano.OffChain.ECC                       (convertZp, convertG1, convertG2)
+import           ZkFold.Cardano.OffChain.ECC                       (convertG1, convertG2, convertZp)
 import           ZkFold.Cardano.OnChain.BLS12_381
 import           ZkFold.Cardano.OnChain.Plonkup.Data               (InputBytes, ProofBytes (..), SetupBytes (..))
 import           ZkFold.Prelude                                    (log2ceiling)

@@ -20,9 +20,9 @@ import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Protocol.NonInteractiveProof
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
-import           ZkFold.Cardano.OffChain.Transcript          ()
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), powTwo, mul)
+import           ZkFold.Cardano.OffChain.Transcript          ()
+import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), mul, powTwo)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes (..))
 
 data PlonkupPlutus

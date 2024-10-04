@@ -2,18 +2,17 @@
 
 module ZkFold.Cardano.OffChain.Transcript where
 
-import           Data.Word                                         (Word8)
-import           GHC.ByteOrder                                     (ByteOrder (..))
+import           Data.Word                                   (Word8)
+import           GHC.ByteOrder                               (ByteOrder (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                                  ((.))
+import           PlutusTx.Prelude                            ((.))
 
-import           ZkFold.Base.Algebra.Basic.Field                   (toZp)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class           (PointCompressed)
-import           ZkFold.Base.Data.ByteString                       (toByteString)
-import           ZkFold.Base.Protocol.NonInteractiveProof          (FromTranscript (..),
-                                                                    ToTranscript (..))
-import           ZkFold.Cardano.OffChain.ECC                       (convertZp)
+import           ZkFold.Base.Algebra.Basic.Field             (toZp)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (PointCompressed)
+import           ZkFold.Base.Data.ByteString                 (toByteString)
+import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), ToTranscript (..))
+import           ZkFold.Cardano.OffChain.ECC                 (convertZp)
 import           ZkFold.Cardano.OnChain.BLS12_381
 
 instance ToTranscript BuiltinByteString Word8 where

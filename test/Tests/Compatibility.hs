@@ -4,8 +4,8 @@ import           Prelude                                  hiding (Eq (..), Fract
 import           Test.Hspec                               (describe, hspec, it)
 import           Test.QuickCheck                          (Testable (property))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProofTestData (..),
-                                                           nipCompatibility, CompatibleNonInteractiveProofs)
+import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs, HaskellCore,
+                                                           NonInteractiveProofTestData (..), nipCompatibility)
 import           ZkFold.Cardano.OffChain.Plonk            (PlonkN)
 import           ZkFold.Cardano.OffChain.Plonkup          (PlonkupN)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
