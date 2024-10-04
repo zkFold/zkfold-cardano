@@ -24,9 +24,11 @@ data SetupBytes = SetupBytes {
   , cmQr_bytes :: BuiltinByteString
   , cmQo_bytes :: BuiltinByteString
   , cmQc_bytes :: BuiltinByteString
+  , cmQk_bytes :: BuiltinByteString
   , cmS1_bytes :: BuiltinByteString
   , cmS2_bytes :: BuiltinByteString
   , cmS3_bytes :: BuiltinByteString
+  , cmT1_bytes :: BuiltinByteString
 } deriving stock (Show, Generic)
 
 makeLift ''SetupBytes

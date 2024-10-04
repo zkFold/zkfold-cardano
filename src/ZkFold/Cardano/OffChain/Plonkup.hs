@@ -8,11 +8,11 @@ import           PlutusTx.Builtins
 import           PlutusTx.Prelude                                  (($), (.))
 import           Prelude                                           (fromIntegral)
 
+import           ZkFold.Base.Algebra.Basic.Class                   (negate)
 import           ZkFold.Base.Algebra.Basic.Number
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2)
 import qualified ZkFold.Base.Data.Vector                           as V
 import           ZkFold.Base.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
-import           ZkFold.Base.Protocol.Plonk
 import           ZkFold.Base.Protocol.Plonkup.Input
 import           ZkFold.Base.Protocol.Plonkup.Proof
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
@@ -21,10 +21,11 @@ import           ZkFold.Cardano.OffChain.ECC                       (convertG1, c
 import           ZkFold.Cardano.OnChain.BLS12_381
 import           ZkFold.Cardano.OnChain.Plonkup.Data               (InputBytes, ProofBytes (..), SetupBytes (..))
 import           ZkFold.Prelude                                    (log2ceiling)
+import ZkFold.Base.Protocol.Plonkup (Plonkup)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN i n = Plonk i n 1 BLS12_381_G1 BLS12_381_G2 BuiltinByteString
+type PlonkupN i n = Plonkup i n 1 BLS12_381_G1 BLS12_381_G2 BuiltinByteString
 
 mkSetup :: forall i n . KnownNat n => SetupVerify (PlonkupN i n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
@@ -41,13 +42,15 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmQr_bytes = convertG1 cmQr
     , cmQo_bytes = convertG1 cmQo
     , cmQc_bytes = convertG1 cmQc
+    , cmQk_bytes = convertG1 cmQk
     , cmS1_bytes = convertG1 cmS1
     , cmS2_bytes = convertG1 cmS2
     , cmS3_bytes = convertG1 cmS3
+    , cmT1_bytes = convertG1 cmT1
     }
 
 mkInput :: Input (PlonkupN i n) -> InputBytes
-mkInput (PlonkupInput input) = F . convertZp $ V.head input
+mkInput (PlonkupInput input) = F . convertZp . negate $ V.head input
 
 mkProof :: Proof (PlonkupN i n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes

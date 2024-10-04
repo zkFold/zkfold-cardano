@@ -46,7 +46,7 @@ instance NonInteractiveProof PlonkPlutus core where
 
     {-# INLINABLE verify #-}
     verify :: SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> Bool
-    verify SetupBytes{..} pi ProofBytes{..} =
+    verify SetupBytes{..} pi_xi ProofBytes{..} =
         let g0 = bls12_381_G1_uncompress bls12_381_G1_compressed_generator
             h0 = bls12_381_G2_uncompress bls12_381_G2_compressed_generator
 
@@ -74,7 +74,7 @@ instance NonInteractiveProof PlonkPlutus core where
             c_xi    = F c_xi_int
             s1_xi   = F s1_xi_int
             s2_xi   = F s2_xi_int
-            z_xi    = F z1_xi'_int
+            z1_xi'  = F z1_xi'_int
             proof1  = bls12_381_G1_uncompress proof1_bytes
             proof2  = bls12_381_G1_uncompress proof2_bytes
 
@@ -86,7 +86,8 @@ instance NonInteractiveProof PlonkPlutus core where
             gamma = F . byteStringToInteger LittleEndian . blake2b_224 $ ts2 <> consByteString 2 emptyByteString
 
             ts3 = ts2 <> cmZ1_bytes
-            alpha = F . byteStringToInteger LittleEndian . blake2b_224 $ ts3
+            alpha  = F . byteStringToInteger LittleEndian . blake2b_224 $ ts3
+            alpha2 = alpha * alpha
 
             ts4 = ts3 <> cmQlow_bytes <> cmQmid_bytes <> cmQhigh_bytes
             xi = F . byteStringToInteger LittleEndian . blake2b_224 $ ts4
@@ -107,32 +108,16 @@ instance NonInteractiveProof PlonkPlutus core where
 
             xi_n = xi `powTwo` pow
             xi_n2 = xi_n * (xi * xi)
-            xi_m_one = xi_n - one
 
-            lagrange1_xi = omega * xi_m_one * l1_xi
+            zhX_xi = xi_n - one
 
-            alphaSquare = alpha * alpha
-            alphaEvalZOmega = alpha * z_xi
-            betaZeta = beta * xi
-
-            a_xi_gamma = a_xi + gamma
-            b_xi_gamma = b_xi + gamma
-            c_xi_gamma = c_xi + gamma
-
-            beta_s1_xi = beta * s1_xi
-            beta_s2_xi = beta * s2_xi
-
-            gamma_beta_a_s1 = a_xi_gamma + beta_s1_xi
-            gamma_beta_b_s2 = b_xi_gamma + beta_s2_xi
+            lagrange1_xi = omega * zhX_xi * l1_xi
 
             -- final calculations
             r0 =
-                  negate pi * lagrange1_xi
-                - alphaSquare * lagrange1_xi
-                - alphaEvalZOmega
-                    * gamma_beta_a_s1
-                    * gamma_beta_b_s2
-                    * c_xi_gamma
+                  pi_xi * lagrange1_xi
+                - alpha * (a_xi + beta * s1_xi + gamma) * (b_xi + beta * s2_xi + gamma) * (c_xi + gamma) * z1_xi'
+                - alpha2 * lagrange1_xi
 
             d  =
                   mul (a_xi * b_xi) cmQm
@@ -142,19 +127,19 @@ instance NonInteractiveProof PlonkPlutus core where
                 + cmQc
                 + mul (
                           alpha
-                        * (a_xi_gamma + betaZeta)
-                        * (b_xi_gamma + betaZeta * k1)
-                        * (c_xi_gamma + betaZeta * k2)
-                    +     alphaSquare * lagrange1_xi
+                        * (a_xi + beta * xi + gamma)
+                        * (b_xi + beta * k1 * xi + gamma)
+                        * (c_xi + beta * k2 * xi + gamma)
+                    +     alpha2 * lagrange1_xi
                     +     eta
                     ) cmZ1
                 - mul (
-                      alphaEvalZOmega
+                      alpha * z1_xi'
                     * beta
-                    * gamma_beta_a_s1
-                    * gamma_beta_b_s2
+                    * (a_xi + beta * s1_xi + gamma)
+                    * (b_xi + beta * s2_xi + gamma)
                     ) cmS3
-                - mul xi_m_one (cmQlow + xi_n2 `mul` cmQmid + (xi_n2 * xi_n2) `mul` cmQhigh)
+                - mul zhX_xi (cmQlow + xi_n2 `mul` cmQmid + (xi_n2 * xi_n2) `mul` cmQhigh)
 
             f  = d
                 + v `mul` (cmA
@@ -170,7 +155,7 @@ instance NonInteractiveProof PlonkPlutus core where
                 + v * (c_xi
                 + v * (s1_xi
                 + v * s2_xi))))
-                + eta * z_xi
+                + eta * z1_xi'
                 ) `mul` g0
 
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (eta * xi * omega) `mul` proof2 + f - e) h0
