@@ -1,7 +1,7 @@
 # Rollups benchmarks
 
 
-Here we benchmark `rollup` script defined in `../../src/ZkFold/Cardano/Scripts/Rollup.hs`.
+Here we benchmark `rollup` script defined in `../../src/ZkFold/Cardano/UPLC/Rollup.hs`.
 
 ## Exec units as a function of *update length*
 
@@ -19,6 +19,6 @@ cabal run bench-rollup
 
 ![data plots](./data-analysis/rollupBench.png)
 
-Therefore, to be within budget, *update length* must be 35 or less.
+Therefore, to be within budget, *update length* must be 654 or less.
 
 For details, see [data-analysis.pdf](./data-analysis/data-analysis.pdf).

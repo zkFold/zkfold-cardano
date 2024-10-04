@@ -16,8 +16,7 @@ import qualified PlutusLedgerApi.V2                    as V2
 import           PlutusLedgerApi.V3
 import           PlutusTx                              (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                      (($), (.))
-import           Prelude                               hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                        (.))
+import           Prelude                               hiding (Bool, Eq (..), Fractional (..), length, ($), (.))
 import           System.Directory                      (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
@@ -42,11 +41,10 @@ sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupRedeemer
 unitDatum :: OutputDatum
 unitDatum = OutputDatum . Datum . toBuiltin . toData $ ()
 
-{-
 sampleDatum :: OutputDatum
-sampleDatum = OutputDatum . Datum . toBuiltin . B $
-  (fromString "0000000000000000000000000000000000000000000000000000000000000000" :: BS.ByteString)  -- 32 bytes datum
--}
+sampleDatum = OutputDatum . Datum . toBuiltin . B $ byteStringOfLength 28  -- 28 bytes datum
+  where
+    byteStringOfLength n = fromString (replicate (2 * n) '0') :: BS.ByteString
 
 sampleAddress :: Address
 sampleAddress = Address (PubKeyCredential . PubKeyHash $
@@ -64,7 +62,7 @@ sampleTxId = TxId $ toBuiltin (fromString "25923f589a26311e87fb37bb41cb1dadf9a90
 
 -- | Sample script output
 sampleScriptTxOut :: TxOut
-sampleScriptTxOut = TxOut sampleAddress sampleValue unitDatum Nothing
+sampleScriptTxOut = TxOut sampleAddress sampleValue sampleDatum Nothing
 
 -- | Sample pub key output
 samplePubTxOut :: TxOut
@@ -116,7 +114,7 @@ costsRollup s proof sizes = (\n -> (n, cpu n, mem n)) <$> sizes
     mem      = snd . costsCek
 
 testUpdateSizes :: [Int]
-testUpdateSizes = [0, 1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+testUpdateSizes = [0, 50 .. 1000]
 
 dataHeaders :: [String]
 dataHeaders = ["Update length", "Exec Steps", "Exec Memory"]
@@ -143,6 +141,7 @@ main = do
 
     writeCSV dataOutputFile $ costsRollup setup proof testUpdateSizes
     printCSVWithHeaders dataOutputFile dataHeaders
+
     putStrLn ""
     putStrLn $ "Data exported to " ++ dataOutputFile
     putStrLn ""
