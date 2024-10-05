@@ -31,13 +31,14 @@ makeIsDataIndexed ''RollupRedeemer [('RollupRedeemer,0)]
 -- | Plutus script for verifying a ZkFold Rollup state transition.
 {-# INLINABLE rollup #-}
 rollup :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
-rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
+--rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
+rollup ledgerRules RollupRedeemer{..} ctx =
         -- Verify the transition from the current state to the next state
-        verify @PlonkPlutus @HaskellCore ledgerRules state' proof
+        verify @PlonkPlutus @HaskellCore ledgerRules nextState rrProof
         -- Check the current rollup output
-        && out  == TxOut addr val (OutputDatum $ Datum $ toBuiltinData state)  Nothing
+        && out  == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData rrState) Nothing
         -- Check the next rollup output
-        && out' == TxOut addr val (OutputDatum $ Datum $ toBuiltinData state') Nothing
+        && out' == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData nextState) Nothing
     where
         -- Get the current rollup output
         Just j = findOwnInput ctx
@@ -47,7 +48,7 @@ rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
         out'   = head $ txInfoOutputs $ scriptContextTxInfo ctx
 
         -- Compute the next state
-        state' = toInput $ dataToBlake (state, update)
+        nextState = toInput $ dataToBlake (rrState, rrUpdate)
 
 {-# INLINABLE untypedRollup #-}
 untypedRollup :: SetupBytes -> BuiltinData -> BuiltinUnit
