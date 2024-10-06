@@ -131,7 +131,7 @@ instance NonInteractiveProof PlonkupPlutus core where
 
             xi_n = xi `powTwo` pow
             xi_n2 = xi_n * (xi * xi)
-            
+
             zhX_xi = xi_n - one
 
             lagrange1_xi = omega * zhX_xi * l1_xi
