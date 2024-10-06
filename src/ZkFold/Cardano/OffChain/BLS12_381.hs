@@ -1,4 +1,4 @@
-module ZkFold.Cardano.OffChain.ECC where
+module ZkFold.Cardano.OffChain.BLS12_381 where
 
 import           GHC.Natural                                 (naturalToInteger)
 import           PlutusTx.Builtins

@@ -3,7 +3,7 @@ cabal-version:      3.0
 name:               zkfold-cardano
 version:            0.1.0.0
 category:           Testing, Cryptography, Math, Symbolic Computation
-author:             Vladimir Sinyakov, Ilya Baryshnikov
+author:             Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
 maintainer:         info@zkfold.io
 license:            MIT
 build-type:         Simple
@@ -67,8 +67,8 @@ library
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.Examples.EqualityCheck
+    ZkFold.Cardano.OffChain.BLS12_381
     ZkFold.Cardano.OffChain.E2E
-    ZkFold.Cardano.OffChain.ECC
     ZkFold.Cardano.OffChain.Plonk
     ZkFold.Cardano.OffChain.Plonkup
     ZkFold.Cardano.OffChain.Transcript
