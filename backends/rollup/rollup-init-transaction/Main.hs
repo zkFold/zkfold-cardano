@@ -26,7 +26,7 @@ import           Text.Parsec.Char                      (digit)
 import           Text.Parsec.String                    (Parser)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Plonk         (EqualityCheckContract (..))
+import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                   (parkingSpotCompiled, rollupCompiled')
 import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..))
 
