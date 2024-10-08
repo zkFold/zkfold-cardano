@@ -1,21 +1,22 @@
 module Main where
 
-import           Cardano.Api          (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
-import           Cardano.Api.Shelley  (fromPlutusData, scriptDataFromJsonDetailedSchema, scriptDataToJsonDetailedSchema, toPlutusData)
-import           Cardano.Api.Ledger   (toCBOR)
-import           Data.Aeson           (decode)
-import qualified Data.Aeson           as Aeson
-import           Data.Maybe           (fromJust)
-import qualified Data.ByteString      as BS
-import qualified Data.ByteString.Lazy as BL
-import           Codec.CBOR.Write     (toStrictByteString)
-import qualified PlutusLedgerApi.V3   as V3
-import           PlutusTx             (ToData (..))
-import           Prelude              (Either (..), IO, error, ($), (++), (.), (<$>))
+import           Cardano.Api                      (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
+import           Cardano.Api.Ledger               (toCBOR)
+import           Cardano.Api.Shelley              (fromPlutusData, scriptDataFromJsonDetailedSchema,
+                                                   scriptDataToJsonDetailedSchema, toPlutusData)
+import           Codec.CBOR.Write                 (toStrictByteString)
+import           Data.Aeson                       (decode)
+import qualified Data.Aeson                       as Aeson
+import qualified Data.ByteString                  as BS
+import qualified Data.ByteString.Lazy             as BL
+import           Data.Maybe                       (fromJust)
+import qualified PlutusLedgerApi.V3               as V3
+import           PlutusTx                         (ToData (..))
+import           Prelude                          (Either (..), IO, error, ($), (++), (.), (<$>))
 
 import           ZkFold.Cardano.OnChain.BLS12_381 (toInput)
-import           ZkFold.Cardano.UPLC.Rollup       (RollupRedeemer (..))
 import           ZkFold.Cardano.OnChain.Utils     (dataToBlake)
+import           ZkFold.Cardano.UPLC.Rollup       (RollupRedeemer (..))
 
 main :: IO ()
 main = do
@@ -36,7 +37,7 @@ main = do
       BS.writeFile "../../assets/datumRollup.cbor" $ dataToCBOR nextState
       BS.writeFile "../../assets/nextRedeemerRollup.cbor" $ dataToCBOR nextRedeemerRollup
       BS.writeFile "../../assets/nextRedeemerRollup.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollup
-      
+
     Left _                         -> error "JSON error: unreadable 'redeemerRollup.json'"
 
 
