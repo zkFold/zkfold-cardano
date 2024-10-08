@@ -9,7 +9,7 @@ set -o pipefail
 keypath=./keys
 assets=../../assets
 
-parkingTag=17
+parkingTag=0
 unitDatum=$assets/unit.cbor
 initialState=$assets/datumRollup.cbor
 rollupValue=3000000
