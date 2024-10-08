@@ -14,7 +14,7 @@ import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Plonk         (EqualityCheckContract (..))
+import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, symbolicVerifierCompiled)
 
 {-
