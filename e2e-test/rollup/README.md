@@ -7,7 +7,7 @@ These scripts implement a prototype rollup process.
 
 Assuming that your active directory is `e2e-test/rollup`, execute the following.
 
-0. (SKIP since Alice's keys already present and funded.)  If necessary, create Alice's wallet and fund it:
+0. Create Alice's wallet and fund it:
 ```shell
 ./00-sancho-init-addrs.sh
 ```
