@@ -64,6 +64,9 @@ saveRollupPlutus = do
   BS.writeFile "../../assets/redeemerRollup.cbor" $ dataToCBOR initialRedeemer
   BS.writeFile "../../assets/redeemerRollup.json" $ prettyPrintJSON $ dataToJSON initialRedeemer
 
+saveParkingSpotPlutus :: Integer -> IO ()
+saveParkingSpotPlutus = savePlutus "../../assets/parkingSpot.plutus" . parkingSpotCompiled
+
 main :: IO ()
 main = do
   createDirectoryIfMissing True "../../test-data"
@@ -74,7 +77,7 @@ main = do
   case tagE of
     Right tag -> do
       saveRollupPlutus
-      savePlutus "../../assets/parkingSpot.plutus" . parkingSpotCompiled $ tag
+      saveParkingSpotPlutus tag
 
       BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
 
