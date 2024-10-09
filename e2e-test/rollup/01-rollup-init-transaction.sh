@@ -9,7 +9,10 @@ set -o pipefail
 keypath=./keys
 assets=../../assets
 
-parkingTag=0
+mkdir -p $assets
+mkdir -p $keypath
+
+parkingTag=11
 unitDatum=$assets/unit.cbor
 initialState=$assets/datumRollup.cbor
 rollupValue=3000000
@@ -72,8 +75,8 @@ cardano-cli conway transaction submit \
     --tx-file $keypath/parkedScript.tx
 
 echo ""
-echo "Pausing for 75 seconds..."
-sleep 75
+echo "Pausing for 60 seconds..."
+sleep 60
 
 echo ""
 echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/parkedScript.tx)"
@@ -104,9 +107,7 @@ cardano-cli conway transaction submit \
     --tx-file $keypath/rollupUpdate.tx
 
 echo ""
-echo "Pausing for 50 seconds..."
-sleep 50
-
-echo ""
 echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupUpdate.tx)"
 echo ""
+
+printf "true" > $keypath/rollup-loop.flag

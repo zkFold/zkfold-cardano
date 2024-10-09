@@ -1,7 +1,7 @@
 # Rollup scripts
 
 
-These scripts implement a prototype rollup process.
+These scripts implement a prototype *rollup loop*.
 
 ## Instructions
 
@@ -15,8 +15,11 @@ Assuming that your active directory is `e2e-test/rollup`, execute the following.
 ```shell
 ./01-rollup-init-transaction.sh
 ```
-2. Recurrent rollup update:
+2. Start rollup update loop:
 ```shell
-./02-rollup-update-transaction.sh
+./02-rollup-update-loop.sh
 ```
-Execute step 2 recurrently (again & again) to simulate each rollup update.
+You will enter a loop of recurrent rollup updates.  To **stop**, execute (from another terminal)
+```shell
+printf "false" > ./keys/rollup-loop.flag
+```
