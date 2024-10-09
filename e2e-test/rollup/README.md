@@ -23,3 +23,4 @@ You will enter a loop of recurrent rollup updates.  To **stop**, execute (from a
 ```shell
 printf "false" > ./keys/rollup-loop.flag
 ```
+To resume rollup update loop, simply execute step 2 again.
