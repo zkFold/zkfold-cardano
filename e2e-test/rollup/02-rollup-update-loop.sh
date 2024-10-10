@@ -20,6 +20,7 @@ rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx"
 
 period=7
 loop=true
+printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
     loop=$(cat $keypath/rollup-loop.flag)

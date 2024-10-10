@@ -133,8 +133,6 @@ while true; do
     fi
 done
 
-printf "true" > $keypath/rollup-loop.flag
-
 echo ""
 echo "Initialization completed."
 echo ""
