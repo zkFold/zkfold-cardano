@@ -13,8 +13,10 @@ mkdir -p $assets
 mkdir -p $keypath
 
 parkingTag=11
+period=7
 unitDatum=$assets/unit.cbor
-initialState=$assets/datumRollup.cbor
+stateA=$assets/datumRollupA.cbor
+stateB=$assets/datumRollupB.cbor
 rollupValue=3000000
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
@@ -74,13 +76,21 @@ cardano-cli conway transaction submit \
     --testnet-magic 4 \
     --tx-file $keypath/parkedScript.tx
 
-echo ""
-echo "Pausing for 60 seconds..."
-sleep 60
+parkedTx=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")
+parkedOut=$parkedTx#0
 
-echo ""
-echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/parkedScript.tx)"
-echo ""
+while true; do
+    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/parkingSpot.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
+    if [ $txOnChain == "false" ]; then
+	echo "Waiting to see parking tx onchain..."
+	sleep $period
+    else
+	echo ""
+	echo "Transaction Id: $parkedTx"
+	echo ""
+	break
+    fi
+done
 
 #-------------------------------- :rollup initial transfer: -------------------------------
 
@@ -92,7 +102,9 @@ cardano-cli conway transaction build \
   --testnet-magic 4 \
   --tx-in $in1 \
   --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
-  --tx-out-inline-datum-cbor-file $initialState \
+  --tx-out-inline-datum-cbor-file $stateA \
+  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
+  --tx-out-inline-datum-cbor-file $stateB \
   --change-address $(cat $keypath/alice.addr) \
   --out-file $keypath/rollupUpdate.txbody
 
@@ -106,8 +118,23 @@ cardano-cli conway transaction submit \
     --testnet-magic 4 \
     --tx-file $keypath/rollupUpdate.tx
 
-echo ""
-echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupUpdate.tx)"
-echo ""
+rollupTx=$(cardano-cli transaction txid --tx-file "$keypath/rollupUpdate.tx")
+rollupOut=$rollupTx#0
+
+while true; do
+    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/rollup.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$rollupOut" 'has($key) | tostring')
+    if [ $txOnChain == "false" ]; then
+	echo "Waiting to see initial rollup tx onchain..."
+	sleep $period
+    else
+	echo ""
+	echo "Transaction Id: $rollupTx"
+	break
+    fi
+done
 
 printf "true" > $keypath/rollup-loop.flag
+
+echo ""
+echo "Initialization completed."
+echo ""

@@ -9,7 +9,9 @@ import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed)
-import           PlutusTx.Prelude                         hiding ((*), (+))
+import           PlutusTx.AssocMap                        (toList)  -- (elems)
+-- import           PlutusTx.Ord                             (compare)
+import           PlutusTx.Prelude                         hiding (toList)
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
@@ -51,23 +53,38 @@ rollup ledgerRules RollupRedeemer{..} ctx =
 
 {-# INLINABLE rollup' #-}
 rollup' :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
-rollup' ledgerRules RollupRedeemer{..} ctx =
+rollup' ledgerRules red ctx =
         -- Tautology: Verify the transition from the current state to the next state, then always True
-        (verify @PlonkPlutus @HaskellCore ledgerRules nextState rrProof || True)
+        (verify @PlonkPlutus @HaskellCore ledgerRules nextState (rrProof red) || True)
         -- Check the current rollup output
-        && out  == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData rrState) Nothing
+        && out  == TxOut (rrAddress red) (rrValue red) (OutputDatum $ Datum $ toBuiltinData (rrState red)) Nothing
         -- Check the next rollup output
-        && out' == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData nextState) Nothing
+        && if ownInputIdx == length redeemers - 1
+             then out' == TxOut (rrAddress red) (rrValue red) (OutputDatum $ Datum $ toBuiltinData nextState) Nothing
+             else let nextRedeemer = redeemers !! (ownInputIdx + 1)
+                  -- let Just nextRedeemer = lookup (Spending $ TxOutRef ownInputId (ownInputIdx + 1)) redeemers
+                  in  (rrState . unsafeFromBuiltinData . getRedeemer $ nextRedeemer) == nextState
     where
+        info = scriptContextTxInfo ctx
+
+        -- Get redeemer's list
+        redeemers = map snd $ sortBy (\x y -> compare (idx x) (idx y)) $ toList $ txInfoRedeemers info
+          where
+            idx (Spending (TxOutRef _ outIdx), _) = outIdx
+            idx _                                 = error ()
+
+        -- Get the current output
+        Just j      = findOwnInput ctx
+        ownInputIdx = txOutRefIdx $ txInInfoOutRef j
+
         -- Get the current rollup output
-        Just j = findOwnInput ctx
         out    = txInInfoResolved j
 
         -- Get the next rollup output
-        out'   = head $ txInfoOutputs $ scriptContextTxInfo ctx
+        out'   = head $ txInfoOutputs info
 
         -- Compute the next state
-        nextState = toInput $ dataToBlake (rrState, rrUpdate)
+        nextState = toInput $ dataToBlake (rrState red, rrUpdate red)
 
 {-# INLINABLE parkingSpot #-}
 parkingSpot :: Integer -> ScriptContext -> Bool

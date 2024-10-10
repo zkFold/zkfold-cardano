@@ -14,29 +14,40 @@ import qualified PlutusLedgerApi.V3               as V3
 import           PlutusTx                         (ToData (..))
 import           Prelude                          (Either (..), IO, error, ($), (++), (.), (<$>))
 
-import           ZkFold.Cardano.OnChain.BLS12_381 (toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381 (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils     (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup       (RollupRedeemer (..))
 
+
+nextRedeemerRollup :: F -> RollupRedeemer -> RollupRedeemer
+nextRedeemerRollup nextState previousRollup = RollupRedeemer
+  { rrProof   = rrProof previousRollup
+  , rrAddress = rrAddress previousRollup
+  , rrValue   = rrValue previousRollup
+  , rrState   = nextState
+  , rrUpdate  = rrUpdate previousRollup ++ [nextState]
+  }
+
 main :: IO ()
 main = do
-  redeemerRollupE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile "../../assets/redeemerRollup.json"
-  case redeemerRollupE of
-    Right redeemerRollupScriptData -> do
-      let redeemerRollup = fromJust . V3.fromData . toPlutusData . getScriptData $ redeemerRollupScriptData :: RollupRedeemer
+  redeemerRollupBE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile "../../assets/redeemerRollupB.json"
+  case redeemerRollupBE of
+    Right redeemerRollupBScriptData -> do
+      let redeemerRollupB = fromJust . V3.fromData . toPlutusData . getScriptData $ redeemerRollupBScriptData :: RollupRedeemer
 
-      let nextState          = toInput $ dataToBlake (rrState redeemerRollup, rrUpdate redeemerRollup)
-          nextRedeemerRollup = RollupRedeemer
-            { rrProof   = rrProof redeemerRollup
-            , rrAddress = rrAddress redeemerRollup
-            , rrValue   = rrValue redeemerRollup
-            , rrState   = nextState
-            , rrUpdate  = rrUpdate redeemerRollup ++ [nextState]
-            }
+      let nextStateA          = toInput $ dataToBlake (rrState redeemerRollupB, rrUpdate redeemerRollupB)
+          nextRedeemerRollupA = nextRedeemerRollup nextStateA redeemerRollupB
 
-      BS.writeFile "../../assets/datumRollup.cbor" $ dataToCBOR nextState
-      BS.writeFile "../../assets/nextRedeemerRollup.cbor" $ dataToCBOR nextRedeemerRollup
-      BS.writeFile "../../assets/nextRedeemerRollup.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollup
+          nextStateB          = toInput $ dataToBlake (rrState nextRedeemerRollupA, rrUpdate nextRedeemerRollupA)
+          nextRedeemerRollupB = nextRedeemerRollup nextStateB nextRedeemerRollupA
+
+      BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR nextStateA
+      BS.writeFile "../../assets/nextRedeemerRollupA.cbor" $ dataToCBOR nextRedeemerRollupA
+      BS.writeFile "../../assets/nextRedeemerRollupA.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollupA
+
+      BS.writeFile "../../assets/datumRollupB.cbor" $ dataToCBOR nextStateB
+      BS.writeFile "../../assets/nextRedeemerRollupB.cbor" $ dataToCBOR nextRedeemerRollupB
+      BS.writeFile "../../assets/nextRedeemerRollupB.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollupB
 
     Left _                         -> error "JSON error: unreadable 'redeemerRollup.json'"
 
