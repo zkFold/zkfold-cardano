@@ -1,7 +1,7 @@
 # Rollup scripts
 
 
-These scripts implement a prototype *rollup loop*.
+Scripts implementing a prototype *rollup loop*.  Currently rollup transactions process batches of two rollup updates.  (We hope that generalization to batches of *n* rollup updates will now be easy.)
 
 ## Instructions
 
