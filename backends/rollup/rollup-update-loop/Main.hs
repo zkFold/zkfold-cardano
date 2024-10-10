@@ -12,7 +12,8 @@ import qualified Data.ByteString.Lazy             as BL
 import           Data.Maybe                       (fromJust)
 import qualified PlutusLedgerApi.V3               as V3
 import           PlutusTx                         (ToData (..))
-import           Prelude                          (Either (..), IO, error, ($), (++), (.), (<$>))
+import           Prelude                          (Either (..), IO, error, length, show, ($), (++), (.), (<$>))
+import qualified System.IO                        as IO
 
 import           ZkFold.Cardano.OnChain.BLS12_381 (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils     (dataToBlake)
@@ -41,6 +42,7 @@ main = do
           nextStateB          = toInput $ dataToBlake (rrState nextRedeemerRollupA, rrUpdate nextRedeemerRollupA)
           nextRedeemerRollupB = nextRedeemerRollup nextStateB nextRedeemerRollupA
 
+      IO.writeFile "../../assets/last-update-length.log" . show . length . rrUpdate $ redeemerRollupB
       BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR nextStateA
       BS.writeFile "../../assets/nextRedeemerRollupA.cbor" $ dataToCBOR nextRedeemerRollupA
       BS.writeFile "../../assets/nextRedeemerRollupA.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollupA

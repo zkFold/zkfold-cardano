@@ -74,7 +74,7 @@ while $loop; do
 	    --tx-file $keypath/rollupUpdate.tx
 
 	echo ""
-	echo "Rollup-update batch completed."
+	echo "Rollup-update batch completed.  Last update length: $(cat $assets/last-update-length.log)."
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupUpdate.tx)"
 	echo ""
 

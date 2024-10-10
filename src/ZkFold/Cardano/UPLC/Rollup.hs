@@ -9,9 +9,8 @@ import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed)
-import           PlutusTx.AssocMap                        (toList)  -- (elems)
--- import           PlutusTx.Ord                             (compare)
-import           PlutusTx.Prelude                         hiding (toList)
+import           PlutusTx.AssocMap                        (elems)
+import           PlutusTx.Prelude
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
@@ -62,16 +61,12 @@ rollup' ledgerRules red ctx =
         && if ownInputIdx == length redeemers - 1
              then out' == TxOut (rrAddress red) (rrValue red) (OutputDatum $ Datum $ toBuiltinData nextState) Nothing
              else let nextRedeemer = redeemers !! (ownInputIdx + 1)
-                  -- let Just nextRedeemer = lookup (Spending $ TxOutRef ownInputId (ownInputIdx + 1)) redeemers
                   in  (rrState . unsafeFromBuiltinData . getRedeemer $ nextRedeemer) == nextState
     where
         info = scriptContextTxInfo ctx
 
         -- Get redeemer's list
-        redeemers = map snd $ sortBy (\x y -> compare (idx x) (idx y)) $ toList $ txInfoRedeemers info
-          where
-            idx (Spending (TxOutRef _ outIdx), _) = outIdx
-            idx _                                 = error ()
+        redeemers = elems $ txInfoRedeemers info
 
         -- Get the current output
         Just j      = findOwnInput ctx
