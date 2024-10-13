@@ -7,7 +7,10 @@ cradle:
       component: "zkfold-cardano:test:test"
 
     - path: "./benchs/bench-cpu-mem"
-      component: "zkfold-cardano:exe:bench-cpu-mem"
+      component: "zkfold-cardano:bench:bench-cpu-mem"
+    
+    - path: "./benchs/bench-rollup"
+      component: "zkfold-cardano:bench:bench-rollup"
 
     - path: "./backends/symbolic/symbolic-init-transaction"
       component: "zkfold-cardano:exe:symbolic-init-transaction"

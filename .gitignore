@@ -22,9 +22,11 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
+.DS_Store
 compiled_scripts/*
 logs
 *.svg
+
 e2e-test/*/keys
 local-testnet/example
 assets

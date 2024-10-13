@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Main where
 
 
@@ -31,12 +32,11 @@ import           UntypedPlutusCore                        (UnrestrictedProgram (
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Plonk                     (PlonkPlutus)
-import           ZkFold.Cardano.Plonk.OnChain             (InputBytes, ProofBytes (..), SetupBytes)
-import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
+import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
+import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
+import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes, ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, symbolicVerifierCompiled,
                                                            verifyPlonkCompiled)
-
 
 contextPlonk :: ProofBytes -> ScriptContext
 contextPlonk redeemerProof = ScriptContext
@@ -168,10 +168,10 @@ main = do
     hPrintf h "Run \'plonkVerifier\'\n\n"
     printHeader h
     printCostsPlonkVerifier h setup $ contextPlonk proof
-    -- hPrintf h "\n\n"
-    -- hPrintf h "\n\n"
-    -- hPrintf h "Run symbolic plonk verifier\n\n"
-    -- printHeader h
-    -- printCostsSymbolicVerifier h setup proof contextSymbolic
+    hPrintf h "\n\n"
+    hPrintf h "\n\n"
+    hPrintf h "Run symbolic plonk verifier\n\n"
+    printHeader h
+    printCostsSymbolicVerifier h setup $ contextSymbolic proof
     hPrintf h "\n\n"
 

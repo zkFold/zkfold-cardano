@@ -1,16 +1,19 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies    #-}
 
-module ZkFold.Cardano.Plonk.OnChain.BLS12_381.F where
+{-# OPTIONS_GHC -Wno-orphans #-}
+
+module ZkFold.Cardano.OnChain.BLS12_381.F where
 
 import           Data.Aeson                      (FromJSON, ToJSON)
+import           GHC.ByteOrder                   (ByteOrder (..))
 import           GHC.Generics                    (Generic)
 import           GHC.Natural                     (Natural, naturalToInteger)
 import           PlutusTx                        (makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude
-import           Prelude                         (Show)
+import qualified Prelude                         as Haskell
 
 import qualified ZkFold.Base.Algebra.Basic.Class as ZkFold
 
@@ -18,7 +21,7 @@ bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 newtype F = F Integer
-  deriving stock (Show, Generic)
+  deriving stock (Haskell.Show, Generic)
   deriving newtype (ToJSON, FromJSON)
 makeLift ''F
 makeIsDataIndexed ''F [('F,0)]
@@ -26,6 +29,16 @@ makeIsDataIndexed ''F [('F,0)]
 {-# INLINABLE toF #-}
 toF :: Integer -> F
 toF = F . (`modulo` bls12_381_field_prime)
+
+-- | convert hash into Zp BLS12_381_Scalar
+{-# INLINABLE toInput #-}
+toInput :: BuiltinByteString -> F
+toInput = F . byteStringToInteger BigEndian
+
+-- | convert Zp BLS12_381_Scalar into hash
+{-# INLINABLE fromInput #-}
+fromInput :: F -> BuiltinByteString
+fromInput (F input) = integerToByteString BigEndian 32 input
 
 instance Eq F where
     {-# INLINABLE (==) #-}
@@ -107,3 +120,11 @@ instance ZkFold.MultiplicativeGroup F where
 
     {-# INLINABLE (/) #-}
     a / b = a ZkFold.* ZkFold.invert b
+
+--------------------------------------------------------------------------------
+
+instance Haskell.Eq F where
+    (F a) == (F b) = a == b
+
+instance ZkFold.Finite F where
+    type Order F = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001

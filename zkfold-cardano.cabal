@@ -3,7 +3,7 @@ cabal-version:      3.0
 name:               zkfold-cardano
 version:            0.1.0.0
 category:           Testing, Cryptography, Math, Symbolic Computation
-author:             Vladimir Sinyakov, Ilya Baryshnikov
+author:             Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
 maintainer:         info@zkfold.io
 license:            MIT
 build-type:         Simple
@@ -67,22 +67,28 @@ library
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.Examples.EqualityCheck
-    ZkFold.Cardano.Scripts.ForwardingScripts
-    ZkFold.Cardano.Scripts.PlonkVerifier
-    ZkFold.Cardano.Scripts.Rollup
-    ZkFold.Cardano.Scripts.SymbolicVerifier
+    ZkFold.Cardano.OffChain.BLS12_381
+    ZkFold.Cardano.OffChain.E2E
+    ZkFold.Cardano.OffChain.Plonk
+    ZkFold.Cardano.OffChain.Plonkup
+    ZkFold.Cardano.OffChain.Transcript
+    ZkFold.Cardano.OnChain.BLS12_381
+    ZkFold.Cardano.OnChain.BLS12_381.F
+    ZkFold.Cardano.OnChain.BLS12_381.G1
+    ZkFold.Cardano.OnChain.BLS12_381.G2
+    ZkFold.Cardano.OnChain.Plonk
+    ZkFold.Cardano.OnChain.Plonk.Data
+    ZkFold.Cardano.OnChain.Plonkup
+    ZkFold.Cardano.OnChain.Plonkup.Data
+    ZkFold.Cardano.OnChain.Utils
     ZkFold.Cardano.UPLC
-    ZkFold.Cardano.Plonk
-    ZkFold.Cardano.Plonk.OnChain
-    ZkFold.Cardano.Plonk.OnChain.BLS12_381.F
-    ZkFold.Cardano.Plonk.OnChain.BLS12_381.G1
-    ZkFold.Cardano.Plonk.OnChain.BLS12_381.G2
-    ZkFold.Cardano.Plonk.OnChain.Data
-    ZkFold.Cardano.Plonk.OnChain.Utils
-    ZkFold.Cardano.Plonk.OffChain
-    ZkFold.Cardano.Benchs.PlonkAlt
-    ZkFold.Cardano.Benchs.PubInput
+--    ZkFold.Cardano.Benchs.PlonkAlt
+--    ZkFold.Cardano.Benchs.PubInput
     ZkFold.Cardano.Benchs.EmptyCircuit
+    ZkFold.Cardano.UPLC.ForwardingScripts
+    ZkFold.Cardano.UPLC.PlonkVerifier
+    ZkFold.Cardano.UPLC.Rollup
+    ZkFold.Cardano.UPLC.SymbolicVerifier
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -103,7 +109,7 @@ test-suite test
   ghc-options:      -rtsopts
   main-is:          Main.hs
   other-modules:
-    Tests.Verifier
+    Tests.Compatibility
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -137,15 +143,16 @@ test-suite test
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
-executable bench-cpu-mem
+benchmark bench-cpu-mem
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   benchs/bench-cpu-mem
   other-modules:
     Bench.Statistics
+  hs-source-dirs:   benchs/bench-cpu-mem
+  type:             exitcode-stdio-1.0
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
@@ -162,28 +169,31 @@ executable bench-cpu-mem
     zkfold-base                    ,
     zkfold-cardano                 ,
 
-executable bench-pubinput
+benchmark bench-rollup
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   benchs/bench-pubinput
   other-modules:
-    Bench.Scripts
+    Bench.Statistics
     Bench.Utils
+  hs-source-dirs:   benchs/bench-rollup
+  type:             exitcode-stdio-1.0
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
     bytestring                     ,
     cardano-api                    ,
-    cborg                          ,
+    containers                     ,
     directory                      ,
+    plutus-core             ^>=1.30,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
+    QuickCheck                     ,
+    zkfold-base                    ,
     zkfold-cardano                 ,
-    QuickCheck
 
 executable bench-emptycircuit
   import:           lang

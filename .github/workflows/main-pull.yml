@@ -19,21 +19,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
-
-    - name: Set up Haskell
-      uses: haskell-actions/setup@v2.6.2
-      id: setup
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
-        cabal-update: true
-
-    - name: Configure Cabal
-      run: |
-        cabal configure --enable-tests --enable-benchmarks --enable-documentation
-    
     - name: Install system dependencies
       run: |
         sudo apt-get update -y
@@ -41,7 +26,7 @@ jobs:
         
     - name: Install C dependencies
       run: |
-        CARDANO_NODE_VERSION='8.7.3'
+        CARDANO_NODE_VERSION='9.1.0'
         IOHKNIX_VERSION=$(curl https://raw.githubusercontent.com/IntersectMBO/cardano-node/$CARDANO_NODE_VERSION/flake.lock | jq -r '.nodes.iohkNix.locked.rev')
         echo "iohk-nix version: $IOHKNIX_VERSION"
 
@@ -109,6 +94,21 @@ jobs:
 
         cd
 
+    - name: Checkout code
+      uses: actions/checkout@v4.1.1
+
+    - name: Set up Haskell
+      uses: haskell-actions/setup@v2.6.2
+      id: setup
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+        cabal-update: true
+
+    - name: Configure Cabal
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --enable-documentation
+
     - name: Generate cache key
       # Creates plan.json file
       run: |
@@ -126,7 +126,7 @@ jobs:
 
     - name: Install stylish-haskell
       run: |
-        cabal install stylish-haskell
+        cabal install stylish-haskell-0.14.5.0
 
     - name: Lint Haskell
       run: |

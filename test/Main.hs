@@ -1,8 +1,8 @@
 module Main where
 
 import           Prelude
-import           Tests.Verifier (specVerifier)
+import           Tests.Compatibility (specCompatibility)
 
 main :: IO ()
 main = do
-    specVerifier
+    specCompatibility
