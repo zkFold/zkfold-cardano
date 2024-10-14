@@ -3,15 +3,15 @@ module ZkFold.Cardano.Benchs.EmptyCircuit where
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
-import           ZkFold.Base.Data.Vector                     (Vector (..), unsafeToVector)
 import qualified ZkFold.Base.Data.Vector                     as V
+import           ZkFold.Base.Data.Vector                     (Vector (..), unsafeToVector)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonk
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness
 import           ZkFold.Cardano.OffChain.Plonk               (PlonkNZ, mkInput', mkProof', mkSetup')
-import           ZkFold.Cardano.OnChain.Plonk()
+import           ZkFold.Cardano.OnChain.Plonk                ()
 import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes, SetupBytes)
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..))
 

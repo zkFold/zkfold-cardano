@@ -21,6 +21,7 @@ import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificatio
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, symbolicVerifierCompiled)
 
+
 {-
 import           Cardano.Api                                 hiding (TxId)
 import qualified Cardano.Api                                 as C
