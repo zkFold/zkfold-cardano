@@ -18,7 +18,7 @@ import           Test.QuickCheck.Arbitrary          (Arbitrary (..))
 import           Test.QuickCheck.Gen                (generate)
 
 import           ZkFold.Cardano.Benchs.EmptyCircuit (tautologyVerificationBytes)
-import           ZkFold.Cardano.Plonk.OffChain      (EqualityCheckContract (..))
+import           ZkFold.Cardano.OffChain.E2E        (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                (symbolicVerifierCompiled)
 
 
