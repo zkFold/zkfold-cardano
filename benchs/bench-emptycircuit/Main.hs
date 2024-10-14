@@ -1,26 +1,22 @@
 module Main where
 
 -- import           Bench.Scripts                      (compiledAlwaysSucceeds)
-import           Cardano.Api                        (IsPlutusScriptLanguage, PlutusScriptV3, writeFileTextEnvelope)
-import           Cardano.Api.Ledger                 (toCBOR)
-import           Cardano.Api.Shelley                (File (..), PlutusScript (..), fromPlutusData)
-import           Codec.CBOR.Write                   (toStrictByteString)
-import           Control.Monad                      (void)
--- import           Data.Aeson                         (encode)
-import qualified Data.ByteString                    as BS
--- import qualified Data.ByteString.Lazy               as BL
-import qualified PlutusLedgerApi.V3                 as V3
-import           PlutusTx                           (CompiledCode, ToData (..))
-import           Prelude                            (FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))  -- Bool (..)
--- import           System.Directory                   (createDirectoryIfMissing)
-import           Test.QuickCheck.Arbitrary          (Arbitrary (..))
-import           Test.QuickCheck.Gen                (generate)
+import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
+                                                           writeFileTextEnvelope)
+import           Cardano.Api.Ledger                       (toCBOR)
+import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData)
+import           Codec.CBOR.Write                         (toStrictByteString)
+import           Control.Monad                            (void)
+import qualified Data.ByteString                          as BS
+import qualified PlutusLedgerApi.V3                       as V3
+import           PlutusTx                                 (CompiledCode, ToData (..))
+import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
+import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
+import           Test.QuickCheck.Gen                      (generate)
 
-import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
--- import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.Benchs.EmptyCircuit (tautologyVerificationBytes)
--- import           ZkFold.Cardano.OffChain.E2E        (EqualityCheckContract (..))
-import           ZkFold.Cardano.OnChain.Plonk       (PlonkPlutus)
+import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Cardano.Benchs.EmptyCircuit       (tautologyVerificationBytes)
+import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 -- import           ZkFold.Cardano.UPLC                (symbolicVerifierCompiled)
 
 
