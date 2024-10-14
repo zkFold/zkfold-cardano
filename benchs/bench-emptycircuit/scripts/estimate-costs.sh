@@ -14,7 +14,7 @@ proofRedeemer=$assetspath/redeemerSymbolicVerifier.cbor
 #------------------------ :symbolicVerifier: ------------------------
 
 # Plutus script for 'symbolicVerifier' in CBORHex format.
-symbolicVerifier_cbor_hex=$(jq -r '.cborHex' $assetspath/symbolicVerifier.plutus)
+# symbolicVerifier_cbor_hex=$(jq -r '.cborHex' $assetspath/symbolicVerifier.plutus)
 
 # TxOutRef for 'symbolicVerifier'
 symbolicVerifier=$(cardano-cli transaction txid --tx-file "$keypath/transferScript.tx")#0

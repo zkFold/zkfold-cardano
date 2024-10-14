@@ -13,11 +13,11 @@ import           System.Directory                   (createDirectoryIfMissing)
 import           Test.QuickCheck.Arbitrary          (Arbitrary (..))
 import           Test.QuickCheck.Gen                (generate)
 
-import           ZkFold.Cardano.Benchs.EmptyCircuit (tautologyVerificationBytes)
+-- import           ZkFold.Cardano.Benchs.EmptyCircuit (tautologyVerificationBytes)
 -- import           ZkFold.Cardano.Plonk.OffChain      (EqualityCheckContract (..))
 -- import           ZkFold.Cardano.UPLC                (forwardingRewardCompiled, symbolicVerifierCompiled)
 
--- import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
+import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, symbolicVerifierCompiled)
 
@@ -203,8 +203,7 @@ main = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-  let (setup, _, _) = tautologyVerificationBytes x ps targetValue
---  let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
+  let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
   savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
   savePlutus "../../assets/forwardingReward.plutus" forwardingRewardCompiled

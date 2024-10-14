@@ -1,5 +1,5 @@
 Command failed: transaction build  Error: The following scripts have execution failures:
-the script for transaction input 1 (in ascending order of the TxIds) failed with: 
+the script for transaction input 0 (in ascending order of the TxIds) failed with: 
 The Plutus script evaluation failed: An error has occurred:
 The machine terminated because of an error, either from a built-in function or from an explicit use of 'error'.
 Script debugging logs: entering untypedSymbolicVerifier
