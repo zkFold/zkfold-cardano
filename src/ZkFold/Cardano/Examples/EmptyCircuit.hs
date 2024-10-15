@@ -1,13 +1,13 @@
 module ZkFold.Cardano.Examples.EmptyCircuit where
 
-import           GHC.Generics                                (Par1(..))
+import           GHC.Generics                                (Par1 (..))
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (zero)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import           ZkFold.Base.Data.HFunctor                   (hmap)
-import           ZkFold.Base.Data.Vector                     (Vector (..), unsafeToVector, item, singleton)
+import           ZkFold.Base.Data.Vector                     (Vector (..), item, singleton, unsafeToVector)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonk
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
