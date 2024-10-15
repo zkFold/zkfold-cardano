@@ -58,7 +58,7 @@ echo ""
 
 inA=$(cardano-cli transaction txid --tx-file "$keypath/rollupUpdateA.tx")#0
 
-total2=1476592423
+total2=1473592423
 fee=3000000
 collateralVal=5000000
 change=$((total2 - $fee))
