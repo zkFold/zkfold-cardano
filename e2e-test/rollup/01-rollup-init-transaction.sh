@@ -13,6 +13,7 @@ mkdir -p $assets
 mkdir -p $keypath
 
 parkingTag=11
+pause=7
 unitDatum=$assets/unit.cbor
 initialState=$assets/datumRollup.cbor
 rollupValue=3000000
@@ -74,13 +75,20 @@ cardano-cli conway transaction submit \
     --testnet-magic 4 \
     --tx-file $keypath/parkedScript.tx
 
-echo ""
-echo "Pausing for 60 seconds..."
-sleep 60
-
-echo ""
-echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/parkedScript.tx)"
-echo ""
+parkedTx=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")
+parkedOut=$parkedTx#0
+while true; do
+    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/parkingSpot.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
+    if [ $txOnChain == "false" ]; then
+	echo "Waiting to see parking tx onchain..."
+	sleep $pause
+    else
+	echo ""
+	echo "Transaction Id: $parkedTx"
+	echo ""
+	break
+    fi
+done
 
 #-------------------------------- :rollup initial transfer: -------------------------------
 
@@ -106,8 +114,21 @@ cardano-cli conway transaction submit \
     --testnet-magic 4 \
     --tx-file $keypath/rollupUpdate.tx
 
+rollupTx=$(cardano-cli transaction txid --tx-file "$keypath/rollupUpdate.tx")
+rollupOut=$rollupTx#0
+while true; do
+    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/rollup.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$rollupOut" 'has($key) | tostring')
+    if [ $txOnChain == "false" ]; then
+	echo "Waiting to see initial rollup tx onchain..."
+	sleep $pause
+    else
+	echo ""
+	echo "Transaction Id: $rollupTx"
+	break
+    fi
+done
+
 echo ""
-echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupUpdate.tx)"
+echo "Initialization completed."
 echo ""
 
-printf "true" > $keypath/rollup-loop.flag

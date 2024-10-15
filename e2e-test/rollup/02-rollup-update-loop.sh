@@ -16,8 +16,9 @@ rollupValue=3000000
 
 rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
 
-period=7
+pause=7
 loop=true
+printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
     loop=$(cat $keypath/rollup-loop.flag)
@@ -27,7 +28,7 @@ while $loop; do
 
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see rollup tx onchain..."
-	sleep $period
+	sleep $pause
     else
 	echo ""
 	echo "Starting next rollup update..."
@@ -63,6 +64,7 @@ while $loop; do
 	    --tx-file $keypath/rollupUpdate.tx
 
 	echo ""
+	echo "Rollup-update batch completed.  Last update length: $(cat $assets/last-update-length.log)."
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupUpdate.tx)"
 	echo ""
 
