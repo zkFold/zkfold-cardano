@@ -66,6 +66,7 @@ library
   import:           lang-extra
   default-language: Haskell2010
   exposed-modules:
+    ZkFold.Cardano.Examples.EmptyCircuit
     ZkFold.Cardano.Examples.EqualityCheck
     ZkFold.Cardano.OffChain.BLS12_381
     ZkFold.Cardano.OffChain.E2E
