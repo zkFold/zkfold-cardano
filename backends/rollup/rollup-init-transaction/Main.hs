@@ -28,9 +28,20 @@ import           Text.Parsec.String                    (Parser)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381      (F (..), toInput)
+import           ZkFold.Cardano.OnChain.Utils          (dataToBlake)
 import           ZkFold.Cardano.UPLC                   (parkingSpotCompiled, rollupCompiled')
 import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..))
 
+
+nextRedeemer :: F -> RollupRedeemer -> RollupRedeemer
+nextRedeemer nextState previousRollup = RollupRedeemer
+  { rrProof   = rrProof previousRollup
+  , rrAddress = rrAddress previousRollup
+  , rrValue   = rrValue previousRollup
+  , rrState   = nextState
+  , rrUpdate  = rrUpdate previousRollup ++ [nextState]
+  }
 
 saveRollupPlutus :: IO ()
 saveRollupPlutus = do
@@ -42,27 +53,32 @@ saveRollupPlutus = do
 
   BL.writeFile "../../test-data/plonk-raw-contract-data.json" $ encode contract
 
-  -- EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile "../../test-data/plonk-raw-contract-data.json"
-
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-  let (ledgerRules, iniState, proof) = equalityCheckVerificationBytes x ps targetValue
+  let (ledgerRules, stateA, proof) = equalityCheckVerificationBytes x ps targetValue
 
-  let initialRedeemer = RollupRedeemer
+  let redeemerRollupA = RollupRedeemer
         { rrProof   = proof
         , rrAddress = V3.Address rollupCredential Nothing
         , rrValue   = lovelace 3000000
-        , rrState   = iniState
-        , rrUpdate  = [iniState]
+        , rrState   = stateA
+        , rrUpdate  = [stateA]
         }
         where
           rollupCredential = credentialOf $ rollupCompiled' ledgerRules
           lovelace = V2.singleton V2.adaSymbol V2.adaToken
 
+  let stateB          = toInput $ dataToBlake (rrState redeemerRollupA, rrUpdate redeemerRollupA)
+      redeemerRollupB = nextRedeemer stateB redeemerRollupA
+
   savePlutus "../../assets/rollup.plutus" $ rollupCompiled' ledgerRules
-  BS.writeFile "../../assets/datumRollup.cbor" $ dataToCBOR iniState
-  BS.writeFile "../../assets/redeemerRollup.cbor" $ dataToCBOR initialRedeemer
-  BS.writeFile "../../assets/redeemerRollup.json" $ prettyPrintJSON $ dataToJSON initialRedeemer
+
+  BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR stateA
+  BS.writeFile "../../assets/redeemerRollupA.cbor" $ dataToCBOR redeemerRollupA
+  BS.writeFile "../../assets/redeemerRollupA.json" $ prettyPrintJSON $ dataToJSON redeemerRollupA
+  BS.writeFile "../../assets/datumRollupB.cbor" $ dataToCBOR stateB
+  BS.writeFile "../../assets/redeemerRollupB.cbor" . dataToCBOR $ redeemerRollupB
+  BS.writeFile "../../assets/redeemerRollupB.json" . prettyPrintJSON . dataToJSON $ redeemerRollupB
 
 saveParkingSpotPlutus :: Integer -> IO ()
 saveParkingSpotPlutus = savePlutus "../../assets/parkingSpot.plutus" . parkingSpotCompiled

@@ -15,7 +15,8 @@ mkdir -p $keypath
 parkingTag=11
 pause=7
 unitDatum=$assets/unit.cbor
-initialState=$assets/datumRollup.cbor
+stateA=$assets/datumRollupA.cbor
+stateB=$assets/datumRollupB.cbor
 rollupValue=3000000
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
@@ -86,44 +87,6 @@ while true; do
 	echo ""
 	echo "Transaction Id: $parkedTx"
 	echo ""
-	break
-    fi
-done
-
-#-------------------------------- :rollup initial transfer: -------------------------------
-
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
-
-echo "Rollup initial transfer..."
-
-cardano-cli conway transaction build \
-  --testnet-magic 4 \
-  --tx-in $in1 \
-  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
-  --tx-out-inline-datum-cbor-file $initialState \
-  --change-address $(cat $keypath/alice.addr) \
-  --out-file $keypath/rollupUpdate.txbody
-
-cardano-cli conway transaction sign \
-  --testnet-magic 4 \
-  --tx-body-file $keypath/rollupUpdate.txbody \
-  --signing-key-file $keypath/alice.skey \
-  --out-file $keypath/rollupUpdate.tx
-
-cardano-cli conway transaction submit \
-    --testnet-magic 4 \
-    --tx-file $keypath/rollupUpdate.tx
-
-rollupTx=$(cardano-cli transaction txid --tx-file "$keypath/rollupUpdate.tx")
-rollupOut=$rollupTx#0
-while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/rollup.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$rollupOut" 'has($key) | tostring')
-    if [ $txOnChain == "false" ]; then
-	echo "Waiting to see initial rollup tx onchain..."
-	sleep $pause
-    else
-	echo ""
-	echo "Transaction Id: $rollupTx"
 	break
     fi
 done

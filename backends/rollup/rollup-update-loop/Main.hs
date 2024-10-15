@@ -12,11 +12,22 @@ import qualified Data.ByteString.Lazy             as BL
 import           Data.Maybe                       (fromJust)
 import qualified PlutusLedgerApi.V3               as V3
 import           PlutusTx                         (ToData (..))
-import           Prelude                          (Either (..), IO, error, ($), (++), (.), (<$>))
+import           Prelude                          (Either (..), IO, error, length, show, ($), (++), (.), (<$>))
+import qualified System.IO                        as IO
 
-import           ZkFold.Cardano.OnChain.BLS12_381 (toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381 (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils     (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup       (RollupRedeemer (..))
+
+
+nextRedeemer :: F -> RollupRedeemer -> RollupRedeemer
+nextRedeemer nextState previousRollup = RollupRedeemer
+  { rrProof   = rrProof previousRollup
+  , rrAddress = rrAddress previousRollup
+  , rrValue   = rrValue previousRollup
+  , rrState   = nextState
+  , rrUpdate  = rrUpdate previousRollup ++ [nextState]
+  }
 
 main :: IO ()
 main = do
@@ -26,14 +37,9 @@ main = do
       let redeemerRollup = fromJust . V3.fromData . toPlutusData . getScriptData $ redeemerRollupScriptData :: RollupRedeemer
 
       let nextState          = toInput $ dataToBlake (rrState redeemerRollup, rrUpdate redeemerRollup)
-          nextRedeemerRollup = RollupRedeemer
-            { rrProof   = rrProof redeemerRollup
-            , rrAddress = rrAddress redeemerRollup
-            , rrValue   = rrValue redeemerRollup
-            , rrState   = nextState
-            , rrUpdate  = rrUpdate redeemerRollup ++ [nextState]
-            }
+          nextRedeemerRollup = nextRedeemer nextState redeemerRollup
 
+      IO.writeFile "../../assets/last-update-length.log" . show . length . rrUpdate $ redeemerRollup
       BS.writeFile "../../assets/datumRollup.cbor" $ dataToCBOR nextState
       BS.writeFile "../../assets/nextRedeemerRollup.cbor" $ dataToCBOR nextRedeemerRollup
       BS.writeFile "../../assets/nextRedeemerRollup.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollup
