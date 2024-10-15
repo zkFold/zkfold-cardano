@@ -10,8 +10,10 @@ keypath=./keys
 assets=../../assets
 
 unitDatum=$assets/unit.cbor
-newState=$assets/datumRollup.cbor
-rollupRedeemer=$assets/redeemerRollup.cbor
+newStateA=$assets/datumRollupA.cbor
+newStateB=$assets/datumRollupB.cbor
+redeemerRollupA=$assets/redeemerRollupA.cbor
+redeemerRollupB=$assets/redeemerRollupB.cbor
 rollupValue=3000000
 
 rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
@@ -23,8 +25,10 @@ printf "$loop" > $keypath/rollup-loop.flag
 while $loop; do
     loop=$(cat $keypath/rollup-loop.flag)
 
-    in2=$(cardano-cli transaction txid --tx-file "$keypath/rollupUpdate.tx")#0
-    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/rollup.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$in2" 'has($key) | tostring')
+    in2=$(cardano-cli transaction txid --tx-file "$keypath/rollupUpdate.tx")
+    in2A=$in2#0
+    in2B=$in2#1
+    txOnChain=$(cardano-cli query utxo --address $(cat ./keys/rollup.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$in2A" 'has($key) | tostring')
 
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see rollup tx onchain..."
@@ -42,14 +46,21 @@ while $loop; do
 	cardano-cli conway transaction build \
 	  --testnet-magic 4 \
 	  --tx-in $in1 \
-	  --tx-in $in2 \
+	  --tx-in $in2A \
 	  --spending-tx-in-reference $rollupScript \
 	  --spending-plutus-script-v3 \
 	  --spending-reference-tx-in-inline-datum-present \
-	  --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemer \
+	  --spending-reference-tx-in-redeemer-cbor-file $redeemerRollupA \
+	  --tx-in $in2B \
+	  --spending-tx-in-reference $rollupScript \
+	  --spending-plutus-script-v3 \
+	  --spending-reference-tx-in-inline-datum-present \
+	  --spending-reference-tx-in-redeemer-cbor-file $redeemerRollupB \
 	  --tx-in-collateral $collateral \
 	  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
-	  --tx-out-inline-datum-cbor-file $newState \
+	  --tx-out-inline-datum-cbor-file $newStateA \
+	  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
+	  --tx-out-inline-datum-cbor-file $newStateB \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --out-file $keypath/rollupUpdate.txbody
 
@@ -68,7 +79,10 @@ while $loop; do
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupUpdate.tx)"
 	echo ""
 
-	mv $assets/nextRedeemerRollup.cbor $assets/redeemerRollup.cbor
-	mv $assets/nextRedeemerRollup.json $assets/redeemerRollup.json
+	mv $assets/nextRedeemerRollupA.cbor $assets/redeemerRollupA.cbor
+	mv $assets/nextRedeemerRollupA.json $assets/redeemerRollupA.json
+
+	mv $assets/nextRedeemerRollupB.cbor $assets/redeemerRollupB.cbor
+	mv $assets/nextRedeemerRollupB.json $assets/redeemerRollupB.json
     fi
 done

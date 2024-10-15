@@ -78,6 +78,7 @@ cardano-cli conway transaction submit \
 
 parkedTx=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")
 parkedOut=$parkedTx#0
+
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat ./keys/parkingSpot.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
@@ -94,4 +95,3 @@ done
 echo ""
 echo "Initialization completed."
 echo ""
-
