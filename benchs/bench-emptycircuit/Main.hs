@@ -1,5 +1,6 @@
 module Main where
 
+import           Bench.Tautology                          (tautologyCheckVerificationBytes)
 import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
                                                            writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
@@ -13,8 +14,6 @@ import           Prelude                                  (FilePath, IO, Maybe (
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
--- import           Bench.Scripts                            (parkingSpotCompiled)
-import           Bench.Tautology                          (tautologyCheckVerificationBytes)
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 -- import           ZkFold.Cardano.UPLC                (symbolicVerifierCompiled)
