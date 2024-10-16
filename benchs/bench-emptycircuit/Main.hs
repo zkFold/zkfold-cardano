@@ -1,6 +1,5 @@
 module Main where
 
-import           Bench.Tautology                          (tautologyCheckVerificationBytes)
 import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
                                                            writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
@@ -15,6 +14,8 @@ import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Cardano.Examples.EmptyCircuit     (emptyCircuitVerificationBytes)
+import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 -- import           ZkFold.Cardano.UPLC                (symbolicVerifierCompiled)
 
@@ -34,13 +35,13 @@ main :: IO ()
 main = do
   x           <- generate arbitrary
   ps          <- generate arbitrary
-  targetValue <- generate arbitrary
 
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n\n"
+  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let (setup, input, proof) = tautologyCheckVerificationBytes x ps targetValue
+  let (setup, _, proof) = emptyCircuitVerificationBytes x ps
+  let input' = F 26217937587563095239723870254092982918845276250263818911301829349969290592256  -- an arbitrary value
 
-  let result = show $ verify @PlonkPlutus @HaskellCore setup input proof
+  let result = show $ verify @PlonkPlutus @HaskellCore setup input' proof
   putStr $ "Result: " ++ result ++ ".\n"
 
 

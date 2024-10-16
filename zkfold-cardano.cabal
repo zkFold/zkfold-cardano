@@ -202,7 +202,6 @@ executable bench-emptycircuit
   hs-source-dirs:   benchs/bench-emptycircuit
   other-modules:
     Bench.Scripts
-    Bench.Tautology
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
