@@ -1,6 +1,5 @@
 module Main where
 
--- import           Bench.Scripts                      (compiledAlwaysSucceeds)
 import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
                                                            writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
@@ -14,8 +13,9 @@ import           Prelude                                  (FilePath, IO, Maybe (
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
+-- import           Bench.Scripts                            (parkingSpotCompiled)
+import           Bench.Tautology                          (tautologyCheckVerificationBytes)
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.Benchs.EmptyCircuit       (tautologyVerificationBytes)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 -- import           ZkFold.Cardano.UPLC                (symbolicVerifierCompiled)
 
@@ -39,8 +39,7 @@ main = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n\n"
 
-  -- let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
-  let (setup, input, proof) = tautologyVerificationBytes x ps targetValue
+  let (setup, input, proof) = tautologyCheckVerificationBytes x ps targetValue
 
   let result = show $ verify @PlonkPlutus @HaskellCore setup input proof
   putStr $ "Result: " ++ result ++ ".\n"
@@ -64,7 +63,7 @@ main = do
 
   let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/alwaysSucceeds.plutus" $ compiledAlwaysSucceeds 17
+  savePlutus "../../assets/parkingSpot.plutus" $ compiledParkingSpot 17
   savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
 
   BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()

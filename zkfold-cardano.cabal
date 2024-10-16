@@ -83,9 +83,6 @@ library
     ZkFold.Cardano.OnChain.Plonkup.Data
     ZkFold.Cardano.OnChain.Utils
     ZkFold.Cardano.UPLC
---    ZkFold.Cardano.Benchs.PlonkAlt
---    ZkFold.Cardano.Benchs.PubInput
-    ZkFold.Cardano.Benchs.EmptyCircuit
     ZkFold.Cardano.UPLC.ForwardingScripts
     ZkFold.Cardano.UPLC.PlonkVerifier
     ZkFold.Cardano.UPLC.Rollup
@@ -205,6 +202,7 @@ executable bench-emptycircuit
   hs-source-dirs:   benchs/bench-emptycircuit
   other-modules:
     Bench.Scripts
+    Bench.Tautology
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
