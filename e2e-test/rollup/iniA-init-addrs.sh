@@ -8,7 +8,7 @@ set -o pipefail
 
 keypath=./keys
 
-echo "Create Alice."
+echo "Create Alice..."
 
 mkdir -p $keypath
 
@@ -25,4 +25,4 @@ cardano-cli conway address build \
 
 #-------------------------------------------------------------------------------
 
-echo "Put some funds in Alice's address: $(cat $keypath/alice.addr)"
+echo "Done.  Put some funds in Alice's address: $(cat $keypath/alice.addr)"

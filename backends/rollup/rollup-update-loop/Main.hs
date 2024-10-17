@@ -29,22 +29,31 @@ nextRedeemer nextState previousRollup = RollupRedeemer
   , rrUpdate  = rrUpdate previousRollup ++ [nextState]
   }
 
+-- | Will process two simultaneous transactions 'A' & 'B', processing states
+-- 'stateA', 'stateB' with redeemers 'redeemerA', 'redeemerB', respectively.
+
 main :: IO ()
 main = do
-  redeemerRollupE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile "../../assets/redeemerRollup.json"
-  case redeemerRollupE of
-    Right redeemerRollupScriptData -> do
-      let redeemerRollup = fromJust . V3.fromData . toPlutusData . getScriptData $ redeemerRollupScriptData :: RollupRedeemer
+  redeemerRollupAE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile "../../assets/redeemerRollupA.json"
+  case redeemerRollupAE of
+    Right redeemerRollupAScriptData -> do
+      let redeemerRollupA = fromJust . V3.fromData . toPlutusData . getScriptData $ redeemerRollupAScriptData :: RollupRedeemer
 
-      let nextState          = toInput $ dataToBlake (rrState redeemerRollup, rrUpdate redeemerRollup)
-          nextRedeemerRollup = nextRedeemer nextState redeemerRollup
+      let nextStateA      = toInput $ dataToBlake (rrState redeemerRollupA, rrUpdate redeemerRollupA)
+          redeemerRollupB = nextRedeemer nextStateA redeemerRollupA
 
-      IO.writeFile "../../assets/last-update-length.log" . show . length . rrUpdate $ redeemerRollup
-      BS.writeFile "../../assets/datumRollup.cbor" $ dataToCBOR nextState
-      BS.writeFile "../../assets/nextRedeemerRollup.cbor" $ dataToCBOR nextRedeemerRollup
-      BS.writeFile "../../assets/nextRedeemerRollup.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollup
+          nextStateB          = toInput $ dataToBlake (rrState redeemerRollupB, rrUpdate redeemerRollupB)
+          nextRedeemerRollupA = nextRedeemer nextStateB redeemerRollupB
 
-    Left _                         -> error "JSON error: unreadable 'redeemerRollup.json'"
+      BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR nextStateA
+      BS.writeFile "../../assets/nextRedeemerRollupA.cbor" $ dataToCBOR nextRedeemerRollupA
+      BS.writeFile "../../assets/nextRedeemerRollupA.json" $ prettyPrintJSON $ dataToJSON nextRedeemerRollupA
+
+      BS.writeFile "../../assets/datumRollupB.cbor" $ dataToCBOR nextStateB
+      BS.writeFile "../../assets/redeemerRollupB.cbor" $ dataToCBOR redeemerRollupB
+      IO.writeFile "../../assets/last-update-length.log" . show . length . rrUpdate $ redeemerRollupB
+
+    Left _                         -> error "JSON error: unreadable 'redeemerRollupA.json'"
 
 
 ----- HELPER FUNCTIONS -----

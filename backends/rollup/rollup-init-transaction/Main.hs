@@ -26,22 +26,11 @@ import           Text.Parsec                           (many1, parse)
 import           Text.Parsec.Char                      (digit)
 import           Text.Parsec.String                    (Parser)
 
-import           ZkFold.Cardano.Examples.EmptyCircuit  (tautologyCheckVerificationBytes)
+import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
-import           ZkFold.Cardano.OnChain.BLS12_381      (F (..), toInput)
-import           ZkFold.Cardano.OnChain.Utils          (dataToBlake)
 import           ZkFold.Cardano.UPLC                   (parkingSpotCompiled, rollupCompiled')
 import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..))
 
-
-nextRedeemer :: F -> RollupRedeemer -> RollupRedeemer
-nextRedeemer nextState previousRollup = RollupRedeemer
-  { rrProof   = rrProof previousRollup
-  , rrAddress = rrAddress previousRollup
-  , rrValue   = rrValue previousRollup
-  , rrState   = nextState
-  , rrUpdate  = rrUpdate previousRollup ++ [nextState]
-  }
 
 saveRollupPlutus :: IO ()
 saveRollupPlutus = do
@@ -53,32 +42,26 @@ saveRollupPlutus = do
 
   BL.writeFile "../../test-data/plonk-raw-contract-data.json" $ encode contract
 
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
+  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n\n"
 
-  let (ledgerRules, stateA, proof) = tautologyCheckVerificationBytes x ps targetValue
+  let (ledgerRules, iniState, proof) = equalityCheckVerificationBytes x ps targetValue
 
   let redeemerRollupA = RollupRedeemer
         { rrProof   = proof
         , rrAddress = V3.Address rollupCredential Nothing
         , rrValue   = lovelace 3000000
-        , rrState   = stateA
-        , rrUpdate  = [stateA]
+        , rrState   = iniState
+        , rrUpdate  = [iniState]
         }
         where
           rollupCredential = credentialOf $ rollupCompiled' ledgerRules
-          lovelace = V2.singleton V2.adaSymbol V2.adaToken
-
-  let stateB          = toInput $ dataToBlake (rrState redeemerRollupA, rrUpdate redeemerRollupA)
-      redeemerRollupB = nextRedeemer stateB redeemerRollupA
+          lovelace         = V2.singleton V2.adaSymbol V2.adaToken
 
   savePlutus "../../assets/rollup.plutus" $ rollupCompiled' ledgerRules
 
-  BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR stateA
+  BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR iniState
   BS.writeFile "../../assets/redeemerRollupA.cbor" $ dataToCBOR redeemerRollupA
   BS.writeFile "../../assets/redeemerRollupA.json" $ prettyPrintJSON $ dataToJSON redeemerRollupA
-  BS.writeFile "../../assets/datumRollupB.cbor" $ dataToCBOR stateB
-  BS.writeFile "../../assets/redeemerRollupB.cbor" . dataToCBOR $ redeemerRollupB
-  BS.writeFile "../../assets/redeemerRollupB.json" . prettyPrintJSON . dataToJSON $ redeemerRollupB
 
 saveParkingSpotPlutus :: Integer -> IO ()
 saveParkingSpotPlutus = savePlutus "../../assets/parkingSpot.plutus" . parkingSpotCompiled
@@ -97,7 +80,7 @@ main = do
 
       BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
 
-      putStr "\nDone serializing plutus scripts.\n\n"
+      putStr "\nDone serializing plutus scripts and initializing state.\n\n"
 
     Left err    -> print $ "parse error: " ++ show err
 
