@@ -56,6 +56,11 @@ forwardingMintCompiled label =
     $$(compile [|| untypedForwardingMint ||])
     `unsafeApplyCode` liftCodeDef label
 
+parkingSpotCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+parkingSpotCompiled tag =
+    $$(compile [|| untypedParkingSpot ||])
+    `unsafeApplyCode` liftCodeDef tag
+
 rollupCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 rollupCompiled computation =
     $$(compile [|| untypedRollup ||])
@@ -65,8 +70,3 @@ rollupCompiled' :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 rollupCompiled' computation =
     $$(compile [|| untypedRollup' ||])
     `unsafeApplyCode` liftCodeDef computation
-
-parkingSpotCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
-parkingSpotCompiled tag =
-    $$(compile [|| untypedParkingSpot ||])
-    `unsafeApplyCode` liftCodeDef tag

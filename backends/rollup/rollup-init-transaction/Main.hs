@@ -26,7 +26,7 @@ import           Text.Parsec                           (many1, parse)
 import           Text.Parsec.Char                      (digit)
 import           Text.Parsec.String                    (Parser)
 
-import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
+import           ZkFold.Cardano.Examples.EmptyCircuit  (tautologyCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.OnChain.BLS12_381      (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils          (dataToBlake)
@@ -55,7 +55,7 @@ saveRollupPlutus = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 
-  let (ledgerRules, stateA, proof) = equalityCheckVerificationBytes x ps targetValue
+  let (ledgerRules, stateA, proof) = tautologyCheckVerificationBytes x ps targetValue
 
   let redeemerRollupA = RollupRedeemer
         { rrProof   = proof

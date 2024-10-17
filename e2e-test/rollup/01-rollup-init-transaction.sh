@@ -82,7 +82,7 @@ parkedOut=$parkedTx#0
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat ./keys/parkingSpot.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
-	echo "Waiting to see parking tx onchain..."
+	echo "Waiting to see script parked onchain..."
 	sleep $pause
     else
 	echo ""
