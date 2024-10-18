@@ -23,13 +23,20 @@ rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
 pause=7
 rollupValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 
-cpuA=4252791294
-cpuB=8427602
-cpuC=28000
+# ----- Linear Model for Exec Units -----
+# (cpu steps of Tx B) = (cpu steps of Tx A) + incCpu
+# (memory of Tx B)    = (memory of Tx A) + incMem
 
-memA=2665606
-memB=20452
-memC=20
+# Expected from benchmarks:
+# incCpu=7023002
+# incMem=18260
+
+# Practical choices:
+incCpu=$((7023002 + 7023002 * 80 / 100))
+incMem=$((18260 + 18260 * 65 / 100))
+
+execCpuA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.steps')
+execMemA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.memory')
 
 #-------------------------------- :second transaction: -------------------------------
 
@@ -45,7 +52,7 @@ collateralVal=5000000
 collateralExcess=$(($total2 - $collateralVal))
 
 updateLength=$(cat "$assets/last-update-length.log")
-execUnits="($((cpuA + cpuB * updateLength + cpuC * updateLength * updateLength)), $((memA + memB * updateLength + memC * updateLength * updateLength)))"
+execUnits="($((execCpuA + incCpu)), $((execMemA + incMem)))"
 
 cardano-cli conway transaction build-estimate \
   --shelley-key-witnesses 1 \

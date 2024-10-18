@@ -25,17 +25,12 @@ rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
 pause=7  # Wait time (in seconds) before querying blockchain
 rollupValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 
-# ----- Quadratic Model for Exec Units -----
-# cpu steps = cpuA + cpuB * updateLength * cpuC * updateLength^2
-# memory    = memA + memB * updateLength * memC * updateLength^2
+# ----- Linear Model for Exec Units -----
+# (cpu steps of Tx B) = (cpu steps of Tx A) + incCpu
+# (memory of Tx B)    = (memory of Tx A) + incMem
 
-cpuA=4252791294
-cpuB=8427602
-cpuC=28000
-
-memA=2665606
-memB=20452
-memC=20
+incCpu=12641403
+incMem=30129
 
 #-------------------------------- :rollup loop: -------------------------------
 
@@ -63,6 +58,25 @@ while $loop; do
 
 	in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
 
+	# Log execution units for first Tx
+	cardano-cli conway transaction build \
+	  --testnet-magic 4 \
+	  --tx-in $in1 \
+	  --tx-in $inRB \
+	  --spending-tx-in-reference $rollupScript \
+	  --spending-plutus-script-v3 \
+	  --spending-reference-tx-in-inline-datum-present \
+	  --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemerA \
+	  --tx-in-collateral $in1 \
+	  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
+	  --tx-out-inline-datum-cbor-file $stateA \
+	  --change-address $(cat $keypath/alice.addr) \
+	  --calculate-plutus-script-cost $keypath/exec-units-A.log > /dev/null
+
+	execCpuA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.steps')
+	execMemA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.memory')
+
+	# Build first Tx
 	cardano-cli conway transaction build \
 	  --testnet-magic 4 \
 	  --tx-in $in1 \
@@ -99,8 +113,9 @@ while $loop; do
 	collateralExcess=$(($total2 - $collateralVal))
 
 	updateLength=$(cat "$assets/last-update-length.log")
-	execUnits="($((cpuA + cpuB * updateLength + cpuC * updateLength * updateLength)), $((memA + memB * updateLength + memC * updateLength * updateLength)))"
+	execUnits="($((execCpuA + incCpu)), $((execMemA + incMem)))"
 
+	# Build second Tx
 	cardano-cli conway transaction build-estimate \
 	  --shelley-key-witnesses 1 \
 	  --protocol-params-file $protocolParams \
