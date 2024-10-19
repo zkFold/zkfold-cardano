@@ -34,7 +34,7 @@ You will enter a loop of recurrent rollup updates.  To **stop**, execute (from a
 ```shell
 printf "false" > ./keys/rollup-loop.flag
 ```
-To resume rollup update loop, simply execute step 2 again.  To reset and start all over again, execute `./reset.sh`.
+To resume rollup update loop, simply execute step 2 again.  To reset and start all over again from *step 1*, execute `./reset.sh`.
 
 ### Debug
 

@@ -26,8 +26,8 @@ import           Text.Parsec                           (many1, parse)
 import           Text.Parsec.Char                      (digit)
 import           Text.Parsec.String                    (Parser)
 
-import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
+import           ZkFold.Cardano.Examples.EmptyCircuit  (emptyCircuitVerificationBytes)
+import           ZkFold.Cardano.OffChain.E2E           (EmptyCircuitContract (..))
 import           ZkFold.Cardano.UPLC                   (parkingSpotCompiled, rollupCompiled')
 import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..))
 
@@ -36,15 +36,14 @@ saveRollupPlutus :: IO ()
 saveRollupPlutus = do
   x           <- generate arbitrary
   ps          <- generate arbitrary
-  targetValue <- generate arbitrary
 
-  let contract = EqualityCheckContract x ps targetValue
+  let contract = EmptyCircuitContract x ps
 
   BL.writeFile "../../test-data/plonk-raw-contract-data.json" $ encode contract
 
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n\n"
+  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let (ledgerRules, iniState, proof) = equalityCheckVerificationBytes x ps targetValue
+  let (ledgerRules, iniState, proof) = emptyCircuitVerificationBytes x ps
 
   let redeemerRollupA = RollupRedeemer
         { rrProof   = proof

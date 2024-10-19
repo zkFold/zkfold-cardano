@@ -38,8 +38,6 @@ loop=true
 printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
-    loop=$(cat $keypath/rollup-loop.flag)
-
     inRB=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutB.tx")#0
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/rollup.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r --arg key "$inRB" 'has($key) | tostring')
 
@@ -174,4 +172,5 @@ while $loop; do
 	mv $assets/nextRedeemerRollupA.cbor $assets/redeemerRollupA.cbor
 	mv $assets/nextRedeemerRollupA.json $assets/redeemerRollupA.json
     fi
+    loop=$(cat $keypath/rollup-loop.flag)
 done

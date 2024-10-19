@@ -12,7 +12,7 @@ assets=../../assets
 mkdir -p $assets
 mkdir -p $keypath
 
-parkingTag=11
+parkingTag=54
 pause=7
 unitDatum=$assets/unit.cbor
 stateA=$assets/datumRollupA.cbor
