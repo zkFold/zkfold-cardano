@@ -9,6 +9,7 @@ set -o pipefail
 keypath=./keys
 assets=../../assets
 
+mN=42
 protocolParams=$assets/protocol.json
 unitDatum=$assets/unit.cbor
 stateB=$assets/datumRollupB.cbor
@@ -43,10 +44,10 @@ execMemA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.memory')
 echo "Building second Tx..."
 echo ""
 
-in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[1]')
+in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[1]')
 inRA=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutA.tx")#0
 
-total2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic 4 --out-file /dev/stdout | jq -r '. | to_entries[1].value.value.lovelace')
+total2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r '. | to_entries[1].value.value.lovelace')
 totalUtxoVal=$(($total2 + $rollupValue))
 collateralVal=5000000
 collateralExcess=$(($total2 - $collateralVal))
@@ -86,7 +87,7 @@ echo "Signing second Tx..."
 echo ""
 
 cardano-cli conway transaction sign \
-  --testnet-magic 4 \
+  --testnet-magic $mN \
   --tx-body-file $keypath/rollupOutB.txbody \
   --signing-key-file $keypath/alice.skey \
   --out-file $keypath/nextRollupOutB.tx
@@ -95,7 +96,7 @@ echo "Submitting second Txs..."
 echo ""
 
 cardano-cli conway transaction submit \
-    --testnet-magic 4 \
+    --testnet-magic $mN \
     --tx-file $keypath/nextRollupOutB.tx
 
 echo ""

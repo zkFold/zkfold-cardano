@@ -7,6 +7,7 @@ set -u
 set -o pipefail
 
 keypath=./keys
+mN=42
 
 echo "Create Alice..."
 
@@ -21,7 +22,7 @@ cardano-cli conway address key-gen \
 cardano-cli conway address build \
   --payment-verification-key-file $keypath/alice.vkey \
   --out-file $keypath/alice.addr \
-  --testnet-magic 4
+  --testnet-magic $mN
 
 #-------------------------------------------------------------------------------
 

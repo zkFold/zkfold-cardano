@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy                 as BL
 import qualified PlutusLedgerApi.V2                   as V2
 import qualified PlutusLedgerApi.V3                   as V3
 import           PlutusTx                             (CompiledCode, ToData (..))
+import           PlutusTx.Eq                          ((==))
 import           Prelude                              (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
                                                        Show (..), head, print, putStr, read, return, ($), (++), (.),
                                                        (<$>))
@@ -26,16 +27,17 @@ import           Text.Parsec                          (many1, parse)
 import           Text.Parsec.Char                     (digit)
 import           Text.Parsec.String                   (Parser)
 
-import           ZkFold.Cardano.Examples.EmptyCircuit (emptyCircuitVerificationBytes)
+import           ZkFold.Cardano.Examples.EmptyCircuit (emptyCircuitVerificationBytes, stateCheckVerificationBytes, stateCheckVerificationBytes')
 import           ZkFold.Cardano.OffChain.E2E          (EmptyCircuitContract (..))
-import           ZkFold.Cardano.UPLC                  (parkingSpotCompiled, rollupCompiled')
+import           ZkFold.Cardano.OnChain.BLS12_381     (toInput)
+import           ZkFold.Cardano.OnChain.Utils         (dataToBlake)
+import           ZkFold.Cardano.UPLC                  (parkingSpotCompiled, rollupCompiled)
 import           ZkFold.Cardano.UPLC.Rollup           (RollupRedeemer (..))
-
 
 saveRollupPlutus :: IO ()
 saveRollupPlutus = do
-  x           <- generate arbitrary
-  ps          <- generate arbitrary
+  x  <- generate arbitrary
+  ps <- generate arbitrary
 
   let contract = EmptyCircuitContract x ps
 
@@ -43,7 +45,10 @@ saveRollupPlutus = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let (ledgerRules, iniState, proof) = emptyCircuitVerificationBytes x ps
+  let (ledgerRules, iniState, _) = emptyCircuitVerificationBytes x ps
+      nextState                  = toInput $ dataToBlake (iniState, [iniState])
+      (_, input, proof)          = stateCheckVerificationBytes x ps nextState
+      (_, input', _)             = stateCheckVerificationBytes' x ps nextState
 
   let redeemerRollupA = RollupRedeemer
         { rrProof   = proof
@@ -53,14 +58,17 @@ saveRollupPlutus = do
         , rrUpdate  = [iniState]
         }
         where
-          rollupCredential = credentialOf $ rollupCompiled' ledgerRules
+          rollupCredential = credentialOf $ rollupCompiled ledgerRules
           lovelace         = V2.singleton V2.adaSymbol V2.adaToken
 
-  savePlutus "../../assets/rollup.plutus" $ rollupCompiled' ledgerRules
+  savePlutus "../../assets/rollup.plutus" $ rollupCompiled ledgerRules
 
   BS.writeFile "../../assets/datumRollupA.cbor" $ dataToCBOR iniState
   BS.writeFile "../../assets/redeemerRollupA.cbor" $ dataToCBOR redeemerRollupA
   BS.writeFile "../../assets/redeemerRollupA.json" $ prettyPrintJSON $ dataToJSON redeemerRollupA
+
+  putStr $ "\ninput == nextState: " ++ (show $ input == nextState) ++ ".\n"
+  putStr $ "\ninput' == nextState: " ++ (show $ input' == nextState) ++ ".\n"
 
 saveParkingSpotPlutus :: Integer -> IO ()
 saveParkingSpotPlutus = savePlutus "../../assets/parkingSpot.plutus" . parkingSpotCompiled
