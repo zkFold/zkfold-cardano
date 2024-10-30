@@ -1,13 +1,11 @@
 module ZkFold.Cardano.Examples.EmptyCircuit where
 
-import           GHC.Generics                                (Par1 (..))
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (negate, zero)
 import           ZkFold.Base.Algebra.Basic.Field             (toZp)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
-import           ZkFold.Base.Data.HFunctor                   (hmap)
 import           ZkFold.Base.Data.Vector                     (Vector (..), item, singleton, unsafeToVector)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonk
@@ -18,13 +16,10 @@ import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, m
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..))
 import           ZkFold.Cardano.OnChain.Plonk                (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), eval)
-import           ZkFold.Symbolic.Data.FieldElement
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), eval, compile)
 
 emptyCircuit :: ArithmeticCircuit Fr (Vector 1) (Vector 1)
-emptyCircuit =
-    let FieldElement ac = zero
-    in hmap (\(Par1 x) -> singleton x) ac
+emptyCircuit = compile (id :: ArithmeticCircuit Fr (Vector 1) (Vector 1) -> ArithmeticCircuit Fr (Vector 1) (Vector 1))
 
 emptyCircuitVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1 -> (SetupBytes, InputBytes, ProofBytes)
 emptyCircuitVerificationBytes x ps =
