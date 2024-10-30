@@ -27,7 +27,8 @@ import           Text.Parsec                          (many1, parse)
 import           Text.Parsec.Char                     (digit)
 import           Text.Parsec.String                   (Parser)
 
-import           ZkFold.Cardano.Examples.EmptyCircuit (emptyCircuitVerificationBytes, stateCheckVerificationBytes, stateCheckVerificationBytes')
+import           ZkFold.Cardano.Examples.EmptyCircuit (emptyCircuitVerificationBytes, stateCheckVerificationBytes,
+                                                       stateCheckVerificationBytes')
 import           ZkFold.Cardano.OffChain.E2E          (EmptyCircuitContract (..))
 import           ZkFold.Cardano.OnChain.BLS12_381     (toInput)
 import           ZkFold.Cardano.OnChain.Utils         (dataToBlake)
