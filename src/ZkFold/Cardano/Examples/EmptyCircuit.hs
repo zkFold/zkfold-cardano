@@ -16,7 +16,7 @@ import           ZkFold.Cardano.OffChain.Plonk               (PlonkN, mkInput, m
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..))
 import           ZkFold.Cardano.OnChain.Plonk                (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data           (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), eval, compile)
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile, eval)
 
 emptyCircuit :: ArithmeticCircuit Fr (Vector 1) (Vector 1)
 emptyCircuit = compile (id :: ArithmeticCircuit Fr (Vector 1) (Vector 1) -> ArithmeticCircuit Fr (Vector 1) (Vector 1))
