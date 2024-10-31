@@ -1,42 +1,43 @@
 module Main where
 
-import           Cardano.Api               (IsPlutusScriptLanguage, PlutusScriptV3, Script (..), hashScript,
-                                            plutusScriptVersion, prettyPrintJSON, serialiseToRawBytes,
-                                            unsafeHashableScriptData, writeFileTextEnvelope)
-import           Cardano.Api.Ledger        (toCBOR)
-import           Cardano.Api.Shelley       (File (..), PlutusScript (..), fromPlutusData,
-                                            scriptDataToJsonDetailedSchema)
-import           Codec.CBOR.Write          (toStrictByteString)
-import           Control.Monad             (void)
-import           Data.Aeson                (encode)
-import qualified Data.Aeson                as Aeson
-import qualified Data.ByteString           as BS
-import qualified Data.ByteString.Lazy      as BL
-import qualified PlutusLedgerApi.V2        as V2
-import qualified PlutusLedgerApi.V3        as V3
-import           PlutusTx                  (CompiledCode, ToData (..))
-import qualified PlutusTx.Eq               as Tx
-import           Prelude                   (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                            Show (..), head, print, putStr, read, return, ($), (++), (.),
-                                            (<$>), (==))
-import           System.Directory          (createDirectoryIfMissing, getCurrentDirectory)
-import           System.Environment        (getArgs)
-import           System.FilePath           (takeFileName, (</>))
-import           Test.QuickCheck.Arbitrary (Arbitrary (..))
-import           Test.QuickCheck.Gen       (generate)
-import           Text.Parsec               (many1, parse)
-import           Text.Parsec.Char          (digit)
-import           Text.Parsec.String        (Parser)
+import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3, Script (..),
+                                                           hashScript, plutusScriptVersion, prettyPrintJSON,
+                                                           serialiseToRawBytes, unsafeHashableScriptData,
+                                                           writeFileTextEnvelope)
+import           Cardano.Api.Ledger                       (toCBOR)
+import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData,
+                                                           scriptDataToJsonDetailedSchema)
+import           Codec.CBOR.Write                         (toStrictByteString)
+import           Control.Monad                            (void)
+import           Data.Aeson                               (encode)
+import qualified Data.Aeson                               as Aeson
+import qualified Data.ByteString                          as BS
+import qualified Data.ByteString.Lazy                     as BL
+import qualified PlutusLedgerApi.V2                       as V2
+import qualified PlutusLedgerApi.V3                       as V3
+import           PlutusTx                                 (CompiledCode, ToData (..))
+import qualified PlutusTx.Eq                              as Tx
+import           Prelude                                  (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
+                                                           Show (..), head, print, putStr, read, return, ($), (++), (.),
+                                                           (<$>), (==))
+import           System.Directory                         (createDirectoryIfMissing, getCurrentDirectory)
+import           System.Environment                       (getArgs)
+import           System.FilePath                          (takeFileName, (</>))
+import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
+import           Test.QuickCheck.Gen                      (generate)
+import           Text.Parsec                              (many1, parse)
+import           Text.Parsec.Char                         (digit)
+import           Text.Parsec.String                       (Parser)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Cardano.Examples.IdentityCircuit  (identityCircuitVerificationBytes,
+                                                           stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381         (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-
-import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
-import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
-import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, rollupCompiled)
-import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..))
+import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
+import           ZkFold.Cardano.UPLC                      (parkingSpotCompiled, rollupCompiled)
+import           ZkFold.Cardano.UPLC.Rollup               (RollupRedeemer (..))
 
 saveRollupPlutus :: FilePath -> IO ()
 saveRollupPlutus path = do
@@ -86,7 +87,7 @@ main = do
   let currentDirName = takeFileName currentDir
       path           = if currentDirName == "rollup" then "../.."
                           else if currentDirName == "e2e-test" then ".." else "."
-  
+
   createDirectoryIfMissing True $ path </> "test-data"
   createDirectoryIfMissing True $ path </> "assets"
 
