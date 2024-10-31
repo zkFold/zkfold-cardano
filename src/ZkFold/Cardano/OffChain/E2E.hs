@@ -22,7 +22,7 @@ data EqualityCheckContract = EqualityCheckContract {
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-data EmptyCircuitContract = EmptyCircuitContract {
+data IdentityCircuitContract = IdentityCircuitContract {
     x'  :: Fr
   , ps' :: PlonkupProverSecret BLS12_381_G1
 } deriving stock (Show, Generic)

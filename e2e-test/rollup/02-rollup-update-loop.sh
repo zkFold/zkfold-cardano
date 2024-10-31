@@ -23,7 +23,7 @@ rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
 
 #-------------------------------- :numeric parameters: -------------------------------
 
-pause=7  # Wait time (in seconds) before querying blockchain
+pause=5  # Wait time (in seconds) before querying blockchain
 rollupValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 
 # ----- Linear Model for Exec Units -----
