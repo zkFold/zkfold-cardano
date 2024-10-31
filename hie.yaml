@@ -29,3 +29,9 @@ cradle:
 
     - path: "./backends/plonk/plonk-minting-transaction"
       component: "zkfold-cardano:exe:plonk-minting-transaction"
+
+    - path: "./backends/rollup/rollup-init-transaction"
+      component: "zkfold-cardano:exe:rollup-init-transaction"
+
+    - path: "./backends/rollup/rollup-update-loop"
+      component: "zkfold-cardano:exe:rollup-update-loop"
