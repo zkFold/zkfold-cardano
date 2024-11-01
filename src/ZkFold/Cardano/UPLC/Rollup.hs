@@ -33,17 +33,17 @@ makeIsDataIndexed ''RollupSetup [('RollupSetup,0)]
 data RollupRedeemer =
       UpdateRollup ProofBytes [BuiltinByteString]
     -- ^ Update the rollup state using the proof.
-    | BridgeOutput
-    -- ^ Bridge the output into the rollup.
     | CombineValue
-    -- ^ Combine the value locked in the rollup.
+    -- ^ Combine the non-ada values locked in the rollup.
     | AdjustStake
-    -- ^ Adjust the stake in the rollup.
+    -- ^ Adjust the stake of the ada value locked in the rollup.
+    | UpgradeScript
+    -- ^ Update the script of the rollup to a new version.
   deriving stock (Show, Generic)
 
-makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('BridgeOutput,1),('CombineValue,2),('AdjustStake,3)]
+makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('CombineValue,1),('AdjustStake,2),('UpgradeScript,3)]
 
--- | Plutus script for verifying a ZkFold Rollup state transition.
+-- | Plutus script for verifying a rollup state transition.
 {-# INLINABLE rollup #-}
 rollup :: RollupSetup -> RollupRedeemer -> ScriptContext -> Bool
 rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof update) ctx =
@@ -70,18 +70,19 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof upd
     -- Get the next rollup output
     out'   = head $ txInfoOutputs $ scriptContextTxInfo ctx
 
-    -- Get bridged inputs
-    bridgedInputs = filter (\(TxOut addr'' _ _ _) -> addr == addr'') $ map txInInfoResolved $ txInfoInputs $ scriptContextTxInfo ctx
-
     -- Get the fee output
     outFee = head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
     feeVal = getValue $ txOutValue outFee
 
-    -- Get bridged outputs
-    bridgedOutputs = tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
+    -- Get bridge outputs
+    -- If the payment credential of the output coincides with the rollup payment credential, then this output transfers value to the rollup.
+    -- Otherwise, it transfers value from the rollup.
+    bridgeOutputs =
+      filter (\(TxOut _ _ (OutputDatumHash _) Nothing) -> True) $
+      tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
 
     -- Compute the next state
-    state' = toInput $ dataToBlake (state, update, (bridgedInputs, bridgedOutputs), feeVal)
+    state' = toInput $ dataToBlake (state, update, bridgeOutputs, feeVal)
   in
     -- Verify the transition from the current state to the next state
     verify @PlonkPlutus @HaskellCore ledgerRules state' proof

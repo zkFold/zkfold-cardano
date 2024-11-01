@@ -22,7 +22,8 @@ data RollupDataRedeemer =
 
 makeIsDataIndexed ''RollupDataRedeemer [('NewData,0),('OldData,1)]
 
--- | Plutus script for verifying a ZkFold Rollup state transition.
+-- | Plutus script for posting rollup data on-chain.
+-- Creates a token with the hash of the data as the name.
 {-# INLINABLE rollupData #-}
 rollupData :: RollupDataRedeemer -> ScriptContext -> Bool
 rollupData (NewData update) ctx =
