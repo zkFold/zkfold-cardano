@@ -6,25 +6,27 @@
 
 module ZkFold.Cardano.UPLC.Rollup where
 
+import           GHC.ByteOrder                            (ByteOrder(..))
 import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.AssocMap                        (toList)
-import           PlutusTx.Builtins                        (unsafeDataAsI)
-import           PlutusTx.Prelude                         hiding (toList, (*), (+))
+import           PlutusTx.Builtins                        (unsafeDataAsI, mkI)
+import           PlutusTx.Prelude                         hiding ((*), (+), toList)
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (toF)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 
 data RollupSetup = RollupSetup
   { rsLedgerRules  :: SetupBytes
-  , rsFeeAddress   :: Address
   , rsDataCurrency :: CurrencySymbol
+  , rsThreadValue  :: Value
+  , rsFeeAddress   :: Address
   } deriving stock (Show, Generic)
 
 makeLift ''RollupSetup
@@ -33,6 +35,7 @@ makeIsDataIndexed ''RollupSetup [('RollupSetup,0)]
 data RollupRedeemer =
       UpdateRollup ProofBytes [BuiltinByteString]
     -- ^ Update the rollup state using the proof.
+    | ForwardValidation
     | CombineValue
     -- ^ Combine the non-ada values locked in the rollup.
     | AdjustStake
@@ -41,12 +44,12 @@ data RollupRedeemer =
     -- ^ Update the script of the rollup to a new version.
   deriving stock (Show, Generic)
 
-makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('CombineValue,1),('AdjustStake,2),('UpgradeScript,3)]
+makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('ForwardValidation,1),('CombineValue,2),('AdjustStake,3),('UpgradeScript,4)]
 
 -- | Plutus script for verifying a rollup state transition.
 {-# INLINABLE rollup #-}
 rollup :: RollupSetup -> RollupRedeemer -> ScriptContext -> Bool
-rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof update) ctx =
+rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRollup proof update) ctx =
   let
     -- Get the current rollup output
     out = txInInfoResolved $ case findOwnInput ctx of
@@ -54,9 +57,9 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof upd
       _      -> traceError "rollup: no input"
 
     -- Get the address and state of the rollup
-    (addr, state) = case out of
-      TxOut addr' _ (OutputDatum (Datum s)) _ -> (addr', unsafeDataAsI s)
-      _                                       -> traceError "rollup: invalid redeemer"
+    (addr, val, state) = case out of
+      TxOut a v (OutputDatum (Datum s)) _ -> (a, v, unsafeDataAsI s)
+      _ -> traceError "rollup: invalid redeemer"
 
     -- Get state updates as token names of the data currency
     update' =
@@ -82,23 +85,29 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof upd
       tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
 
     -- Compute the next state
-    state' = toInput $ dataToBlake (state, update, bridgeOutputs, feeVal)
+    state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
   in
     -- Verify the transition from the current state to the next state
-    verify @PlonkPlutus @HaskellCore ledgerRules state' proof
+    verify @PlonkPlutus @HaskellCore ledgerRules (toF state') proof
 
     -- Compare the state updates
     && sort update' == sort update
 
+    -- Check the current rollup output
+    && val == threadValue
+
     -- Check the next rollup output
-    && case out' of
-      TxOut a _ (OutputDatum (Datum s)) Nothing -> addr == a && toBuiltinData state' == s
-      _                                         -> False
+    && out' == TxOut addr threadValue (OutputDatum (Datum $ mkI state')) Nothing
 
     -- Check the fee output
     && case outFee of
       TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
-      _                                    -> False
+      _ -> False
+rollup (RollupSetup _ _ threadValue _) ForwardValidation ctx =
+  let
+    out = head $ txInfoOutputs $ scriptContextTxInfo ctx
+  in
+    txOutValue out == threadValue
 -- TODO: implement other cases
 rollup _ _ _ = False
 
