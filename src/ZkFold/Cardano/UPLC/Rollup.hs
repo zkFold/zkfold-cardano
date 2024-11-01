@@ -31,7 +31,7 @@ makeLift ''RollupSetup
 makeIsDataIndexed ''RollupSetup [('RollupSetup,0)]
 
 data RollupRedeemer =
-      UpdateRollup ProofBytes
+      UpdateRollup ProofBytes [BuiltinByteString]
     -- ^ Update the rollup state using the proof.
     | BridgeOutput
     -- ^ Bridge the output into the rollup.
@@ -46,11 +46,12 @@ makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('BridgeOutput,1),('Combin
 -- | Plutus script for verifying a ZkFold Rollup state transition.
 {-# INLINABLE rollup #-}
 rollup :: RollupSetup -> RollupRedeemer -> ScriptContext -> Bool
-rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof) ctx =
+rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof update) ctx =
   let
     -- Get the current rollup output
-    Just j        = findOwnInput ctx
-    out           = txInInfoResolved j
+    out = txInInfoResolved $ case findOwnInput ctx of
+      Just j -> j
+      _      -> traceError "rollup: no input"
 
     -- Get the address and state of the rollup
     (addr, state) = case out of
@@ -58,8 +59,8 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof) ct
       _ -> traceError "rollup: invalid redeemer"
 
     -- Get state updates as token names of the data currency
-    update =
-      map fst $
+    update' =
+      map (unTokenName . fst) $
       concatMap (toList . snd) $
       filter (\(k, _) -> k == dataCurrency) $
       -- Every referenced input must have the data currency as the second currency (the first one is ada).
@@ -81,10 +82,12 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof) ct
 
     -- Compute the next state
     state' = toInput $ dataToBlake (state, update, (bridgedInputs, bridgedOutputs), feeVal)
-
   in
     -- Verify the transition from the current state to the next state
     verify @PlonkPlutus @HaskellCore ledgerRules state' proof
+
+    -- Compare the state updates
+    && sort update' == sort update
 
     -- Check the next rollup output
     && case out' of
@@ -95,7 +98,6 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof) ct
     && case outFee of
       TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
       _ -> False
-
 -- TODO: implement other cases
 rollup _ _ _ = False
 
