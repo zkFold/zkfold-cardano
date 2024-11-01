@@ -17,7 +17,7 @@ pause=5
 mN=42
 unitDatum=$assets/unit.cbor
 stateA=$assets/datumRollupA.cbor
-stateB=$assets/datumRollupB.cbor
+# stateB=$assets/datumRollupB.cbor
 rollupValue=3000000
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')

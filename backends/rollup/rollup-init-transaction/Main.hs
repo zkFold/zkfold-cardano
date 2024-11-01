@@ -16,7 +16,6 @@ import qualified Data.ByteString.Lazy                     as BL
 import qualified PlutusLedgerApi.V2                       as V2
 import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import qualified PlutusTx.Eq                              as Tx
 import           Prelude                                  (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
                                                            Show (..), head, print, putStr, read, return, ($), (++), (.),
                                                            (<$>), (==))
@@ -29,12 +28,10 @@ import           Text.Parsec                              (many1, parse)
 import           Text.Parsec.Char                         (digit)
 import           Text.Parsec.String                       (Parser)
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.IdentityCircuit  (identityCircuitVerificationBytes,
                                                            stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract (..))
-import           ZkFold.Cardano.OnChain.BLS12_381         (F (..), toInput)
-import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
+import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 import           ZkFold.Cardano.UPLC                      (parkingSpotCompiled, rollupCompiled)
 import           ZkFold.Cardano.UPLC.Rollup               (RollupRedeemer (..))
@@ -51,9 +48,8 @@ saveRollupPlutus path = do
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
   let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
-      nextState                 = toInput $ dataToBlake (iniState, [iniState])
-      (_, input, proof)         = stateCheckVerificationBytes x ps nextState
-      (_, input', proof')       = stateCheckVerificationBytes x ps (F 0)
+      nextState                  = toInput $ dataToBlake (iniState, [iniState])
+      (_, _, proof)              = stateCheckVerificationBytes x ps nextState
 
   let redeemerRollupA = RollupRedeemer
         { rrProof   = proof
@@ -74,10 +70,6 @@ saveRollupPlutus path = do
   BS.writeFile (assetsPath </> "redeemerRollupA.cbor") $ dataToCBOR redeemerRollupA
   BS.writeFile (assetsPath </> "redeemerRollupA.json") $ prettyPrintJSON $ dataToJSON redeemerRollupA
 
-  putStr $ "input == nextState: " ++ (show $ input Tx.== nextState) ++ ".\n"
-  putStr $ "\nVerifies proof: " ++ (show $ verify @PlonkPlutus @HaskellCore ledgerRules input proof) ++ ".\n"
-  putStr $ "\nVerifies proof assuming nextState is zero: " ++ (show $ verify @PlonkPlutus @HaskellCore ledgerRules input' proof') ++ ".\n"
-
 saveParkingSpotPlutus :: FilePath -> Integer -> IO ()
 saveParkingSpotPlutus path = savePlutus (path </> "assets" </> "parkingSpot.plutus") . parkingSpotCompiled
 
@@ -85,7 +77,7 @@ main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
   let currentDirName = takeFileName currentDir
-      path           = if currentDirName == "rollup" then "../.."
+      path           = if currentDirName == "rollup" then (".." </> "..")
                           else if currentDirName == "e2e-test" then ".." else "."
 
   createDirectoryIfMissing True $ path </> "test-data"

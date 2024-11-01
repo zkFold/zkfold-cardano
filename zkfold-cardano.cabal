@@ -316,7 +316,6 @@ executable rollup-init-transaction
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
-    zkfold-base                    ,
     zkfold-cardano                 ,
     QuickCheck                     ,
 
@@ -337,4 +336,5 @@ executable rollup-update-loop
     filepath                       ,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
+    zkfold-base                    ,
     zkfold-cardano
