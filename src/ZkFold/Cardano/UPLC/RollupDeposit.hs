@@ -4,13 +4,13 @@
 
 module ZkFold.Cardano.UPLC.RollupDeposit where
 
-import           GHC.Generics                             (Generic)
+import           GHC.Generics                 (Generic)
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (makeIsDataIndexed)
-import           PlutusTx.Prelude                         hiding ((*), (+), toList)
-import           Prelude                                  (Show)
+import           PlutusTx                     (makeIsDataIndexed)
+import           PlutusTx.Prelude             hiding (toList, (*), (+))
+import           Prelude                      (Show)
 
-import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
+import           ZkFold.Cardano.OnChain.Utils (dataToBlake)
 
 data RollupDepositRedeemer = RollupDepositRedeemer Integer BuiltinByteString
   deriving stock (Show, Generic)

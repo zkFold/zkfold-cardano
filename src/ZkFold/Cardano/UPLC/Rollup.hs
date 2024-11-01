@@ -12,7 +12,7 @@ import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.AssocMap                        (toList)
 import           PlutusTx.Builtins                        (unsafeDataAsI)
-import           PlutusTx.Prelude                         hiding ((*), (+), toList)
+import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
@@ -56,7 +56,7 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof upd
     -- Get the address and state of the rollup
     (addr, state) = case out of
       TxOut addr' _ (OutputDatum (Datum s)) _ -> (addr', unsafeDataAsI s)
-      _ -> traceError "rollup: invalid redeemer"
+      _                                       -> traceError "rollup: invalid redeemer"
 
     -- Get state updates as token names of the data currency
     update' =
@@ -93,12 +93,12 @@ rollup (RollupSetup ledgerRules feeAddress dataCurrency) (UpdateRollup proof upd
     -- Check the next rollup output
     && case out' of
       TxOut a _ (OutputDatum (Datum s)) Nothing -> addr == a && toBuiltinData state' == s
-      _ -> False
+      _                                         -> False
 
     -- Check the fee output
     && case outFee of
       TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
-      _ -> False
+      _                                    -> False
 -- TODO: implement other cases
 rollup _ _ _ = False
 

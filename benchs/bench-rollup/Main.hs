@@ -27,7 +27,7 @@ import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (.
 import           ZkFold.Cardano.OnChain.BLS12_381.F    (F (..))
 import           ZkFold.Cardano.OnChain.Plonk.Data     (ProofBytes (..))
 import           ZkFold.Cardano.UPLC                   (rollupCompiled)
-import           ZkFold.Cardano.UPLC.Rollup            (RollupSetup(..), RollupRedeemer (..))
+import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..), RollupSetup (..))
 
 sampleRedeemer :: ProofBytes -> Int -> Redeemer
 sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupState
