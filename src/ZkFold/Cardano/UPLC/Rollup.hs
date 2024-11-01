@@ -6,14 +6,14 @@
 
 module ZkFold.Cardano.UPLC.Rollup where
 
-import           GHC.ByteOrder                            (ByteOrder(..))
+import           GHC.ByteOrder                            (ByteOrder (..))
 import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.AssocMap                        (toList)
-import           PlutusTx.Builtins                        (unsafeDataAsI, mkI)
-import           PlutusTx.Prelude                         hiding ((*), (+), toList)
+import           PlutusTx.Builtins                        (mkI, unsafeDataAsI)
+import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
@@ -59,7 +59,7 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     -- Get the address and state of the rollup
     (addr, val, state) = case out of
       TxOut a v (OutputDatum (Datum s)) _ -> (a, v, unsafeDataAsI s)
-      _ -> traceError "rollup: invalid redeemer"
+      _                                   -> traceError "rollup: invalid redeemer"
 
     -- Get state updates as token names of the data currency
     update' =
@@ -102,7 +102,7 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     -- Check the fee output
     && case outFee of
       TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
-      _ -> False
+      _                                    -> False
 rollup (RollupSetup _ _ threadValue _) ForwardValidation ctx =
   let
     out = head $ txInfoOutputs $ scriptContextTxInfo ctx
