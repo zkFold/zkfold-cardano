@@ -36,6 +36,7 @@ data RollupRedeemer =
       UpdateRollup ProofBytes [BuiltinByteString]
     -- ^ Update the rollup state using the proof.
     | ForwardValidation
+    -- ^ Forwards validation of the rollup state update.
     | CombineValue
     -- ^ Combine the non-ada values locked in the rollup.
     | AdjustStake
