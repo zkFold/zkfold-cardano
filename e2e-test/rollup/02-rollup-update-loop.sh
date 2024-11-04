@@ -10,10 +10,11 @@ keypath=./keys
 assets=../../assets
 
 mN=42
+pause=5  # Wait time (in seconds) before querying blockchain
 protocolParams=$assets/protocol.json
-unitDatum=$assets/unit.cbor
-stateA=$assets/datumRollupA.cbor
-stateB=$assets/datumRollupB.cbor
+
+stateA=$assets/datumA.cbor
+stateB=$assets/datumB.cbor
 rollupRedeemerA=$assets/redeemerRollupA.cbor
 rollupRedeemerB=$assets/redeemerRollupB.cbor
 
@@ -23,21 +24,19 @@ rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
 
 #-------------------------------- :numeric parameters: -------------------------------
 
-pause=5  # Wait time (in seconds) before querying blockchain
 rollupValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 
 # ----- Linear Model for Exec Units -----
 # (cpu steps of Tx B) = (cpu steps of Tx A) + incCpu
 # (memory of Tx B)    = (memory of Tx A) + incMem
 
-incCpu=12641403
-incMem=30129
+incCpu=14046004
+incMem=36520
 
 #-------------------------------- :rollup loop: -------------------------------
 
 loop=true
-# printf "$loop" > $keypath/rollup-loop.flag
-printf "false" > $keypath/rollup-loop.flag  # submit two txs and stop
+printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
     inRB=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutB.tx")#0
@@ -135,13 +134,13 @@ while $loop; do
 	  --reference-script-size $rollupVerifierSize \
 	  --out-file $keypath/rollupOutB.txbody
 
-	fee2=$(cardano-cli conway transaction calculate-min-fee \
+	feeB=$(cardano-cli conway transaction calculate-min-fee \
 		 --tx-body-file $keypath/rollupOutB.txbody \
 		 --protocol-params-file $protocolParams \
 		 --witness-count 1 \
 		 --reference-script-size $rollupVerifierSize | sed 's/ .*//')
 
-	echo "Estimated transaction fee: Coin $fee2"
+	echo "Estimated transaction fee: Coin $feeB"
 	echo ""
 
 	echo "Signing second Tx..."
@@ -160,13 +159,6 @@ while $loop; do
 	    --testnet-magic $mN \
 	    --tx-file $keypath/rollupOutA.tx
 
-	# echo ""
-	# echo "EXPERIMENT COMPLETED"
-	# echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupOutA.tx)"
-	# # echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOutB.tx)"
-	# echo ""
-	# exit 1
-
 	cardano-cli conway transaction submit \
 	    --testnet-magic $mN \
 	    --tx-file $keypath/nextRollupOutB.tx
@@ -177,9 +169,8 @@ while $loop; do
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOutB.tx)"
 	echo ""
 
-	mv $keypath/nextRollupOutB.tx $keypath/rollupOutB.tx
-	mv $assets/nextRedeemerRollupA.cbor $assets/redeemerRollupA.cbor
-	mv $assets/nextRedeemerRollupA.json $assets/redeemerRollupA.json
+    mv $keypath/nextRollupOutB.tx $keypath/rollupOutB.tx
+    mv $assets/newRollupDataA.json $assets/rollupDataA.json
     fi
     loop=$(cat $keypath/rollup-loop.flag)
 done

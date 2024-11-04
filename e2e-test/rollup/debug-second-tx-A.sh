@@ -33,8 +33,8 @@ rollupValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 # incMem=18260
 
 # Practical choices:
-incCpu=$((7023002 + 7023002 * 80 / 100))
-incMem=$((18260 + 18260 * 65 / 100))
+incCpu=$((2 * 7023002))
+incMem=$((2 * 18260))
 
 execCpuA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.steps')
 execMemA=$(cat $keypath/exec-units-A.log | jq -r '.[0].executionUnits.memory')

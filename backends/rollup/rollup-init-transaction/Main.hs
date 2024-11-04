@@ -30,7 +30,7 @@ import           Text.Parsec.String                       (Parser)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit  (identityCircuitVerificationBytes,
                                                            stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract (..))
+import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract (..), RollupData (..))
 import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 import           ZkFold.Cardano.UPLC                      (parkingSpotCompiled, rollupCompiled)
@@ -62,13 +62,14 @@ saveRollupPlutus path = do
           rollupCredential = credentialOf $ rollupCompiled ledgerRules
           lovelace         = V2.singleton V2.adaSymbol V2.adaToken
 
+  let rollupDataA = RollupData { rdNextState = nextState, rdRedeemer = redeemerRollupA }
+
   let assetsPath = path </> "assets"
 
   savePlutus (assetsPath </> "rollup.plutus") $ rollupCompiled ledgerRules
 
-  BS.writeFile (assetsPath </> "datumRollupA.cbor") $ dataToCBOR iniState
-  BS.writeFile (assetsPath </> "redeemerRollupA.cbor") $ dataToCBOR redeemerRollupA
-  BS.writeFile (assetsPath </> "redeemerRollupA.json") $ prettyPrintJSON $ dataToJSON redeemerRollupA
+  BS.writeFile (assetsPath </> "datumB.cbor") $ dataToCBOR iniState
+  BS.writeFile (assetsPath </> "rollupDataA.json") $ prettyPrintJSON $ dataToJSON rollupDataA
 
 saveParkingSpotPlutus :: FilePath -> Integer -> IO ()
 saveParkingSpotPlutus path = savePlutus (path </> "assets" </> "parkingSpot.plutus") . parkingSpotCompiled
@@ -89,8 +90,6 @@ main = do
     Right tag -> do
       saveRollupPlutus path
       saveParkingSpotPlutus path tag
-
-      BS.writeFile (path </> "assets" </> "unit.cbor") $ dataToCBOR ()
 
       putStr "\nDone serializing plutus scripts and initializing state.\n\n"
 

@@ -12,48 +12,35 @@ import qualified Data.ByteString.Lazy as BL
 import           Data.Maybe           (fromJust)
 import qualified PlutusLedgerApi.V3   as V3
 import           PlutusTx             (ToData (..))
-import           Prelude              (Either (..), IO, error, length, show, ($), (++), (.), (<$>), (==), putStr)
+import           Prelude              (Either (..), IO, concat, error, length, show, ($), (.), (<$>), (==))
 import           System.Directory     (getCurrentDirectory)
 import           System.FilePath      (takeFileName, (</>))
 import qualified System.IO            as IO
 
--- import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
--- import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-import           ZkFold.Cardano.UPLC.Rollup               (rollupMini)
-
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
-import           ZkFold.Cardano.Examples.IdentityCircuit     (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..))
-import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
+import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupData (..))
+import           ZkFold.Cardano.OnChain.BLS12_381            (toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
 
-nextRollup :: Fr -> PlonkupProverSecret BLS12_381_G1 -> RollupRedeemer -> (F, RollupRedeemer)
-nextRollup x ps previousRollup =
-  let nextState     = toInput $ dataToBlake (rrState previousRollup, rrUpdate previousRollup)
-      nextState'    = toInput $ dataToBlake (nextState, rrUpdate previousRollup ++ [nextState])
+nextRollup :: Fr -> PlonkupProverSecret BLS12_381_G1 -> RollupData -> RollupData
+nextRollup x ps rollupData =
+  let nextState     = rdNextState rollupData
+      nextState'    = toInput $ dataToBlake (nextState, concat [rrUpdate . rdRedeemer $ rollupData, [nextState]])
       (_, _, proof) = stateCheckVerificationBytes x ps nextState'
       nextRedeemer = RollupRedeemer
                      { rrProof   = proof
-                     , rrAddress = rrAddress previousRollup
-                     , rrValue   = rrValue previousRollup
+                     , rrAddress = rrAddress . rdRedeemer $ rollupData
+                     , rrValue   = rrValue . rdRedeemer $ rollupData
                      , rrState   = nextState
-                     , rrUpdate  = rrUpdate previousRollup ++ [nextState]
+                     , rrUpdate  = concat [rrUpdate . rdRedeemer $ rollupData, [nextState]]
                      }
-  in (nextState, nextRedeemer)
+  in RollupData nextState' nextRedeemer
 
--- nextRedeemer :: F -> RollupRedeemer -> RollupRedeemer
--- nextRedeemer nextState previousRollup = RollupRedeemer
---   { rrProof   = rrProof previousRollup
---   , rrAddress = rrAddress previousRollup
---   , rrValue   = rrValue previousRollup
---   , rrState   = nextState
---   , rrUpdate  = rrUpdate previousRollup ++ [nextState]
---   }
-
--- | Will process two simultaneous transactions 'A' & 'B', processing states
--- 'stateA', 'stateB' with redeemers 'redeemerA', 'redeemerB', respectively.
+-- | Will process two simultaneous transactions 'A' & 'B', uploading states 'nextStateA', 'nextStateB'
+-- with redeemers 'redeemerRollupA', 'redeemerRollupB', respectively.
 
 main :: IO ()
 main = do
@@ -63,37 +50,28 @@ main = do
                           else if currentDirName == "e2e-test" then ".." else "."
       assetsPath     = path </> "assets"
 
-  redeemerRollupAE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "redeemerRollupA.json")
+  rollupDataAE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupDataA.json")
 
-  case redeemerRollupAE of
-    Right redeemerRollupAScriptData -> do
-      let redeemerRollupA = fromJust . V3.fromData . toPlutusData . getScriptData $ redeemerRollupAScriptData :: RollupRedeemer
-
+  case rollupDataAE of
+    Right rollupDataAScriptData -> do
       IdentityCircuitContract x ps <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
-      let (ledgerRules, _, _) = identityCircuitVerificationBytes x ps
 
-      let (nextStateA, redeemerRollupB)     = nextRollup x ps redeemerRollupA
+      let rollupDataA = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupDataAScriptData :: RollupData
 
-      -- let nextStateA      = toInput $ dataToBlake (rrState redeemerRollupA, rrUpdate redeemerRollupA)
-      --     redeemerRollupB = nextRedeemer x ps nextStateA redeemerRollupA
+      let RollupData nextStateA redeemerRollupA               = rollupDataA
+      let rollupDataB@(RollupData nextStateB redeemerRollupB) = nextRollup x ps rollupDataA
+      let newRollupDataA                                      = nextRollup x ps rollupDataB
 
-      let (nextStateB, nextRedeemerRollupA) = nextRollup x ps redeemerRollupB
+      BS.writeFile (assetsPath </> "datumA.cbor") $ dataToCBOR nextStateA
+      BS.writeFile (assetsPath </> "redeemerRollupA.cbor") $ dataToCBOR redeemerRollupA
 
-          -- nextStateB          = toInput $ dataToBlake (rrState redeemerRollupB, rrUpdate redeemerRollupB)
-          -- nextRedeemerRollupA = nextRedeemer x ps nextStateB redeemerRollupB
-
-      putStr $ "Verifies proof (A): " ++ (show $ rollupMini ledgerRules redeemerRollupA) ++ ".\n"
-      putStr $ "Verifies proof (B): " ++ (show $ rollupMini ledgerRules redeemerRollupB)++ ".\n\n"
-
-      BS.writeFile (assetsPath </> "datumRollupA.cbor") $ dataToCBOR nextStateA
-      BS.writeFile (assetsPath </> "nextRedeemerRollupA.cbor") $ dataToCBOR nextRedeemerRollupA
-      BS.writeFile (assetsPath </> "nextRedeemerRollupA.json") $ prettyPrintJSON $ dataToJSON nextRedeemerRollupA
-
-      BS.writeFile (assetsPath </> "datumRollupB.cbor") $ dataToCBOR nextStateB
+      BS.writeFile (assetsPath </> "datumB.cbor") $ dataToCBOR nextStateB
       BS.writeFile (assetsPath </> "redeemerRollupB.cbor") $ dataToCBOR redeemerRollupB
       IO.writeFile (assetsPath </> "last-update-length.log") . show . length . rrUpdate $ redeemerRollupB
 
-    Left _                         -> error "JSON error: unreadable 'redeemerRollupA.json'"
+      BS.writeFile (assetsPath </> "newRollupDataA.json") $ prettyPrintJSON $ dataToJSON newRollupDataA
+
+    Left _                         -> error "JSON error: unreadable 'rollupDataB.json'"
 
 
 ----- HELPER FUNCTIONS -----

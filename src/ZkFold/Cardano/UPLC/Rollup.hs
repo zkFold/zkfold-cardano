@@ -49,14 +49,6 @@ rollup ledgerRules RollupRedeemer{..} ctx =
         -- Compute the next state
         nextState = toInput $ dataToBlake (rrState, rrUpdate)
 
-rollupMini :: SetupBytes -> RollupRedeemer -> Bool
-rollupMini ledgerRules RollupRedeemer{..} =
-        -- Verify the transition from the current state to the next state
-        verify @PlonkPlutus @HaskellCore ledgerRules nextState rrProof
-    where
-        -- Compute the next state
-        nextState = toInput $ dataToBlake (rrState, rrUpdate)
-
 {-# INLINABLE rollup' #-}
 rollup' :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
 rollup' ledgerRules RollupRedeemer{..} ctx =

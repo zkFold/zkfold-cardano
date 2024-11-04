@@ -15,9 +15,7 @@ mkdir -p $keypath
 parkingTag=54
 pause=5
 mN=42
-unitDatum=$assets/unit.cbor
-stateA=$assets/datumRollupA.cbor
-# stateB=$assets/datumRollupB.cbor
+stateB=$assets/datumB.cbor
 rollupValue=3000000
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
@@ -104,7 +102,7 @@ cardano-cli conway transaction build \
   --testnet-magic $mN \
   --tx-in $in1 \
   --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
-  --tx-out-inline-datum-cbor-file $stateA \
+  --tx-out-inline-datum-cbor-file $stateB \
   --change-address $(cat $keypath/alice.addr) \
   --out-file $keypath/rollupOutB.txbody
 
