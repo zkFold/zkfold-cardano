@@ -37,13 +37,13 @@ nextRollup x rollupInfo = do
       nextUpdate    = concat [rrUpdate . riRedeemer $ rollupInfo, [nextState]]
       nextState'    = toInput $ dataToBlake (nextState, nextUpdate)
       (_, _, proof) = stateCheckVerificationBytes x ps nextState'
-      nextRedeemer = RollupRedeemer
-                     { rrProof   = proof
-                     , rrAddress = rrAddress . riRedeemer $ rollupInfo
-                     , rrValue   = rrValue . riRedeemer $ rollupInfo
-                     , rrState   = nextState
-                     , rrUpdate  = nextUpdate
-                     }
+      nextRedeemer  = RollupRedeemer
+                      { rrProof   = proof
+                      , rrAddress = rrAddress . riRedeemer $ rollupInfo
+                      , rrValue   = rrValue . riRedeemer $ rollupInfo
+                      , rrState   = nextState
+                      , rrUpdate  = nextUpdate
+                      }
 
   return $ RollupInfo nextState' nextRedeemer
 
@@ -66,7 +66,7 @@ main = do
 
       let rollupInfoA = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupInfoAScriptData :: RollupInfo
 
-      let RollupInfo nextStateA redeemerRollupA               = rollupInfoA
+      let RollupInfo nextStateA redeemerRollupA = rollupInfoA
 
       rollupInfoB@(RollupInfo nextStateB redeemerRollupB) <- nextRollup x rollupInfoA
       newRollupInfoA                                      <- nextRollup x rollupInfoB
