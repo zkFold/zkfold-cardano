@@ -27,7 +27,7 @@ import           ZkFold.Cardano.OnChain.Plonk          (untypedVerifyPlonk)
 import           ZkFold.Cardano.OnChain.Plonk.Data     (SetupBytes)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (untypedForwardingMint, untypedForwardingReward)
 import           ZkFold.Cardano.UPLC.PlonkVerifier     (untypedPlonkVerifier)
-import           ZkFold.Cardano.UPLC.Rollup            (RollupSetup, untypedRollup, untypedParkingSpot)
+import           ZkFold.Cardano.UPLC.Rollup            (RollupSetup, untypedParkingSpot, untypedRollup)
 import           ZkFold.Cardano.UPLC.SymbolicVerifier  (untypedSymbolicVerifier)
 
 
