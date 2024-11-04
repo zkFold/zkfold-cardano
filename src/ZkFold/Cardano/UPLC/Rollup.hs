@@ -92,6 +92,7 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     verify @PlonkPlutus @HaskellCore ledgerRules (toF state') proof
 
     -- Compare the state updates
+    -- Note: we want to have the full control over the order of data updates. That is why we pass `update` in the redeemer.
     && sort update' == sort update
 
     -- Check the current rollup output
