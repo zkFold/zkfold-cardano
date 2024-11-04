@@ -1,21 +1,22 @@
 module Main where
 
-import           Cardano.Api          (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
-import           Cardano.Api.Ledger   (toCBOR)
-import           Cardano.Api.Shelley  (fromPlutusData, scriptDataFromJsonDetailedSchema,
-                                       scriptDataToJsonDetailedSchema, toPlutusData)
-import           Codec.CBOR.Write     (toStrictByteString)
-import           Data.Aeson           (decode)
-import qualified Data.Aeson           as Aeson
-import qualified Data.ByteString      as BS
-import qualified Data.ByteString.Lazy as BL
-import           Data.Maybe           (fromJust)
-import qualified PlutusLedgerApi.V3   as V3
-import           PlutusTx             (ToData (..))
-import           Prelude              (Either (..), IO, concat, error, length, show, ($), (.), (<$>), (==))
-import           System.Directory     (getCurrentDirectory)
-import           System.FilePath      (takeFileName, (</>))
-import qualified System.IO            as IO
+import           Cardano.Api                                 (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
+import           Cardano.Api.Ledger                          (toCBOR)
+import           Cardano.Api.Shelley                         (fromPlutusData, scriptDataFromJsonDetailedSchema,
+                                                              scriptDataToJsonDetailedSchema, toPlutusData)
+import           Codec.CBOR.Write                            (toStrictByteString)
+import           Data.Aeson                                  (decode)
+import qualified Data.Aeson                                  as Aeson
+import qualified Data.ByteString                             as BS
+import qualified Data.ByteString.Lazy                        as BL
+import           Data.Maybe                                  (fromJust)
+import qualified PlutusLedgerApi.V3                          as V3
+import           PlutusTx                                    (ToData (..))
+import           Prelude                                     (Either (..), IO, concat, error, length, show, ($), (.),
+                                                              (<$>), (==))
+import           System.Directory                            (getCurrentDirectory)
+import           System.FilePath                             (takeFileName, (</>))
+import qualified System.IO                                   as IO
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
