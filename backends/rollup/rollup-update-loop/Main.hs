@@ -12,8 +12,8 @@ import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import qualified PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (ToData (..))
-import           Prelude                                     (Either (..), IO, concat, error, length, putStr, return, show,
-                                                              ($), (.), (<$>), (++), (==))
+import           Prelude                                     (Either (..), IO, concat, error, length, putStr, return,
+                                                              show, ($), (++), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
@@ -29,7 +29,7 @@ import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..
 
 nextRollup :: Fr -> RollupInfo -> IO RollupInfo
 nextRollup x rollupInfo = do
-  ps <- generate arbitrary  
+  ps <- generate arbitrary
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
@@ -44,7 +44,7 @@ nextRollup x rollupInfo = do
                      , rrState   = nextState
                      , rrUpdate  = nextUpdate
                      }
-                     
+
   return $ RollupInfo nextState' nextRedeemer
 
 -- | Will process two simultaneous transactions 'A' & 'B', uploading states 'nextStateA', 'nextStateB'
