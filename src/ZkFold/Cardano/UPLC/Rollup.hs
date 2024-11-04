@@ -9,7 +9,7 @@ import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed)
-import           PlutusTx.Prelude                         hiding ((*), (+))
+import           PlutusTx.Prelude
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
@@ -31,13 +31,13 @@ makeIsDataIndexed ''RollupRedeemer [('RollupRedeemer,0)]
 -- | Plutus script for verifying a ZkFold Rollup state transition.
 {-# INLINABLE rollup #-}
 rollup :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
-rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
+rollup ledgerRules RollupRedeemer{..} ctx =
         -- Verify the transition from the current state to the next state
-        verify @PlonkPlutus @HaskellCore ledgerRules state' proof
+        verify @PlonkPlutus @HaskellCore ledgerRules nextState rrProof
         -- Check the current rollup output
-        && out  == TxOut addr val (OutputDatum $ Datum $ toBuiltinData state)  Nothing
+        && out  == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData rrState) Nothing
         -- Check the next rollup output
-        && out' == TxOut addr val (OutputDatum $ Datum $ toBuiltinData state') Nothing
+        && out' == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData nextState) Nothing
     where
         -- Get the current rollup output
         Just j = findOwnInput ctx
@@ -47,7 +47,12 @@ rollup ledgerRules (RollupRedeemer proof addr val state update) ctx =
         out'   = head $ txInfoOutputs $ scriptContextTxInfo ctx
 
         -- Compute the next state
-        state' = toInput $ dataToBlake (state, update)
+        nextState = toInput $ dataToBlake (rrState, rrUpdate)
+
+{-# INLINABLE parkingSpot #-}
+parkingSpot :: Integer -> ScriptContext -> Bool
+parkingSpot _ _ = True
+
 
 {-# INLINABLE untypedRollup #-}
 untypedRollup :: SetupBytes -> BuiltinData -> BuiltinUnit
@@ -57,3 +62,11 @@ untypedRollup computation ctx' =
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
     check $ rollup computation redeemer ctx
+
+{-# INLINABLE untypedParkingSpot #-}
+untypedParkingSpot :: Integer -> BuiltinData -> BuiltinUnit
+untypedParkingSpot tag ctx' =
+  let
+    ctx = unsafeFromBuiltinData ctx'
+  in
+    check $ parkingSpot tag ctx
