@@ -6,11 +6,20 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
-assets=../../assets
+sanchomagic=4
+assets=../assets
+keypath=./rollup/keys
+privpath=./rollup/priv
 
-mN=42
-pause=5  # Wait time (in seconds) before querying blockchain
+mN=$(cat $privpath/testnet.flag)
+
+# Wait time (in seconds) before querying blockchain
+if [ $mN == $sanchomagic ]; then
+    pause=7
+else
+    pause=4
+fi
+
 protocolParams=$assets/protocol.json
 
 stateA=$assets/datumA.cbor

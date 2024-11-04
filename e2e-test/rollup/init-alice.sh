@@ -6,12 +6,12 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
-mN=42
+keypath=./rollup/keys
+privpath=./rollup/priv
+
+mN=$(cat $privpath/testnet.flag)
 
 echo "Create Alice..."
-
-mkdir -p $keypath
 
 #----------------------------------- :alice: -----------------------------------
 

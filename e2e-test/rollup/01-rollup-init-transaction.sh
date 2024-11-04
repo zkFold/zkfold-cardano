@@ -6,15 +6,23 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
-assets=../../assets
+sanchomagic=4
+assets=../assets
+keypath=./rollup/keys
+privpath=./rollup/priv
+
+mN=$(cat $privpath/testnet.flag)
 
 mkdir -p $assets
-mkdir -p $keypath
+
+# Wait time (in seconds) before querying blockchain
+if [ $mN == $sanchomagic ]; then
+    pause=7
+else
+    pause=4
+fi
 
 parkingTag=54
-pause=5
-mN=42
 stateB=$assets/datumB.cbor
 rollupValue=3000000
 

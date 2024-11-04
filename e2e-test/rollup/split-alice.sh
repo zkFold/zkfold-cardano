@@ -6,14 +6,20 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
-assets=../../assets
+sanchomagic=4
+assets=../assets
+keypath=./rollup/keys
+privpath=./rollup/priv
 
-pause=7
-mN=42
+mN=$(cat $privpath/testnet.flag)
+if [ $mN == $sanchomagic ]; then
+    pause=7
+else
+    pause=5
+fi
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
-alice0=$(cardano-cli query utxo --address $(cat ./keys/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r '. | to_entries[0].value.value.lovelace')
+alice0=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r '. | to_entries[0].value.value.lovelace')
 
 echo "Split Alice's funds (at UTxO #0) into two separate UTxO's..."
 

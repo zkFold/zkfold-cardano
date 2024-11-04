@@ -6,11 +6,28 @@ set -e
 set -u
 set -o pipefail
 
-keypath0=../local-testnet/example/utxo-keys
-keypath=./keys
-mN=42
+localmagic=42
+pause=5
+assets=../assets
+keypath0=./local-testnet/example/utxo-keys
+keypath=./rollup/keys
+privpath=./rollup/priv
 
-echo "Fund Alice..."
+if [ -d "./rollup" ]; then
+    mkdir -p $assets
+    mkdir -p $keypath
+    mkdir -p $privpath
+else
+    echo "Please run script from directory 'e2e-test'."
+    exit 1
+fi
+
+printf "$localmagic" > $privpath/testnet.flag
+mN=$localmagic
+
+./rollup/init-alice.sh
+
+echo "Now funding Alice..."
 
 #----------------------------------- :utxo1: -----------------------------------
 
@@ -59,3 +76,5 @@ echo ""
 echo "Alice's wallet:"
 echo "$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN)"
 echo ""
+
+./rollup/split-alice.sh

@@ -6,8 +6,8 @@ set -e
 set -u
 set -o pipefail
 
-keypath=./keys
-assets=../../assets
+assets=../assets
+keypath=./rollup/keys
 
 find $keypath/ -type f ! -name "alice.*" -exec rm {} +
 rm -r $assets
