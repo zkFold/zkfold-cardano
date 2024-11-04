@@ -29,14 +29,15 @@ import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..
 nextRollup :: Fr -> PlonkupProverSecret BLS12_381_G1 -> RollupData -> RollupData
 nextRollup x ps rollupData =
   let nextState     = rdNextState rollupData
-      nextState'    = toInput $ dataToBlake (nextState, concat [rrUpdate . rdRedeemer $ rollupData, [nextState]])
+      nextUpdate    = concat [rrUpdate . rdRedeemer $ rollupData, [nextState]]
+      nextState'    = toInput $ dataToBlake (nextState, nextUpdate)
       (_, _, proof) = stateCheckVerificationBytes x ps nextState'
       nextRedeemer = RollupRedeemer
                      { rrProof   = proof
                      , rrAddress = rrAddress . rdRedeemer $ rollupData
                      , rrValue   = rrValue . rdRedeemer $ rollupData
                      , rrState   = nextState
-                     , rrUpdate  = concat [rrUpdate . rdRedeemer $ rollupData, [nextState]]
+                     , rrUpdate  = nextUpdate
                      }
   in RollupData nextState' nextRedeemer
 

@@ -50,7 +50,7 @@ saveRollupPlutus path = do
       nextState                  = toInput $ dataToBlake (iniState, [iniState])
       (_, _, proof)              = stateCheckVerificationBytes x ps nextState
 
-  let redeemerRollupA = RollupRedeemer
+  let redeemerRollup = RollupRedeemer
         { rrProof   = proof
         , rrAddress = V3.Address rollupCredential Nothing
         , rrValue   = lovelace 3000000
@@ -61,7 +61,7 @@ saveRollupPlutus path = do
           rollupCredential = credentialOf $ rollupCompiled ledgerRules
           lovelace         = V2.singleton V2.adaSymbol V2.adaToken
 
-  let rollupDataA = RollupData { rdNextState = nextState, rdRedeemer = redeemerRollupA }
+  let rollupDataA = RollupData { rdNextState = nextState, rdRedeemer = redeemerRollup }
 
   let assetsPath = path </> "assets"
 
