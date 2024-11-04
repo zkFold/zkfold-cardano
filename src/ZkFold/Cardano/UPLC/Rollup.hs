@@ -121,3 +121,15 @@ untypedRollup computation ctx' =
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
     check $ rollup computation redeemer ctx
+
+{-# INLINABLE parkingSpot #-}
+parkingSpot :: Integer -> ScriptContext -> Bool
+parkingSpot _ _ = True
+
+{-# INLINABLE untypedParkingSpot #-}
+untypedParkingSpot :: Integer -> BuiltinData -> BuiltinUnit
+untypedParkingSpot tag ctx' =
+  let
+    ctx = unsafeFromBuiltinData ctx'
+  in
+    check $ parkingSpot tag ctx

@@ -140,7 +140,7 @@ instance NonInteractiveProof PlonkupPlutus core where
 
             -- final calculations
             r0 =
-                  pi_xi * lagrange1_xi
+                  negate pi_xi * lagrange1_xi
                 - alpha * (a_xi + beta * s1_xi + gamma) * (b_xi + beta * s2_xi + gamma) * (c_xi + gamma) * z1_xi'
                 - alpha2 * lagrange1_xi
                 - alpha4 * z2_xi' * (epsilon * (one + delta) + delta * h2_xi) * (epsilon * (one + delta) + h2_xi + delta * h1_xi')

@@ -13,6 +13,7 @@ module ZkFold.Cardano.UPLC
   , forwardingRewardCompiled
   , forwardingMintCompiled
   , rollupCompiled
+  , parkingSpotCompiled
   ) where
 
 import           Flat.Types                            ()
@@ -59,3 +60,7 @@ rollupCompiled computation =
     $$(compile [|| untypedRollup ||])
     `unsafeApplyCode` liftCodeDef computation
 
+parkingSpotCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+parkingSpotCompiled tag =
+    $$(compile [|| untypedParkingSpot ||])
+    `unsafeApplyCode` liftCodeDef tag
