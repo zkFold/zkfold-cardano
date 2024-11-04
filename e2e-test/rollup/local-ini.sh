@@ -7,7 +7,7 @@ set -u
 set -o pipefail
 
 localmagic=42
-pause=5
+pause=4
 assets=../assets
 keypath0=./local-testnet/example/utxo-keys
 keypath=./rollup/keys

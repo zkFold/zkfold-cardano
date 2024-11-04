@@ -15,7 +15,7 @@ mN=$(cat $privpath/testnet.flag)
 if [ $mN == $sanchomagic ]; then
     pause=7
 else
-    pause=5
+    pause=4
 fi
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
