@@ -12,34 +12,40 @@ import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import qualified PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (ToData (..))
-import           Prelude                                     (Either (..), IO, concat, error, length, show, ($), (.),
-                                                              (<$>), (==))
+import           Prelude                                     (Either (..), IO, concat, error, length, putStr, return, show,
+                                                              ($), (.), (<$>), (++), (==))
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
+import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
+import           Test.QuickCheck.Gen                         (generate)
 
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
-import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupData (..))
+import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381            (toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
 
-nextRollup :: Fr -> PlonkupProverSecret BLS12_381_G1 -> RollupData -> RollupData
-nextRollup x ps rollupData =
-  let nextState     = rdNextState rollupData
-      nextUpdate    = concat [rrUpdate . rdRedeemer $ rollupData, [nextState]]
+nextRollup :: Fr -> RollupInfo -> IO RollupInfo
+nextRollup x rollupInfo = do
+  ps <- generate arbitrary  
+
+  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
+
+  let nextState     = riNextState rollupInfo
+      nextUpdate    = concat [rrUpdate . riRedeemer $ rollupInfo, [nextState]]
       nextState'    = toInput $ dataToBlake (nextState, nextUpdate)
       (_, _, proof) = stateCheckVerificationBytes x ps nextState'
       nextRedeemer = RollupRedeemer
                      { rrProof   = proof
-                     , rrAddress = rrAddress . rdRedeemer $ rollupData
-                     , rrValue   = rrValue . rdRedeemer $ rollupData
+                     , rrAddress = rrAddress . riRedeemer $ rollupInfo
+                     , rrValue   = rrValue . riRedeemer $ rollupInfo
                      , rrState   = nextState
                      , rrUpdate  = nextUpdate
                      }
-  in RollupData nextState' nextRedeemer
+                     
+  return $ RollupInfo nextState' nextRedeemer
 
 -- | Will process two simultaneous transactions 'A' & 'B', uploading states 'nextStateA', 'nextStateB'
 -- with redeemers 'redeemerRollupA', 'redeemerRollupB', respectively.
@@ -52,17 +58,18 @@ main = do
                           else if currentDirName == "e2e-test" then ".." else "."
       assetsPath     = path </> "assets"
 
-  rollupDataAE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupDataA.json")
+  rollupInfoAE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfoA.json")
 
-  case rollupDataAE of
-    Right rollupDataAScriptData -> do
-      IdentityCircuitContract x ps <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
+  case rollupInfoAE of
+    Right rollupInfoAScriptData -> do
+      IdentityCircuitContract x _ <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
 
-      let rollupDataA = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupDataAScriptData :: RollupData
+      let rollupInfoA = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupInfoAScriptData :: RollupInfo
 
-      let RollupData nextStateA redeemerRollupA               = rollupDataA
-      let rollupDataB@(RollupData nextStateB redeemerRollupB) = nextRollup x ps rollupDataA
-      let newRollupDataA                                      = nextRollup x ps rollupDataB
+      let RollupInfo nextStateA redeemerRollupA               = rollupInfoA
+
+      rollupInfoB@(RollupInfo nextStateB redeemerRollupB) <- nextRollup x rollupInfoA
+      newRollupInfoA                                      <- nextRollup x rollupInfoB
 
       BS.writeFile (assetsPath </> "datumA.cbor") $ dataToCBOR nextStateA
       BS.writeFile (assetsPath </> "redeemerRollupA.cbor") $ dataToCBOR redeemerRollupA
@@ -71,9 +78,9 @@ main = do
       BS.writeFile (assetsPath </> "redeemerRollupB.cbor") $ dataToCBOR redeemerRollupB
       IO.writeFile (assetsPath </> "last-update-length.log") . show . length . rrUpdate $ redeemerRollupB
 
-      BS.writeFile (assetsPath </> "newRollupDataA.json") $ prettyPrintJSON $ dataToJSON newRollupDataA
+      BS.writeFile (assetsPath </> "newRollupInfoA.json") $ prettyPrintJSON $ dataToJSON newRollupInfoA
 
-    Left _                      -> error "JSON error: unreadable 'rollupDataA.json'"
+    Left _                      -> error "JSON error: unreadable 'rollupInfoA.json'"
 
 
 ----- HELPER FUNCTIONS -----

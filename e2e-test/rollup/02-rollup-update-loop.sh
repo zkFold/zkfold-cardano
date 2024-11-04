@@ -179,7 +179,7 @@ while $loop; do
 	echo ""
 
     mv $keypath/nextRollupOutB.tx $keypath/rollupOutB.tx
-    mv $assets/newRollupDataA.json $assets/rollupDataA.json
+    mv $assets/newRollupInfoA.json $assets/rollupInfoA.json
     fi
     loop=$(cat $keypath/rollup-loop.flag)
 done

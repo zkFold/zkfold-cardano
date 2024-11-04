@@ -36,8 +36,8 @@ deriving anyclass instance FromJSON (V.Vector 19 Fr)
 deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
 deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)
 
-data RollupData = RollupData { rdNextState :: F, rdRedeemer :: RollupRedeemer }
+data RollupInfo = RollupInfo { riNextState :: F, riRedeemer :: RollupRedeemer }
   deriving stock (Show, Generic)
 
-makeIsDataIndexed ''RollupData [('RollupData,0)]
+makeIsDataIndexed ''RollupInfo [('RollupInfo,0)]
 
