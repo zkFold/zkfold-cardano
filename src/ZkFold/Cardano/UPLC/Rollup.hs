@@ -49,26 +49,6 @@ rollup ledgerRules RollupRedeemer{..} ctx =
         -- Compute the next state
         nextState = toInput $ dataToBlake (rrState, rrUpdate)
 
-{-# INLINABLE rollup' #-}
-rollup' :: SetupBytes -> RollupRedeemer -> ScriptContext -> Bool
-rollup' ledgerRules RollupRedeemer{..} ctx =
-        -- Tautology: Verify the transition from the current state to the next state, then always True
-        (verify @PlonkPlutus @HaskellCore ledgerRules nextState rrProof || True)
-        -- Check the current rollup output
-        && out  == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData rrState) Nothing
-        -- Check the next rollup output
-        && out' == TxOut rrAddress rrValue (OutputDatum $ Datum $ toBuiltinData nextState) Nothing
-    where
-        -- Get the current rollup output
-        Just j = findOwnInput ctx
-        out    = txInInfoResolved j
-
-        -- Get the next rollup output
-        out'   = head $ txInfoOutputs $ scriptContextTxInfo ctx
-
-        -- Compute the next state
-        nextState = toInput $ dataToBlake (rrState, rrUpdate)
-
 {-# INLINABLE parkingSpot #-}
 parkingSpot :: Integer -> ScriptContext -> Bool
 parkingSpot _ _ = True
@@ -82,15 +62,6 @@ untypedRollup computation ctx' =
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
     check $ rollup computation redeemer ctx
-
-{-# INLINABLE untypedRollup' #-}
-untypedRollup' :: SetupBytes -> BuiltinData -> BuiltinUnit
-untypedRollup' computation ctx' =
-  let
-    ctx      = unsafeFromBuiltinData ctx'
-    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
-  in
-    check $ rollup' computation redeemer ctx
 
 {-# INLINABLE untypedParkingSpot #-}
 untypedParkingSpot :: Integer -> BuiltinData -> BuiltinUnit
