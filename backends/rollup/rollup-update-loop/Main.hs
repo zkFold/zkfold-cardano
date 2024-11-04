@@ -73,7 +73,7 @@ main = do
 
       BS.writeFile (assetsPath </> "newRollupDataA.json") $ prettyPrintJSON $ dataToJSON newRollupDataA
 
-    Left _                         -> error "JSON error: unreadable 'rollupDataB.json'"
+    Left _                      -> error "JSON error: unreadable 'rollupDataA.json'"
 
 
 ----- HELPER FUNCTIONS -----
