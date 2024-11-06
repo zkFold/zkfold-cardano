@@ -82,8 +82,10 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     -- If the payment credential of the output coincides with the rollup payment credential, then this output transfers value to the rollup.
     -- Otherwise, it transfers value from the rollup.
     bridgeOutputs =
-      filter (\(TxOut _ _ (OutputDatumHash _) Nothing) -> True) $
-      tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
+      filter (\case
+        TxOut _ _ (OutputDatumHash _) Nothing -> True  
+        _                                     -> False)
+      $ tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
 
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
