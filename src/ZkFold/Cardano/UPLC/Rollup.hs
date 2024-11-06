@@ -83,7 +83,7 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     -- Otherwise, it transfers value from the rollup.
     bridgeOutputs =
       filter (\case
-        TxOut _ _ (OutputDatumHash _) Nothing -> True  
+        TxOut _ _ (OutputDatumHash _) Nothing -> True
         _                                     -> False)
       $ tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
 
