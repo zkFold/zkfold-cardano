@@ -25,15 +25,14 @@ import qualified UntypedPlutusCore                     as UPLC
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F    (F (..))
-import           ZkFold.Cardano.OnChain.Plonk.Data     (ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonk.Data     (ProofBytes (..))
 import           ZkFold.Cardano.UPLC                   (rollupCompiled)
-import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..))
+import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..), RollupSetup (..))
 
 sampleRedeemer :: ProofBytes -> Int -> Redeemer
-sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupRedeemer
+sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupState
   { rrProof   = proof
   , rrAddress = sampleAddress
-  , rrValue   = sampleValue
   , rrState   = sampleState
   , rrUpdate  = replicate n sampleState
   }
@@ -82,7 +81,7 @@ contextRollup proof n = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs = [TxInInfo (TxOutRef sampleTxId 0) sampleScriptTxOut, TxInInfo (TxOutRef sampleTxId 1) samplePubTxOut]
     , txInfoReferenceInputs = [TxInInfo (TxOutRef sampleTxId 2) sampleReferenceTxOut]
-    , txInfoOutputs = [sampleScriptTxOut, samplePubTxOut]
+    , txInfoOutputs = [sampleScriptTxOut, samplePubTxOut, samplePubTxOut]
     , txInfoFee = V2.Lovelace 0
     , txInfoMint = mempty
     , txInfoTxCerts = []
@@ -101,12 +100,12 @@ contextRollup proof n = ScriptContext
     scriptContextScriptInfo = SpendingScript (TxOutRef sampleTxId 3) Nothing
   }
 
-rollupScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+rollupScript :: RollupSetup -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
 rollupScript paramsSetup ctx =
   getPlcNoAnn $ rollupCompiled paramsSetup
     `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-costsRollup :: SetupBytes -> ProofBytes -> [Int] -> [(Int, Integer, Integer)]
+costsRollup :: RollupSetup -> ProofBytes -> [Int] -> [(Int, Integer, Integer)]
 costsRollup s proof sizes = (\n -> (n, cpu n, mem n)) <$> sizes
   where
     costsCek = getCostsCek . rollupScript s . contextRollup proof
@@ -139,7 +138,7 @@ main = do
 
     let (setup, _, proof) = equalityCheckVerificationBytes x ps targetValue
 
-    writeCSV dataOutputFile $ costsRollup setup proof testUpdateSizes
+    writeCSV dataOutputFile $ costsRollup (RollupSetup setup sampleAddress) proof testUpdateSizes
     printCSVWithHeaders dataOutputFile dataHeaders
 
     putStrLn ""

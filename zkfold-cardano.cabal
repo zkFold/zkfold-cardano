@@ -86,6 +86,8 @@ library
     ZkFold.Cardano.UPLC.ForwardingScripts
     ZkFold.Cardano.UPLC.PlonkVerifier
     ZkFold.Cardano.UPLC.Rollup
+    ZkFold.Cardano.UPLC.RollupData
+    ZkFold.Cardano.UPLC.RollupDeposit
     ZkFold.Cardano.UPLC.SymbolicVerifier
   build-depends:
     aeson                          ,
