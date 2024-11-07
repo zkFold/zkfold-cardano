@@ -6,7 +6,6 @@ import           PlutusTx.Builtins
 import           PlutusTx.Prelude                                  (($), (.))
 import           Prelude                                           (fromIntegral)
 
-import           ZkFold.Base.Algebra.Basic.Class                   (negate)
 import           ZkFold.Base.Algebra.Basic.Number
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2)
 import qualified ZkFold.Base.Data.Vector                           as V
@@ -48,7 +47,7 @@ mkSetup PlonkupVerifierSetup {..} =
     }
 
 mkInput :: Input (PlonkupN i n) -> InputBytes
-mkInput (PlonkupInput input) = F . convertZp . negate $ V.head input
+mkInput (PlonkupInput input) = F . convertZp $ V.head input
 
 mkProof :: Proof (PlonkupN i n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes
