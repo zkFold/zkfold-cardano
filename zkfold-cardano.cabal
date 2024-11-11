@@ -89,6 +89,7 @@ library
     ZkFold.Cardano.UPLC.RollupData
     ZkFold.Cardano.UPLC.RollupDeposit
     ZkFold.Cardano.UPLC.SymbolicVerifier
+    ZkFold.Cardano.UPLC.Wallet
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
