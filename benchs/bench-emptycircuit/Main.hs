@@ -1,22 +1,24 @@
 module Main where
 
+import           Bench.JsonToData                         (parseJsonToTxInInfoList)
 import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
                                                            writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
-import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData, scriptDataFromJsonDetailedSchema)
+import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData,
+                                                           scriptDataFromJsonDetailedSchema)
 import           Codec.CBOR.Write                         (toStrictByteString)
 import           Control.Monad                            (void)
 import           Data.Aeson                               (decode)
 import qualified Data.ByteString                          as BS
 import qualified Data.ByteString.Lazy                     as BL
-import qualified PlutusLedgerApi.V3                       as V3
 import           Data.Maybe                               (fromJust)
+import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), putStr, ($), (<$>), (++), (.))
+import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.),
+                                                           (<$>))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
-import           Bench.JsonToData                         (parseJsonToTxInInfoList)  -- displayTxIn
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.IdentityCircuit  (stateCheckVerificationBytes)
 import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
