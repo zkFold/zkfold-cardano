@@ -3,21 +3,25 @@ module Main where
 import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
                                                            writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
-import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData)
+import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData, scriptDataFromJsonDetailedSchema)
 import           Codec.CBOR.Write                         (toStrictByteString)
 import           Control.Monad                            (void)
+import           Data.Aeson                               (decode)
 import qualified Data.ByteString                          as BS
+import qualified Data.ByteString.Lazy                     as BL
 import qualified PlutusLedgerApi.V3                       as V3
+import           Data.Maybe                               (fromJust)
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), putStr, ($), (++), (.))
+import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), putStr, ($), (<$>), (++), (.))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
+import           Bench.JsonToData                         (parseJsonToTxInInfoList)  -- displayTxIn
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.Examples.EmptyCircuit     (emptyCircuitVerificationBytes)
+import           ZkFold.Cardano.Examples.IdentityCircuit  (stateCheckVerificationBytes)
 import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
--- import           ZkFold.Cardano.UPLC                (symbolicVerifierCompiled)
+-- import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -38,34 +42,20 @@ main = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let (setup, _, proof) = emptyCircuitVerificationBytes x ps
-  let input' = F 26217937587563095239723870254092982918845276250263818911301829349969290592256  -- an arbitrary value
+  let input                = F 26217937587563095239723870254092982918845276250263818911301829349969290592256  -- an arbitrary value
+  let (setup, _, proof) = stateCheckVerificationBytes x ps input
 
-  let result = show $ verify @PlonkPlutus @HaskellCore setup input' proof
-  putStr $ "Result: " ++ result ++ ".\n"
+  let result = show $ verify @PlonkPlutus @HaskellCore setup input proof
+  putStr $ "Result: " ++ result ++ ".\n\n"
 
+  datumExampleE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile "datumExample.json"
 
-{-
-main :: IO ()
-main = do
-  x           <- generate arbitrary
-  ps          <- generate arbitrary
-  targetValue <- generate arbitrary
+  putStr $ (show datumExampleE) ++ "\n\n"
 
-  let contract = EqualityCheckContract x ps targetValue
+  txin <- parseJsonToTxInInfoList <$> BL.readFile "utxoExample.json"
 
-  createDirectoryIfMissing True "../../test-data"
-  createDirectoryIfMissing True "../../assets"
+  putStr $ (show txin) ++ "\n\n"
 
-  BL.writeFile "../../test-data/symbolic-raw-contract-data.json" $ encode contract
+  -- txin' <- displayTxIn <$> BL.readFile "utxoExample.json"
 
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n\n"
-
-  let (setup, _, proof) = tautologyVerificationBytes x ps targetValue
-
-  savePlutus "../../assets/parkingSpot.plutus" $ compiledParkingSpot 17
-  savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
-
-  BS.writeFile "../../assets/unit.cbor" $ dataToCBOR ()
-  BS.writeFile "../../assets/redeemerSymbolicVerifier.cbor" $ dataToCBOR proof
--}
+  -- putStr $ (show txin') ++ "\n\n"

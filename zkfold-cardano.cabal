@@ -143,57 +143,57 @@ test-suite test
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
-benchmark bench-cpu-mem
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  other-modules:
-    Bench.Statistics
-  hs-source-dirs:   benchs/bench-cpu-mem
-  type:             exitcode-stdio-1.0
-  build-depends:
-    aeson                          ,
-    base                >=4.9 && <5,
-    bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
-    directory                      ,
-    flat                           ,
-    plutus-core             ^>=1.30,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    QuickCheck                     ,
-    zkfold-base                    ,
-    zkfold-cardano                 ,
+-- benchmark bench-cpu-mem
+--   import:           lang
+--   import:           lang-extra
+--   default-language: Haskell2010
+--   ghc-options:      -rtsopts
+--   main-is:          Main.hs
+--   other-modules:
+--     Bench.Statistics
+--   hs-source-dirs:   benchs/bench-cpu-mem
+--   type:             exitcode-stdio-1.0
+--   build-depends:
+--     aeson                          ,
+--     base                >=4.9 && <5,
+--     bytestring                     ,
+--     cardano-api                    ,
+--     containers                     ,
+--     directory                      ,
+--     flat                           ,
+--     plutus-core             ^>=1.30,
+--     plutus-ledger-api       ^>=1.30,
+--     plutus-tx               ^>=1.30,
+--     plutus-tx-plugin        ^>=1.30,
+--     QuickCheck                     ,
+--     zkfold-base                    ,
+--     zkfold-cardano                 ,
 
-benchmark bench-rollup
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  other-modules:
-    Bench.Statistics
-    Bench.Utils
-  hs-source-dirs:   benchs/bench-rollup
-  type:             exitcode-stdio-1.0
-  build-depends:
-    aeson                          ,
-    base                >=4.9 && <5,
-    bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
-    directory                      ,
-    plutus-core             ^>=1.30,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    QuickCheck                     ,
-    zkfold-base                    ,
-    zkfold-cardano                 ,
+-- benchmark bench-rollup
+--   import:           lang
+--   import:           lang-extra
+--   default-language: Haskell2010
+--   ghc-options:      -rtsopts
+--   main-is:          Main.hs
+--   other-modules:
+--     Bench.Statistics
+--     Bench.Utils
+--   hs-source-dirs:   benchs/bench-rollup
+--   type:             exitcode-stdio-1.0
+--   build-depends:
+--     aeson                          ,
+--     base                >=4.9 && <5,
+--     bytestring                     ,
+--     cardano-api                    ,
+--     containers                     ,
+--     directory                      ,
+--     plutus-core             ^>=1.30,
+--     plutus-ledger-api       ^>=1.30,
+--     plutus-tx               ^>=1.30,
+--     plutus-tx-plugin        ^>=1.30,
+--     QuickCheck                     ,
+--     zkfold-base                    ,
+--     zkfold-cardano                 ,
 
 executable bench-emptycircuit
   import:           lang
@@ -204,16 +204,21 @@ executable bench-emptycircuit
   hs-source-dirs:   benchs/bench-emptycircuit
   other-modules:
     Bench.Scripts
+    Bench.DataExamples
+    Bench.JsonToData
   build-depends:
     aeson                          ,
     base                >=4.9 && <5,
+    base16-bytestring              ,
     bytestring                     ,
     cardano-api                    ,
+    containers                     ,
     cborg                          ,
     directory                      ,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
+    text                           ,
     zkfold-base                    ,
     zkfold-cardano                 ,
     QuickCheck
@@ -323,45 +328,45 @@ executable plonk-minting-transaction
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,
 
-executable rollup-init-transaction
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   backends/rollup/rollup-init-transaction
-  build-depends:
-    aeson                          ,
-    base              >= 4.9 && < 5,
-    bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
-    directory                      ,
-    filepath                       ,
-    parsec                         ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    zkfold-cardano                 ,
-    QuickCheck
+-- executable rollup-init-transaction
+--   import:           lang
+--   import:           lang-extra
+--   default-language: Haskell2010
+--   ghc-options:      -rtsopts
+--   main-is:          Main.hs
+--   hs-source-dirs:   backends/rollup/rollup-init-transaction
+--   build-depends:
+--     aeson                          ,
+--     base              >= 4.9 && < 5,
+--     bytestring                     ,
+--     cardano-api                    ,
+--     cborg                          ,
+--     directory                      ,
+--     filepath                       ,
+--     parsec                         ,
+--     plutus-ledger-api       ^>=1.30,
+--     plutus-tx               ^>=1.30,
+--     plutus-tx-plugin        ^>=1.30,
+--     zkfold-cardano                 ,
+--     QuickCheck
 
-executable rollup-update-loop
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   backends/rollup/rollup-update-loop
-  build-depends:
-    aeson                          ,
-    base              >= 4.9 && < 5,
-    bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
-    directory                      ,
-    filepath                       ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    zkfold-base                    ,
-    zkfold-cardano                 ,
-    QuickCheck
+-- executable rollup-update-loop
+--   import:           lang
+--   import:           lang-extra
+--   default-language: Haskell2010
+--   ghc-options:      -rtsopts
+--   main-is:          Main.hs
+--   hs-source-dirs:   backends/rollup/rollup-update-loop
+--   build-depends:
+--     aeson                          ,
+--     base              >= 4.9 && < 5,
+--     bytestring                     ,
+--     cardano-api                    ,
+--     cborg                          ,
+--     directory                      ,
+--     filepath                       ,
+--     plutus-ledger-api       ^>=1.30,
+--     plutus-tx               ^>=1.30,
+--     zkfold-base                    ,
+--     zkfold-cardano                 ,
+--     QuickCheck
