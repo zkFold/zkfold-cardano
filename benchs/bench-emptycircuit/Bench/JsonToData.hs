@@ -3,23 +3,23 @@
 module Bench.JsonToData where
 
 import           Cardano.Api
-import           Cardano.Api.Shelley (scriptDataFromJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
-import           Control.Monad (forM)
-import           Data.Aeson ((.:), (.:?), decode, eitherDecode, parseJSON)
-import           Data.Aeson.Types as Aeson (Result(..), Value(..), parse, parseEither)
-import qualified Data.Aeson.Key as Key
-import qualified Data.Aeson.KeyMap as KeyMap
-import           Data.Bifunctor (first)
+import           Cardano.Api.Shelley  (scriptDataFromJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
+import           Control.Monad        (forM)
+import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
+import qualified Data.Aeson.Key       as Key
+import qualified Data.Aeson.KeyMap    as KeyMap
+import           Data.Aeson.Types     as Aeson (Result (..), Value (..), parse, parseEither)
+import           Data.Bifunctor       (first)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Coerce
 import           Data.Either
-import           Data.Maybe (Maybe (..), fromMaybe)
-import           Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import           PlutusLedgerApi.V3 as V3
-import           Prelude (String, const, maybe, return, show, ($), (.), (++))
-import           Text.Read (readEither)
+import           Data.Maybe           (Maybe (..), fromMaybe)
+import           Data.Text            (Text)
+import qualified Data.Text            as T
+import qualified Data.Text.Encoding   as TE
+import           PlutusLedgerApi.V3   as V3
+import           Prelude              (String, const, maybe, return, show, ($), (++), (.))
+import           Text.Read            (readEither)
 
 -- Function to parse JSON and convert to a list of TxInInfo
 parseJsonToTxInInfoList :: BL.ByteString -> Either String [TxInInfo]

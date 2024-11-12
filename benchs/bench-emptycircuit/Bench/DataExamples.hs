@@ -7,8 +7,8 @@ module Bench.DataExamples where
 import           Data.String        (IsString (fromString))
 import qualified PlutusLedgerApi.V2 as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx.Prelude   (Maybe (..), Integer, ($))
 import           PlutusTx           (makeIsDataIndexed)
+import           PlutusTx.Prelude   (Integer, Maybe (..), ($))
 
 ------- DATUM DATATYPES  ------
 
