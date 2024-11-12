@@ -12,14 +12,16 @@ import qualified Data.ByteString.Lazy                     as BL
 import qualified PlutusLedgerApi.V3                       as V3
 import           Data.Maybe                               (fromJust)
 import           PlutusTx                                 (CompiledCode, ToData (..))
-import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), putStr, ($), (<$>), (++), (.))
+import           PlutusTx.Builtins.Internal               (serialiseData)
+import           PlutusTx.Prelude                         (blake2b_224, head)
+import           Prelude                                  (FilePath, Either (..), IO, Maybe (..), Show (..), putStr, ($), (<$>), (++), (.))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
 import           Bench.JsonToData                         (parseJsonToTxInInfoList)  -- displayTxIn
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.IdentityCircuit  (stateCheckVerificationBytes)
-import           ZkFold.Cardano.OnChain.BLS12_381         (F (..))
+import           ZkFold.Cardano.OnChain.BLS12_381         (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 -- import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
 
@@ -42,7 +44,7 @@ main = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let input                = F 26217937587563095239723870254092982918845276250263818911301829349969290592256  -- an arbitrary value
+  let input             = F 26217937587563095239723870254092982918845276250263818911301829349969290592256  -- an arbitrary value
   let (setup, _, proof) = stateCheckVerificationBytes x ps input
 
   let result = show $ verify @PlonkPlutus @HaskellCore setup input proof
@@ -56,6 +58,15 @@ main = do
 
   putStr $ (show txin) ++ "\n\n"
 
-  -- txin' <- displayTxIn <$> BL.readFile "utxoExample.json"
+  case txin of
+    Right txins -> do
+      let txinBD  = toBuiltinData . head $ txins
+      putStr $ "Data: " ++ (show txinBD) ++ "\n\n"
 
-  -- putStr $ (show txin') ++ "\n\n"
+      let txinBBS = serialiseData txinBD
+      putStr $ "Serialised data: " ++ (show txinBBS) ++ "\n\n"
+  
+      let input' = toInput $ blake2b_224 txinBBS
+      putStr $ "Input: " ++ (show input') ++ "\n\n"
+
+    Left errMsg -> putStr $ "Error: " ++ errMsg ++ "\n\n"
