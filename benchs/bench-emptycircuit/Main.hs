@@ -16,7 +16,7 @@ import qualified PlutusLedgerApi.V3                       as V3
 import           PlutusTx                                 (CompiledCode, ToData (..))
 import           PlutusTx.Builtins.Internal               (serialiseData)
 import           PlutusTx.Prelude                         (blake2b_224, head)
-import           Prelude                                  (FilePath, Either (..), IO, Maybe (..), Show (..), putStr,
+import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), Show (..), putStr,
                                                            ($), (++), (.), (<$>))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
@@ -67,7 +67,7 @@ main = do
 
       let txinBBS = serialiseData txinBD
       putStr $ "Serialised data: " ++ (show txinBBS) ++ "\n\n"
-  
+
       let input' = toInput $ blake2b_224 txinBBS
       putStr $ "Input: " ++ (show input') ++ "\n\n"
 
