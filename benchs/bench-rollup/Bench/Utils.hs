@@ -3,7 +3,7 @@ module Bench.Utils ( printCSVWithHeaders
                    , intToByteString32
                    ) where
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString         as BS
 import           Data.ByteString.Builder (toLazyByteString, word8)
 import           Data.ByteString.Lazy    (toStrict)
 import           Data.List               (transpose)
