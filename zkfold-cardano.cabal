@@ -188,6 +188,7 @@ benchmark bench-rollup
     cardano-api                    ,
     containers                     ,
     directory                      ,
+    filepath                       ,
     plutus-core             ^>=1.30,
     plutus-ledger-api       ^>=1.30,
     plutus-tx               ^>=1.30,
@@ -300,45 +301,47 @@ executable plonk-minting-transaction
     plutus-tx               ^>=1.30,
     zkfold-cardano                 ,
 
-executable rollup-init-transaction
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   backends/rollup/rollup-init-transaction
-  build-depends:
-    aeson                          ,
-    base              >= 4.9 && < 5,
-    bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
-    directory                      ,
-    filepath                       ,
-    parsec                         ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    zkfold-cardano                 ,
-    QuickCheck
+-- executable rollup-init-transaction
+--   import:           lang
+--   import:           lang-extra
+--   default-language: Haskell2010
+--   ghc-options:      -rtsopts
+--   main-is:          Main.hs
+--   hs-source-dirs:   backends/rollup/rollup-init-transaction
+--   other-modules:
+--     Backend.NFT
+--   build-depends:
+--     aeson                          ,
+--     base              >= 4.9 && < 5,
+--     bytestring                     ,
+--     cardano-api                    ,
+--     cborg                          ,
+--     directory                      ,
+--     filepath                       ,
+--     parsec                         ,
+--     plutus-ledger-api       ^>=1.30,
+--     plutus-tx               ^>=1.30,
+--     plutus-tx-plugin        ^>=1.30,
+--     zkfold-cardano                 ,
+--     QuickCheck
 
-executable rollup-update-loop
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   backends/rollup/rollup-update-loop
-  build-depends:
-    aeson                          ,
-    base              >= 4.9 && < 5,
-    bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
-    directory                      ,
-    filepath                       ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    zkfold-base                    ,
-    zkfold-cardano                 ,
-    QuickCheck
+-- executable rollup-update-loop
+--   import:           lang
+--   import:           lang-extra
+--   default-language: Haskell2010
+--   ghc-options:      -rtsopts
+--   main-is:          Main.hs
+--   hs-source-dirs:   backends/rollup/rollup-update-loop
+--   build-depends:
+--     aeson                          ,
+--     base              >= 4.9 && < 5,
+--     bytestring                     ,
+--     cardano-api                    ,
+--     cborg                          ,
+--     directory                      ,
+--     filepath                       ,
+--     plutus-ledger-api       ^>=1.30,
+--     plutus-tx               ^>=1.30,
+--     zkfold-base                    ,
+--     zkfold-cardano                 ,
+--     QuickCheck
