@@ -72,7 +72,7 @@ sampleAddress = Address (PubKeyCredential . PubKeyHash $
 
 -- | An arbitrary value.
 sampleValue :: V2.Value
-sampleValue = V2.singleton V2.adaSymbol V2.adaToken 100000000
+sampleValue = lovelaceValue $ V2.Lovelace 100000000
 
 -- | An arbitrary fee.
 sampleFee :: V2.Lovelace
@@ -80,7 +80,7 @@ sampleFee = V2.Lovelace 10000000
 
 -- | 'change' = 'value' - 'fee'
 sampleChange :: V2.Value
-sampleChange = V2.singleton V2.adaSymbol V2.adaToken 90000000
+sampleChange = lovelaceValue $ V2.Lovelace 90000000
 
 -- | An arbitary integer.
 sampleState :: Integer
@@ -90,7 +90,7 @@ sampleState = 251544969761416661165857688831144146505752127089605199918816053494
 sampleTxId :: TxId
 sampleTxId = TxId (fromString "25923f589a26311e87fb37bb41cb1dadf9a90166775f9f3b303cfe24e4fb95f8" :: BuiltinByteString)
 
--- | Reference TxOut carrying an"update" value of length 'n'.
+-- | Reference TxOut carrying an "update" value of length 'n'.
 updateRefTxOut :: Int -> TxOut
 updateRefTxOut n = TxOut sampleAddress (updateValue n) unitDatum Nothing
 
@@ -112,7 +112,7 @@ sampleBridgeTxOut = TxOut sampleAddress sampleValue sampleDatumHash Nothing
 
 -- | Updated state taking into account 'sampleState' and "update" list.
 sampleNewState :: Int -> Integer
-sampleNewState n = byteStringToInteger BigEndian $ dataToBlake (toF sampleState, updateOfLength n, [sampleBridgeTxOut], sampleFee)
+sampleNewState n = byteStringToInteger BigEndian $ dataToBlake (toF sampleState, updateOfLength n, [sampleBridgeTxOut], sampleValue)
 
 -- | The 'ScriptContext'.
 contextRollup :: ProofBytes -> Int -> ScriptContext
@@ -122,7 +122,7 @@ contextRollup proof n = ScriptContext
     , txInfoReferenceInputs = [TxInInfo (TxOutRef sampleTxId 2) (updateRefTxOut n)]
     , txInfoOutputs =
         [ stateTxOut (sampleNewState n)
-        , samplePubTxOut $ lovelaceValue sampleFee
+        , samplePubTxOut sampleValue
         , samplePubTxOut sampleChange
         , sampleBridgeTxOut
         ]
