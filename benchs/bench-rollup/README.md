@@ -9,7 +9,7 @@ Instructions for running the benchmarks and summary of results.
 
 ### Running the benchmarks
 
-Assuming `bench-rollup` is your active directory, execute:
+Execute:
 
 ```shell
 cabal run bench-rollup
@@ -19,6 +19,6 @@ cabal run bench-rollup
 
 ![data plots](./data-analysis/rollupBench.png)
 
-Therefore, to be within budget, *update length* must be 654 or less.
+Therefore, to be within budget, *update length* must be 552 or less.
 
 For details, see [data-analysis.pdf](./data-analysis/data-analysis.pdf).
