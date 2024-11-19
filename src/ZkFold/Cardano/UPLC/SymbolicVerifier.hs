@@ -2,7 +2,7 @@ module ZkFold.Cardano.UPLC.SymbolicVerifier where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.), not)
+import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, not, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)

@@ -3,7 +3,8 @@
 module Backend.JsonToData where
 
 import           Cardano.Api
-import           Cardano.Api.Shelley  (PlutusScript(..), scriptDataFromJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
+import           Cardano.Api.Shelley  (PlutusScript (..), scriptDataFromJsonDetailedSchema,
+                                       shelleyPayAddrToPlutusPubKHash, toPlutusData)
 import           Control.Monad        (zipWithM)
 import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
 import qualified Data.Aeson.Key       as Key

@@ -1,30 +1,31 @@
 module Main where
 
-import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3, prettyPrintJSON,
-                                                           unsafeHashableScriptData, writeFileTextEnvelope)
-import           Cardano.Api.Ledger                       (toCBOR)
-import           Cardano.Api.Shelley                      (File(..), PlutusScript(..), fromPlutusData, scriptDataToJsonDetailedSchema)
-import           Codec.CBOR.Write                         (toStrictByteString)
-import           Control.Monad                            (void)
-import           Data.Aeson                               (decode)
-import qualified Data.Aeson                               as Aeson
-import qualified Data.ByteString                          as BS
-import qualified Data.ByteString.Lazy                     as BL
-import           Data.Maybe                               (fromJust)
-import qualified PlutusLedgerApi.V3                       as V3
-import           PlutusTx                                 (CompiledCode, ToData(..))
-import           PlutusTx.Builtins.Internal               (serialiseData)
-import           PlutusTx.Prelude                         (blake2b_224, head)
-import           Prelude                                  (FilePath, Either(..), IO, Maybe(..), Show(..), concat, putStr, sequenceA,
-                                                           ($), (++), (.), (<$>))
-import           System.Directory                         (getCurrentDirectory)
-import           System.FilePath                          (takeFileName, (</>))
+import           Backend.JsonToData                      (parseJsonToTxInInfoList)
+import           Cardano.Api                             (IsPlutusScriptLanguage, PlutusScriptV3, prettyPrintJSON,
+                                                          unsafeHashableScriptData, writeFileTextEnvelope)
+import           Cardano.Api.Ledger                      (toCBOR)
+import           Cardano.Api.Shelley                     (File (..), PlutusScript (..), fromPlutusData,
+                                                          scriptDataToJsonDetailedSchema)
+import           Codec.CBOR.Write                        (toStrictByteString)
+import           Control.Monad                           (void)
+import           Data.Aeson                              (decode)
+import qualified Data.Aeson                              as Aeson
+import qualified Data.ByteString                         as BS
+import qualified Data.ByteString.Lazy                    as BL
+import           Data.Maybe                              (fromJust)
+import qualified PlutusLedgerApi.V3                      as V3
+import           PlutusTx                                (CompiledCode, ToData (..))
+import           PlutusTx.Builtins.Internal              (serialiseData)
+import           PlutusTx.Prelude                        (blake2b_224, head)
+import           Prelude                                 (Either (..), FilePath, IO, Maybe (..), Show (..), concat,
+                                                          putStr, sequenceA, ($), (++), (.), (<$>))
+import           System.Directory                        (getCurrentDirectory)
+import           System.FilePath                         (takeFileName, (</>))
 
-import           Backend.JsonToData                       (parseJsonToTxInInfoList)
-import           ZkFold.Cardano.Examples.IdentityCircuit  (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract(..))
-import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
-import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled')
+import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
+import           ZkFold.Cardano.UPLC                     (symbolicVerifierCompiled')
 
 
 main :: IO ()
@@ -44,7 +45,7 @@ main = do
 
   txin1 <- parseJsonToTxInInfoList [Nothing] <$> BL.readFile (assetsPath </> "utxo1.json")
   txin2 <- parseJsonToTxInInfoList [Just $ symbolicVerifierCompiled' setup] <$> BL.readFile (assetsPath </> "utxo2.json")
-  
+
   putStr $ "Input UTxO from Alice:\n\n" ++ (show txin1) ++ "\n\n"
   putStr $ "Input UTxO from SymbolicVerifier:\n\n" ++ (show txin2) ++ "\n\n"
 
@@ -55,7 +56,7 @@ main = do
 
       let txinBBS = serialiseData txinBD
       putStr $ "Serialised data:\n\n" ++ (show txinBBS) ++ "\n\n"
-  
+
       let input = toInput $ blake2b_224 txinBBS
       putStr $ "Verifier's input: " ++ (show input) ++ "\n\n"
 

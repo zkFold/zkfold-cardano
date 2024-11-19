@@ -1,38 +1,33 @@
 module Main where
 
-import           System.Directory                            (createDirectoryIfMissing, getCurrentDirectory)
-import           System.FilePath                             (takeFileName, (</>))
-import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract(..))
-import           Data.Aeson                              (encode)
-
-
-
--- import           Bench.JsonToData                         (parseJsonToTxInInfoList)
 import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
                                                            writeFileTextEnvelope)
 import           Cardano.Api.Ledger                       (toCBOR)
-import           Cardano.Api.Shelley                      (File(..), PlutusScript(..), fromPlutusData,
+import           Cardano.Api.Shelley                      (File (..), PlutusScript (..), fromPlutusData,
                                                            scriptDataFromJsonDetailedSchema)
 import           Codec.CBOR.Write                         (toStrictByteString)
 import           Control.Monad                            (void)
-import           Data.Aeson                               (decode)
+import           Data.Aeson                               (decode, encode)
 import qualified Data.ByteString                          as BS
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Maybe                               (fromJust)
 import qualified PlutusLedgerApi.V3                       as V3
-import           PlutusTx                                 (CompiledCode, ToData(..))
+import           PlutusTx                                 (CompiledCode, ToData (..))
 import           PlutusTx.Builtins.Internal               (serialiseData)
 import           PlutusTx.Prelude                         (blake2b_224, head)
 import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), Show (..), putStr,
                                                            ($), (++), (.), (<$>))
-import           Test.QuickCheck.Arbitrary                (Arbitrary(..))
+import           System.Directory                         (createDirectoryIfMissing, getCurrentDirectory)
+import           System.FilePath                          (takeFileName, (</>))
+import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof(..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.IdentityCircuit  (stateCheckVerificationBytes)
-import           ZkFold.Cardano.OnChain.BLS12_381         (F(..), toInput)
+import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381         (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled', parkingSpotCompiled)
+import           ZkFold.Cardano.UPLC                      (parkingSpotCompiled, symbolicVerifierCompiled')
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -57,7 +52,7 @@ main = do
 
   createDirectoryIfMissing True $ path </> "test-data"
   createDirectoryIfMissing True $ path </> "assets"
-  
+
   x           <- generate arbitrary
   ps          <- generate arbitrary
 
