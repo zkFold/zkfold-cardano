@@ -4,14 +4,13 @@ module Backend.JsonToData where
 
 import           Cardano.Api
 import           Cardano.Api.Shelley  (PlutusScript(..), scriptDataFromJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
--- import           Control.Monad        (forM)
+import           Control.Monad        (zipWithM)
 import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
 import qualified Data.Aeson.Key       as Key
 import qualified Data.Aeson.KeyMap    as KeyMap
 import           Data.Aeson.Types     as Aeson (Result (..), Value (..), parse, parseEither)
 import           Data.Bifunctor       (first)
 import qualified Data.ByteString.Lazy as BL
--- import           Data.Coerce
 import           Data.Either
 import           Data.Maybe           (Maybe (..), fromMaybe)
 import           Data.Text            (Text)
@@ -19,26 +18,22 @@ import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as TE
 import           PlutusLedgerApi.V3   as V3
 import           PlutusTx             (CompiledCode)
-import           Prelude              (String, const, mapM, maybe, return, show, ($), (++), (.))
+import           Prelude              (String, const, maybe, return, show, ($), (++), (.))
 import           Text.Read            (readEither)
 
 -- Function to parse JSON and convert to a list of TxInInfo
-parseJsonToTxInInfoList :: Maybe (CompiledCode a) -> BL.ByteString -> Either String [TxInInfo]
-parseJsonToTxInInfoList mscript jsonInput = do
+parseJsonToTxInInfoList :: [Maybe (CompiledCode a)] -> BL.ByteString -> Either String [TxInInfo]
+parseJsonToTxInInfoList mscripts jsonInput = do
     jsonData <- eitherDecode jsonInput
     case jsonData of
-      Object utxoMap -> mapM (parseEntry . convertKeyToText) $ KeyMap.toList utxoMap
+      Object utxoMap -> zipWithM parseEntry mscripts (KeyMap.toList utxoMap)
       _              -> Left "Expected top-level JSON object"
 
   where
-    -- Convert KeyMap.Key to Text
-    convertKeyToText :: (KeyMap.Key, Aeson.Value) -> (Text, Aeson.Value)
-    convertKeyToText (key, value) = (Key.toText key, value)
-
-    parseEntry :: (Text, Aeson.Value) -> Either String TxInInfo
-    parseEntry (txRef, Object utxoInfo) = do
+    parseEntry :: Maybe (CompiledCode a) -> (KeyMap.Key, Aeson.Value) -> Either String TxInInfo
+    parseEntry mscript (txRef, Object utxoInfo) = do
         -- Parse TxOutRef from txRef (e.g., "3dfe...#0")
-        (txIdHex, txIxStr) <- case T.splitOn "#" txRef of
+        (txIdHex, txIxStr) <- case T.splitOn "#" (Key.toText txRef) of
               [txIdHex, txIxStr] -> Right (txIdHex, txIxStr)
               _                  -> Left "Failed to parse TxOutRef"
         txId <- case deserialiseFromRawBytesHex AsTxId (TE.encodeUtf8 txIdHex) of
@@ -84,7 +79,7 @@ parseJsonToTxInInfoList mscript jsonInput = do
               }
         return $ TxInInfo txOutRef txOut
 
-    parseEntry _ = Left "Failed to parse TxInInfo entry"
+    parseEntry _ _ = Left "Failed to parse TxInInfo entry"
 
 -- Helper to parse address in era
 parseAddress :: Text -> Either String V3.Address

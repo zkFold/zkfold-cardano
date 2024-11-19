@@ -116,6 +116,25 @@ To resume rollup update loop, simply execute step 2 again.  To reset and start a
 *Note:*  if working on local testnet, keep in mind that it sometimes behaves erratically, like failing to submit Txs even if message "Transaction successfully submitted" is displayed.
 
 
+### Symbolic balancing
+
+Instructions:  Create local testnet (follow instruction in section *Plonk* above).  Then, from directory `e2e-test`, execute the following shell commands.
+
+0. Create Alice's wallet and fund it:
+```shell
+./symbolic-balancing/local-ini.sh
+```
+
+1. Initialization and funding of SymbolicVerifier script address:
+```shell
+./symbolic-balancing/01-balancing-init-transaction.sh
+```
+
+2. Get exec units and estimated fee for retrieval transaction:
+```shell
+./symbolic-balancing/02-balancing-parse-input.sh
+```
+
 ### Symbolic
 
 (In progress.)

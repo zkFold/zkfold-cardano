@@ -195,34 +195,6 @@ test-suite test
 --     zkfold-base                    ,
 --     zkfold-cardano                 ,
 
-executable bench-emptycircuit
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   benchs/bench-emptycircuit
-  other-modules:
-    Bench.Scripts
-    Bench.DataExamples
-    Bench.JsonToData
-  build-depends:
-    aeson                          ,
-    base                >=4.9 && <5,
-    base16-bytestring              ,
-    bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
-    cborg                          ,
-    directory                      ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    text                           ,
-    zkfold-base                    ,
-    zkfold-cardano                 ,
-    QuickCheck
-
 executable symbolic-init-transaction
   import:           lang
   import:           lang-extra
@@ -318,9 +290,7 @@ executable balancing-parse-input
     plutus-tx               ^>=1.30,
     plutus-tx-plugin        ^>=1.30,
     text                           ,
-    zkfold-base                    ,
     zkfold-cardano                 ,
-    QuickCheck                     ,
 
 executable plonk-init-transaction
   import:           lang
