@@ -1,8 +1,16 @@
-module Bench.Utils (printCSVWithHeaders, writeCSV) where
+module Bench.Utils ( printCSVWithHeaders
+                   , writeCSV
+                   , intToByteString32
+                   ) where
 
-import           Data.List   (transpose)
+import qualified Data.ByteString         as BS
+import           Data.ByteString.Builder (toLazyByteString, word8)
+import           Data.ByteString.Lazy    (toStrict)
+import           Data.List               (transpose)
+import           Data.Word               (Word8)
+import           PlutusLedgerApi.V3      (BuiltinByteString, toBuiltin)
 import           Prelude
-import           Text.Printf (printf)
+import           Text.Printf             (printf)
 
 
 -- Write benchmark data to a CSV file
@@ -24,6 +32,15 @@ printCSVWithHeaders filepath headers = do
     putStrLn formattedHeaders
     mapM_ putStrLn formattedRows
 
+-- Converts an Int to a 32-byte ByteString
+intToByteString32 :: Int -> BuiltinByteString
+intToByteString32 idx = toBuiltin $ BS.append padding byteString
+  where
+    -- Convert integer to its ByteString representation
+    byteString = toStrict . toLazyByteString . mconcat $ map word8 (intToBytes idx)
+    -- Pad with leading zeros
+    padding = BS.replicate (32 - BS.length byteString) 0
+
 
 ----- HELPER FUNCTIONS -----
 
@@ -36,3 +53,8 @@ splitOn :: Char -> String -> [String]
 splitOn delim str = case break (== delim) str of
     (before, "")      -> [before]
     (before, _:after) -> before : splitOn delim after
+
+-- Convert Int to list of bytes
+intToBytes :: Int -> [Word8]
+intToBytes 0 = []
+intToBytes n = intToBytes (n `div` 256) ++ [fromIntegral (n `mod` 256)]

@@ -5,90 +5,134 @@
 
 module Main where
 
-import           Bench.Statistics                      (getCostsCek)
-import           Bench.Utils                           (printCSVWithHeaders, writeCSV)
-import           Data.Aeson                            (encode)
-import qualified Data.ByteString                       as BS
-import qualified Data.ByteString.Lazy                  as BL
-import           Data.String                           (IsString (fromString))
-import           PlutusCore                            (DefaultFun, DefaultUni)
-import qualified PlutusLedgerApi.V2                    as V2
+import           Bench.Statistics                            (getCostsCek)
+import           Bench.Utils                                 (intToByteString32, printCSVWithHeaders, writeCSV)
+import           Data.Aeson                                  (encode)
+import qualified Data.ByteString.Lazy                        as BL
+import           Data.String                                 (IsString (fromString))
+import           GHC.ByteOrder                               (ByteOrder (..))
+import           PlutusCore                                  (DefaultFun, DefaultUni)
+import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
+import qualified PlutusLedgerApi.V2                          as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                              (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                      (($), (.))
-import           Prelude                               hiding (Bool, Eq (..), Fractional (..), length, ($), (.))
-import           System.Directory                      (createDirectoryIfMissing)
-import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
-import           Test.QuickCheck.Gen                   (generate)
-import qualified UntypedPlutusCore                     as UPLC
+import           PlutusTx                                    (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Builtins                           (byteStringToInteger, mkI)
+import           PlutusTx.Prelude                            (($), (.))
+import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), length, ($), (.))
+import           System.Directory                            (createDirectoryIfMissing, getCurrentDirectory)
+import           System.FilePath                             (takeFileName, (</>))
+import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
+import           Test.QuickCheck.Gen                         (generate)
+import qualified UntypedPlutusCore                           as UPLC
 
-import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F    (F (..))
-import           ZkFold.Cardano.OnChain.Plonk.Data     (ProofBytes (..))
-import           ZkFold.Cardano.UPLC                   (rollupCompiled)
-import           ZkFold.Cardano.UPLC.Rollup            (RollupRedeemer (..), RollupSetup (..))
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
+import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
+import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
+import           ZkFold.Cardano.OnChain.Plonk.Data           (ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
+import           ZkFold.Cardano.UPLC                         (rollupCompiled)
+import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..), RollupSetup (..))
 
-sampleRedeemer :: ProofBytes -> Int -> Redeemer
-sampleRedeemer proof n = Redeemer . toBuiltinData $ RollupState
-  { rrProof   = proof
-  , rrAddress = sampleAddress
-  , rrState   = sampleState
-  , rrUpdate  = replicate n sampleState
-  }
+
+--------------- SETUP  ----------------
+
+-- | Construct "update" of length n.
+updateOfLength :: Int -> [BuiltinByteString]
+updateOfLength n = [intToByteString32 i | i <- [0 .. n - 1]]
+
+-- | An arbitrary currency symbol.
+sampleDataCurrency :: CurrencySymbol
+sampleDataCurrency = CurrencySymbol (fromString "279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f" :: BuiltinByteString)
+
+-- | An arbitrary thread token.
+sampleThreadValue :: Value
+sampleThreadValue = singleton threadCurrency threadTokenName 1
+  where
+    threadCurrency  = CurrencySymbol (fromString "17ac801d2ce81747e038d69bc0ccc861dcaad0d10750df4a3897b66d" :: BuiltinByteString)
+    threadTokenName = TokenName (fromString "7a6b466f6c64" :: BuiltinByteString)  -- token name: "zkFold"
+
+-- | Value containing "update" token names.
+updateValue :: Int -> Value
+updateValue n = Value $ unsafeFromList [(sampleDataCurrency, unsafeFromList . map (\bs -> (TokenName bs, 1)) $ updateOfLength n)]
+
+-- | Rollup redeemer for an "update" of length 'n'.
+rollupRedeemer :: ProofBytes -> Int -> Redeemer
+rollupRedeemer proof n = Redeemer . toBuiltinData . UpdateRollup proof $ updateOfLength n
 
 unitDatum :: OutputDatum
 unitDatum = OutputDatum . Datum . toBuiltin . toData $ ()
 
-sampleDatum :: OutputDatum
-sampleDatum = OutputDatum . Datum . toBuiltin . B $ byteStringOfLength 28  -- 28 bytes datum
-  where
-    byteStringOfLength n = fromString (replicate (2 * n) '0') :: BS.ByteString
-
+-- | An arbitrary address.
 sampleAddress :: Address
 sampleAddress = Address (PubKeyCredential . PubKeyHash $
-                          toBuiltin (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BS.ByteString)
+                         (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BuiltinByteString)
                         ) Nothing
 
+-- | An arbitrary value.
 sampleValue :: V2.Value
-sampleValue = V2.singleton V2.adaSymbol V2.adaToken 100000000
+sampleValue = lovelaceValue $ V2.Lovelace 100000000
 
-sampleState :: F
-sampleState = F 25154496976141666116585768883114414650575212708960519991881605349447581737748
+-- | An arbitrary fee.
+sampleFee :: V2.Lovelace
+sampleFee = V2.Lovelace 10000000
 
+-- | 'change' = 'value' - 'fee'
+sampleChange :: V2.Value
+sampleChange = lovelaceValue $ V2.Lovelace 90000000
+
+-- | An arbitary integer.
+sampleState :: Integer
+sampleState = 25154496976141666116585768883114414650575212708960519991881605349447581737748
+
+-- | An arbitrary 'TxId'.
 sampleTxId :: TxId
-sampleTxId = TxId $ toBuiltin (fromString "25923f589a26311e87fb37bb41cb1dadf9a90166775f9f3b303cfe24e4fb95f8" :: BS.ByteString)
+sampleTxId = TxId (fromString "25923f589a26311e87fb37bb41cb1dadf9a90166775f9f3b303cfe24e4fb95f8" :: BuiltinByteString)
 
--- | Sample script output
-sampleScriptTxOut :: TxOut
-sampleScriptTxOut = TxOut sampleAddress sampleValue sampleDatum Nothing
+-- | Reference TxOut carrying an "update" value of length 'n'.
+updateRefTxOut :: Int -> TxOut
+updateRefTxOut n = TxOut sampleAddress (updateValue n) unitDatum Nothing
+
+-- | TxOut carrying the "state" datum.
+stateTxOut :: Integer -> TxOut
+stateTxOut state = TxOut sampleAddress sampleThreadValue (OutputDatum . Datum . mkI $ state) Nothing
 
 -- | Sample pub key output
-samplePubTxOut :: TxOut
-samplePubTxOut = TxOut sampleAddress sampleValue NoOutputDatum Nothing
+samplePubTxOut :: Value -> TxOut
+samplePubTxOut v = TxOut sampleAddress v NoOutputDatum Nothing
 
--- | Sample reference output
-sampleReferenceTxOut :: TxOut
-sampleReferenceTxOut = TxOut sampleAddress sampleValue unitDatum $
-  Just . ScriptHash $ toBuiltin (fromString "264ac730a6d3dacd0be8f9948e161aa151fd49d5e48203c31b2ae5eb" :: BS.ByteString)
+-- | An arbitrary datum hash.
+sampleDatumHash :: OutputDatum
+sampleDatumHash = OutputDatumHash $ DatumHash (fromString "9f5e3c6d1d8f98d45b62a7d113e1b9f5e3a7d8f32a9f7c6d4b8f9a3c5d7e8f9b" :: BuiltinByteString)
 
-dummyRedeemer :: ProofBytes
-dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F 0)
-  where e = ""
+-- | TxOut carrying a bridge output.
+sampleBridgeTxOut :: TxOut
+sampleBridgeTxOut = TxOut sampleAddress sampleValue sampleDatumHash Nothing
 
+-- | Updated state taking into account 'sampleState' and "update" list.
+sampleNewState :: Int -> Integer
+sampleNewState n = byteStringToInteger BigEndian $ dataToBlake (toF sampleState, updateOfLength n, [sampleBridgeTxOut], sampleValue)
+
+-- | The 'ScriptContext'.
 contextRollup :: ProofBytes -> Int -> ScriptContext
 contextRollup proof n = ScriptContext
   { scriptContextTxInfo = TxInfo
-    { txInfoInputs = [TxInInfo (TxOutRef sampleTxId 0) sampleScriptTxOut, TxInInfo (TxOutRef sampleTxId 1) samplePubTxOut]
-    , txInfoReferenceInputs = [TxInInfo (TxOutRef sampleTxId 2) sampleReferenceTxOut]
-    , txInfoOutputs = [sampleScriptTxOut, samplePubTxOut, samplePubTxOut]
-    , txInfoFee = V2.Lovelace 0
+    { txInfoInputs = [TxInInfo (TxOutRef sampleTxId 0) (stateTxOut sampleState), TxInInfo (TxOutRef sampleTxId 1) (samplePubTxOut sampleValue)]
+    , txInfoReferenceInputs = [TxInInfo (TxOutRef sampleTxId 2) (updateRefTxOut n)]
+    , txInfoOutputs =
+        [ stateTxOut (sampleNewState n)
+        , samplePubTxOut sampleValue
+        , samplePubTxOut sampleChange
+        , sampleBridgeTxOut
+        ]
+    , txInfoFee = sampleFee
     , txInfoMint = mempty
     , txInfoTxCerts = []
     , txInfoWdrl = unsafeFromList []
     , txInfoValidRange = always
     , txInfoSignatories = []
-    , txInfoRedeemers = unsafeFromList [(Spending (TxOutRef sampleTxId 3), Redeemer (toBuiltinData dummyRedeemer))]
+    , txInfoRedeemers = unsafeFromList [(Spending (TxOutRef sampleTxId 0), rollupRedeemer proof n)]
     , txInfoData = unsafeFromList []
     , txInfoId = fromString "00" :: TxId
     , txInfoVotes = unsafeFromList []
@@ -96,21 +140,33 @@ contextRollup proof n = ScriptContext
     , txInfoCurrentTreasuryAmount = Nothing :: Maybe V2.Lovelace
     , txInfoTreasuryDonation = Nothing      :: Maybe V2.Lovelace
     },
-    scriptContextRedeemer = sampleRedeemer proof n,
-    scriptContextScriptInfo = SpendingScript (TxOutRef sampleTxId 3) Nothing
+    scriptContextRedeemer = rollupRedeemer proof n,
+    scriptContextScriptInfo = SpendingScript (TxOutRef sampleTxId 0) Nothing
   }
 
+rollupSetup :: SetupBytes -> RollupSetup
+rollupSetup setup = RollupSetup
+  { rsLedgerRules  = setup
+  , rsDataCurrency = sampleDataCurrency
+  , rsThreadValue  = sampleThreadValue
+  , rsFeeAddress   = sampleAddress
+  }
+
+
+--------------- BENCHMARK ROLLUP SCRIPT  ----------------
+
 rollupScript :: RollupSetup -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-rollupScript paramsSetup ctx =
-  getPlcNoAnn $ rollupCompiled paramsSetup
+rollupScript setup ctx =
+  getPlcNoAnn $ rollupCompiled setup
     `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-costsRollup :: RollupSetup -> ProofBytes -> [Int] -> [(Int, Integer, Integer)]
-costsRollup s proof sizes = (\n -> (n, cpu n, mem n)) <$> sizes
+costRollup :: Fr -> PlonkupProverSecret BLS12_381_G1 -> Int -> (Int, Integer, Integer)
+costRollup x ps n = (n, cpu, mem)
   where
-    costsCek = getCostsCek . rollupScript s . contextRollup proof
-    cpu      = fst . costsCek
-    mem      = snd . costsCek
+    (setup, _, proof) = stateCheckVerificationBytes x ps . toF $ sampleNewState n
+    costsCek = getCostsCek . rollupScript (rollupSetup setup) $ contextRollup proof n
+    cpu      = fst costsCek
+    mem      = snd costsCek
 
 testUpdateSizes :: [Int]
 testUpdateSizes = [0, 50 .. 1000]
@@ -118,29 +174,35 @@ testUpdateSizes = [0, 50 .. 1000]
 dataHeaders :: [String]
 dataHeaders = ["Update length", "Exec Steps", "Exec Memory"]
 
-dataOutputFile :: FilePath
-dataOutputFile = "./data-analysis/rollupBench.csv"
+
+--------------- MAIN  ----------------
 
 main :: IO ()
 main = do
-    x           <- generate arbitrary
-    ps          <- generate arbitrary
-    targetValue <- generate arbitrary
+  currentDir <- getCurrentDirectory
+  let path    = case takeFileName currentDir of
+        "data-analysis" -> "."
+        "bench-rollup"  -> "data-analysis"
+        "benchs"        -> "bench-rollup" </> "data-analysis"
+        _               -> "benchs" </> "bench-rollup" </> "data-analysis"
 
-    let contract = EqualityCheckContract x ps targetValue
+  let dataOutputFile = path </> "rollupBench.csv"
 
-    createDirectoryIfMissing True "./data-analysis"
-    createDirectoryIfMissing True "./data-analysis/test-data"
+  x  <- generate arbitrary
+  ps <- generate arbitrary
 
-    BL.writeFile "./data-analysis/test-data/rollup-raw-contract-data.json" $ encode contract
+  let contract = IdentityCircuitContract x ps
 
-    putStrLn $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
+  createDirectoryIfMissing True $ path
+  createDirectoryIfMissing True $ path </> "test-data"
 
-    let (setup, _, proof) = equalityCheckVerificationBytes x ps targetValue
+  BL.writeFile (path </> "test-data" </> "rollup-raw-contract-data.json") (encode contract)
 
-    writeCSV dataOutputFile $ costsRollup (RollupSetup setup sampleAddress) proof testUpdateSizes
-    printCSVWithHeaders dataOutputFile dataHeaders
+  putStrLn $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n"
 
-    putStrLn ""
-    putStrLn $ "Data exported to " ++ dataOutputFile
-    putStrLn ""
+  writeCSV dataOutputFile $ costRollup x ps <$> testUpdateSizes
+  printCSVWithHeaders dataOutputFile dataHeaders
+
+  putStrLn ""
+  putStrLn $ "Data exported to " ++ dataOutputFile
+  putStrLn ""
