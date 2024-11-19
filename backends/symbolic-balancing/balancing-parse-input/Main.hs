@@ -16,7 +16,7 @@ import           Data.Maybe                              (fromJust)
 import qualified PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode, ToData (..))
 import           PlutusTx.Builtins.Internal              (serialiseData)
-import           PlutusTx.Prelude                        (blake2b_224, head)
+import           PlutusTx.Prelude                        (blake2b_224)
 import           Prelude                                 (Either (..), FilePath, IO, Maybe (..), Show (..), concat,
                                                           putStr, sequenceA, ($), (++), (.), (<$>))
 import           System.Directory                        (getCurrentDirectory)
@@ -51,7 +51,7 @@ main = do
 
   case concat <$> sequenceA [txin1, txin2] of
     Right txins -> do
-      let txinBD  = toBuiltinData . head $ txins
+      let txinBD  = toBuiltinData txins
       putStr $ "Data:\n\n" ++ (show txinBD) ++ "\n\n"
 
       let txinBBS = serialiseData txinBD
