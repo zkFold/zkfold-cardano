@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Bench.JsonToData where
+module Backend.JsonToData where
 
 import           Cardano.Api
-import           Cardano.Api.Shelley  (scriptDataFromJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
-import           Control.Monad        (forM)
+import           Cardano.Api.Shelley  (PlutusScript(..), scriptDataFromJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
+-- import           Control.Monad        (forM)
 import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
 import qualified Data.Aeson.Key       as Key
 import qualified Data.Aeson.KeyMap    as KeyMap
@@ -18,15 +18,16 @@ import           Data.Text            (Text)
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as TE
 import           PlutusLedgerApi.V3   as V3
-import           Prelude              (String, const, maybe, return, show, ($), (++), (.))
+import           PlutusTx             (CompiledCode)
+import           Prelude              (String, const, mapM, maybe, return, show, ($), (++), (.))
 import           Text.Read            (readEither)
 
 -- Function to parse JSON and convert to a list of TxInInfo
-parseJsonToTxInInfoList :: BL.ByteString -> Either String [TxInInfo]
-parseJsonToTxInInfoList jsonInput = do
+parseJsonToTxInInfoList :: Maybe (CompiledCode a) -> BL.ByteString -> Either String [TxInInfo]
+parseJsonToTxInInfoList mscript jsonInput = do
     jsonData <- eitherDecode jsonInput
     case jsonData of
-      Object utxoMap -> forM (KeyMap.toList utxoMap) (parseEntry . convertKeyToText)
+      Object utxoMap -> mapM (parseEntry . convertKeyToText) $ KeyMap.toList utxoMap
       _              -> Left "Expected top-level JSON object"
 
   where
@@ -48,7 +49,9 @@ parseJsonToTxInInfoList jsonInput = do
 
         -- Parse Address
         addressText <- parseEither (.: "address") utxoInfo
-        address     <- parseAddress addressText
+        address     <- case mscript of
+          Nothing     -> parseAddress addressText
+          Just script -> Right $ V3.Address (credentialOf script) Nothing
 
         -- Parse Value (assumes only "lovelace" entry.  TODO: generalise)
         valueObj       <- parseEither (.: "value") utxoInfo
@@ -131,3 +134,8 @@ displayTxIn jsonInput = do
                         Error err    -> Left $ "Failed to parse TxIn: " ++ err
         Nothing    -> Left "Invalid JSON input"
     return txIn
+
+-- | Credential of compiled script
+credentialOf :: CompiledCode a -> V3.Credential
+credentialOf = V3.ScriptCredential . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes . hashScript
+               . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . V3.serialiseCompiledCode

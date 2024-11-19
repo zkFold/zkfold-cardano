@@ -8,6 +8,7 @@
 
 module ZkFold.Cardano.UPLC
   ( symbolicVerifierCompiled
+  , symbolicVerifierCompiled'
   , plonkVerifierCompiled
   , verifyPlonkCompiled
   , forwardingRewardCompiled
@@ -28,12 +29,17 @@ import           ZkFold.Cardano.OnChain.Plonk.Data     (SetupBytes)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (untypedForwardingMint, untypedForwardingReward)
 import           ZkFold.Cardano.UPLC.PlonkVerifier     (untypedPlonkVerifier)
 import           ZkFold.Cardano.UPLC.Rollup            (RollupSetup, untypedParkingSpot, untypedRollup)
-import           ZkFold.Cardano.UPLC.SymbolicVerifier  (untypedSymbolicVerifier)
+import           ZkFold.Cardano.UPLC.SymbolicVerifier  (untypedSymbolicVerifier, untypedSymbolicVerifier')
 
 
 symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 symbolicVerifierCompiled contract =
     $$(compile [|| untypedSymbolicVerifier ||])
+    `unsafeApplyCode` liftCodeDef contract
+
+symbolicVerifierCompiled' :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+symbolicVerifierCompiled' contract =
+    $$(compile [|| untypedSymbolicVerifier' ||])
     `unsafeApplyCode` liftCodeDef contract
 
 plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)

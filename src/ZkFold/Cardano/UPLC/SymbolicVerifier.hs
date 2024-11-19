@@ -2,7 +2,7 @@ module ZkFold.Cardano.UPLC.SymbolicVerifier where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.))
+import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.), not)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
@@ -49,3 +49,24 @@ untypedSymbolicVerifier contract ctx =
               BI.mkCons c $
                 BI.mkCons d $
                   BI.mkNilData BI.unitval
+
+{-# INLINABLE untypedSymbolicVerifier' #-}
+untypedSymbolicVerifier' :: SetupBytes -> BuiltinData -> BuiltinUnit
+untypedSymbolicVerifier' contract ctx =
+    -- Verifying the Plonk `proof` for the `contract` on the transaction data encoded as `input`
+    check . not $ verify @PlonkPlutus @HaskellCore contract input proof
+    where
+      -- Extracting transaction data
+      ins    = BI.head infoFields                -- txInfoInputs
+      txData = ins
+
+      -- Computing public input from the transaction data
+      input = toInput . blake2b_224 . BI.serialiseData $ txData
+
+      -- Extract redeemer from ScriptContext
+      proof = unsafeFromBuiltinData @ProofBytes $ BI.head $ BI.tail scriptContextTxInfo'
+
+      -- Extracting transaction builtin fields
+      scriptContextTxInfo' = BI.snd $ BI.unsafeDataAsConstr ctx
+      info                 = BI.head scriptContextTxInfo'
+      infoFields           = BI.snd $ BI.unsafeDataAsConstr info
