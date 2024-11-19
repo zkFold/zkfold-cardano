@@ -1,26 +1,25 @@
 module Main where
 
-import           Cardano.Api                              (IsPlutusScriptLanguage, PlutusScriptV3,
-                                                           writeFileTextEnvelope)
-import           Cardano.Api.Ledger                       (toCBOR)
-import           Cardano.Api.Shelley                      (File(..), PlutusScript(..), fromPlutusData)
-import           Codec.CBOR.Write                         (toStrictByteString)
-import           Control.Monad                            (void)
-import           Data.Aeson                               (encode)
-import qualified Data.ByteString                          as BS
-import qualified Data.ByteString.Lazy                     as BL
-import qualified PlutusLedgerApi.V3                       as V3
-import           PlutusTx                                 (CompiledCode, ToData(..))
-import           Prelude                                  (Bool(..), FilePath, IO, Maybe(..), Show(..), putStr,
-                                                           ($), (++), (.))
-import           System.Directory                         (createDirectoryIfMissing, getCurrentDirectory)
-import           System.FilePath                          (takeFileName, (</>))
-import           Test.QuickCheck.Arbitrary                (Arbitrary(..))
-import           Test.QuickCheck.Gen                      (generate)
+import           Cardano.Api                             (IsPlutusScriptLanguage, PlutusScriptV3, writeFileTextEnvelope)
+import           Cardano.Api.Ledger                      (toCBOR)
+import           Cardano.Api.Shelley                     (File (..), PlutusScript (..), fromPlutusData)
+import           Codec.CBOR.Write                        (toStrictByteString)
+import           Control.Monad                           (void)
+import           Data.Aeson                              (encode)
+import qualified Data.ByteString                         as BS
+import qualified Data.ByteString.Lazy                    as BL
+import qualified PlutusLedgerApi.V3                      as V3
+import           PlutusTx                                (CompiledCode, ToData (..))
+import           Prelude                                 (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
+                                                          (++), (.))
+import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
+import           System.FilePath                         (takeFileName, (</>))
+import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
+import           Test.QuickCheck.Gen                     (generate)
 
-import           ZkFold.Cardano.Examples.IdentityCircuit  (identityCircuitVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E              (IdentityCircuitContract(..))
-import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled', parkingSpotCompiled)
+import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes)
+import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
+import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, symbolicVerifierCompiled')
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
