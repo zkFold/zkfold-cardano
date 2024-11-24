@@ -23,8 +23,8 @@ import           PlutusTx.Prelude                       (BuiltinUnit)
 import           Prelude                                hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
                                                          (.))
 
-import           ZkFold.Cardano.OnChain.Plonkup           (untypedPlonkVerifier)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonkup         (untypedPlonkVerifier)
+import           ZkFold.Cardano.OnChain.Plonkup.Data    (SetupBytes)
 import           ZkFold.Cardano.UPLC.ForwardingScripts  (untypedForwardingMint, untypedForwardingReward)
 import           ZkFold.Cardano.UPLC.PlonkVerifierToken (untypedPlonkVerifierToken)
 import           ZkFold.Cardano.UPLC.PlonkVerifierTx    (untypedPlonkVerifierTx)
