@@ -15,7 +15,7 @@ import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
-import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, symbolicVerifierCompiled)
+import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, plonkVerifierTxCompiled)
 
 {-
 import           Cardano.Api                                 hiding (TxId)
@@ -201,5 +201,5 @@ main = do
 
   let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
-  savePlutus "../../assets/symbolicVerifier.plutus" $ symbolicVerifierCompiled setup
+  savePlutus "../../assets/plonkVerifierTx.plutus" $ plonkVerifierTxCompiled setup
   savePlutus "../../assets/forwardingReward.plutus" forwardingRewardCompiled

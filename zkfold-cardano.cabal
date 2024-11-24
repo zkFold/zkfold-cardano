@@ -84,11 +84,11 @@ library
     ZkFold.Cardano.OnChain.Utils
     ZkFold.Cardano.UPLC
     ZkFold.Cardano.UPLC.ForwardingScripts
-    ZkFold.Cardano.UPLC.PlonkVerifier
+    ZkFold.Cardano.UPLC.PlonkVerifierToken
     ZkFold.Cardano.UPLC.Rollup
     ZkFold.Cardano.UPLC.RollupData
     ZkFold.Cardano.UPLC.RollupDeposit
-    ZkFold.Cardano.UPLC.SymbolicVerifier
+    ZkFold.Cardano.UPLC.PlonkVerifierTx
     ZkFold.Cardano.UPLC.Wallet
   build-depends:
     aeson                          ,

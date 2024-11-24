@@ -35,8 +35,8 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerifica
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, symbolicVerifierCompiled,
-                                                           verifyPlonkCompiled)
+import           ZkFold.Cardano.UPLC                      (plonkVerifierTokenCompiled, plonkVerifierTxCompiled,
+                                                           plonkVerifierCompiled)
 
 contextPlonk :: ProofBytes -> ScriptContext
 contextPlonk redeemerProof = ScriptContext
@@ -99,30 +99,30 @@ contextSymbolic redeemerProof = ScriptContext
     scriptContextScriptInfo = RewardingScript dummyCredential
   }
 
-symbolicVerifierScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-symbolicVerifierScript paramsSetup ctx =
-    getPlcNoAnn $ symbolicVerifierCompiled paramsSetup
+plonkVerifierTxScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkVerifierTxScript paramsSetup ctx =
+    getPlcNoAnn $ plonkVerifierTxCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-plonkVerifierScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierScript paramsSetup ctx =
+plonkVerifierTokenScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkVerifierTokenScript paramsSetup ctx =
+    getPlcNoAnn $ plonkVerifierTokenCompiled paramsSetup
+       `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
+
+plonkVerifierScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkVerifierScript paramsSetup input proof =
     getPlcNoAnn $ plonkVerifierCompiled paramsSetup
-       `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
-
-verifyPlonkScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-verifyPlonkScript paramsSetup input proof =
-    getPlcNoAnn $ verifyPlonkCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData input)
        `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
-printCostsSymbolicVerifier :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
-printCostsSymbolicVerifier h s ctx = printSizeStatistics h NoSize (symbolicVerifierScript s ctx)
+printCostsPlonkVerifierTx :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifierTx h s ctx = printSizeStatistics h NoSize (plonkVerifierTxScript s ctx)
 
-printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifier h s ctx = printSizeStatistics h NoSize (plonkVerifierScript s ctx)
+printCostsPlonkVerifierToken :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifierToken h s ctx = printSizeStatistics h NoSize (plonkVerifierTokenScript s ctx)
 
-printCostsVerifyPlonk :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
-printCostsVerifyPlonk h s i p = printSizeStatistics h NoSize (verifyPlonkScript s i p)
+printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
+printCostsPlonkVerifier h s i p = printSizeStatistics h NoSize (plonkVerifierScript s i p)
 
 saveFlat ctx filePath code =
    BS.writeFile ("./" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> getPlcNoAnn $ code
@@ -152,26 +152,26 @@ main = do
 
     createDirectoryIfMissing True "assets"
 
-    savePlutus "assets/symbolicVerifier" $ symbolicVerifierCompiled setup
-    savePlutus "assets/plonkVerifier"    $ plonkVerifierCompiled setup
-    savePlutus "assets/verifyPlonk"      $ verifyPlonkCompiled setup
-    saveFlat (contextSymbolic proof) "assets/plonkSymbolicVerifier" $ symbolicVerifierCompiled setup
-    saveFlat (contextPlonk proof) "assets/plonkVerifierScript"   $ plonkVerifierCompiled setup
-    saveFlat2 input proof "assets/verifyPlonkScript"  $ verifyPlonkCompiled setup
+    savePlutus "assets/plonkVerifierTx" $ plonkVerifierTxCompiled setup
+    savePlutus "assets/plonkVerifierToken"    $ plonkVerifierTokenCompiled setup
+    savePlutus "assets/plonkVerifier"      $ plonkVerifierCompiled setup
+    saveFlat (contextSymbolic proof) "assets/plonkPlonkVerifierTx" $ plonkVerifierTxCompiled setup
+    saveFlat (contextPlonk proof) "assets/plonkVerifierTokenScript"   $ plonkVerifierTokenCompiled setup
+    saveFlat2 input proof "assets/plonkVerifierScript"  $ plonkVerifierCompiled setup
 
-    hPrintf h "\n\n"
-    hPrintf h "Run \'verifyPlonk\'\n\n"
-    printHeader h
-    printCostsVerifyPlonk h setup input proof
-    hPrintf h "\n\n"
     hPrintf h "\n\n"
     hPrintf h "Run \'plonkVerifier\'\n\n"
     printHeader h
-    printCostsPlonkVerifier h setup $ contextPlonk proof
+    printCostsPlonkVerifier h setup input proof
+    hPrintf h "\n\n"
+    hPrintf h "\n\n"
+    hPrintf h "Run \'plonkVerifierToken\'\n\n"
+    printHeader h
+    printCostsPlonkVerifierToken h setup $ contextPlonk proof
     hPrintf h "\n\n"
     hPrintf h "\n\n"
     hPrintf h "Run symbolic plonk verifier\n\n"
     printHeader h
-    printCostsSymbolicVerifier h setup $ contextSymbolic proof
+    printCostsPlonkVerifierTx h setup $ contextSymbolic proof
     hPrintf h "\n\n"
 

@@ -28,13 +28,13 @@ echo ""
 
 cardano-cli conway stake-address registration-certificate \
   --testnet-magic 4 \
-  --stake-script-file "$assets/symbolicVerifier.plutus" \
-  --out-file "$keypath/symbolicVerifier.regcert"
+  --stake-script-file "$assets/plonkVerifierTx.plutus" \
+  --out-file "$keypath/plonkVerifierTx.regcert"
 
 cardano-cli conway transaction build \
     --testnet-magic 4 \
     --change-address "$(cat $keypath/someone.addr)" \
-    --certificate-file "$keypath/symbolicVerifier.regcert" \
+    --certificate-file "$keypath/plonkVerifierTx.regcert" \
     --out-file "$keypath/register-plutus-staking-script.txbody"
 
 cardano-cli conway transaction sign \
@@ -82,7 +82,7 @@ echo ""
 
 cardano-cli conway stake-address registration-certificate \
   --testnet-magic 4 \
-  --stake-script-file "$assets/symbolicVerifier.plutus" \
+  --stake-script-file "$assets/plonkVerifierTx.plutus" \
   --cold-verification-key-file "$keypath/cold.vkey" \
   --out-file "$keypath/plutus-script.delegcert"
 
@@ -100,9 +100,9 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/someone.addr)" \
     --tx-in $in \
     --tx-in-collateral $collateral \
-    --tx-out "$(cat $keypath/symbolicVerifier.addr) + 10000000 lovelace" \
+    --tx-out "$(cat $keypath/plonkVerifierTx.addr) + 10000000 lovelace" \
     --certificate-file "$keypath/plutus-script.delegcert" \
-    --certificate-script-file "$assets/symbolicVerifier.plutus" \
+    --certificate-script-file "$assets/plonkVerifierTx.plutus" \
     --certificate-redeemer-file $plutusStakingScriptRedeemer \
     --protocol-params-file "$keypath/pparams.json" \
     --out-file "$keypath/delegate-staking-script.txbody"

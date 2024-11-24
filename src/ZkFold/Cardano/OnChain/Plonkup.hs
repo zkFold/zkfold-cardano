@@ -192,8 +192,8 @@ instance
     nipInputTransform = mkInput
     nipProofTransform = mkProof
 
-untypedVerifyPlonk :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-untypedVerifyPlonk computation input' proof' =
+untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedPlonkVerifier computation input' proof' =
     check
     ( verify @PlonkupPlutus @HaskellCore
         computation

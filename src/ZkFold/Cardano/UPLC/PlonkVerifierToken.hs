@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-module ZkFold.Cardano.UPLC.PlonkVerifier where
+module ZkFold.Cardano.UPLC.PlonkVerifierToken where
 
 import           PlutusLedgerApi.V1.Value                 (Value (..))
 import           PlutusLedgerApi.V3                       (ScriptContext (..), TokenName (..), TxInfo (..), getRedeemer)
@@ -19,9 +19,9 @@ import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupByte
 --
 -- The token is minted if and only if the Plonk `proof` is valid for the `computation` on the `input` derived from the token name.
 -- The computation is encoded into the token's currency symbol (aka policyID).
-{-# INLINABLE plonkVerifier #-}
-plonkVerifier :: SetupBytes -> ProofBytes -> ScriptContext -> Bool
-plonkVerifier computation proof ctx =
+{-# INLINABLE plonkVerifierToken #-}
+plonkVerifierToken :: SetupBytes -> ProofBytes -> ScriptContext -> Bool
+plonkVerifierToken computation proof ctx =
     conditionBurning || conditionVerifying
     where
         mints              = getValue $ txInfoMint $ scriptContextTxInfo ctx
@@ -39,11 +39,11 @@ plonkVerifier computation proof ctx =
         -- Verifying the Plonk `proof` for the `computation` on `input`
         conditionVerifying = verify @PlonkPlutus @HaskellCore computation input proof
 
-{-# INLINABLE untypedPlonkVerifier #-}
-untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-untypedPlonkVerifier computation' ctx' =
+{-# INLINABLE untypedPlonkVerifierToken #-}
+untypedPlonkVerifierToken :: SetupBytes -> BuiltinData -> BuiltinUnit
+untypedPlonkVerifierToken computation' ctx' =
   let
     ctx           = unsafeFromBuiltinData ctx'
     redeemerProof = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
-    check $ plonkVerifier computation' redeemerProof ctx
+    check $ plonkVerifierToken computation' redeemerProof ctx

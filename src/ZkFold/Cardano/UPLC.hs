@@ -7,9 +7,9 @@
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module ZkFold.Cardano.UPLC
-  ( symbolicVerifierCompiled
+  ( plonkVerifierTxCompiled
+  , plonkVerifierTokenCompiled
   , plonkVerifierCompiled
-  , verifyPlonkCompiled
   , forwardingRewardCompiled
   , forwardingMintCompiled
   , rollupCompiled
@@ -23,27 +23,27 @@ import           PlutusTx.Prelude                      (BuiltinUnit)
 import           Prelude                               hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
                                                         (.))
 
-import           ZkFold.Cardano.OnChain.Plonk          (untypedVerifyPlonk)
+import           ZkFold.Cardano.OnChain.Plonk          (untypedPlonkVerifier)
 import           ZkFold.Cardano.OnChain.Plonk.Data     (SetupBytes)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (untypedForwardingMint, untypedForwardingReward)
-import           ZkFold.Cardano.UPLC.PlonkVerifier     (untypedPlonkVerifier)
+import           ZkFold.Cardano.UPLC.PlonkVerifierToken     (untypedPlonkVerifierToken)
 import           ZkFold.Cardano.UPLC.Rollup            (RollupSetup, untypedParkingSpot, untypedRollup)
-import           ZkFold.Cardano.UPLC.SymbolicVerifier  (untypedSymbolicVerifier)
+import           ZkFold.Cardano.UPLC.PlonkVerifierTx  (untypedPlonkVerifierTx)
 
 
-symbolicVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-symbolicVerifierCompiled contract =
-    $$(compile [|| untypedSymbolicVerifier ||])
+plonkVerifierTxCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+plonkVerifierTxCompiled contract =
+    $$(compile [|| untypedPlonkVerifierTx ||])
     `unsafeApplyCode` liftCodeDef contract
 
-plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-plonkVerifierCompiled computation =
-    $$(compile [|| untypedPlonkVerifier ||])
+plonkVerifierTokenCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
+plonkVerifierTokenCompiled computation =
+    $$(compile [|| untypedPlonkVerifierToken ||])
     `unsafeApplyCode` liftCodeDef computation
 
-verifyPlonkCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
-verifyPlonkCompiled computation =
-    $$(compile [|| untypedVerifyPlonk ||])
+plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+plonkVerifierCompiled computation =
+    $$(compile [|| untypedPlonkVerifier ||])
     `unsafeApplyCode` liftCodeDef computation
 
 forwardingRewardCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)

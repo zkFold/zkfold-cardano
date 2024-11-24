@@ -44,8 +44,8 @@ main = do
 
   BS.writeFile "../assets/tokenname" $ fromString $ show $ UsingRawBytesHex $ AssetName $ fromBuiltin $ F.fromInput input
 --  BS.writeFile "../assets/unit.json" $ prettyPrintJSON $ dataToJSON ()
---  BS.writeFile "../assets/redeemerPlonkVerifier.json" $ prettyPrintJSON $ dataToJSON proof
+--  BS.writeFile "../assets/redeemerPlonkVerifierToken.json" $ prettyPrintJSON $ dataToJSON proof
 --  BS.writeFile "../assets/dummy-redeemer.json" $ prettyPrintJSON $ dataToJSON dummyRedeemer
   BS.writeFile "../assets/unit.cbor" $ dataToCBOR ()
-  BS.writeFile "../assets/redeemerPlonkVerifier.cbor" $ dataToCBOR proof
+  BS.writeFile "../assets/redeemerPlonkVerifierToken.cbor" $ dataToCBOR proof
   BS.writeFile "../assets/dummy-redeemer.cbor" $ dataToCBOR dummyRedeemer

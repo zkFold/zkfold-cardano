@@ -1,4 +1,4 @@
-module ZkFold.Cardano.UPLC.SymbolicVerifier where
+module ZkFold.Cardano.UPLC.PlonkVerifierTx where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
@@ -13,9 +13,9 @@ import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupByte
 --
 -- ZkFold Symbolic smart contracts have access to inputs, reference inputs, outputs and the transaction validity range.
 -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a ZK contract.
-{-# INLINABLE untypedSymbolicVerifier #-}
-untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-untypedSymbolicVerifier contract ctx =
+{-# INLINABLE untypedPlonkVerifierTx #-}
+untypedPlonkVerifierTx :: SetupBytes -> BuiltinData -> BuiltinUnit
+untypedPlonkVerifierTx contract ctx =
     -- Verifying the Plonk `proof` for the `contract` on the transaction data encoded as `input`
     check $ verify @PlonkPlutus @HaskellCore contract input proof
     where
