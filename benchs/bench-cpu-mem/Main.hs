@@ -35,8 +35,8 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerifica
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC                      (plonkVerifierTokenCompiled, plonkVerifierTxCompiled,
-                                                           plonkVerifierCompiled)
+import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, plonkVerifierTokenCompiled,
+                                                           plonkVerifierTxCompiled)
 
 contextPlonk :: ProofBytes -> ScriptContext
 contextPlonk redeemerProof = ScriptContext
