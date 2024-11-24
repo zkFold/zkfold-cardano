@@ -33,10 +33,10 @@ import           UntypedPlutusCore                        (UnrestrictedProgram (
 import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
-import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-import           ZkFold.Cardano.OnChain.Plonk.Data        (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC                      (plonkVerifierTokenCompiled, plonkVerifierTxCompiled,
-                                                           plonkVerifierCompiled)
+import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, plonkVerifierTokenCompiled,
+                                                           plonkVerifierTxCompiled)
 
 contextPlonk :: ProofBytes -> ScriptContext
 contextPlonk redeemerProof = ScriptContext
@@ -69,7 +69,7 @@ dummyTokenName :: TokenName
 dummyTokenName = TokenName $ toBuiltin (fromString "34ad74db78700c335968ca0898f2953adba88f368efa0541b98897e2668090bd" :: BS.ByteString)
 
 dummyRedeemer :: ProofBytes
-dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F.F 0)
+dummyRedeemer = ProofBytes e e e e e e e e e e e e e 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
   where e = ""
 
 dummyCredential :: Credential
@@ -115,13 +115,13 @@ plonkVerifierScript paramsSetup input proof =
        `unsafeApplyCode` liftCodeDef (toBuiltinData input)
        `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
-printCostsPlonkVerifierTx :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifierTx :: Handle -> SetupVerify PlonkupPlutus -> ScriptContext -> IO ()
 printCostsPlonkVerifierTx h s ctx = printSizeStatistics h NoSize (plonkVerifierTxScript s ctx)
 
-printCostsPlonkVerifierToken :: Handle -> SetupVerify PlonkPlutus -> ScriptContext -> IO ()
+printCostsPlonkVerifierToken :: Handle -> SetupVerify PlonkupPlutus -> ScriptContext -> IO ()
 printCostsPlonkVerifierToken h s ctx = printSizeStatistics h NoSize (plonkVerifierTokenScript s ctx)
 
-printCostsPlonkVerifier :: Handle -> SetupVerify PlonkPlutus -> Input PlonkPlutus -> Proof PlonkPlutus -> IO ()
+printCostsPlonkVerifier :: Handle -> SetupVerify PlonkupPlutus -> Input PlonkupPlutus -> Proof PlonkupPlutus -> IO ()
 printCostsPlonkVerifier h s i p = printSizeStatistics h NoSize (plonkVerifierScript s i p)
 
 saveFlat ctx filePath code =

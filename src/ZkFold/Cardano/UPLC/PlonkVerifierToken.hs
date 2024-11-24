@@ -11,13 +11,13 @@ import           PlutusTx.Prelude                         (Bool (..), BuiltinDat
                                                            check, ($), (.), (||))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
-import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
+import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 
 -- | Plutus script (minting policy) for verifying computations on-chain.
 --
--- The token is minted if and only if the Plonk `proof` is valid for the `computation` on the `input` derived from the token name.
+-- The token is minted if and only if the Plonkup `proof` is valid for the `computation` on the `input` derived from the token name.
 -- The computation is encoded into the token's currency symbol (aka policyID).
 {-# INLINABLE plonkVerifierToken #-}
 plonkVerifierToken :: SetupBytes -> ProofBytes -> ScriptContext -> Bool
@@ -36,8 +36,8 @@ plonkVerifierToken computation proof ctx =
         -- Burning already minted tokens
         conditionBurning   = n < 0
 
-        -- Verifying the Plonk `proof` for the `computation` on `input`
-        conditionVerifying = verify @PlonkPlutus @HaskellCore computation input proof
+        -- Verifying the Plonkup `proof` for the `computation` on `input`
+        conditionVerifying = verify @PlonkupPlutus @HaskellCore computation input proof
 
 {-# INLINABLE untypedPlonkVerifierToken #-}
 untypedPlonkVerifierToken :: SetupBytes -> BuiltinData -> BuiltinUnit
