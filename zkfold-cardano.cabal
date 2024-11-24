@@ -70,15 +70,12 @@ library
     ZkFold.Cardano.Examples.IdentityCircuit
     ZkFold.Cardano.OffChain.BLS12_381
     ZkFold.Cardano.OffChain.E2E
-    ZkFold.Cardano.OffChain.Plonk
     ZkFold.Cardano.OffChain.Plonkup
     ZkFold.Cardano.OffChain.Transcript
     ZkFold.Cardano.OnChain.BLS12_381
     ZkFold.Cardano.OnChain.BLS12_381.F
     ZkFold.Cardano.OnChain.BLS12_381.G1
     ZkFold.Cardano.OnChain.BLS12_381.G2
-    ZkFold.Cardano.OnChain.Plonk
-    ZkFold.Cardano.OnChain.Plonk.Data
     ZkFold.Cardano.OnChain.Plonkup
     ZkFold.Cardano.OnChain.Plonkup.Data
     ZkFold.Cardano.OnChain.Utils
@@ -123,7 +120,7 @@ test-suite test
     -- cardano-ledger-core            ,
     -- cardano-ledger-shelley         ,
     -- cardano-prelude                ,
-    -- cardano-testnet        ^>=9.0.0,
+    -- cardano-testnet        ^>=10.0.0,
     directory                      ,
     filepath                       ,
     hedgehog                       ,

@@ -28,8 +28,8 @@ equalityCheckVerificationBytes x ps targetValue =
     let ac = compileForceOne @Fr (equalityCheckContract @Fr @(ArithmeticCircuit Fr (Vector 1)) targetValue) :: ArithmeticCircuit Fr (Vector 1) (Vector 1)
 
         (omega, k1, k2) = getParams 32
-        witnessInputs  = unsafeToVector [targetValue]
-        plonkup   = Plonkup omega k1 k2 ac x :: PlonkupN 1 32
+        witnessInputs   = unsafeToVector [targetValue]
+        plonkup = Plonkup omega k1 k2 ac x :: PlonkupN 1 32
         setupP  = setupProve @_ @HaskellCore plonkup
         setupV  = setupVerify @_ @HaskellCore plonkup
         witness = (PlonkupWitnessInput witnessInputs, ps)

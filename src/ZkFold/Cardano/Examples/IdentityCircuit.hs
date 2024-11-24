@@ -25,7 +25,7 @@ identityCircuitVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1 -> (S
 identityCircuitVerificationBytes x ps =
     let (omega, k1, k2) = getParams 2
         witnessInputs   = unsafeToVector [item $ eval identityCircuit $ singleton zero]
-        plonkup           = Plonkup omega k1 k2 identityCircuit x :: PlonkupN 1 2
+        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN 1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
         witness         = (PlonkupWitnessInput witnessInputs, ps)
@@ -39,7 +39,7 @@ stateCheckVerificationBytes x ps state =
         state'          = toZp n :: Fr
         (omega, k1, k2) = getParams 2
         witnessInputs   = unsafeToVector [state']
-        plonkup           = Plonkup omega k1 k2 identityCircuit x :: PlonkupN 1 2
+        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN 1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
         witness         = (PlonkupWitnessInput witnessInputs, ps)
