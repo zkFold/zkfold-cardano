@@ -75,8 +75,8 @@ dummyRedeemer = ProofBytes e e e e e e e e e 0 0 0 0 0 0 (F.F 0)
 dummyCredential :: Credential
 dummyCredential = ScriptCredential . ScriptHash $ toBuiltin (fromString "deadbeef" :: BS.ByteString)
 
-contextSymbolic :: ProofBytes -> ScriptContext
-contextSymbolic redeemerProof = ScriptContext
+contextTx :: ProofBytes -> ScriptContext
+contextTx redeemerProof = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs = []                     :: [TxInInfo]
     , txInfoReferenceInputs = []            :: [TxInInfo]
@@ -148,14 +148,13 @@ main = do
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
         h = stdout
-        -- redeemer = (setup, input, proof)
 
     createDirectoryIfMissing True "assets"
 
     savePlutus "assets/plonkVerifierTx" $ plonkVerifierTxCompiled setup
     savePlutus "assets/plonkVerifierToken"    $ plonkVerifierTokenCompiled setup
     savePlutus "assets/plonkVerifier"      $ plonkVerifierCompiled setup
-    saveFlat (contextSymbolic proof) "assets/plonkPlonkVerifierTx" $ plonkVerifierTxCompiled setup
+    saveFlat (contextTx proof) "assets/plonkPlonkVerifierTx" $ plonkVerifierTxCompiled setup
     saveFlat (contextPlonk proof) "assets/plonkVerifierTokenScript"   $ plonkVerifierTokenCompiled setup
     saveFlat2 input proof "assets/plonkVerifierScript"  $ plonkVerifierCompiled setup
 
@@ -170,8 +169,8 @@ main = do
     printCostsPlonkVerifierToken h setup $ contextPlonk proof
     hPrintf h "\n\n"
     hPrintf h "\n\n"
-    hPrintf h "Run symbolic plonk verifier\n\n"
+    hPrintf h "Run \'plonkVerifierTx\'\n\n"
     printHeader h
-    printCostsPlonkVerifierTx h setup $ contextSymbolic proof
+    printCostsPlonkVerifierTx h setup $ contextTx proof
     hPrintf h "\n\n"
 
