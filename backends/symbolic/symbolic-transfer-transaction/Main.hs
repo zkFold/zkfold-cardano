@@ -1,6 +1,6 @@
 module Main where
 
-import           Cardano.Api         (PolicyId (..), policyId, prettyPrintJSON, unsafeHashableScriptData)
+import           Cardano.Api         (PolicyId (..), parsePolicyId, prettyPrintJSON, unsafeHashableScriptData)
 import           Cardano.Api.Shelley (fromPlutusData, scriptDataToJsonDetailedSchema)
 import           Data.Aeson          (ToJSON (..))
 import qualified Data.Aeson          as Aeson
@@ -16,7 +16,7 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 
 main :: IO ()
 main = do
-  policyidE <- parse policyId "" . head <$> getArgs
+  policyidE <- parse parsePolicyId "" . head <$> getArgs
 
   case policyidE of
     Right policyid -> BS.writeFile "../../assets/datumSymbolic.json" $ prettyPrintJSON $ toJSON $ unPolicyId policyid

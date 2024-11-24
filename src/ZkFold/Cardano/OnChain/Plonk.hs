@@ -8,7 +8,6 @@
 
 module ZkFold.Cardano.OnChain.Plonk where
 
-import           GHC.ByteOrder                               (ByteOrder (..))
 import           PlutusTx                                    (UnsafeFromData (..))
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                            (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
@@ -166,8 +165,6 @@ instance NonInteractiveProof PlonkPlutus core where
 instance
         ( KnownNat i
         , KnownNat n
-        , KnownNat (3 * n)
-        , KnownNat ((4 * n) + 6)
         , SetupVerify (Plonkup i n 1 c1 c2 ts) ~ PlonkupVerifierSetup i n 1 c1 c2
         , CoreFunction BLS12_381_G1 core
         ) => CompatibleNonInteractiveProofs (PlonkN i n) PlonkPlutus core where

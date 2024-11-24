@@ -3,7 +3,6 @@
 module ZkFold.Cardano.OffChain.Transcript where
 
 import           Data.Word                                   (Word8)
-import           GHC.ByteOrder                               (ByteOrder (..))
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                            ((.))
 

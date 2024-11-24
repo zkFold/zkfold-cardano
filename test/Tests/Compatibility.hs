@@ -4,16 +4,15 @@ import           Prelude                                  hiding (Eq (..), Fract
 import           Test.Hspec                               (describe, hspec, it)
 import           Test.QuickCheck                          (Testable (property))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs, HaskellCore,
-                                                           NonInteractiveProofTestData (..), nipCompatibility)
+import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs, HaskellCore, nipCompatibility, NonInteractiveProof (..))
 import           ZkFold.Cardano.OffChain.Plonk            (PlonkN)
 import           ZkFold.Cardano.OffChain.Plonkup          (PlonkupN)
 import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 
 propCompatibility :: forall a b . CompatibleNonInteractiveProofs a b HaskellCore =>
-    NonInteractiveProofTestData a HaskellCore -> Bool
-propCompatibility (TestData a w) = nipCompatibility @a @b @HaskellCore a w
+    (a, Witness a) -> Bool
+propCompatibility (a, w) = nipCompatibility @a @b @HaskellCore a w
 
 specCompatibility :: IO ()
 specCompatibility = hspec $ do
