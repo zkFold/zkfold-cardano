@@ -28,8 +28,6 @@ rollupRedeemerA=$assets/rollupRedeemerA.cbor
 rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
 rollupScriptFile=$assets/rollup.plutus
 
-dataToken=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#1
-
 rollupLovelaceValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 feeValue=15000000  # rollup fee
 
