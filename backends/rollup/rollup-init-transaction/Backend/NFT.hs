@@ -9,7 +9,7 @@ module Backend.NFT where
 import           PlutusLedgerApi.V1.Value (flattenValue)
 import           PlutusLedgerApi.V3
 import           PlutusTx                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude         (Bool(..), BuiltinUnit, any, check, ($), (==), (&&))
+import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, any, check, ($), (&&), (==))
 
 {-# INLINABLE nftPolicy #-}
 nftPolicy :: TxOutRef -> ScriptContext -> Bool
