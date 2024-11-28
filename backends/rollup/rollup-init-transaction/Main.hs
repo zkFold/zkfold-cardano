@@ -24,7 +24,7 @@ import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins                       (byteStringToInteger)
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
                                                           Show (..), String, concat, const, either, maybe, putStr, read,
-                                                          return, ($), (++), (.), (>>), (>>=))
+                                                          return, ($), (++), (.), (>>))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.Exit                             (exitFailure)
@@ -32,8 +32,8 @@ import           System.FilePath                         (takeFileName, (</>))
 import qualified System.IO                               as IO
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
-import           Text.Parsec                             (many1, parse)
-import           Text.Parsec.Char                        (anyChar, digit)
+import           Text.Parsec                             (many1)
+import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
 import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
@@ -114,8 +114,8 @@ main = do
   case argsRaw of
     (nftOrefStr : addrStr : _) -> do
       let argsE = do
-            nftOref <- stringParser nftOrefStr >>= parseTxOutRef
-            addr    <- stringParser addrStr >>= parseAddress
+            nftOref <- parseTxOutRef nftOrefStr
+            addr    <- parseAddress addrStr
             return (nftOref, addr)
       case argsE of
         Right (nftOref, addr) -> do
@@ -157,7 +157,7 @@ credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawByte
 -- | Currency symbol of compiled minting script
 currencySymbolOf :: CompiledCode a -> CurrencySymbol
 currencySymbolOf = CurrencySymbol . toBuiltin . serialiseToRawBytes . hashScript
-               . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
+                   . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
 
 -- | Parser for a positive integer
 integerParser :: Parser Integer
@@ -165,19 +165,10 @@ integerParser = do
   digits <- many1 digit
   return $ read digits
 
--- | Parser for a string
-stringParser' :: Parser String
-stringParser' = many1 anyChar
-
--- | 'Either' version of string parser
-stringParser :: String -> Either String String
-stringParser = either (Left . show) Right . parse stringParser' ""
-
 -- | Parse TxOutRef
 parseTxOutRef :: String -> Either String TxOutRef
 parseTxOutRef orefStr = do
-  (txIdHex, txIxStr) <- case T.splitOn (T.pack "#")
-    (T.pack orefStr) of
+  (txIdHex, txIxStr) <- case T.splitOn (T.pack "#") (T.pack orefStr) of
     [txIdHex, txIxStr] -> Right (txIdHex, txIxStr)
     _                  -> Left "Failed to parse TxOutRef"
   txId <- case deserialiseFromRawBytesHex AsTxId (TE.encodeUtf8 txIdHex) of
