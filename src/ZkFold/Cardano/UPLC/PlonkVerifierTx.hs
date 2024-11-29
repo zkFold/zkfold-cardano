@@ -1,23 +1,23 @@
-module ZkFold.Cardano.UPLC.SymbolicVerifier where
+module ZkFold.Cardano.UPLC.PlonkVerifierTx where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
 import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
-import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
+import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --
 -- ZkFold Symbolic smart contracts have access to inputs, reference inputs, outputs and the transaction validity range.
 -- Other TxInfo fields can either be passed to the Symbolic contract as private inputs or are not particularly useful inside a ZK contract.
-{-# INLINABLE untypedSymbolicVerifier #-}
-untypedSymbolicVerifier :: SetupBytes -> BuiltinData -> BuiltinUnit
-untypedSymbolicVerifier contract ctx =
-    -- Verifying the Plonk `proof` for the `contract` on the transaction data encoded as `input`
-    check $ verify @PlonkPlutus @HaskellCore contract input proof
+{-# INLINABLE untypedPlonkVerifierTx #-}
+untypedPlonkVerifierTx :: SetupBytes -> BuiltinData -> BuiltinUnit
+untypedPlonkVerifierTx contract ctx =
+    -- Verifying the Plonkup `proof` for the `contract` on the transaction data encoded as `input`
+    check $ verify @PlonkupPlutus @HaskellCore contract input proof
     where
       -- Extracting transaction data
       ins    = BI.head infoFields                -- txInfoInputs

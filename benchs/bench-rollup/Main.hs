@@ -1,7 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Main where
 
@@ -30,7 +27,7 @@ import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecre
 import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
-import           ZkFold.Cardano.OnChain.Plonk.Data           (ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.OnChain.Plonkup.Data         (ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
 import           ZkFold.Cardano.UPLC                         (rollupCompiled)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..), RollupSetup (..))
