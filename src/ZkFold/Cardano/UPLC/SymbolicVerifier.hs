@@ -2,7 +2,7 @@ module ZkFold.Cardano.UPLC.SymbolicVerifier where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, not, ($), (.))
+import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381         (toInput)
@@ -54,7 +54,7 @@ untypedSymbolicVerifier contract ctx =
 untypedSymbolicVerifier' :: SetupBytes -> BuiltinData -> BuiltinUnit
 untypedSymbolicVerifier' contract ctx =
     -- Verifying the Plonk `proof` for the `contract` on the transaction data encoded as `input`
-    check . not $ verify @PlonkPlutus @HaskellCore contract input proof
+    check $ verify @PlonkPlutus @HaskellCore contract input proof
     where
       -- Extracting transaction data
       ins    = BI.head infoFields                -- txInfoInputs

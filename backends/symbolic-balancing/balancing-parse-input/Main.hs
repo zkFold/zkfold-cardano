@@ -49,7 +49,7 @@ main = do
   putStr $ "Input UTxO from Alice:\n\n" ++ (show txin1) ++ "\n\n"
   putStr $ "Input UTxO from SymbolicVerifier:\n\n" ++ (show txin2) ++ "\n\n"
 
-  case concat <$> sequenceA [txin1, txin2] of
+  case concat <$> sequenceA [txin2, txin1] of  -- Note script address appearing before pubkey address.
     Right txins -> do
       let txinBD  = toBuiltinData txins
       putStr $ "Data:\n\n" ++ (show txinBD) ++ "\n\n"

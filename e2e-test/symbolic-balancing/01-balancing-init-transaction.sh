@@ -83,7 +83,6 @@ cardano-cli conway transaction submit \
 
 parkedTx=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")
 parkedOut=$parkedTx#0
-
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
@@ -100,10 +99,9 @@ done
 
 #-------------------------------- :symbolic initial transfer: -------------------------------
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
+echo "Initial transfer to 'symbolic'..."
 
-echo "Initial transfer to symbolic..."
-echo ""
+in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
 
 cardano-cli conway transaction build \
   --testnet-magic $mN \
