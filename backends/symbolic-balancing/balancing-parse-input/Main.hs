@@ -13,13 +13,14 @@ import qualified Data.Aeson                              as Aeson
 import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
 import           Data.Maybe                              (fromJust)
-import qualified PlutusLedgerApi.V3                      as V3
-import           PlutusTx                                (CompiledCode, ToData (..))
+import           PlutusLedgerApi.V3                      as V3
+import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins.Internal              (serialiseData)
-import           PlutusTx.Prelude                        (blake2b_224)
+import           PlutusTx.Prelude                        (Ordering(..), blake2b_224, compare, sortBy)
 import           Prelude                                 (Either (..), FilePath, IO, Maybe (..), Show (..), concat,
-                                                          putStr, sequenceA, ($), (++), (.), (<$>))
+                                                          putStr, sequenceA, ($), (++), (.), (<$>), (>>))
 import           System.Directory                        (getCurrentDirectory)
+import           System.Exit                             (exitFailure)
 import           System.FilePath                         (takeFileName, (</>))
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
@@ -49,9 +50,11 @@ main = do
   putStr $ "Input UTxO from Alice:\n\n" ++ (show txin1) ++ "\n\n"
   putStr $ "Input UTxO from SymbolicVerifier:\n\n" ++ (show txin2) ++ "\n\n"
 
-  case concat <$> sequenceA [txin2, txin1] of  -- Note script address appearing before pubkey address.
+  case concat <$> sequenceA [txin1, txin2] of
     Right txins -> do
-      let txinBD  = toBuiltinData txins
+      let txinsSorted = sortBy (\u v -> outRefCompare (txInInfoOutRef u) (txInInfoOutRef v)) txins
+
+      let txinBD  = toBuiltinData txinsSorted
       putStr $ "Data:\n\n" ++ (show txinBD) ++ "\n\n"
 
       let txinBBS = serialiseData txinBD
@@ -66,7 +69,7 @@ main = do
 
       BS.writeFile (assetsPath </> "redeemerSymbolicVerifier.json") $ prettyPrintJSON $ dataToJSON proof
 
-    Left errMsg -> putStr $ "Error: " ++ errMsg ++ "\n\n"
+    Left errMsg -> putStr ("Error: " ++ errMsg ++ "\n\n") >> exitFailure
 
 
 ----- HELPER FUNCTIONS -----
@@ -87,3 +90,10 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 -- | Serialise data to CBOR.
 dataToCBOR :: ToData a => a -> BS.ByteString
 dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . V3.toData
+
+-- | Compare function for 'TxOutRef'
+outRefCompare :: TxOutRef -> TxOutRef -> Ordering
+outRefCompare o1 o2 = 
+    case compare (txOutRefId o1) (txOutRefId o2) of
+        EQ  -> compare (txOutRefIdx o1) (txOutRefIdx o2)
+        ord -> ord
