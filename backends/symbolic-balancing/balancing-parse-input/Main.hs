@@ -16,7 +16,7 @@ import           Data.Maybe                              (fromJust)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins.Internal              (serialiseData)
-import           PlutusTx.Prelude                        (Ordering(..), blake2b_224, compare, sortBy)
+import           PlutusTx.Prelude                        (Ordering (..), blake2b_224, compare, sortBy)
 import           Prelude                                 (Either (..), FilePath, IO, Maybe (..), Show (..), concat,
                                                           putStr, sequenceA, ($), (++), (.), (<$>), (>>))
 import           System.Directory                        (getCurrentDirectory)
@@ -93,7 +93,7 @@ dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . V3.toData
 
 -- | Compare function for 'TxOutRef'
 outRefCompare :: TxOutRef -> TxOutRef -> Ordering
-outRefCompare o1 o2 = 
+outRefCompare o1 o2 =
     case compare (txOutRefId o1) (txOutRefId o2) of
         EQ  -> compare (txOutRefIdx o1) (txOutRefIdx o2)
         ord -> ord

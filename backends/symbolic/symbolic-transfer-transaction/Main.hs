@@ -1,7 +1,7 @@
 module Main where
 
-import           Cardano.Api.Ledger  (toCBOR)
 import           Cardano.Api         (SerialiseAsRawBytes (..), parsePolicyId, unsafeHashableScriptData)
+import           Cardano.Api.Ledger  (toCBOR)
 import           Cardano.Api.Shelley (fromPlutusData, scriptDataToJsonDetailedSchema)
 import           Codec.CBOR.Write    (toStrictByteString)
 import qualified Data.Aeson          as Aeson

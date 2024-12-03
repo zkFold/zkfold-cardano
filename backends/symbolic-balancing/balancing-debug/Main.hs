@@ -1,10 +1,10 @@
 module Main where
 
+import           Data.Aeson                  (decode)
+import qualified Data.ByteString.Lazy        as BL
 import           Prelude
-import           Data.Aeson (decode)
-import qualified Data.ByteString.Lazy as BL
 
-import ZkFold.Cardano.OffChain.E2E
+import           ZkFold.Cardano.OffChain.E2E
 
 main :: IO ()
 main = do
