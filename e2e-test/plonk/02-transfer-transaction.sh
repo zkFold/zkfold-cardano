@@ -18,7 +18,7 @@ echo "charles wants to create an address with lock reward."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic $magic --out-file  /dev/stdout | jq -r 'keys[0]')
-policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
+policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifierToken.plutus")
 
 echo "charles address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic $magic)"

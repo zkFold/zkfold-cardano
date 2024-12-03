@@ -15,7 +15,7 @@ import           Test.QuickCheck.Gen                   (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
-import           ZkFold.Cardano.UPLC                   (forwardingMintCompiled, plonkVerifierCompiled)
+import           ZkFold.Cardano.UPLC                   (forwardingMintCompiled, plonkVerifierTokenCompiled)
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
@@ -43,5 +43,5 @@ main = do
 
   let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
 
-  savePlutus "../assets/plonkVerifier.plutus" $ plonkVerifierCompiled setup
+  savePlutus "../assets/plonkVerifierToken.plutus" $ plonkVerifierTokenCompiled setup
   savePlutus "../assets/forwardingMint.plutus" $ forwardingMintCompiled fmLabel

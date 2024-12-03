@@ -70,25 +70,22 @@ library
     ZkFold.Cardano.Examples.IdentityCircuit
     ZkFold.Cardano.OffChain.BLS12_381
     ZkFold.Cardano.OffChain.E2E
-    ZkFold.Cardano.OffChain.Plonk
     ZkFold.Cardano.OffChain.Plonkup
     ZkFold.Cardano.OffChain.Transcript
     ZkFold.Cardano.OnChain.BLS12_381
     ZkFold.Cardano.OnChain.BLS12_381.F
     ZkFold.Cardano.OnChain.BLS12_381.G1
     ZkFold.Cardano.OnChain.BLS12_381.G2
-    ZkFold.Cardano.OnChain.Plonk
-    ZkFold.Cardano.OnChain.Plonk.Data
     ZkFold.Cardano.OnChain.Plonkup
     ZkFold.Cardano.OnChain.Plonkup.Data
     ZkFold.Cardano.OnChain.Utils
     ZkFold.Cardano.UPLC
     ZkFold.Cardano.UPLC.ForwardingScripts
-    ZkFold.Cardano.UPLC.PlonkVerifier
+    ZkFold.Cardano.UPLC.PlonkVerifierToken
     ZkFold.Cardano.UPLC.Rollup
     ZkFold.Cardano.UPLC.RollupData
     ZkFold.Cardano.UPLC.RollupDeposit
-    ZkFold.Cardano.UPLC.SymbolicVerifier
+    ZkFold.Cardano.UPLC.PlonkVerifierTx
     ZkFold.Cardano.UPLC.Wallet
   build-depends:
     aeson                          ,
@@ -96,11 +93,11 @@ library
     bytestring                     ,
     containers                     ,
     flat                           ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
     vector                         ,
-    zkfold-base                    ,
+    symbolic-base                  ,
   hs-source-dirs:   src
 
 test-suite test
@@ -117,21 +114,21 @@ test-suite test
     base16-bytestring              ,
     bytestring                     ,
     containers                     ,
-    cardano-api:{cardano-api, gen} ,
-    cardano-cli                    ,
-    cardano-ledger-alonzo          ,
-    cardano-ledger-core            ,
-    cardano-ledger-shelley         ,
-    cardano-prelude                ,
-    cardano-testnet        ^>=9.0.0,
+    -- cardano-api:{cardano-api, gen} ,
+    -- cardano-cli                    ,
+    -- cardano-ledger-alonzo          ,
+    -- cardano-ledger-core            ,
+    -- cardano-ledger-shelley         ,
+    -- cardano-prelude                ,
+    -- cardano-testnet        ^>=10.0.0,
     directory                      ,
     filepath                       ,
     hedgehog                       ,
     hedgehog-extras                ,
     hspec                          ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
     tasty                          ,
     tasty-expected-failure         ,
     tasty-hunit                    ,
@@ -140,7 +137,7 @@ test-suite test
     text                           ,
     unordered-containers           ,
     QuickCheck                     ,
-    zkfold-base                    ,
+    symbolic-base                  ,
     zkfold-cardano                 ,
   hs-source-dirs:   test
 
@@ -209,9 +206,13 @@ executable symbolic-init-transaction
     bytestring                     ,
     cardano-api                    ,
     directory                      ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
+    flat                           ,
+    plutus-core             ^>=1.36,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
+    QuickCheck                     ,
+    symbolic-base                  ,
     zkfold-cardano                 ,
     QuickCheck                     ,
 
@@ -228,9 +229,17 @@ executable symbolic-transfer-transaction
     bytestring                     ,
     cardano-api                    ,
     cborg                          ,
+    containers                     ,
+    directory                      ,
+    filepath                       ,
     parsec                         ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
+    plutus-core             ^>=1.36,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
+    QuickCheck                     ,
+    symbolic-base                  ,
+    zkfold-cardano                 ,
 
 executable symbolic-withdraw-transaction
   import:           lang
@@ -244,8 +253,10 @@ executable symbolic-withdraw-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
+    directory                      ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
     zkfold-cardano                 ,
 
 executable balancing-init-transaction
@@ -263,10 +274,11 @@ executable balancing-init-transaction
     cborg                          ,
     directory                      ,
     filepath                       ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
-    zkfold-base                    ,
+    parsec                         ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
+    symbolic-base                  ,
     zkfold-cardano                 ,
     QuickCheck                     ,
 
@@ -287,10 +299,23 @@ executable balancing-parse-input
     cborg                          ,
     directory                      ,
     filepath                       ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
     text                           ,
+    zkfold-cardano                 ,
+
+executable balancing-debug
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/symbolic-balancing/balancing-debug
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
     zkfold-cardano                 ,
 
 executable plonk-init-transaction
@@ -306,9 +331,9 @@ executable plonk-init-transaction
     bytestring                     ,
     cardano-api                    ,
     directory                      ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
-    plutus-tx-plugin        ^>=1.30,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
     zkfold-cardano                 ,
     QuickCheck                     ,
 
@@ -326,8 +351,8 @@ executable plonk-transfer-transaction
     cardano-api                    ,
     cborg                          ,
     parsec                         ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
 
 executable plonk-minting-transaction
   import:           lang
@@ -342,8 +367,8 @@ executable plonk-minting-transaction
     bytestring                     ,
     cardano-api                    ,
     cborg                          ,
-    plutus-ledger-api       ^>=1.30,
-    plutus-tx               ^>=1.30,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
     zkfold-cardano                 ,
 
 -- executable rollup-init-transaction
@@ -362,9 +387,9 @@ executable plonk-minting-transaction
 --     directory                      ,
 --     filepath                       ,
 --     parsec                         ,
---     plutus-ledger-api       ^>=1.30,
---     plutus-tx               ^>=1.30,
---     plutus-tx-plugin        ^>=1.30,
+--     plutus-ledger-api       ^>=1.36,
+--     plutus-tx               ^>=1.36,
+--     plutus-tx-plugin        ^>=1.36,
 --     zkfold-cardano                 ,
 --     QuickCheck
 
@@ -383,8 +408,8 @@ executable plonk-minting-transaction
 --     cborg                          ,
 --     directory                      ,
 --     filepath                       ,
---     plutus-ledger-api       ^>=1.30,
---     plutus-tx               ^>=1.30,
---     zkfold-base                    ,
+--     plutus-ledger-api       ^>=1.36,
+--     plutus-tx               ^>=1.36,
+--     symbolic-base                  ,
 --     zkfold-cardano                 ,
 --     QuickCheck

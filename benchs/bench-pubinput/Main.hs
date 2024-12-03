@@ -26,7 +26,7 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerifica
 import           ZkFold.Cardano.Plonk.OffChain            (EqualityCheckContract (..))
 import qualified ZkFold.Cardano.Plonk.OnChain.BLS12_381.F as F
 import           ZkFold.Cardano.Plonk.OnChain.Data        (ProofBytes (..))
-import           ZkFold.Cardano.UPLC                      (symbolicVerifierCompiled)
+import           ZkFold.Cardano.UPLC                      (plonkVerifierTxCompiled)
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()

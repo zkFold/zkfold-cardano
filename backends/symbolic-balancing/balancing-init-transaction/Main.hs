@@ -19,7 +19,7 @@ import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
-import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, symbolicVerifierCompiled')
+import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, plonkVerifierTxCompiled')
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -59,7 +59,7 @@ main = do
 
   let assetsPath = path </> "assets"
 
-  savePlutus (assetsPath </> "symbolic.plutus") $ symbolicVerifierCompiled' setup
+  savePlutus (assetsPath </> "symbolic.plutus") $ plonkVerifierTxCompiled' setup
   savePlutus (assetsPath </> "parkingSpot.plutus") $ parkingSpotCompiled 54
 
   BS.writeFile (assetsPath </> "unit.cbor") $ dataToCBOR ()

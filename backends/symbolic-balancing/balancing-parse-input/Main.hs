@@ -26,7 +26,7 @@ import           System.FilePath                         (takeFileName, (</>))
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
 import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
-import           ZkFold.Cardano.UPLC                     (symbolicVerifierCompiled')
+import           ZkFold.Cardano.UPLC                     (plonkVerifierTxCompiled')
 
 
 main :: IO ()
@@ -45,7 +45,7 @@ main = do
   let assetsPath = path </> "assets"
 
   txin1 <- parseJsonToTxInInfoList [Nothing] <$> BL.readFile (assetsPath </> "utxo1.json")
-  txin2 <- parseJsonToTxInInfoList [Just $ symbolicVerifierCompiled' setup] <$> BL.readFile (assetsPath </> "utxo2.json")
+  txin2 <- parseJsonToTxInInfoList [Just $ plonkVerifierTxCompiled' setup] <$> BL.readFile (assetsPath </> "utxo2.json")
 
   putStr $ "Input UTxO from Alice:\n\n" ++ (show txin1) ++ "\n\n"
   putStr $ "Input UTxO from SymbolicVerifier:\n\n" ++ (show txin2) ++ "\n\n"

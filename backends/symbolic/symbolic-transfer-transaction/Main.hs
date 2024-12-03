@@ -1,7 +1,7 @@
 module Main where
 
-import           Cardano.Api         (SerialiseAsRawBytes (..), policyId, unsafeHashableScriptData)
 import           Cardano.Api.Ledger  (toCBOR)
+import           Cardano.Api         (SerialiseAsRawBytes (..), parsePolicyId, unsafeHashableScriptData)
 import           Cardano.Api.Shelley (fromPlutusData, scriptDataToJsonDetailedSchema)
 import           Codec.CBOR.Write    (toStrictByteString)
 import qualified Data.Aeson          as Aeson
@@ -17,7 +17,7 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 
 main :: IO ()
 main = do
-  policyidE <- parse policyId "" . head <$> getArgs
+  policyidE <- parse parsePolicyId "" . head <$> getArgs
 
   case policyidE of
     Right policyid -> BS.writeFile "../../assets/datumSymbolic.cbor" $ toStrictByteString $ toCBOR $ serialiseToRawBytes policyid
