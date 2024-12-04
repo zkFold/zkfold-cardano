@@ -2,14 +2,15 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeOperators #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans                 #-}
 
 module ZkFold.Cardano.OnChain.Plonkup where
 
-import           GHC.Generics (U1, Par1)
+import           Data.Functor.Rep                            (Rep, Representable)
+import           GHC.Base                                    (Ord)
+import           GHC.Generics                                (Par1, U1)
 import           PlutusTx                                    (UnsafeFromData (..))
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                            (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
@@ -25,8 +26,6 @@ import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput,
 import           ZkFold.Cardano.OffChain.Transcript          ()
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), mul, powTwo)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes (..))
-import           Data.Functor.Rep                           (Rep, Representable)
-import GHC.Base (Ord)
 
 data PlonkupPlutus
 

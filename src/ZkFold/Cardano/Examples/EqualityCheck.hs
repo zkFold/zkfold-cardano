@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 module ZkFold.Cardano.Examples.EqualityCheck where
 
-import           GHC.Generics                                
+import           GHC.Generics
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import qualified Prelude                                     as Haskell
 
