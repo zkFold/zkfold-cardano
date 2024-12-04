@@ -21,9 +21,9 @@ echo "bob address:"
 echo "$(cardano-cli query utxo --testnet-magic 4 --address $(cat $keypath/bob.addr))"
 echo ""
 
-symbolicVerifier=$(cardano-cli transaction txid --tx-file "$keypath/symbolicVerifier.tx")#0
+plonkVerifierTx=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierTx.tx")#0
 forwardingRewardReference=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
-base16=$(cardano-cli conway address info --address "$keypath/symbolicVerifier.addr" /dev/stdout | jq -r 'keys[0]')
+base16=$(cardano-cli conway address info --address "$keypath/plonkVerifierTx.addr" /dev/stdout | jq -r 'keys[0]')
 
 forwardingRewardIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
 
@@ -31,7 +31,7 @@ forwardingRewardIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-tran
 
 cabal run symbolic-withdraw-transaction -- $base16
 
-plutusStakingScriptRedeemer=$assets/redeemerSymbolicVerifier.json
+plutusStakingScriptRedeemer=$assets/redeemerPlonkVerifierTx.json
 
 redeemerUnit=$assets/unit.json
 
@@ -44,9 +44,9 @@ cardano-cli conway transaction build \
     --protocol-params-file "$keypath/pparams.json" \
     --out-file "$keypath/staking-script-withdrawal.txbody" \
     --tx-in $in \
-    --withdrawal "$(cat $keypath/symbolicVerifierStaking.addr) + 0 lovelace" \
+    --withdrawal "$(cat $keypath/plonkVerifierTxStaking.addr) + 0 lovelace" \
     --withdrawal-plutus-script-v3 \
-    --withdrawal-tx-in-reference "$assets/symbolicVerifier.plutus" \
+    --withdrawal-tx-in-reference "$assets/plonkVerifierTx.plutus" \
     --withdrawal-reference-tx-in-redeemer-file $plutusStakingScriptRedeemer \
     --tx-in $forwardingRewardIn \
     --spending-tx-in-reference $forwardingRewardReference \

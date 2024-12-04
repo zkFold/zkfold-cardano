@@ -26,9 +26,9 @@ echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"
 echo ""
 
-plonkVerifier=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")#0
+plonkVerifierToken=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierToken.tx")#0
 forwardingMintReference=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
-policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
+policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifierToken.plutus")
 
 forwardingMintIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
 
@@ -56,7 +56,7 @@ cardano-cli conway transaction build \
     --tx-out "$(cat $keypath/bob.addr) + 10000000 lovelace" \
     --change-address "$(cat $keypath/bob.addr)" \
     --mint "-1 $policyid.$tokenname" \
-    --mint-tx-in-reference $plonkVerifier \
+    --mint-tx-in-reference $plonkVerifierToken \
     --mint-plutus-script-v3 \
     --mint-reference-tx-in-redeemer-cbor-file $redeemerDummy \
     --policy-id $policyid \

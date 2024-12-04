@@ -25,8 +25,8 @@ echo "alice address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $magic)"
 echo ""
 
-plonkVerifier=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifier.tx")#0
-policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifier.plutus")
+plonkVerifierToken=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierToken.tx")#0
+policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifierToken.plutus")
 
 #-------------------------- :tokenname and redeemer: ---------------------------
 
@@ -34,7 +34,7 @@ cabal run plonk-minting-transaction
 
 tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
 
-redeemerProof=$assets/redeemerPlonkVerifier.cbor
+redeemerProof=$assets/redeemerPlonkVerifierToken.cbor
 
 echo "PolicyID & TokenName:"
 echo "$policyid.$tokenname"
@@ -48,7 +48,7 @@ cardano-cli conway transaction build \
     --out-file "$keypath/minting-transaction.txbody" \
     --tx-in $in \
     --mint "1 $policyid.$tokenname" \
-    --mint-tx-in-reference $plonkVerifier \
+    --mint-tx-in-reference $plonkVerifierToken \
     --mint-plutus-script-v3 \
     --mint-reference-tx-in-redeemer-cbor-file $redeemerProof \
     --policy-id $policyid \

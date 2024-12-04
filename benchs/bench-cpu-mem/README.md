@@ -5,25 +5,25 @@
 This repository will follow [plutus-plonk-poc](https://github.com/perturbing/plutus-plonk-poc).
 
 ```bash
-Run 'verifyPlonk'
-
-    n     Script size             CPU usage               Memory usage
-  ----------------------------------------------------------------------
-    -    4040  (24.7%)      3804030393  (38.0%)          800065   (5.7%)
-```
-
-```bash
 Run 'plonkVerifier'
 
     n     Script size             CPU usage               Memory usage
   ----------------------------------------------------------------------
-    -   11680  (71.3%)      3900648512  (39.0%)         1195522   (8.5%)
+    -    5167  (31.5%)      5475398242  (54.8%)         1329610   (9.5%)
 ```
 
 ```bash
-Run 'symbolicVerifier'
+Run 'plonkVerifierToken'
 
     n     Script size             CPU usage               Memory usage
   ----------------------------------------------------------------------
-    -    4027  (24.6%)      3812086558  (38.1%)          782862   (5.6%)
+    -    5614  (34.3%)      5478141917  (54.8%)         1325175   (9.5%)
+```
+
+```bash
+Run 'plonkVerifierTx'
+
+    n     Script size             CPU usage               Memory usage
+  ----------------------------------------------------------------------
+    -    5318  (32.5%)      5485836172  (54.9%)         1324775   (9.5%)
 ```

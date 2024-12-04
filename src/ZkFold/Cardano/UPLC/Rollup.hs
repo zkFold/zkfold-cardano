@@ -18,8 +18,8 @@ import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toF)
-import           ZkFold.Cardano.OnChain.Plonk             (PlonkPlutus)
-import           ZkFold.Cardano.OnChain.Plonk.Data        (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 
 data RollupSetup = RollupSetup
@@ -94,7 +94,7 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     threadCurrency = fst . head . toList . getValue $ threadValue
   in
     -- Verify the transition from the current state to the next state
-    verify @PlonkPlutus @HaskellCore ledgerRules (toF state') proof
+    verify @PlonkupPlutus @HaskellCore ledgerRules (toF state') proof
 
     -- Compare the state updates
     -- Note: we want to have the full control over the order of data updates. That is why we pass `update` in the redeemer.
