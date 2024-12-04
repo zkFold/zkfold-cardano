@@ -2,12 +2,14 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeOperators #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans                 #-}
 
 module ZkFold.Cardano.OnChain.Plonkup where
 
+import           GHC.Generics (U1, Par1)
 import           PlutusTx                                    (UnsafeFromData (..))
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                            (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
@@ -23,6 +25,8 @@ import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput,
 import           ZkFold.Cardano.OffChain.Transcript          ()
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), mul, powTwo)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes (..))
+import           Data.Functor.Rep                           (Rep, Representable)
+import GHC.Base (Ord)
 
 data PlonkupPlutus
 
@@ -183,9 +187,10 @@ instance NonInteractiveProof PlonkupPlutus core where
         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one)
 
 instance
-        ( KnownNat i
+        ( Representable i
         , KnownNat n
-        , SetupVerify (Plonkup i n 1 c1 c2 ts) ~ PlonkupVerifierSetup i n 1 c1 c2
+        , Ord (Rep i)
+        , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2
         , CoreFunction BLS12_381_G1 core
         ) => CompatibleNonInteractiveProofs (PlonkupN i n) PlonkupPlutus core where
     nipSetupTransform = mkSetup
