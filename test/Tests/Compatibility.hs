@@ -26,10 +26,10 @@ instance Show1 (U1 :*: U1) where
   liftShowsPrec _ _ = showsPrec
 
 instance Show1 Par1 where
-  liftShowsPrec _ _ = undefined
+  liftShowsPrec f _ _ (Par1 x) = f 0 x
 
 instance Show1 (Par1 :*: U1) where
-  liftShowsPrec _ _ = undefined
+  liftShowsPrec f _ _ (Par1 x :*: U1) = f 0 x
 
 instance Arbitrary (U1 a) where
   arbitrary = return U1
@@ -39,13 +39,11 @@ instance Arbitrary1 U1 where
 instance Arbitrary1 (U1 :*: U1) where
   liftArbitrary _ = return (U1 :*: U1)
 
--- Arbitrary1 (Par1 :*: U1)
-
 instance Arbitrary Void where
-  arbitrary = undefined
+  arbitrary = return $ error "Uninhabited data type"
 
 instance Arbitrary1 (Par1 :*: U1) where
-  liftArbitrary _ = return (Par1 undefined :*: U1)
+  liftArbitrary = fmap (flip (:*:) U1 . Par1)
 
 specCompatibility :: IO ()
 specCompatibility = hspec $ do

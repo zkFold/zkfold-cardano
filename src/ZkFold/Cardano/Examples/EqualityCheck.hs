@@ -33,7 +33,7 @@ equalityCheckVerificationBytes x ps targetValue =
         plonkup = Plonkup omega k1 k2 ac x :: PlonkupN (Par1 :*: U1) 32
         setupP  = setupProve @_ @HaskellCore plonkup
         setupV  = setupVerify @_ @HaskellCore plonkup
-        witness = (PlonkupWitnessInput @_ @(Par1 :*: U1) @_ undefined witnessInputs, ps)
+        witness = (PlonkupWitnessInput @_ @(Par1 :*: U1) @_ (U1 :*: U1) witnessInputs, ps)
         (input, proof) = prove @(PlonkupN (Par1 :*: U1) 32) @HaskellCore setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
