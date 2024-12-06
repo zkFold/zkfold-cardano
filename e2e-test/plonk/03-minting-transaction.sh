@@ -41,6 +41,10 @@ echo "$policyid.$tokenname"
 
 #---------------------------------- :minting: ----------------------------------
 
+plonkVerifierPolicyReqUtxo=$(cardano-cli conway transaction calculate-min-required-utxo \
+  --protocol-params-file $assets/protocol.json \
+  --tx-out "$(cat $keypath/bob.addr) + 1 $policyid.$tokenname" | sed 's/^[^ ]* //')
+
 cardano-cli conway transaction build \
     --testnet-magic $magic \
     --change-address "$(cat $keypath/alice.addr)" \
@@ -52,7 +56,7 @@ cardano-cli conway transaction build \
     --mint-plutus-script-v3 \
     --mint-reference-tx-in-redeemer-cbor-file $redeemerProof \
     --policy-id $policyid \
-    --tx-out "$(cat $keypath/bob.addr) + 1142150 lovelace + 1 $policyid.$tokenname"
+    --tx-out "$(cat $keypath/bob.addr) + $plonkVerifierPolicyReqUtxo lovelace + 1 $policyid.$tokenname"
 
 cardano-cli conway transaction sign \
     --testnet-magic $magic \

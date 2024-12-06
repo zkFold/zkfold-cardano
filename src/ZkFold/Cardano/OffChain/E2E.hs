@@ -32,7 +32,7 @@ data IdentityCircuitContract = IdentityCircuitContract {
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-deriving anyclass instance FromJSON (V.Vector 19 Fr)
+deriving newtype instance FromJSON (V.Vector 19 Fr)
 deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
 deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)
 
