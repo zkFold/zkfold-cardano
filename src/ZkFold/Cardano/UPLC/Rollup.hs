@@ -11,7 +11,7 @@ import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
-import           PlutusTx.AssocMap                        (lookup, member, toList)
+import           PlutusTx.AssocMap                        (lookup, toList)
 import           PlutusTx.Builtins                        (mkI, unsafeDataAsI)
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
@@ -80,18 +80,16 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     -- Get bridge outputs
     -- If the payment credential of the output coincides with the rollup payment credential, then this output transfers value to the rollup.
     -- Otherwise, it transfers value from the rollup.
-    -- bridgeOutputs =
-    --   filter (\case
-    --     TxOut _ _ (OutputDatumHash _) Nothing -> True
-    --     _                                     -> False)
-    --   $ tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
+    bridgeOutputs =
+      filter (\case
+        TxOut _ _ (OutputDatumHash _) Nothing -> True
+        _                                     -> False)
+      $ tail $ tail $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
 
     -- Compute the next state
-    -- state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
-    state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, feeVal)
+    state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
 
     -- Get thread currency symbol
-    threadCurrency = fst . head . toList . getValue $ threadValue
   in
     -- Verify the transition from the current state to the next state
     verify @PlonkupPlutus @HaskellCore ledgerRules (toF state') proof
@@ -101,14 +99,10 @@ rollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) (UpdateRoll
     && sort update' == sort update
 
     -- Check the current rollup output
-    -- && val == threadValue  -- Doesn't work because 'val' also contains lovelaces
-    && member threadCurrency (getValue val)
+    && val == threadValue
 
     -- Check the next rollup output
-    -- && out' == TxOut addr threadValue (OutputDatum (Datum $ mkI state')) Nothing
-    && member threadCurrency (getValue $ txOutValue out')
-    && txOutAddress out' == addr
-    && txOutDatum out'   == (OutputDatum . Datum . mkI $ state')
+    && out' == TxOut addr threadValue (OutputDatum (Datum $ mkI state')) Nothing
 
     -- Check the fee output
     && case outFee of

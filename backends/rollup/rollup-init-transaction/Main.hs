@@ -22,6 +22,7 @@ import qualified PlutusLedgerApi.V2                      as V2
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins                       (byteStringToInteger)
+import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
                                                           Show (..), String, concat, const, either, maybe, putStr, read,
                                                           return, ($), (++), (.), (>>))
@@ -69,11 +70,11 @@ saveRollupPlutus path oref addr = do
       (_, _, proof)              = stateCheckVerificationBytes x ps nextState
 
   let threadCS    = currencySymbolOf $ nftPolicyCompiled oref
-      threadName  = TokenName (fromString "7a6b466f6c64" :: BuiltinByteString)  -- token name: "zkFold"
+      threadName  = TokenName (fromString "zkFold" :: BuiltinByteString)
       rollupSetup = RollupSetup
                     { rsLedgerRules  = ledgerRules
                     , rsDataCurrency = currencySymbolOf rollupDataCompiled
-                    , rsThreadValue  = singleton threadCS threadName 1
+                    , rsThreadValue  = lovelaceValue (V2.Lovelace 3000000) <> singleton threadCS threadName 1
                     , rsFeeAddress   = addr
                     }
 
