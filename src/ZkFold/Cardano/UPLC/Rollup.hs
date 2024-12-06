@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE NamedFieldPuns    #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
