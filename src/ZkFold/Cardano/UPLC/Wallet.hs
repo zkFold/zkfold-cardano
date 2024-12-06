@@ -9,7 +9,7 @@ import           PlutusLedgerApi.V3
 import           PlutusTx                              (makeIsDataIndexed, makeLift)
 import qualified PlutusTx.AssocMap                     as M
 import           PlutusTx.Prelude                      hiding (toList, (*), (+))
-import           Prelude                               (Show, undefined)
+import           Prelude                               (Show)
 
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingReward)
 
@@ -49,7 +49,7 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
     where
         signedCorrectly =
             case wrCreds of
-              SpendWithSignature sign  -> verifyEd25519Signature wsPubKeyHash undefined sign
+              SpendWithSignature sign  -> verifyEd25519Signature wsPubKeyHash (getTxId $ txInfoId) sign
               SpendWithWeb2Token token -> zkpCheck token wrTxDate wsWeb2UserId
 
         valueIsCorrect = M.all (M.all (>= 0)) $ getValue $ sumInputs - sumOutputs - feeValue
@@ -66,7 +66,7 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
 
         fwd =
             case scriptInfo of
-              SpendingScript _ _ -> forwardingReward undefined () ctx
+              SpendingScript _ _ -> forwardingReward (getTxId $ txInfoId) () ctx
               _                  -> True
 
 
