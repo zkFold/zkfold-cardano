@@ -26,11 +26,11 @@ identityCircuitVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1 -> (S
 identityCircuitVerificationBytes x ps =
     let (omega, k1, k2) = getParams 2
         witnessInputs   = eval identityCircuit (U1 :*: U1) $ Par1 zero
-        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN Par1 2
+        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN (U1 :*: U1) Par1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
         witness         = (PlonkupWitnessInput @_ @_ @BLS12_381_G1 (U1 :*: U1) witnessInputs, ps)
-        (input, proof)  = prove @(PlonkupN Par1 2) @HaskellCore setupP witness
+        (input, proof)  = prove @(PlonkupN (U1 :*: U1) Par1 2) @HaskellCore setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
@@ -40,11 +40,11 @@ stateCheckVerificationBytes x ps state =
         state'          = toZp n :: Fr
         (omega, k1, k2) = getParams 2
         witnessInputs   = Par1 state'
-        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN Par1 2
+        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN (U1 :*: U1) Par1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
         witness         = (PlonkupWitnessInput (U1 :*: U1) witnessInputs, ps)
-        (input, proof)  = prove @(PlonkupN Par1 2) @HaskellCore setupP witness
+        (input, proof)  = prove @(PlonkupN (U1 :*: U1) Par1 2) @HaskellCore setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 

@@ -186,12 +186,13 @@ instance NonInteractiveProof PlonkupPlutus core where
         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one)
 
 instance
-        ( Representable i
+        ( Representable p
+        , Representable i
         , KnownNat n
         , Ord (Rep i)
         , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2
         , CoreFunction BLS12_381_G1 core
-        ) => CompatibleNonInteractiveProofs (PlonkupN i n) PlonkupPlutus core where
+        ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus core where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof

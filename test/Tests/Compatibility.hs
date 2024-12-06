@@ -48,4 +48,4 @@ instance Arbitrary1 (Par1 :*: U1) where
 specCompatibility :: IO ()
 specCompatibility = hspec $ do
     describe "Plonkup verifier compatibility test" $ do
-        it "should pass" $ property $ propCompatibility @(PlonkupN (Par1 :*: U1) 32) @PlonkupPlutus
+        it "should pass" $ property $ propCompatibility @(PlonkupN (U1 :*: U1) (Par1 :*: U1) 32) @PlonkupPlutus
