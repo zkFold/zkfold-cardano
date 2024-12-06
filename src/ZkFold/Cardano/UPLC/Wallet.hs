@@ -5,6 +5,7 @@
 module ZkFold.Cardano.UPLC.Wallet where
 
 import           GHC.Generics                          (Generic)
+import           PlutusLedgerApi.V1.Value              (lovelaceValue)
 import           PlutusLedgerApi.V3
 import           PlutusTx                              (makeIsDataIndexed, makeLift)
 import qualified PlutusTx.AssocMap                     as M
@@ -55,7 +56,7 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
         valueIsCorrect = M.all (M.all (>= 0)) $ getValue $ sumInputs - sumOutputs - feeValue
 
         feeValue :: Value
-        feeValue = Value $ M.singleton adaSymbol (M.singleton adaToken $ getLovelace txInfoFee)
+        feeValue = lovelaceValue txInfoFee
 
         sumTx :: [TxOut] -> Value
         sumTx = mconcat . fmap txOutValue
