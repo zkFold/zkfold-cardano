@@ -4,13 +4,14 @@
 
 module ZkFold.Cardano.UPLC.Wallet where
 
-import           GHC.Generics                     (Generic)
+import           GHC.Generics                          (Generic)
 import           PlutusLedgerApi.V3
-import           PlutusTx                         (makeIsDataIndexed, makeLift)
-import           PlutusTx.Prelude                 hiding (toList, (*), (+))
-import           Prelude                          (Show, undefined)
+import           PlutusTx                              (makeIsDataIndexed, makeLift)
+import qualified PlutusTx.AssocMap                     as M
+import           PlutusTx.Prelude                      hiding (toList, (*), (+))
+import           Prelude                               (Show, undefined)
 
-import           ZkFold.Cardano.OnChain.BLS12_381 (F)
+import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingReward)
 
 data WalletSetup = WalletSetup
   { wsPubKeyHash :: BuiltinByteString
@@ -23,6 +24,7 @@ makeIsDataIndexed ''WalletSetup [('WalletSetup,0)]
 data SpendingCreds = SpendWithSignature BuiltinByteString | SpendWithWeb2Token BuiltinByteString
   deriving stock (Show, Generic)
 
+makeLift ''SpendingCreds
 makeIsDataIndexed ''SpendingCreds [('SpendWithSignature,0),('SpendWithWeb2Token,1)]
 
 data WalletRedeemer = WalletRedeemer
@@ -50,10 +52,13 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
               SpendWithSignature sign  -> verifyEd25519Signature wsPubKeyHash undefined sign
               SpendWithWeb2Token token -> zkpCheck token wrTxDate wsWeb2UserId
 
-        valueIsCorrect = sumInputs - sumOutputs - txInfoFee >= 0
+        valueIsCorrect = M.all (M.all (>= 0)) $ getValue $ sumInputs - sumOutputs - feeValue
 
-        sumTx :: [TxOut] -> Lovelace
-        sumTx = sum . fmap txOutValue
+        feeValue :: Value
+        feeValue = Value $ M.singleton adaSymbol (M.singleton adaToken $ getLovelace txInfoFee)
+
+        sumTx :: [TxOut] -> Value
+        sumTx = mconcat . fmap txOutValue
 
         sumInputs = sumTx . fmap txInInfoResolved $ txInfoInputs
 
@@ -61,9 +66,8 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
 
         fwd =
             case scriptInfo of
-              Spending _ _ -> forwardingReward undefined () ctx
-              _            -> True
-
+              SpendingScript _ _ -> forwardingReward undefined () ctx
+              _                  -> True
 
 
 {-# INLINABLE untypedWallet #-}
