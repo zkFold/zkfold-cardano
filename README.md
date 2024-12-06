@@ -16,6 +16,14 @@ Crypotgraphic depencencies needed for building Haskell packages:
 * [`libsecp256k1`](https://github.com/bitcoin-core/secp256k1)
 * [`libblst`](https://github.com/supranational/blst)
 
+You might also need Libtool if you are getting errors associated with it:
+
+```
+sudo apt-get install libtool
+```
+
+Then run
+
 ```
 $ cabal update
 $ cabal build
