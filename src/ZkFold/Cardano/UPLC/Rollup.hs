@@ -20,8 +20,8 @@ import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toF)
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 
 data RollupSetup = RollupSetup
   { rsLedgerRules  :: SetupBytes
@@ -52,6 +52,14 @@ makeIsDataIndexed ''RollupRedeemer [('UpdateRollup, 0)]
 findOwnInput' :: [TxInInfo] -> TxOutRef -> Maybe TxInInfo
 findOwnInput' txInfoInputs txOutRef = find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
 {-# INLINABLE findOwnInput' #-}
+
+filter' :: (BuiltinData -> Bool) -> BI.BuiltinList BuiltinData -> BI.BuiltinList BuiltinData
+filter' pred' xs = BI.ifThenElse (BI.null xs) (BI.mkNilData BI.unitval) $
+  let
+    x'  = BI.head xs
+    xs' = BI.tail xs
+  in if pred' x' then BI.mkCons x' (filter' pred' xs') else filter' pred' xs'
+{-# INLINABLE filter' #-}
 
 -- | Plutus script for verifying a rollup state transition.
 {-# INLINABLE untypedRollup #-}
@@ -94,26 +102,33 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Get the fee output
     outFeeB = BI.head $ BI.tail outs
-    outFee = unsafeFromBuiltinData @TxOut outFeeB
+    addr''                  = BI.snd $ BI.unsafeDataAsConstr outFeeB
+    txOutDatum''            = BI.tail $ BI.tail addr''
+    txOutReferenceScript''  = BI.tail txOutDatum''
+    addr'         = unsafeFromBuiltinData @Address $ BI.head addr''
+    noOutputDatum = BI.fst $ BI.unsafeDataAsConstr $ BI.head txOutDatum''
+    scriptHashN   = BI.fst $ BI.unsafeDataAsConstr $ BI.head txOutReferenceScript''
 
     -- Get bridge outputs
     -- If the payment credential of the output coincides with the rollup payment credential, then this output transfers value to the rollup.
     -- Otherwise, it transfers value from the rollup.
-    bridgeOutputs =
-      filter (\case
-        TxOut _ _ (OutputDatumHash _) Nothing -> True
-        _                                     -> False)
-      $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail $ BI.tail outs
+    bridgeOutputsB = BI.mkList $
+      filter' (\x -> 
+        let x' = BI.snd $ BI.unsafeDataAsConstr x
+            txOutDatum' = BI.tail $ BI.tail x' 
+            txOutReferenceScript' = BI.tail txOutDatum'
+            outputDatumHash = BI.fst $ BI.unsafeDataAsConstr $ BI.head txOutDatum'
+            scriptHashNothing = BI.fst $ BI.unsafeDataAsConstr $ BI.head txOutReferenceScript'
+        in outputDatumHash == 1 && scriptHashNothing == 0)
+      $ BI.tail $ BI.tail $ BI.tail outs
 
     -- Extract redeemer from ScriptContext
     upateRollup = BI.snd $ BI.unsafeDataAsConstr $ BI.head scriptContextRedeemer'
     proof = unsafeFromBuiltinData @ProofBytes $ BI.head upateRollup
-    -- update = unsafeFromBuiltinData @[BuiltinByteString] $ BI.head $ BI.tail upateRollup
 
     stateB         = toBuiltinData $ toF state
     updateB        = BI.head $ BI.tail upateRollup
     feeValB        = BI.head $ BI.tail $ BI.snd $ BI.unsafeDataAsConstr outFeeB
-    bridgeOutputsB = toBuiltinData bridgeOutputs
 
     mkTuple4 a b c d =
         BI.mkList $
@@ -145,9 +160,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
     && out' == TxOut addr threadValue (OutputDatum (Datum $ mkI state')) Nothing
 
     -- Check the fee output
-    && case outFee of
-      TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
-      _                                    -> False
+    && noOutputDatum == 0 && scriptHashN == 0 && feeAddress == addr'
 
 -- rollup (RollupSetup _ _ threadValue _) ForwardValidation ctx =
 --   let
