@@ -166,7 +166,7 @@ costRollup x ps n = (n, cpu, mem)
     mem      = snd costsCek
 
 testUpdateSizes :: [Int]
-testUpdateSizes = [0, 50 .. 1000]
+testUpdateSizes = [0, 50 .. 2200]
 
 dataHeaders :: [String]
 dataHeaders = ["Update length", "Exec Steps", "Exec Memory"]
