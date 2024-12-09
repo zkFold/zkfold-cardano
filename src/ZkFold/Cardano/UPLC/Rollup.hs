@@ -66,7 +66,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     outs = BI.unsafeDataAsList $ BI.head $ BI.tail infBeforeReInputs
     refs = unsafeFromBuiltinData @[TxInInfo] $ BI.head infBeforeReInputs
-    
+
     scriptInfo = BI.unsafeDataAsConstr $ BI.head $ BI.tail scriptContextRedeemer
     trySpend   = BI.fst scriptInfo
     spendRef   = unsafeFromBuiltinData @TxOutRef $ BI.head $ BI.snd scriptInfo
