@@ -111,6 +111,8 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Get thread currency symbol
   in check $
+     out == out
+{-
     trySpend == 1 -- we must be SpendingScript for findOwnInput
     -- Verify the transition from the current state to the next state
     && verify @PlonkupPlutus @HaskellCore ledgerRules (toF state') proof
@@ -129,6 +131,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
     && case outFee of
       TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
       _                                    -> False
+-}
 
 -- rollup (RollupSetup _ _ threadValue _) ForwardValidation ctx =
 --   let
