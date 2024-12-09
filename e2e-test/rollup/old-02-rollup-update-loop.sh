@@ -6,6 +6,10 @@ set -e
 set -u
 set -o pipefail
 
+# THIS IS THE OLD LOOP ROUTINE.  KEEPING THIS FILE HERE BECAUSE IT
+# WILL BE THE BASIS FOR THE NEW LOOP LOGIC.
+exit 1
+
 sanchomagic=4
 assets=../assets
 keypath=./rollup/keys

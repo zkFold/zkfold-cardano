@@ -103,9 +103,9 @@ After performing the above initialization (on either SanchoNet or local testnet)
 ```shell
 ./rollup/01-rollup-init-transaction.sh
 ```
-2. Start rollup update loop:
+2. Start rollup update loop [currently only one rollup transaction]:
 ```shell
-./rollup/02-rollup-update-loop.sh
+./rollup/02-rollup-update-transaction.sh
 ```
 You will enter a loop of recurrent rollup updates.  To **stop**, execute (from another terminal)
 ```shell

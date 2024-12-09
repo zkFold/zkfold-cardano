@@ -13,6 +13,7 @@ module ZkFold.Cardano.UPLC
   , forwardingRewardCompiled
   , forwardingMintCompiled
   , rollupCompiled
+  , rollupDataCompiled
   , parkingSpotCompiled
   ) where
 
@@ -29,6 +30,7 @@ import           ZkFold.Cardano.UPLC.ForwardingScripts  (untypedForwardingMint, 
 import           ZkFold.Cardano.UPLC.PlonkVerifierToken (untypedPlonkVerifierToken)
 import           ZkFold.Cardano.UPLC.PlonkVerifierTx    (untypedPlonkVerifierTx)
 import           ZkFold.Cardano.UPLC.Rollup             (RollupSetup, untypedParkingSpot, untypedRollup)
+import           ZkFold.Cardano.UPLC.RollupData         (untypedRollupData)
 
 
 plonkVerifierTxCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
@@ -59,6 +61,10 @@ rollupCompiled :: RollupSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 rollupCompiled computation =
     $$(compile [|| untypedRollup ||])
     `unsafeApplyCode` liftCodeDef computation
+
+rollupDataCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
+rollupDataCompiled =
+    $$(compile [|| untypedRollupData ||])
 
 parkingSpotCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
 parkingSpotCompiled tag =
