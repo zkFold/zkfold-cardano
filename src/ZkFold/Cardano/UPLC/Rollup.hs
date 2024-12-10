@@ -23,6 +23,7 @@ import           ZkFold.Cardano.OnChain.BLS12_381.F       (toF)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
+import qualified PlutusTx.List as Data.List
 
 data RollupSetup = RollupSetup
   { rsLedgerRules  :: SetupBytes
@@ -51,31 +52,42 @@ data RollupRedeemer =
 makeIsDataIndexed ''RollupRedeemer [('UpdateRollup, 0)]
 
 findOwnInput' :: [TxInInfo] -> TxOutRef -> Maybe TxInInfo
-findOwnInput' txInfoInputs txOutRef = find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
+findOwnInput' txInfoInputs txOutRef = Data.List.find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
 {-# INLINABLE findOwnInput' #-}
 
 -- | Plutus script for verifying a rollup state transition.
 {-# INLINABLE untypedRollup #-}
 untypedRollup :: RollupSetup -> BuiltinData -> BuiltinUnit
 untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx' =
-  let
-    -- Extracting transaction builtin fields
+  let    
+    -- Extracting ScriptContext general fields
     scriptContextTxInfo   = BI.snd $ BI.unsafeDataAsConstr ctx'
     scriptContextRedeemer = BI.tail scriptContextTxInfo
-    infBeforeReInputs     = BI.tail $ BI.snd $ BI.unsafeDataAsConstr $ BI.head scriptContextTxInfo
 
-    outs = BI.unsafeDataAsList $ BI.head $ BI.tail infBeforeReInputs
-    refs = unsafeFromBuiltinData @[TxInInfo] $ BI.head infBeforeReInputs
+    -- Extracting transaction builtin fields
+    info              = BI.head scriptContextTxInfo
+    infoFields        = BI.snd $ BI.unsafeDataAsConstr info
+    infBeforeReInputs = BI.tail infoFields
+    infoBeforeOutputs = BI.tail infBeforeReInputs
 
+    -- Extracting transaction data
+    ins  = BI.head infoFields
+    refs = BI.head infBeforeReInputs
+
+    outs = BI.unsafeDataAsList $ BI.head $ BI.tail $ BI.tail infoBeforeOutputs
+    txInfoInputs          = unsafeFromBuiltinData @[TxInInfo] ins
+    txInfoReferenceInputs = unsafeFromBuiltinData @[TxInInfo] refs
+
+    -- Extracting ScriptInfo
     scriptInfo = BI.unsafeDataAsConstr $ BI.head $ BI.tail scriptContextRedeemer
     trySpend   = BI.fst scriptInfo
     spendRef   = unsafeFromBuiltinData @TxOutRef $ BI.head $ BI.snd scriptInfo
 
-    -- Extract redeemer from ScriptContext
+    -- Extract Redeemer from ScriptContext
     (UpdateRollup proof update) = unsafeFromBuiltinData @RollupRedeemer $ BI.head scriptContextRedeemer
 
     -- Get the current rollup output
-    out = txInInfoResolved $ case findOwnInput' refs spendRef of
+    out = txInInfoResolved $ case findOwnInput' txInfoInputs spendRef of
       Just j -> j
       _      -> traceError "rollup: no input"
 
@@ -88,7 +100,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
     update' =
       map (unTokenName . fst) $
       concatMap toList $
-      mapMaybe (lookup dataCurrency . getValue . txOutValue . txInInfoResolved) refs
+      mapMaybe (lookup dataCurrency . getValue . txOutValue . txInInfoResolved) txInfoReferenceInputs
 
     -- Get the next rollup output
     out' = unsafeFromBuiltinData @TxOut $ BI.head outs
@@ -109,9 +121,10 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
 
-    -- Get thread currency symbol
   in check $
-    trySpend == 1 -- we must be SpendingScript for findOwnInput
+    -- Must be SpendingScript for findOwnInput
+    trySpend == 1
+
     -- Verify the transition from the current state to the next state
     && verify @PlonkupPlutus @HaskellCore ledgerRules (toF state') proof
 
