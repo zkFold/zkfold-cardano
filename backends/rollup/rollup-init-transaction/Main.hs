@@ -18,7 +18,6 @@ import qualified Data.Text                               as T
 import qualified Data.Text.Encoding                      as TE
 import           GHC.ByteOrder                           (ByteOrder (..))
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
-import qualified PlutusLedgerApi.V2                      as V2
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins                       (byteStringToInteger)
@@ -65,7 +64,7 @@ saveRollupPlutus path oref addr = do
   let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
       F iniState'                = iniState
       nextState                  = toF . byteStringToInteger BigEndian $ dataToBlake
-                                   (iniState, update, lovelaceValue $ V2.Lovelace 15000000)
+                                   (iniState, update, lovelaceValue $ Lovelace 15000000)
       F nextState'               = nextState
       (_, _, proof)              = stateCheckVerificationBytes x ps nextState
 
@@ -74,7 +73,7 @@ saveRollupPlutus path oref addr = do
       rollupSetup = RollupSetup
                     { rsLedgerRules  = ledgerRules
                     , rsDataCurrency = currencySymbolOf rollupDataCompiled
-                    , rsThreadValue  = lovelaceValue (V2.Lovelace 3000000) <> singleton threadCS threadName 1
+                    , rsThreadValue  = lovelaceValue (Lovelace 3000000) <> singleton threadCS threadName 1
                     , rsFeeAddress   = addr
                     }
 

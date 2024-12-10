@@ -15,6 +15,7 @@ import           PlutusTx                                 (makeIsDataIndexed, ma
 import           PlutusTx.AssocMap                        (lookup, toList)
 import           PlutusTx.Builtins                        (mkI, unsafeDataAsI)
 import qualified PlutusTx.Builtins.Internal               as BI
+import qualified PlutusTx.List                            as Data.List
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
 
@@ -23,7 +24,6 @@ import           ZkFold.Cardano.OnChain.BLS12_381.F       (toF)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
-import qualified PlutusTx.List as Data.List
 
 data RollupSetup = RollupSetup
   { rsLedgerRules  :: SetupBytes
@@ -59,7 +59,7 @@ findOwnInput' txInfoInputs txOutRef = Data.List.find (\TxInInfo{txInInfoOutRef} 
 {-# INLINABLE untypedRollup #-}
 untypedRollup :: RollupSetup -> BuiltinData -> BuiltinUnit
 untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx' =
-  let    
+  let
     -- Extracting ScriptContext general fields
     scriptContextTxInfo   = BI.snd $ BI.unsafeDataAsConstr ctx'
     scriptContextRedeemer = BI.tail scriptContextTxInfo
