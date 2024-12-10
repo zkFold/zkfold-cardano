@@ -25,7 +25,7 @@ protocolParams=$assets/protocol.json
 stateA=$assets/datumA.cbor
 rollupRedeemerA=$assets/rollupRedeemerA.cbor
 
-rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
+rollupScript=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#0
 rollupScriptFile=$assets/rollup.plutus
 
 rollupLovelaceValue=3000000  # Value (in lovelaces) to be transfered with each rollup
@@ -43,8 +43,8 @@ echo ""
 # cabal run rollup-update-loop
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
-inRB=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutB.tx")#0
-inData=$(cardano-cli transaction txid --tx-file "$keypath/dataRef.tx")#0
+inRB=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOutB.tx")#0
+inData=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef.tx")#0
 
 cardano-cli conway transaction build \
   --testnet-magic $mN \
@@ -72,7 +72,7 @@ cardano-cli conway transaction submit \
   --testnet-magic $mN \
   --tx-file $keypath/rollupOutA.tx
 
-rollupTx=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutA.tx")
+rollupTx=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOutA.tx")
 rollupOut=$rollupTx#0
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/rollup.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$rollupOut" 'has($key) | tostring')
