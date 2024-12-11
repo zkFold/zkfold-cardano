@@ -15,7 +15,6 @@ import           PlutusTx                                 (makeIsDataIndexed, ma
 import           PlutusTx.AssocMap                        (lookup, toList)
 import           PlutusTx.Builtins                        (mkI, unsafeDataAsI)
 import qualified PlutusTx.Builtins.Internal               as BI
-import qualified PlutusTx.List                            as Data.List
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
 
@@ -51,9 +50,9 @@ data RollupRedeemer =
 -- makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('ForwardValidation,1),('CombineValue,2),('AdjustStake,3),('UpgradeScript,4)]
 makeIsDataIndexed ''RollupRedeemer [('UpdateRollup, 0)]
 
-findOwnInput' :: [TxInInfo] -> TxOutRef -> Maybe TxInInfo
-findOwnInput' txInfoInputs txOutRef = Data.List.find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
 {-# INLINABLE findOwnInput' #-}
+findOwnInput' :: [TxInInfo] -> TxOutRef -> Maybe TxInInfo
+findOwnInput' txInfoInputs txOutRef = find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
 
 -- | Plutus script for verifying a rollup state transition.
 {-# INLINABLE untypedRollup #-}
@@ -68,13 +67,12 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
     info              = BI.head scriptContextTxInfo
     infoFields        = BI.snd $ BI.unsafeDataAsConstr info
     infBeforeReInputs = BI.tail infoFields
-    infoBeforeOutputs = BI.tail infBeforeReInputs
 
     -- Extracting transaction data
     ins  = BI.head infoFields
     refs = BI.head infBeforeReInputs
 
-    outs = BI.unsafeDataAsList $ BI.head $ BI.tail $ BI.tail infoBeforeOutputs
+    outs = BI.unsafeDataAsList $ BI.head $ BI.tail infBeforeReInputs
     txInfoInputs          = unsafeFromBuiltinData @[TxInInfo] ins
     txInfoReferenceInputs = unsafeFromBuiltinData @[TxInInfo] refs
 
@@ -120,6 +118,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
+    -- state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, feeVal)
 
   in check $
     -- Must be SpendingScript for findOwnInput

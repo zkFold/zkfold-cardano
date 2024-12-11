@@ -64,7 +64,7 @@ saveRollupPlutus path oref addr = do
   let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
       F iniState'                = iniState
       nextState                  = toF . byteStringToInteger BigEndian $ dataToBlake
-                                   (iniState, update, lovelaceValue $ Lovelace 15000000)
+                                   (iniState, update, [] :: [V3.TxOut], lovelaceValue $ Lovelace 15000000)
       F nextState'               = nextState
       (_, _, proof)              = stateCheckVerificationBytes x ps nextState
 
