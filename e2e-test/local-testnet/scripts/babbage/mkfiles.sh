@@ -115,7 +115,7 @@ $SED -i "${ROOT}/configuration.yaml" \
 # Because in Babbage the overlay schedule and decentralization parameter
 # are deprecated, we must use the "create-staked" cli command to create
 # SPOs in the ShelleyGenesis
-$CARDANO_CLI genesis create-staked --genesis-dir "${ROOT}" \
+$CARDANO_CLI conway genesis create-staked --genesis-dir "${ROOT}" \
   --testnet-magic "${NETWORK_MAGIC}" \
   --gen-pools 3 \
   --supply            2000000000000 \

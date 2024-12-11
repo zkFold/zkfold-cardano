@@ -57,7 +57,7 @@ cardano-cli conway transaction submit \
   --tx-file $keypath/tx.signed \
   --testnet-magic $mN
 
-lastTx=$(cardano-cli transaction txid --tx-file "$keypath/tx.signed")
+lastTx=$(cardano-cli conway transaction txid --tx-file "$keypath/tx.signed")
 lastTxOut=$lastTx#0
 
 while true; do

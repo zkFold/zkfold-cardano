@@ -6,32 +6,41 @@ cradle:
     - path: "./test"
       component: "zkfold-cardano:test:test"
 
-    - path: "./benchs/bench-cpu-mem"
+    - path: "./benchs/bench-cpu-mem/Main.hs"
       component: "zkfold-cardano:bench:bench-cpu-mem"
-    
-    - path: "./benchs/bench-rollup"
+
+    - path: "./benchs/bench-cpu-mem/Bench/Statistics.hs"
+      component: "zkfold-cardano:bench:bench-cpu-mem"
+
+    - path: "./benchs/bench-rollup/Main.hs"
       component: "zkfold-cardano:bench:bench-rollup"
 
-    - path: "./backends/symbolic/symbolic-init-transaction"
+    - path: "./benchs/bench-rollup/Bench/Statistics.hs"
+      component: "zkfold-cardano:bench:bench-rollup"
+
+    - path: "./benchs/bench-rollup/Bench/Utils.hs"
+      component: "zkfold-cardano:bench:bench-rollup"
+
+    - path: "./backends/symbolic/symbolic-init-transaction/Main.hs"
       component: "zkfold-cardano:exe:symbolic-init-transaction"
 
-    - path: "./backends/symbolic/symbolic-transfer-transaction"
+    - path: "./backends/symbolic/symbolic-transfer-transaction/Main.hs"
       component: "zkfold-cardano:exe:symbolic-transfer-transaction"
 
-    - path: "./backends/symbolic/symbolic-withdraw-transaction"
+    - path: "./backends/symbolic/symbolic-withdraw-transaction/Main.hs"
       component: "zkfold-cardano:exe:symbolic-withdraw-transaction"
 
-    - path: "./backends/plonk/plonk-init-transaction"
+    - path: "./backends/plonk/plonk-init-transaction/Main.hs"
       component: "zkfold-cardano:exe:plonk-init-transaction"
 
-    - path: "./backends/plonk/plonk-transfer-transaction"
+    - path: "./backends/plonk/plonk-transfer-transaction/Main.hs"
       component: "zkfold-cardano:exe:plonk-transfer-transaction"
 
-    - path: "./backends/plonk/plonk-minting-transaction"
+    - path: "./backends/plonk/plonk-minting-transaction/Main.hs"
       component: "zkfold-cardano:exe:plonk-minting-transaction"
 
-    - path: "./backends/rollup/rollup-init-transaction"
+    - path: "./backends/rollup/rollup-init-transaction/Main.hs"
       component: "zkfold-cardano:exe:rollup-init-transaction"
 
-    - path: "./backends/rollup/rollup-update-loop"
-      component: "zkfold-cardano:exe:rollup-update-loop"
+    - path: "./backends/rollup/rollup-init-transaction/Backend/NFT.hs"
+      component: "zkfold-cardano:exe:rollup-init-transaction"
