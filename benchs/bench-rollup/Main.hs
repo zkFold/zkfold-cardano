@@ -48,7 +48,7 @@ sampleThreadValue :: Value
 sampleThreadValue = singleton threadCurrency threadTokenName 1
   where
     threadCurrency  = CurrencySymbol (fromString "17ac801d2ce81747e038d69bc0ccc861dcaad0d10750df4a3897b66d" :: BuiltinByteString)
-    threadTokenName = TokenName (fromString "7a6b466f6c64" :: BuiltinByteString)  -- token name: "zkFold"
+    threadTokenName = TokenName (fromString "zkFold" :: BuiltinByteString)
 
 -- | Value containing "update" token names.
 updateValue :: Int -> Value
@@ -166,7 +166,7 @@ costRollup x ps n = (n, cpu, mem)
     mem      = snd costsCek
 
 testUpdateSizes :: [Int]
-testUpdateSizes = [0, 50 .. 1650]
+testUpdateSizes = [0, 25 .. 500]
 
 dataHeaders :: [String]
 dataHeaders = ["Update length", "Exec Steps", "Exec Memory"]
@@ -196,6 +196,7 @@ main = do
   BL.writeFile (path </> "test-data" </> "rollup-raw-contract-data.json") (encode contract)
 
   putStrLn $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n"
+  putStrLn "Please wait for benchmarking to complete...\n"
 
   writeCSV dataOutputFile $ costRollup x ps <$> testUpdateSizes
   printCSVWithHeaders dataOutputFile dataHeaders

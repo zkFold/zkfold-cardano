@@ -118,7 +118,6 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
-    -- state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, feeVal)
 
   in check $
     -- Must be SpendingScript for findOwnInput

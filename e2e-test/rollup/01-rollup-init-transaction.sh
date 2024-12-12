@@ -135,6 +135,8 @@ cardano-cli conway transaction submit \
     --testnet-magic $mN \
     --tx-file $keypath/dataRef.tx
 
+cp $keypath/dataRef.tx $keypath/prevRollupOutA.tx
+
 dataRefTx=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef.tx")
 dataRefOut=$dataRefTx#0
 while true; do

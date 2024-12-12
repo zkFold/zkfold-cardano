@@ -6,10 +6,6 @@ set -e
 set -u
 set -o pipefail
 
-# THIS IS THE OLD LOOP ROUTINE.  KEEPING THIS FILE HERE BECAUSE IT
-# WILL BE THE BASIS FOR THE NEW LOOP LOGIC.
-exit 1
-
 sanchomagic=4
 assets=../assets
 keypath=./rollup/keys
@@ -26,6 +22,8 @@ fi
 
 protocolParams=$assets/protocol.json
 
+aliceIdx=1
+counter=0
 stateA=$assets/datumA.cbor
 stateB=$assets/datumB.cbor
 rollupRedeemerA=$assets/redeemerRollupA.cbor
@@ -35,16 +33,20 @@ rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx"
 rollupScriptFile=$assets/rollup.plutus
 rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
 
+nftPolicy=$assets/nftPolicy.plutus
+nftPolicyId=$(cardano-cli conway transaction policyid --script-file $nftPolicy)
+
 #-------------------------------- :numeric parameters: -------------------------------
 
-rollupValue=3000000  # Value (in lovelaces) to be transfered with each rollup
+rollupLovelaceValue=3000000  # Value (in lovelaces) to be transfered with each rollup
+feeValue=15000000  # rollup fee
 
 # ----- Linear Model for Exec Units -----
 # (cpu steps of Tx B) = (cpu steps of Tx A) + incCpu
 # (memory of Tx B)    = (memory of Tx A) + incMem
 
-incCpu=14046004
-incMem=36520
+incCpu=23697258
+incMem=91412
 
 #-------------------------------- :rollup loop: -------------------------------
 
@@ -53,6 +55,7 @@ printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
     inRB=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutB.tx")#0
+    inData=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef.tx")#0
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/rollup.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$inRB" 'has($key) | tostring')
 
     if [ $txOnChain == "false" ]; then
@@ -68,7 +71,7 @@ while $loop; do
 	echo "Building first Tx..."
 	echo ""
 
-	in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
+	in1=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOutB.tx")#$aliceIdx
 
 	# Log execution units for first Tx
 	cardano-cli conway transaction build \
@@ -79,9 +82,11 @@ while $loop; do
 	  --spending-plutus-script-v3 \
 	  --spending-reference-tx-in-inline-datum-present \
 	  --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemerA \
+	  --read-only-tx-in-reference $inData \
 	  --tx-in-collateral $in1 \
-	  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
+	  --tx-out "$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.7a6b466f6c64" \
 	  --tx-out-inline-datum-cbor-file $stateA \
+	  --tx-out "$(cat $keypath/alice.addr) + $feeValue lovelace" \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --calculate-plutus-script-cost $keypath/exec-units-A.log > /dev/null
 
@@ -97,9 +102,11 @@ while $loop; do
 	  --spending-plutus-script-v3 \
 	  --spending-reference-tx-in-inline-datum-present \
 	  --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemerA \
+	  --read-only-tx-in-reference $inData \
 	  --tx-in-collateral $in1 \
-	  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
+	  --tx-out "$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.7a6b466f6c64" \
 	  --tx-out-inline-datum-cbor-file $stateA \
+	  --tx-out "$(cat $keypath/alice.addr) + $feeValue lovelace" \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --out-file $keypath/rollupOutA.txbody
 
@@ -116,22 +123,23 @@ while $loop; do
 	echo "Building second Tx..."
 	echo ""
 
-	in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[1]')
+        in2=$(cardano-cli conway transaction txid --tx-file "$keypath/prevRollupOutA.tx")#$aliceIdx
 	inRA=$(cardano-cli transaction txid --tx-file "$keypath/rollupOutA.tx")#0
 
-	total2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r '. | to_entries[1].value.value.lovelace')
-	totalUtxoVal=$(($total2 + $rollupValue))
+	total2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
+		     jq -r --arg oref "$in2" '.[$oref].value.lovelace')
+	totalUtxoVal=$(($total2 + $rollupLovelaceValue))
 	collateralVal=5000000
 	collateralExcess=$(($total2 - $collateralVal))
 
-	updateLength=$(cat "$assets/last-update-length.log")
+	# updateLength=$(cat "$assets/last-update-length.log")
 	execUnits="($((execCpuA + incCpu)), $((execMemA + incMem)))"
 
 	# Build second Tx
 	cardano-cli conway transaction build-estimate \
 	  --shelley-key-witnesses 1 \
 	  --protocol-params-file $protocolParams \
-	  --total-utxo-value $totalUtxoVal \
+	  --total-utxo-value "$totalUtxoVal lovelace + 1 $nftPolicyId.7a6b466f6c64" \
 	  --tx-in $in2 \
 	  --tx-in $inRA \
 	  --spending-tx-in-reference $rollupScript \
@@ -139,10 +147,12 @@ while $loop; do
 	  --spending-reference-tx-in-inline-datum-present \
 	  --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemerB \
 	  --spending-reference-tx-in-execution-units "$execUnits" \
+	  --read-only-tx-in-reference $inData \
 	  --tx-in-collateral $in2 \
 	  --tx-out-return-collateral "$(cat $keypath/alice.addr) + $collateralExcess lovelace" \
-	  --tx-out "$(cat $keypath/rollup.addr) + $rollupValue lovelace" \
+	  --tx-out "$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.7a6b466f6c64" \
 	  --tx-out-inline-datum-cbor-file $stateB \
+	  --tx-out "$(cat $keypath/alice.addr) + $feeValue lovelace" \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --reference-script-size $rollupVerifierSize \
 	  --out-file $keypath/rollupOutB.txbody
@@ -176,14 +186,24 @@ while $loop; do
 	    --testnet-magic $mN \
 	    --tx-file $keypath/nextRollupOutB.tx
 
+#-------------------------------- :rollup summary: -------------------------------
+
+	counter=$(($counter + 1))
+
 	echo ""
-	echo "Rollup-update batch completed.  Last update length: $updateLength."
+	echo "Rollup-update batch completed.  Rollups completed: $((2 * counter))."  #  Last update length: $updateLength."
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/rollupOutA.tx)"
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOutB.tx)"
 	echo ""
 
+#-------------------------------- :cleanup before next batch: -------------------------------
+
+    aliceIdx=2
+	
+    mv $keypath/rollupOutA.tx $keypath/prevRollupOutA.tx
     mv $keypath/nextRollupOutB.tx $keypath/rollupOutB.tx
     mv $assets/newRollupInfoA.json $assets/rollupInfoA.json
+
     fi
     loop=$(cat $keypath/rollup-loop.flag)
 done

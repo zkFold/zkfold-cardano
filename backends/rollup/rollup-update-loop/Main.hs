@@ -1,5 +1,10 @@
 module Main where
 
+import           Data.String                             (IsString (fromString))
+-- import           PlutusTx.Builtins                       (byteStringToInteger)
+import           PlutusLedgerApi.V1.Value                (lovelaceValue)
+-- import           GHC.ByteOrder                           (ByteOrder(..))
+
 import           Cardano.Api                                 (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
 import           Cardano.Api.Ledger                          (toCBOR)
 import           Cardano.Api.Shelley                         (fromPlutusData, scriptDataFromJsonDetailedSchema,
@@ -12,18 +17,19 @@ import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import qualified PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (ToData (..))
-import           Prelude                                     (Either (..), IO, concat, error, length, putStr, return,
-                                                              show, ($), (++), (.), (<$>), (==))
+import           Prelude                                     (Either (..), IO, error, return,
+                                                              ($), (.), (<$>), (>>), (==))
 import           System.Directory                            (getCurrentDirectory)
+import           System.Exit                                 (exitFailure)
 import           System.FilePath                             (takeFileName, (</>))
-import qualified System.IO                                   as IO
+-- import qualified System.IO                                   as IO
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
-import           ZkFold.Cardano.OnChain.BLS12_381            (toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
 
@@ -31,21 +37,22 @@ nextRollup :: Fr -> RollupInfo -> IO RollupInfo
 nextRollup x rollupInfo = do
   ps <- generate arbitrary
 
-  putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
+  -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let nextState     = riNextState rollupInfo
-      nextUpdate    = concat [rrUpdate . riRedeemer $ rollupInfo, [nextState]]
-      nextState'    = toInput $ dataToBlake (nextState, nextUpdate)
-      (_, _, proof) = stateCheckVerificationBytes x ps nextState'
-      nextRedeemer  = RollupRedeemer
-                      { rrProof   = proof
-                      , rrAddress = rrAddress . riRedeemer $ rollupInfo
-                      , rrValue   = rrValue . riRedeemer $ rollupInfo
-                      , rrState   = nextState
-                      , rrUpdate  = nextUpdate
-                      }
+  let nextState1 = riNextState rollupInfo
+      dataUpdate = dataToBlake [fromString "deadbeef" :: V3.BuiltinByteString]
+      nextUpdate = [dataUpdate]
+      nextState2 = toInput $ dataToBlake ( nextState1
+                                         , nextUpdate
+                                         , [] :: [V3.TxOut]
+                                         , lovelaceValue $ V3.Lovelace 15000000
+                                         )
 
-  return $ RollupInfo nextState' nextRedeemer
+  let (_, _, proof2)  = stateCheckVerificationBytes x ps nextState2
+      rollupRedeemer2 = UpdateRollup proof2 nextUpdate
+
+  return $ RollupInfo nextState2 rollupRedeemer2
+
 
 -- | Will process two simultaneous transactions 'A' & 'B', uploading states 'nextStateA', 'nextStateB'
 -- with redeemers 'redeemerRollupA', 'redeemerRollupB', respectively.
@@ -71,16 +78,19 @@ main = do
       rollupInfoB@(RollupInfo nextStateB redeemerRollupB) <- nextRollup x rollupInfoA
       newRollupInfoA                                      <- nextRollup x rollupInfoB
 
-      BS.writeFile (assetsPath </> "datumA.cbor") $ dataToCBOR nextStateA
+      let F nextStateA' = nextStateA
+          F nextStateB' = nextStateB
+
+      BS.writeFile (assetsPath </> "datumA.cbor") $ dataToCBOR nextStateA'
       BS.writeFile (assetsPath </> "redeemerRollupA.cbor") $ dataToCBOR redeemerRollupA
 
-      BS.writeFile (assetsPath </> "datumB.cbor") $ dataToCBOR nextStateB
+      BS.writeFile (assetsPath </> "datumB.cbor") $ dataToCBOR nextStateB'
       BS.writeFile (assetsPath </> "redeemerRollupB.cbor") $ dataToCBOR redeemerRollupB
-      IO.writeFile (assetsPath </> "last-update-length.log") . show . length . rrUpdate $ redeemerRollupB
+      -- IO.writeFile (assetsPath </> "last-update-length.log") . show . length . rrUpdate $ redeemerRollupB
 
       BS.writeFile (assetsPath </> "newRollupInfoA.json") $ prettyPrintJSON $ dataToJSON newRollupInfoA
 
-    Left _                      -> error "JSON error: unreadable 'rollupInfoA.json'"
+    Left _                      -> error "JSON error: unreadable 'rollupInfoA.json'" >> exitFailure
 
 
 ----- HELPER FUNCTIONS -----
