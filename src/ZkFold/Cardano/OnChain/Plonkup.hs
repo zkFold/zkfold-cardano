@@ -8,6 +8,9 @@
 
 module ZkFold.Cardano.OnChain.Plonkup where
 
+import           Data.Functor.Rep                            (Rep, Representable)
+import           GHC.Base                                    (Ord)
+import           GHC.Generics                                (Par1, U1)
 import           PlutusTx                                    (UnsafeFromData (..))
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                            (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
@@ -183,11 +186,13 @@ instance NonInteractiveProof PlonkupPlutus core where
         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one)
 
 instance
-        ( KnownNat i
+        ( Representable p
+        , Representable i
         , KnownNat n
-        , SetupVerify (Plonkup i n 1 c1 c2 ts) ~ PlonkupVerifierSetup i n 1 c1 c2
+        , Ord (Rep i)
+        , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2
         , CoreFunction BLS12_381_G1 core
-        ) => CompatibleNonInteractiveProofs (PlonkupN i n) PlonkupPlutus core where
+        ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus core where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof

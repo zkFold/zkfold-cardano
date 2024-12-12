@@ -1,14 +1,15 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE TypeOperators #-}
 
 module ZkFold.Cardano.OffChain.Plonkup where
 
+import           GHC.Generics
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude                                  (($), (.))
 import           Prelude                                           (fromIntegral)
 
 import           ZkFold.Base.Algebra.Basic.Number
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2)
-import qualified ZkFold.Base.Data.Vector                           as V
 import           ZkFold.Base.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                      (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Input
@@ -22,9 +23,9 @@ import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN i n = Plonkup i n 1 BLS12_381_G1 BLS12_381_G2 BuiltinByteString
+type PlonkupN p i n = Plonkup p i n Par1 BLS12_381_G1 BLS12_381_G2 BuiltinByteString
 
-mkSetup :: forall i n . KnownNat n => SetupVerify (PlonkupN i n) -> SetupBytes
+mkSetup :: forall p i n . KnownNat n => SetupVerify (PlonkupN p i n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
@@ -46,10 +47,10 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmT1_bytes = convertG1 cmT1
     }
 
-mkInput :: Input (PlonkupN i n) -> InputBytes
-mkInput (PlonkupInput input) = F . convertZp $ V.head input
+mkInput :: Input (PlonkupN p i n) -> InputBytes
+mkInput (PlonkupInput input) = F . convertZp $ unPar1 input
 
-mkProof :: Proof (PlonkupN i n) -> ProofBytes
+mkProof :: Proof (PlonkupN p i n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes
   { cmA_bytes     = convertG1 cmA
   , cmB_bytes     = convertG1 cmB
