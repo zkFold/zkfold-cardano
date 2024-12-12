@@ -1,10 +1,5 @@
 module Main where
 
-import           Data.String                             (IsString (fromString))
--- import           PlutusTx.Builtins                       (byteStringToInteger)
-import           PlutusLedgerApi.V1.Value                (lovelaceValue)
--- import           GHC.ByteOrder                           (ByteOrder(..))
-
 import           Cardano.Api                                 (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
 import           Cardano.Api.Ledger                          (toCBOR)
 import           Cardano.Api.Shelley                         (fromPlutusData, scriptDataFromJsonDetailedSchema,
@@ -15,14 +10,15 @@ import qualified Data.Aeson                                  as Aeson
 import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
+import           Data.String                                 (IsString (fromString))
+import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import qualified PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (ToData (..))
-import           Prelude                                     (Either (..), IO, error, return,
-                                                              ($), (.), (<$>), (>>), (==))
+import           Prelude                                     (Either (..), IO, error, return, ($), (.), (<$>), (==),
+                                                              (>>))
 import           System.Directory                            (getCurrentDirectory)
 import           System.Exit                                 (exitFailure)
 import           System.FilePath                             (takeFileName, (</>))
--- import qualified System.IO                                   as IO
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 

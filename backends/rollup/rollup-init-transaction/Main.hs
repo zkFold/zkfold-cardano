@@ -3,7 +3,7 @@ module Main where
 import           Backend.NFT                             (nftPolicyCompiled)
 import           Cardano.Api
 import           Cardano.Api.Ledger                      (toCBOR)
-import           Cardano.Api.Shelley                     (PlutusScript(..), fromPlutusData,
+import           Cardano.Api.Shelley                     (PlutusScript (..), fromPlutusData,
                                                           scriptDataToJsonDetailedSchema,
                                                           shelleyPayAddrToPlutusPubKHash)
 import           Codec.CBOR.Write                        (toStrictByteString)
@@ -16,21 +16,21 @@ import qualified Data.ByteString.Lazy                    as BL
 import           Data.String                             (IsString (fromString))
 import qualified Data.Text                               as T
 import qualified Data.Text.Encoding                      as TE
-import           GHC.ByteOrder                           (ByteOrder(..))
+import           GHC.ByteOrder                           (ByteOrder (..))
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins                       (byteStringToInteger)
 import           PlutusTx.Prelude                        ((<>))
-import           Prelude                                 (Bool(..), Either(..), FilePath, IO, Integer, Maybe(..),
-                                                          Show(..), String, concat, const, either, maybe, putStr, read,
+import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
+                                                          Show (..), String, concat, const, either, maybe, putStr, read,
                                                           return, ($), (++), (.), (>>))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.Exit                             (exitFailure)
 import           System.FilePath                         (takeFileName, (</>))
 import qualified System.IO                               as IO
-import           Test.QuickCheck.Arbitrary               (Arbitrary(..))
+import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 import           Text.Parsec                             (many1)
 import           Text.Parsec.Char                        (digit)
@@ -39,12 +39,12 @@ import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract(..), RollupInfo(..))
-import           ZkFold.Cardano.OnChain.BLS12_381        (F(..), toF)
+import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
+import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toF)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, rollupCompiled, rollupDataCompiled)
-import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer(..), RollupSetup(..))
-import           ZkFold.Cardano.UPLC.RollupData          (RollupDataRedeemer(..))
+import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), RollupSetup (..))
+import           ZkFold.Cardano.UPLC.RollupData          (RollupDataRedeemer (..))
 
 
 saveRollupPlutus :: FilePath -> TxOutRef -> V3.Address -> IO ()
