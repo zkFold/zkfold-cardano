@@ -50,7 +50,7 @@ main = do
 
   let contract = IdentityCircuitContract x ps
 
-  BL.writeFile (path </> "test-data" </> "plonk-raw-contract-data.json") $ encode contract
+  BL.writeFile (path </> "test-data" </> "symbolic-contract-data.json") $ encode contract
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 

@@ -38,7 +38,7 @@ main = do
         "e2e-test"           -> ".."
         _                    -> "."
 
-  IdentityCircuitContract x ps <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
+  IdentityCircuitContract x ps <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "symbolic-contract-data.json")
 
   let (setup, _, _) = identityCircuitVerificationBytes x ps
 
