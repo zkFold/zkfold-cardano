@@ -8,6 +8,7 @@ module ZkFold.Cardano.OffChain.E2E where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)
 import           GHC.Generics                                (Generic)
+import           PlutusLedgerApi.V3                          (BuiltinByteString)
 import           PlutusTx                                    (makeIsDataIndexed)
 import           Prelude                                     (Show)
 
@@ -36,8 +37,10 @@ deriving newtype instance FromJSON (V.Vector 19 Fr)
 deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
 deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)
 
-data RollupInfo = RollupInfo { riNextState :: F, riRedeemer :: RollupRedeemer }
-  deriving stock (Show, Generic)
+data RollupInfo = RollupInfo { riDataUpdate :: [BuiltinByteString]
+                             , riProtoState :: BuiltinByteString
+                             , riRedeemer   :: RollupRedeemer
+                             } deriving stock (Show, Generic)
 
 makeIsDataIndexed ''RollupInfo [('RollupInfo,0)]
 

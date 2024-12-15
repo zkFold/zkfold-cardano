@@ -331,6 +331,8 @@ executable rollup-update-loop
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-update-loop
+  other-modules:
+    Backend.Aux
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -339,6 +341,7 @@ executable rollup-update-loop
     cborg                          ,
     directory                      ,
     filepath                       ,
+    parsec                         ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     symbolic-base                  ,

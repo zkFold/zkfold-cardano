@@ -128,7 +128,9 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Compare the state updates
     -- Note: we want to have the full control over the order of data updates. That is why we pass `update` in the redeemer.
-    && sort update' == sort update
+    -- && sort update' == sort update
+    && head update `elem` update'
+    && length update <= length update'
 
     -- Check the current rollup output
     && val == threadValue
@@ -138,8 +140,8 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Check the fee output
     && case outFee of
-      TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
-      _                                    -> False
+         TxOut addr'' _ NoOutputDatum Nothing -> feeAddress == addr''
+         _                                    -> False
 
 -- rollup (RollupSetup _ _ threadValue _) ForwardValidation ctx =
 --   let

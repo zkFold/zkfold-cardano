@@ -1,7 +1,7 @@
 module Main where
 
 import           Backend.NFT                             (nftPolicyCompiled)
-import           Cardano.Api
+import           Cardano.Api                             hiding (Lovelace)
 import           Cardano.Api.Ledger                      (toCBOR)
 import           Cardano.Api.Shelley                     (PlutusScript (..), fromPlutusData,
                                                           scriptDataToJsonDetailedSchema,
@@ -16,36 +16,34 @@ import qualified Data.ByteString.Lazy                    as BL
 import           Data.String                             (IsString (fromString))
 import qualified Data.Text                               as T
 import qualified Data.Text.Encoding                      as TE
-import           GHC.ByteOrder                           (ByteOrder (..))
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
-import           PlutusTx.Builtins                       (byteStringToInteger)
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                                          Show (..), String, concat, const, either, maybe, putStr, read,
-                                                          return, ($), (++), (.), (>>))
+                                                          Show (..), String, const, either, error, maybe, putStr, read,
+                                                          return, ($), (++), (.))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
-import           System.Exit                             (exitFailure)
 import           System.FilePath                         (takeFileName, (</>))
-import qualified System.IO                               as IO
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 import           Text.Parsec                             (many1)
 import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
-import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
-import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toF)
+import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, rollupCompiled, rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), RollupSetup (..))
-import           ZkFold.Cardano.UPLC.RollupData          (RollupDataRedeemer (..))
 
+
+rollupFee, threadLovelace :: Lovelace
+rollupFee      = Lovelace 15000000
+threadLovelace = Lovelace  3000000
 
 saveRollupPlutus :: FilePath -> TxOutRef -> V3.Address -> IO ()
 saveRollupPlutus path oref addr = do
@@ -58,28 +56,28 @@ saveRollupPlutus path oref addr = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n"
 
-  let dataUpdate = dataToBlake [fromString "deadbeef" :: BuiltinByteString]
-      update     = [dataUpdate]
-
   let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
       F iniState'                = iniState
-      nextState                  = toF . byteStringToInteger BigEndian $ dataToBlake
-                                   (iniState, update, [] :: [V3.TxOut], lovelaceValue $ Lovelace 15000000)
-      (_, _, proof)              = stateCheckVerificationBytes x ps nextState
+
+      dataUpdate = [dataToBlake iniState]
+      update     = [dataToBlake dataUpdate]
+
+      protoNextState = dataToBlake (iniState, update, [] :: [V3.TxOut], lovelaceValue rollupFee)
+      nextState      = toInput protoNextState
+
+      (_, _, proof) = stateCheckVerificationBytes x ps nextState
 
   let threadCS    = currencySymbolOf $ nftPolicyCompiled oref
       threadName  = TokenName (fromString "zkFold" :: BuiltinByteString)
       rollupSetup = RollupSetup
                     { rsLedgerRules  = ledgerRules
                     , rsDataCurrency = currencySymbolOf rollupDataCompiled
-                    , rsThreadValue  = lovelaceValue (Lovelace 3000000) <> singleton threadCS threadName 1
+                    , rsThreadValue  = lovelaceValue threadLovelace <> singleton threadCS threadName 1
                     , rsFeeAddress   = addr
                     }
 
-  let rollupRedeemer     = UpdateRollup proof update
-      rollupDataRedeemer = NewData [fromString "deadbeef" :: BuiltinByteString]
-
-  let rollupInfoA = RollupInfo { riNextState = nextState, riRedeemer = rollupRedeemer }
+  let rollupRedeemer = UpdateRollup proof update
+      rollupInfo     = RollupInfo { riDataUpdate = dataUpdate, riProtoState = protoNextState, riRedeemer = rollupRedeemer }
 
   let assetsPath = path </> "assets"
 
@@ -87,10 +85,8 @@ saveRollupPlutus path oref addr = do
   savePlutus (assetsPath </> "rollupData.plutus") rollupDataCompiled
 
   BS.writeFile (assetsPath </> "unit.cbor") $ dataToCBOR ()
-  BS.writeFile (assetsPath </> "datumB.cbor") $ dataToCBOR iniState'
-  BS.writeFile (assetsPath </> "rollupInfoA.json") $ prettyPrintJSON $ dataToJSON rollupInfoA
-  BS.writeFile (assetsPath </> "dataRedeemer.cbor") $ dataToCBOR rollupDataRedeemer
-  IO.writeFile (assetsPath </> "dataTokenName.txt") . byteStringAsHex . fromBuiltin $ dataUpdate
+  BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR iniState'
+  BS.writeFile (assetsPath </> "rollupInfo.json") $ prettyPrintJSON $ dataToJSON rollupInfo
 
 saveParkingSpotPlutus :: FilePath -> IO ()
 saveParkingSpotPlutus path = savePlutus (path </> "assets" </> "parkingSpot.plutus") (parkingSpotCompiled 43)
@@ -125,9 +121,9 @@ main = do
 
           putStr "\nDone serializing plutus scripts and initializing state.\n\n"
 
-        Left err -> putStr ("parse error: " ++ show err ++ "\n") >> exitFailure
+        Left err -> error $ "parse error: " ++ show err
 
-    _ -> putStr "Error: please provide a pair of command-line string-arguments.\n" >> exitFailure
+    _ -> error "Error: please provide a pair of command-line string-arguments.\n"
 
 
 ----- HELPER FUNCTIONS -----
@@ -185,7 +181,3 @@ parseAddress addressStr = do
     pkh        <- maybe (Left "Failed to parse address pubkey hash") Right $
                   shelleyPayAddrToPlutusPubKHash shellyAddr
     return $ V3.Address (PubKeyCredential pkh) Nothing
-
--- | Get hex representation of bytestring
-byteStringAsHex :: BS.ByteString -> String
-byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs

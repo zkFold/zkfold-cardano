@@ -1,5 +1,6 @@
 module Main where
 
+import           Backend.Aux                                 (cardanoCliCode)
 import           Cardano.Api                                 (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
 import           Cardano.Api.Ledger                          (toCBOR)
 import           Cardano.Api.Shelley                         (fromPlutusData, scriptDataFromJsonDetailedSchema,
@@ -10,17 +11,22 @@ import qualified Data.Aeson                                  as Aeson
 import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
-import           Data.String                                 (IsString (fromString))
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import qualified PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (ToData (..))
-import           Prelude                                     (Either (..), IO, error, return, ($), (.), (<$>), (==),
-                                                              (>>))
+import           Prelude                                     (Either (..), Integer, IO, String,
+                                                              concat, error, length, read, return, show,
+                                                              ($), (.), (<$>), (++), (==))
 import           System.Directory                            (getCurrentDirectory)
-import           System.Exit                                 (exitFailure)
+import           System.Environment                          (getArgs)
 import           System.FilePath                             (takeFileName, (</>))
+import qualified System.IO                                   as IO
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
+import           Text.Parsec                                 (many1, parse)
+import           Text.Parsec.Char                            (digit)
+import           Text.Parsec.String                          (Parser)
+import           Text.Printf                                 (printf)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
@@ -28,6 +34,11 @@ import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitCon
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
+import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..))
+
+
+rollupFee :: V3.Lovelace
+rollupFee = V3.Lovelace 15000000
 
 nextRollup :: Fr -> RollupInfo -> IO RollupInfo
 nextRollup x rollupInfo = do
@@ -35,23 +46,22 @@ nextRollup x rollupInfo = do
 
   -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let nextState1 = riNextState rollupInfo
-      dataUpdate = dataToBlake [fromString "deadbeef" :: V3.BuiltinByteString]
-      nextUpdate = [dataUpdate]
-      nextState2 = toInput $ dataToBlake ( nextState1
-                                         , nextUpdate
-                                         , [] :: [V3.TxOut]
-                                         , lovelaceValue $ V3.Lovelace 15000000
-                                         )
+  let dataUpdate1 = riDataUpdate rollupInfo
+      update1     = [dataToBlake dataUpdate1]
 
-  let (_, _, proof2)  = stateCheckVerificationBytes x ps nextState2
-      rollupRedeemer2 = UpdateRollup proof2 nextUpdate
+      protoState1 = riProtoState rollupInfo
+      state1      = toInput protoState1
 
-  return $ RollupInfo nextState2 rollupRedeemer2
+      dataUpdate2 = protoState1 : dataUpdate1
+      update2     = dataToBlake dataUpdate2 : update1
 
+      protoState2 = dataToBlake (state1, update2, [] :: [V3.TxOut], lovelaceValue rollupFee)
+      state2      = toInput protoState2
 
--- | Will process two simultaneous transactions 'A' & 'B', uploading states 'nextStateA', 'nextStateB'
--- with redeemers 'redeemerRollupA', 'redeemerRollupB', respectively.
+      (_, _, proof2)  = stateCheckVerificationBytes x ps state2
+      rollupRedeemer2 = UpdateRollup proof2 update2
+
+  return $ RollupInfo dataUpdate2 protoState2 rollupRedeemer2
 
 main :: IO ()
 main = do
@@ -61,33 +71,44 @@ main = do
                           else if currentDirName == "e2e-test" then ".." else "."
       assetsPath     = path </> "assets"
 
-  rollupInfoAE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfoA.json")
+  args        <- getArgs
+  rollupInfoE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfo.json")
 
-  case rollupInfoAE of
-    Right rollupInfoAScriptData -> do
-      IdentityCircuitContract x _ <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
+  case args of
+    [nStr] -> do
+      let nE = parse integerParser "" nStr
+      case nE of
+        Right n -> do
+          case rollupInfoE of
+            Right rollupInfoScriptData -> do
+              IdentityCircuitContract x _ <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
 
-      let rollupInfoA = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupInfoAScriptData :: RollupInfo
+              let rollupInfo = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-      let RollupInfo nextStateA redeemerRollupA = rollupInfoA
+              let RollupInfo dataUpdate protoNextState redeemerRollup = rollupInfo
 
-      rollupInfoB@(RollupInfo nextStateB redeemerRollupB) <- nextRollup x rollupInfoA
-      newRollupInfoA                                      <- nextRollup x rollupInfoB
+              newRollupInfo <- nextRollup x rollupInfo
 
-      let F nextStateA' = nextStateA
-          F nextStateB' = nextStateB
+              let nextState    = toInput protoNextState
+                  F nextState' = nextState
 
-      BS.writeFile (assetsPath </> "datumA.cbor") $ dataToCBOR nextStateA'
-      BS.writeFile (assetsPath </> "redeemerRollupA.cbor") $ dataToCBOR redeemerRollupA
+              let rollupDataRedeemer = NewData dataUpdate
 
-      BS.writeFile (assetsPath </> "datumB.cbor") $ dataToCBOR nextStateB'
-      BS.writeFile (assetsPath </> "redeemerRollupB.cbor") $ dataToCBOR redeemerRollupB
-      -- IO.writeFile (assetsPath </> "last-update-length.log") . show . length . rrUpdate $ redeemerRollupB
+              BS.writeFile (assetsPath </> "dataRedeemer.cbor") $ dataToCBOR rollupDataRedeemer
+              BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR nextState'
+              BS.writeFile (assetsPath </> "redeemerRollup.cbor") $ dataToCBOR redeemerRollup
 
-      BS.writeFile (assetsPath </> "newRollupInfoA.json") $ prettyPrintJSON $ dataToJSON newRollupInfoA
+              BS.writeFile (assetsPath </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
 
-    Left _                      -> error "JSON error: unreadable 'rollupInfoA.json'" >> exitFailure
+              IO.writeFile (assetsPath </> "dataTokenName.txt") . byteStringAsHex . V3.fromBuiltin . dataToBlake $ dataUpdate
+              IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ dataUpdate
+              IO.writeFile (assetsPath </> "rollupCLICode.sh") $ cardanoCliCode n
 
+            Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
+
+        Left err -> error $ "parse error: " ++ show err
+
+    _      -> error "Usage: cabal run rollup-update-loop -- <N>"
 
 ----- HELPER FUNCTIONS -----
 
@@ -98,3 +119,13 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 -- | Serialise data to CBOR.
 dataToCBOR :: ToData a => a -> BS.ByteString
 dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . V3.toData
+
+-- | Get hex representation of bytestring
+byteStringAsHex :: BS.ByteString -> String
+byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
+
+-- | Parser for a positive integer
+integerParser :: Parser Integer
+integerParser = do
+  digits <- many1 digit
+  return $ read digits
