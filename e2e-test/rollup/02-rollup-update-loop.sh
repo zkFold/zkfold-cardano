@@ -114,24 +114,10 @@ while $loop; do
 	echo "Rollup transaction..."
 	echo ""
 
-	# in1=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")#$aliceIdx
-
-	# # Build first Tx
-	# cardano-cli conway transaction build \
-	#   --testnet-magic $mN \
-	#   --tx-in $in1 \
-	#   --tx-in $inR \
-	#   --spending-tx-in-reference $rollupScript \
-	#   --spending-plutus-script-v3 \
-	#   --spending-reference-tx-in-inline-datum-present \
-	#   --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemer \
-	#   --read-only-tx-in-reference $(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-0.tx")#0 \
-	#   --tx-in-collateral $in1 \
-	#   --tx-out "$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.$nftPolicyNm" \
-	#   --tx-out-inline-datum-cbor-file $state \
-	#   --tx-out "$(cat $keypath/alice.addr) + $rollupFee lovelace" \
-	#   --change-address $(cat $keypath/alice.addr) \
-	#   --out-file $keypath/rollupOut.txbody
+        refInputs=$(cat $assets/dataUpdateLength.txt)
+	
+	echo "Building rollup transaction with $refInputs reference inputs (each with one data token)."
+	echo ""
 
 	$assets/rollupCLICode.sh
 
@@ -148,10 +134,10 @@ while $loop; do
 	#-------------------------------- :rollup summary: -------------------------------
 
 	echo ""
-	echo "Rollup-update completed.  Length of data update: $(cat $assets/dataUpdateLength.txt)."
+	echo "Rollup-update completed.  Length of data update: $refInputs."
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOut.tx)"
 
-	#-------------------------------- :cleanup before next batch: -------------------------------
+    #-------------------------------- :cleanup before next batch: -------------------------------
 
     export aliceIdx=2
 	

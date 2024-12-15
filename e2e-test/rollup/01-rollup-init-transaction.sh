@@ -30,7 +30,6 @@ nftPolicy=$assets/nftPolicy.plutus
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
 in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[1]')
-in1Address=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries[0].value.address')
 
 echo ""
 echo "Initialization..."
@@ -42,9 +41,22 @@ cardano-cli conway query protocol-parameters \
   --testnet-magic $mN \
   --out-file $assets/protocol.json
 
+#---------------------------------- :initialize Bob: ---------------------------------
+
+cardano-cli conway address key-gen \
+  --verification-key-file $keypath/bob.vkey \
+  --signing-key-file $keypath/bob.skey
+
+cardano-cli conway address build \
+  --payment-verification-key-file $keypath/bob.vkey \
+  --out-file $keypath/bob.addr \
+  --testnet-magic $mN
+
+bobAddress=$(cat $keypath/bob.addr)
+
 #------------------------------- :create scripts: ------------------------------
 
-cabal run rollup-init-transaction -- $in1 $in1Address
+cabal run rollup-init-transaction -- $in1 $bobAddress
 
 #-------------------------------- :rollup setup: --------------------------------
 

@@ -44,7 +44,7 @@ cardanoCliCode n = unlines $ firstCodeBlock ++ secondCodeBlock ++ thirdCodeBlock
       [ "  --tx-in-collateral $in1 \\"
       , "  --tx-out \"$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.$nftPolicyNm\" \\"
       , "  --tx-out-inline-datum-cbor-file $state \\"
-      , "  --tx-out \"$(cat $keypath/alice.addr) + $rollupFee lovelace\" \\"
+      , "  --tx-out \"$(cat $keypath/bob.addr) + $rollupFee lovelace\" \\"
       , "  --change-address $(cat $keypath/alice.addr) \\"
       , "  --out-file $keypath/rollupOut.txbody"
       ]
