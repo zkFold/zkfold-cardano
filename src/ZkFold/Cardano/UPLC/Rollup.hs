@@ -128,9 +128,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 
     -- Compare the state updates
     -- Note: we want to have the full control over the order of data updates. That is why we pass `update` in the redeemer.
-    -- && sort update' == sort update
-    && head update `elem` update'
-    && length update <= length update'
+    && sort update' == sort update
 
     -- Check the current rollup output
     && val == threadValue

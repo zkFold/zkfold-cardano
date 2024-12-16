@@ -1,7 +1,7 @@
 module Main where
 
 import           Backend.Aux                                 (cardanoCliCode)
-import           Cardano.Api                                 (getScriptData, prettyPrintJSON, unsafeHashableScriptData)
+import           Cardano.Api                                 hiding (Lovelace, TxOut)
 import           Cardano.Api.Ledger                          (toCBOR)
 import           Cardano.Api.Shelley                         (fromPlutusData, scriptDataFromJsonDetailedSchema,
                                                               scriptDataToJsonDetailedSchema, toPlutusData)
@@ -12,8 +12,7 @@ import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
-import qualified PlutusLedgerApi.V3                          as V3
-import           PlutusTx                                    (ToData (..))
+import           PlutusLedgerApi.V3                          as V3
 import           Prelude                                     (Either (..), IO, Integer, String, concat, error, length,
                                                               read, return, show, ($), (++), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
@@ -36,8 +35,8 @@ import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..
 import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..))
 
 
-rollupFee :: V3.Lovelace
-rollupFee = V3.Lovelace 15000000
+rollupFee :: Lovelace
+rollupFee = Lovelace 15000000
 
 nextRollup :: Fr -> RollupInfo -> IO RollupInfo
 nextRollup x rollupInfo = do
@@ -45,16 +44,16 @@ nextRollup x rollupInfo = do
 
   -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let dataUpdate1 = riDataUpdate rollupInfo
-      update1     = [dataToBlake dataUpdate1]
+  let dataUpdate1            = riDataUpdate rollupInfo
+      protoState1            = riProtoState rollupInfo
+      UpdateRollup _ update1 = riRedeemer   rollupInfo
 
-      protoState1 = riProtoState rollupInfo
       state1      = toInput protoState1
 
       dataUpdate2 = protoState1 : dataUpdate1
       update2     = dataToBlake dataUpdate2 : update1
+      protoState2 = dataToBlake (state1, update2, [] :: [TxOut], lovelaceValue rollupFee)
 
-      protoState2 = dataToBlake (state1, update2, [] :: [V3.TxOut], lovelaceValue rollupFee)
       state2      = toInput protoState2
 
       (_, _, proof2)  = stateCheckVerificationBytes x ps state2
@@ -82,9 +81,9 @@ main = do
             Right rollupInfoScriptData -> do
               IdentityCircuitContract x _ <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
 
-              let rollupInfo = fromJust . V3.fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
+              let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-              let RollupInfo dataUpdate protoNextState redeemerRollup = rollupInfo
+              let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
 
               newRollupInfo <- nextRollup x rollupInfo
 
@@ -95,12 +94,12 @@ main = do
 
               BS.writeFile (assetsPath </> "dataRedeemer.cbor") $ dataToCBOR rollupDataRedeemer
               BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR nextState'
-              BS.writeFile (assetsPath </> "redeemerRollup.cbor") $ dataToCBOR redeemerRollup
+              BS.writeFile (assetsPath </> "redeemerRollup.cbor") $ dataToCBOR rollupRedeemer
 
               BS.writeFile (assetsPath </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
 
-              IO.writeFile (assetsPath </> "dataTokenName.txt") . byteStringAsHex . V3.fromBuiltin . dataToBlake $ dataUpdate
-              IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ dataUpdate
+              IO.writeFile (assetsPath </> "dataTokenName.txt") . byteStringAsHex . fromBuiltin . dataToBlake $ dataUpdate
+              IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ update
               IO.writeFile (assetsPath </> "rollupCLICode.sh") $ cardanoCliCode n
 
             Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
@@ -113,11 +112,11 @@ main = do
 
 -- | Serialise data to CBOR and then wrap it in a JSON object.
 dataToJSON :: ToData a => a -> Aeson.Value
-dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
+dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
 
 -- | Serialise data to CBOR.
 dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . V3.toData
+dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
 
 -- | Get hex representation of bytestring
 byteStringAsHex :: BS.ByteString -> String

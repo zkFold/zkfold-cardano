@@ -17,6 +17,7 @@ cardanoCliCode n = unlines $ firstCodeBlock ++ secondCodeBlock ++ thirdCodeBlock
       , "keypath=./rollup/keys"
       , "privpath=./rollup/priv"
       , "mN=$(cat $privpath/testnet.flag)"
+      , "aliceIdx=$(cat $privpath/aliceIdx.flag)"
       , "state=$assets/datum.cbor"
       , "rollupRedeemer=$assets/redeemerRollup.cbor"
       , "rollupScript=$(cardano-cli transaction txid --tx-file \"$keypath/parkedScript.tx\")#0"

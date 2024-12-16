@@ -22,7 +22,7 @@ fi
 
 protocolParams=$assets/protocol.json
 
-export aliceIdx=1
+unitDatum=$assets/unit.cbor
 state=$assets/datum.cbor
 rollupRedeemer=$assets/redeemerRollup.cbor
 
@@ -76,6 +76,7 @@ while $loop; do
 	  --tx-in $in2 \
 	  --tx-in-collateral $in2 \
 	  --tx-out "$(cat $keypath/parkingSpot.addr) + $rollupLovelaceValue lovelace + 1 $dataPolicyId.$dataTokenName" \
+	  --tx-out-datum-hash-cbor-file $unitDatum \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --mint "1 $dataPolicyId.$dataTokenName" \
 	  --mint-script-file $dataPolicy \
@@ -139,7 +140,7 @@ while $loop; do
 
     #-------------------------------- :cleanup before next batch: -------------------------------
 
-    export aliceIdx=2
+    printf "2" > $privpath/aliceIdx.flag
 	
     mv $keypath/nextRollupOut.tx $keypath/rollupOut.tx
     mv $assets/newRollupInfo.json $assets/rollupInfo.json

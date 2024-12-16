@@ -163,6 +163,7 @@ done
 #-------------------------- :initialize data length: -----------------------
 
 printf "0" > $assets/dataUpdateLength.txt
+printf "1" > $privpath/aliceIdx.flag
 
 #-------------------------------- :epilogue: -------------------------------
 
