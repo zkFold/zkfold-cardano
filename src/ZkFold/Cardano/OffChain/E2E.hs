@@ -15,7 +15,6 @@ import           Prelude                                     (Show)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import qualified ZkFold.Base.Data.Vector                     as V
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
-import           ZkFold.Cardano.OnChain.BLS12_381            (F)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer)
 
 -- These types can only be used for testing.

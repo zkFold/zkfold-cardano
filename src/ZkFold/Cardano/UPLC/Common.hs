@@ -1,15 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-module Backend.NFT where
+module ZkFold.Cardano.UPLC.Common where
 
 import           PlutusLedgerApi.V1.Value (flattenValue)
 import           PlutusLedgerApi.V3
 import           PlutusTx                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, any, check, ($), (&&), (==))
+import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, Integer, any, check, ($), (&&), (==))
+
+
+---------------------------- :nftPolicy: ----------------------------
 
 {-# INLINABLE nftPolicy #-}
 nftPolicy :: TxOutRef -> ScriptContext -> Bool
@@ -34,7 +33,8 @@ untypedNftPolicy oref ctx' =
   in
     check $ nftPolicy oref ctx
 
-nftPolicyCompiled :: TxOutRef -> CompiledCode (BuiltinData -> BuiltinUnit)
-nftPolicyCompiled oref =
-  $$(compile [|| untypedNftPolicy ||])
-  `unsafeApplyCode` liftCodeDef oref
+--------------------------- :parkingSpot: ---------------------------
+
+{-# INLINABLE untypedParkingSpot #-}
+untypedParkingSpot :: Integer -> BuiltinData -> BuiltinUnit
+untypedParkingSpot _ _ = check True

@@ -80,6 +80,7 @@ library
     ZkFold.Cardano.OnChain.Plonkup.Data
     ZkFold.Cardano.OnChain.Utils
     ZkFold.Cardano.UPLC
+    ZkFold.Cardano.UPLC.Common
     ZkFold.Cardano.UPLC.ForwardingScripts
     ZkFold.Cardano.UPLC.PlonkVerifierToken
     ZkFold.Cardano.UPLC.Rollup
@@ -306,8 +307,6 @@ executable rollup-init-transaction
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-init-transaction
-  other-modules:
-    Backend.NFT
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -320,6 +319,7 @@ executable rollup-init-transaction
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     plutus-tx-plugin        ^>=1.36,
+    random                         ,
     text                           ,
     zkfold-cardano                 ,
     QuickCheck
@@ -339,7 +339,6 @@ executable rollup-update-loop
     cborg                          ,
     directory                      ,
     filepath                       ,
-    parsec                         ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     symbolic-base                  ,

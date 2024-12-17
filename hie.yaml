@@ -44,3 +44,6 @@ cradle:
 
     - path: "./backends/rollup/rollup-init-transaction/Backend/NFT.hs"
       component: "zkfold-cardano:exe:rollup-init-transaction"
+
+    - path: "./backends/rollup/rollup-update-loop/Main.hs"
+      component: "zkfold-cardano:exe:rollup-update-loop"

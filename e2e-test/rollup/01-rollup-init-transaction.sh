@@ -22,7 +22,6 @@ else
     pause=4
 fi
 
-# parkingTag=43
 unitDatum=$assets/unit.cbor
 unitRedeemer=$assets/unit.cbor
 state=$assets/datum.cbor
