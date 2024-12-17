@@ -104,7 +104,7 @@ while $loop; do
 	  --mint "1 $dataPolicyId.$dataTokenName" \
 	  --mint-script-file $dataPolicy \
 	  --mint-redeemer-cbor-file $dataRedeemer \
-	  --out-file $keypath/dataRef.txbody &> error.log
+	  --out-file $keypath/dataRef.txbody
 
 	cardano-cli conway transaction sign \
 	  --testnet-magic $mN \
@@ -155,7 +155,7 @@ while $loop; do
 	  --tx-out-inline-datum-cbor-file $state \
 	  --tx-out "$(cat $keypath/bob.addr) + $rollupFee lovelace" \
 	  --change-address $(cat $keypath/alice.addr) \
-	  --out-file $keypath/rollupOut.txbody &> error2.log
+	  --out-file $keypath/rollupOut.txbody
 
 	cardano-cli conway transaction sign \
 	  --testnet-magic $mN \
