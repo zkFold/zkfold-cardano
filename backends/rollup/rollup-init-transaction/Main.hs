@@ -37,7 +37,8 @@ import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerific
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.UPLC                     (nftPolicyCompiled, parkingSpotCompiled, rollupCompiled, rollupDataCompiled)
+import           ZkFold.Cardano.UPLC                     (nftPolicyCompiled, parkingSpotCompiled, rollupCompiled,
+                                                          rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), RollupSetup (..))
 
 
@@ -91,7 +92,7 @@ saveRollupPlutus path oref addr = do
 saveParkingSpotPlutus :: FilePath -> IO ()
 saveParkingSpotPlutus path = do
   randomInt <- randomRIO (1, 10000)
-  savePlutus (path </> "assets" </> "parkingSpot.plutus") $ parkingSpotCompiled randomInt 
+  savePlutus (path </> "assets" </> "parkingSpot.plutus") $ parkingSpotCompiled randomInt
 
 saveNftPolicyPlutus :: FilePath -> TxOutRef -> IO ()
 saveNftPolicyPlutus path oref = savePlutus (path </> "assets" </> "nftPolicy.plutus") $ nftPolicyCompiled oref
