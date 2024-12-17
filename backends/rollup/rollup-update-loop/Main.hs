@@ -2,7 +2,8 @@ module Main where
 
 import           Cardano.Api                                 hiding (Lovelace, TxOut)
 import           Cardano.Api.Ledger                          (toCBOR)
-import           Cardano.Api.Shelley                         (PlutusScript (..), fromPlutusData, scriptDataFromJsonDetailedSchema,
+import           Cardano.Api.Shelley                         (PlutusScript (..), fromPlutusData,
+                                                              scriptDataFromJsonDetailedSchema,
                                                               scriptDataToJsonDetailedSchema, toPlutusData)
 import           Codec.CBOR.Write                            (toStrictByteString)
 import           Data.Aeson                                  (decode)
@@ -13,8 +14,8 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), IO, String, concat, error, length,
-                                                              replicate, return, show, zipWith, ($), (++), (.), (<$>), (-), (==))
+import           Prelude                                     (Either (..), IO, String, concat, error, length, replicate,
+                                                              return, show, zipWith, ($), (++), (-), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
