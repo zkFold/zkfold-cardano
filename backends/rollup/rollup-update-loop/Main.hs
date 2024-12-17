@@ -1,9 +1,8 @@
 module Main where
 
-import           Backend.Aux                                 (cardanoCliCode)
 import           Cardano.Api                                 hiding (Lovelace, TxOut)
 import           Cardano.Api.Ledger                          (toCBOR)
-import           Cardano.Api.Shelley                         (fromPlutusData, scriptDataFromJsonDetailedSchema,
+import           Cardano.Api.Shelley                         (PlutusScript (..), fromPlutusData, scriptDataFromJsonDetailedSchema,
                                                               scriptDataToJsonDetailedSchema, toPlutusData)
 import           Codec.CBOR.Write                            (toStrictByteString)
 import           Data.Aeson                                  (decode)
@@ -13,17 +12,14 @@ import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
-import           Prelude                                     (Either (..), IO, Integer, String, concat, error, length,
-                                                              read, return, show, ($), (++), (.), (<$>), (==))
+import           PlutusTx                                    (CompiledCode)
+import           Prelude                                     (Either (..), IO, String, concat, error, length,
+                                                              replicate, return, show, zipWith, ($), (++), (.), (<$>), (-), (==))
 import           System.Directory                            (getCurrentDirectory)
-import           System.Environment                          (getArgs)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
-import           Text.Parsec                                 (many1, parse)
-import           Text.Parsec.Char                            (digit)
-import           Text.Parsec.String                          (Parser)
 import           Text.Printf                                 (printf)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
@@ -31,13 +27,14 @@ import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerifica
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
+import           ZkFold.Cardano.UPLC                         (rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
 import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..))
-
 
 rollupFee :: Lovelace
 rollupFee = Lovelace 15000000
 
+-- | Compute next rollup info
 nextRollup :: Fr -> RollupInfo -> IO RollupInfo
 nextRollup x rollupInfo = do
   ps <- generate arbitrary
@@ -61,6 +58,13 @@ nextRollup x rollupInfo = do
 
   return $ RollupInfo dataUpdate2 protoState2 rollupRedeemer2
 
+-- | String of data tokens to be used by cardano-cli
+toDataTokens :: [BuiltinByteString] -> String
+toDataTokens update = concat $ zipWith zipper update wrapups
+    where
+      zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
+      wrapups      = replicate (length update - 1) " + " ++ [""]
+
 main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
@@ -69,61 +73,51 @@ main = do
                           else if currentDirName == "e2e-test" then ".." else "."
       assetsPath     = path </> "assets"
 
-  args        <- getArgs
   rollupInfoE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfo.json")
 
-  case args of
-    [nStr] -> do
-      let nE = parse integerParser "" nStr
-      case nE of
-        Right n -> do
-          case rollupInfoE of
-            Right rollupInfoScriptData -> do
-              IdentityCircuitContract x _ <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
+  case rollupInfoE of
+    Right rollupInfoScriptData -> do
+      IdentityCircuitContract x _ <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonk-raw-contract-data.json")
 
-              let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
+      let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-              let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
+      let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
 
-              newRollupInfo <- nextRollup x rollupInfo
+      newRollupInfo <- nextRollup x rollupInfo
 
-              let nextState    = toInput protoNextState
-                  F nextState' = nextState
+      let nextState    = toInput protoNextState
+          F nextState' = nextState
 
-              let rollupDataRedeemer = NewData dataUpdate
+      let rollupDataRedeemer = NewData dataUpdate
 
-              BS.writeFile (assetsPath </> "dataRedeemer.cbor") $ dataToCBOR rollupDataRedeemer
-              BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR nextState'
-              BS.writeFile (assetsPath </> "redeemerRollup.cbor") $ dataToCBOR rollupRedeemer
+      BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR nextState'
+      BS.writeFile (assetsPath </> "dataRedeemer.cbor") $ dataToCBOR rollupDataRedeemer
+      BS.writeFile (assetsPath </> "redeemerRollup.cbor") $ dataToCBOR rollupRedeemer
 
-              BS.writeFile (assetsPath </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
+      BS.writeFile (assetsPath </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
 
-              IO.writeFile (assetsPath </> "dataTokenName.txt") . byteStringAsHex . fromBuiltin . dataToBlake $ dataUpdate
-              IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ update
-              IO.writeFile (assetsPath </> "rollupCLICode.sh") $ cardanoCliCode n
+      IO.writeFile (assetsPath </> "dataNewTokenName.txt") . byteStringAsHex . fromBuiltin . dataToBlake $ dataUpdate
+      IO.writeFile (assetsPath </> "dataTokens.txt") $ toDataTokens update
+      IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ update
 
-            Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
+    Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
 
-        Left err -> error $ "parse error: " ++ show err
-
-    _      -> error "Usage: cabal run rollup-update-loop -- <N>"
 
 ----- HELPER FUNCTIONS -----
-
--- | Serialise data to CBOR and then wrap it in a JSON object.
-dataToJSON :: ToData a => a -> Aeson.Value
-dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
-
--- | Serialise data to CBOR.
-dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
 
 -- | Get hex representation of bytestring
 byteStringAsHex :: BS.ByteString -> String
 byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
 
--- | Parser for a positive integer
-integerParser :: Parser Integer
-integerParser = do
-  digits <- many1 digit
-  return $ read digits
+-- | Serialise data to CBOR.
+dataToCBOR :: ToData a => a -> BS.ByteString
+dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
+
+-- | Serialise data to CBOR and then wrap it in a JSON object.
+dataToJSON :: ToData a => a -> Aeson.Value
+dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
+
+-- | Script hash of compiled validator
+scriptHashOf :: CompiledCode a -> V3.ScriptHash
+scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
+               . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode

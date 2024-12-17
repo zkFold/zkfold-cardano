@@ -331,8 +331,6 @@ executable rollup-update-loop
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-update-loop
-  other-modules:
-    Backend.Aux
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
