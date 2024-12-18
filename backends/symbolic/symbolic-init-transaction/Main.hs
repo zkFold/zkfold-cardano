@@ -17,6 +17,7 @@ import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificatio
 import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
 import           ZkFold.Cardano.UPLC                   (forwardingRewardCompiled, plonkVerifierTxCompiled)
 
+
 {-
 import           Cardano.Api                                 hiding (TxId)
 import qualified Cardano.Api                                 as C
@@ -195,7 +196,7 @@ main = do
   createDirectoryIfMissing True "../../test-data"
   createDirectoryIfMissing True "../../assets"
 
-  BL.writeFile "test-data/symbolic-raw-contract-data.json" $ encode contract
+  BL.writeFile "../../test-data/symbolic-raw-contract-data.json" $ encode contract
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n" ++ "targetValue: " ++ show targetValue ++ "\n"
 

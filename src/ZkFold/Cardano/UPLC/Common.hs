@@ -4,7 +4,7 @@ module ZkFold.Cardano.UPLC.Common where
 
 import           PlutusLedgerApi.V1.Value (flattenValue)
 import           PlutusLedgerApi.V3
-import           PlutusTx                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
+-- import           PlutusTx                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, Integer, any, check, ($), (&&), (==))
 
 
