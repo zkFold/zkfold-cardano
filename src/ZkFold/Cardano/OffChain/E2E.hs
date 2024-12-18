@@ -8,13 +8,13 @@ module ZkFold.Cardano.OffChain.E2E where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)
 import           GHC.Generics                                (Generic)
+import           PlutusLedgerApi.V3                          (BuiltinByteString)
 import           PlutusTx                                    (makeIsDataIndexed)
 import           Prelude                                     (Show)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import qualified ZkFold.Base.Data.Vector                     as V
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
-import           ZkFold.Cardano.OnChain.BLS12_381            (F)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer)
 
 -- These types can only be used for testing.
@@ -36,8 +36,10 @@ deriving newtype instance FromJSON (V.Vector 19 Fr)
 deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
 deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)
 
-data RollupInfo = RollupInfo { riNextState :: F, riRedeemer :: RollupRedeemer }
-  deriving stock (Show, Generic)
+data RollupInfo = RollupInfo { riDataUpdate :: [BuiltinByteString]
+                             , riProtoState :: BuiltinByteString
+                             , riRedeemer   :: RollupRedeemer
+                             } deriving stock (Show, Generic)
 
 makeIsDataIndexed ''RollupInfo [('RollupInfo,0)]
 

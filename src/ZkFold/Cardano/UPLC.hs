@@ -7,14 +7,16 @@
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module ZkFold.Cardano.UPLC
-  ( plonkVerifierTxCompiled
+  ( nftPolicyCompiled
+  , parkingSpotCompiled
+  , plonkVerifierTxCompiled
   , plonkVerifierTxCompiled'
   , plonkVerifierTokenCompiled
   , plonkVerifierCompiled
   , forwardingRewardCompiled
   , forwardingMintCompiled
   , rollupCompiled
-  , parkingSpotCompiled
+  , rollupDataCompiled
   ) where
 
 import           Flat.Types                             ()
@@ -26,11 +28,23 @@ import           Prelude                                hiding (Bool, Eq (..), F
 
 import           ZkFold.Cardano.OnChain.Plonkup         (untypedPlonkVerifier)
 import           ZkFold.Cardano.OnChain.Plonkup.Data    (SetupBytes)
+import           ZkFold.Cardano.UPLC.Common             (untypedNftPolicy, untypedParkingSpot)
 import           ZkFold.Cardano.UPLC.ForwardingScripts  (untypedForwardingMint, untypedForwardingReward)
 import           ZkFold.Cardano.UPLC.PlonkVerifierToken (untypedPlonkVerifierToken)
 import           ZkFold.Cardano.UPLC.PlonkVerifierTx    (untypedPlonkVerifierTx, untypedPlonkVerifierTx')
-import           ZkFold.Cardano.UPLC.Rollup             (RollupSetup, untypedParkingSpot, untypedRollup)
+import           ZkFold.Cardano.UPLC.Rollup             (RollupSetup, untypedRollup)
+import           ZkFold.Cardano.UPLC.RollupData         (untypedRollupData)
 
+
+nftPolicyCompiled :: TxOutRef -> CompiledCode (BuiltinData -> BuiltinUnit)
+nftPolicyCompiled oref =
+  $$(compile [|| untypedNftPolicy ||])
+  `unsafeApplyCode` liftCodeDef oref
+
+parkingSpotCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
+parkingSpotCompiled tag =
+    $$(compile [|| untypedParkingSpot ||])
+    `unsafeApplyCode` liftCodeDef tag
 
 plonkVerifierTxCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 plonkVerifierTxCompiled contract =
@@ -66,7 +80,6 @@ rollupCompiled computation =
     $$(compile [|| untypedRollup ||])
     `unsafeApplyCode` liftCodeDef computation
 
-parkingSpotCompiled :: Integer -> CompiledCode (BuiltinData -> BuiltinUnit)
-parkingSpotCompiled tag =
-    $$(compile [|| untypedParkingSpot ||])
-    `unsafeApplyCode` liftCodeDef tag
+rollupDataCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
+rollupDataCompiled =
+    $$(compile [|| untypedRollupData ||])
