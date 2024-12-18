@@ -30,6 +30,11 @@ cabal run plonk-transfer-transaction -- $policyid
 
 datum=$assets/datumPlonk.cbor
 
+forwardingMintDatumReqUtxo=$(cardano-cli conway transaction calculate-min-required-utxo \
+  --protocol-params-file $assets/protocol.json \
+  --tx-out $(cat $keypath/forwardingMint.addr)+0 \
+  --tx-out-inline-datum-cbor-file $datum | sed 's/^[^ ]* //')
+
 #-------------------------------- :send-script: --------------------------------
 
 cardano-cli conway transaction build \
@@ -37,7 +42,7 @@ cardano-cli conway transaction build \
     --change-address "$(cat $keypath/charles.addr)" \
     --out-file "$keypath/plonk-transfer.txbody" \
     --tx-in $in \
-    --tx-out "$(cat $keypath/forwardingMint.addr) + 1017160 lovelace" \
+    --tx-out "$(cat $keypath/forwardingMint.addr) + $forwardingMintDatumReqUtxo lovelace" \
     --tx-out-inline-datum-cbor-file $datum
 
 cardano-cli conway transaction sign \

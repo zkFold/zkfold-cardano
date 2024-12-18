@@ -1,5 +1,7 @@
 module Main where
 
+import           PlutusTx.Builtins                           (byteStringToInteger, mkI)
+
 import           Cardano.Api                             (IsPlutusScriptLanguage, PlutusScriptV3, Script (..),
                                                           hashScript, plutusScriptVersion, prettyPrintJSON,
                                                           serialiseToRawBytes, unsafeHashableScriptData,
@@ -28,6 +30,7 @@ import           Text.Parsec                             (many1, parse)
 import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
 
+import           Backend.NFT                             (nftPolicyCompiled)
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
@@ -35,8 +38,13 @@ import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, rollupCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..))
 
-saveRollupPlutus :: FilePath -> IO ()
-saveRollupPlutus path = do
+
+main :: IO ()
+main = do
+  putStr "Hello zkFold!\n"
+
+saveRollupPlutus :: FilePath -> TxId -> IO ()
+saveRollupPlutus path nftId = do
   x  <- generate arbitrary
   ps <- generate arbitrary
 
@@ -46,22 +54,31 @@ saveRollupPlutus path = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
+-- data RollupSetup = RollupSetup
+--   { rsLedgerRules  :: SetupBytes
+--   , rsDataCurrency :: CurrencySymbol
+--   , rsThreadValue  :: Value
+--   , rsFeeAddress   :: Address
+--   } deriving stock (Show, Generic)
+
   let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
-      nextState                  = toInput $ dataToBlake (iniState, [iniState])
+      nextState                  = byteStringToInteger BigEndian $ dataToBlake (toF iniState, [] :: TxOut, [] :: TxOut,
+                                                                                lovelaceValue $ V2.Lovelace 100000000)
       (_, _, proof)              = stateCheckVerificationBytes x ps nextState
 
-  let redeemerRollup = RollupRedeemer
-        { rrProof   = proof
-        , rrAddress = V3.Address rollupCredential Nothing
-        , rrValue   = lovelace 3000000
-        , rrState   = iniState
-        , rrUpdate  = [iniState]
-        }
-        where
-          rollupCredential = credentialOf $ rollupCompiled ledgerRules
-          lovelace         = V2.singleton V2.adaSymbol V2.adaToken
+  let threadCS    = currencySymbolOf . nftPolicyCompiled $ TxOut (TxId nftId) 0
+      threadName  = TokenName (fromString "7a6b466f6c64" :: BuiltinByteString)  -- token name: "zkFold"
+      rollupSetup = RollupSetup
+                    { rsLedgerRules = ledgerRules
+                    , rsDataCurrency = 
+                    , rsThreadValue = singleton threadCS threadName 1
 
-  let rollupInfoA = RollupInfo { riNextState = nextState, riRedeemer = redeemerRollup }
+-- data RollupRedeemer =
+--       UpdateRollup ProofBytes [BuiltinByteString]
+
+  let rollupRedeemer = UpdateRollup proof []
+
+  -- let rollupInfoA = RollupInfo { riNextState = nextState, riRedeemer = redeemerRollup }
 
   let assetsPath = path </> "assets"
 
@@ -76,23 +93,30 @@ saveParkingSpotPlutus path = savePlutus (path </> "assets" </> "parkingSpot.plut
 main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
-  let currentDirName = takeFileName currentDir
-      path           = if currentDirName == "rollup" then (".." </> "..")
-                          else if currentDirName == "e2e-test" then ".." else "."
+  let path = case takeFileName currentDir of
+        "rollup"   -> ".." </> ".."
+        "e2e-test" -> ".."
+        _          -> "."
 
   createDirectoryIfMissing True $ path </> "test-data"
   createDirectoryIfMissing True $ path </> "assets"
 
-  tagE <- parse integerParser "" . head <$> getArgs
+  nftIdString <- head <$> getArgs
+  let nftId = TxId (fromString nftId :: BuiltinByteString)
 
-  case tagE of
-    Right tag -> do
-      saveRollupPlutus path
-      saveParkingSpotPlutus path tag
+  saveRollupPlutus path nftId
+  saveParkingSpotPlutus path 54
+  saveNftPolicyPlutus path nftId
 
-      putStr "\nDone serializing plutus scripts and initializing state.\n\n"
+  putStr "\nDone serializing plutus scripts and initializing state.\n\n"
 
-    Left err    -> print $ "parse error: " ++ show err
+  -- tagE <- parse integerParser "" . head <$> getArgs
+  -- case tagE of
+  --   Right tag -> do
+  --     saveRollupPlutus path
+  --     saveParkingSpotPlutus path tag
+  --     putStr "\nDone serializing plutus scripts and initializing state.\n\n"
+  --   Left err    -> print $ "parse error: " ++ show err
 
 
 ----- HELPER FUNCTIONS -----
@@ -114,9 +138,14 @@ savePlutus :: FilePath -> CompiledCode a -> IO ()
 savePlutus filePath =
   writePlutusScriptToFile @PlutusScriptV3 filePath . PlutusScriptSerialised . V3.serialiseCompiledCode
 
--- | Credential of compiled script
+-- | Credential of compiled validator script
 credentialOf :: CompiledCode a -> V3.Credential
 credentialOf = V3.ScriptCredential . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes . hashScript
+               . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . V3.serialiseCompiledCode
+
+-- | Currency symbol of compiled minting script
+currencySymbolOf :: CompiledCode a -> V3.CurrencySymbol
+currencySymbolOf = V3.CurrencySymbol . V3.toBuiltin . serialiseToRawBytes . hashScript
                . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . V3.serialiseCompiledCode
 
 -- | Parser for a positive integer
