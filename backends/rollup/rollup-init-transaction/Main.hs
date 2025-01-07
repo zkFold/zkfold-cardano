@@ -20,17 +20,19 @@ import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                                          Show (..), String, const, either, error, maybe, putStr, read,
-                                                          return, ($), (++), (.))
+                                                          Show (..), String, concat, const, either, error, length, maybe, putStr, read,
+                                                          replicate, return, zipWith, ($), (++), (.), (-))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.FilePath                         (takeFileName, (</>))
+import qualified System.IO                               as IO
 import           System.Random                           (randomRIO)
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 import           Text.Parsec                             (many1)
 import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
+import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
@@ -88,6 +90,8 @@ saveRollupPlutus path oref addr = do
   BS.writeFile (assetsPath </> "unit.cbor") $ dataToCBOR ()
   BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR iniState'
   BS.writeFile (assetsPath </> "rollupInfo.json") $ prettyPrintJSON $ dataToJSON rollupInfo
+
+  IO.writeFile (assetsPath </> "dataTokens.txt") $ toDataTokens update
 
 saveParkingSpotPlutus :: FilePath -> IO ()
 saveParkingSpotPlutus path = do
@@ -153,6 +157,11 @@ credentialOf :: CompiledCode a -> Credential
 credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript
                . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
 
+-- | Script hash of compiled validator
+scriptHashOf :: CompiledCode a -> V3.ScriptHash
+scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
+               . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
+
 -- | Currency symbol of compiled minting script
 currencySymbolOf :: CompiledCode a -> CurrencySymbol
 currencySymbolOf = CurrencySymbol . toBuiltin . serialiseToRawBytes . hashScript
@@ -184,3 +193,14 @@ parseAddress addressStr = do
     pkh        <- maybe (Left "Failed to parse address pubkey hash") Right $
                   shelleyPayAddrToPlutusPubKHash shellyAddr
     return $ V3.Address (PubKeyCredential pkh) Nothing
+
+-- | Get hex representation of bytestring
+byteStringAsHex :: BS.ByteString -> String
+byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
+
+-- | String of data tokens to be used by cardano-cli
+toDataTokens :: [BuiltinByteString] -> String
+toDataTokens update = concat $ zipWith zipper update wrapups
+    where
+      zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
+      wrapups      = replicate (length update - 1) " + " ++ [""]

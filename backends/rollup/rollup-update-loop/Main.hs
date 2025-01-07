@@ -14,8 +14,8 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), IO, String, concat, error, length, replicate,
-                                                              return, show, zipWith, ($), (++), (-), (.), (<$>), (==))
+import           Prelude                                     (Either (..), FilePath, IO, String, concat, drop, error, length, replicate,
+                                                              return, show, take, zipWith, ($), (++), (-), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
@@ -36,20 +36,23 @@ rollupFee :: Lovelace
 rollupFee = Lovelace 15000000
 
 -- | Compute next rollup info
-nextRollup :: Fr -> RollupInfo -> IO RollupInfo
-nextRollup x rollupInfo = do
+nextRollup :: FilePath -> Fr -> RollupInfo -> IO RollupInfo
+nextRollup path x rollupInfo = do
   ps <- generate arbitrary
 
   -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
+  let updateLength = 1
+
   let dataUpdate1            = riDataUpdate rollupInfo
       protoState1            = riProtoState rollupInfo
-      -- UpdateRollup _ update1 = riRedeemer   rollupInfo
+      UpdateRollup _ update1 = riRedeemer   rollupInfo
 
       state1      = toInput protoState1
 
       dataUpdate2 = protoState1 : dataUpdate1
-      update2     = [dataToBlake dataUpdate2]
+      preUpdate2  = dataToBlake dataUpdate2 : update1
+      update2     = take updateLength preUpdate2
       protoState2 = dataToBlake (state1, update2, [] :: [TxOut], lovelaceValue rollupFee)
 
       state2      = toInput protoState2
@@ -57,14 +60,11 @@ nextRollup x rollupInfo = do
       (_, _, proof2)  = stateCheckVerificationBytes x ps state2
       rollupRedeemer2 = UpdateRollup proof2 update2
 
-  return $ RollupInfo dataUpdate2 protoState2 rollupRedeemer2
+  IO.writeFile (path </> "newDataTokens.txt") $ toDataTokens update2
+  IO.writeFile (path </> "newDataTokensDiscarded.txt") $ toDataTokens $ drop updateLength preUpdate2
+  IO.writeFile (path </> "newDataTokensAmount.txt") . show . length $ update2
 
--- | String of data tokens to be used by cardano-cli
-toDataTokens :: [BuiltinByteString] -> String
-toDataTokens update = concat $ zipWith zipper update wrapups
-    where
-      zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
-      wrapups      = replicate (length update - 1) " + " ++ [""]
+  return $ RollupInfo dataUpdate2 protoState2 rollupRedeemer2
 
 main :: IO ()
 main = do
@@ -82,9 +82,9 @@ main = do
 
       let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-      let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
+      let RollupInfo dataUpdate protoNextState rollupRedeemer = rollupInfo
 
-      newRollupInfo <- nextRollup x rollupInfo
+      newRollupInfo <- nextRollup assetsPath x rollupInfo
 
       let nextState    = toInput protoNextState
           F nextState' = nextState
@@ -98,8 +98,6 @@ main = do
       BS.writeFile (assetsPath </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
 
       IO.writeFile (assetsPath </> "dataNewTokenName.txt") . byteStringAsHex . fromBuiltin . dataToBlake $ dataUpdate
-      IO.writeFile (assetsPath </> "dataTokens.txt") $ toDataTokens update
-      IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ update
 
     Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
 
@@ -122,3 +120,11 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 scriptHashOf :: CompiledCode a -> V3.ScriptHash
 scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
                . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
+
+-- | String of data tokens to be used by cardano-cli
+toDataTokens :: [BuiltinByteString] -> String
+toDataTokens update = concat $ zipWith zipper update wrapups
+    where
+      zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
+      wrapups      = replicate (length update - 1) " + " ++ [""]
+

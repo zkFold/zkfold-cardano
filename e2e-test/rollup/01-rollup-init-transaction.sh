@@ -28,8 +28,10 @@ state=$assets/datum.cbor
 rollupLovelaceValue=3000000
 nftPolicy=$assets/nftPolicy.plutus
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
-in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[1]')
+in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
+	  jq -r 'to_entries | map(select(.value.value.lovelace > 5000000)) | .[0].key')
+in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
+	  jq -r 'to_entries | map(select(.value.value.lovelace > 5000000)) | .[1].key')
 
 echo ""
 echo "Initialization..."
@@ -196,12 +198,11 @@ while true; do
     fi
 done
 
-#-------------------------- :initialize data length: -----------------------
-
-printf "0" > $assets/dataUpdateLength.txt
-printf "1" > $privpath/aliceIdx.flag
-
 #-------------------------------- :epilogue: -------------------------------
+
+touch $assets/dataTokensDiscarded.txt
+printf "0" > $assets/dataTokensAmount.txt
+printf "1" > $privpath/aliceIdx.flag
 
 echo ""
 echo "Initialization completed."
