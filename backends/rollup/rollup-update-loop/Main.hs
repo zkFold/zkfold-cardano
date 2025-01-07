@@ -44,12 +44,12 @@ nextRollup x rollupInfo = do
 
   let dataUpdate1            = riDataUpdate rollupInfo
       protoState1            = riProtoState rollupInfo
-      UpdateRollup _ update1 = riRedeemer   rollupInfo
+      -- UpdateRollup _ update1 = riRedeemer   rollupInfo
 
       state1      = toInput protoState1
 
       dataUpdate2 = protoState1 : dataUpdate1
-      update2     = dataToBlake dataUpdate2 : update1
+      update2     = [dataToBlake dataUpdate2]
       protoState2 = dataToBlake (state1, update2, [] :: [TxOut], lovelaceValue rollupFee)
 
       state2      = toInput protoState2
