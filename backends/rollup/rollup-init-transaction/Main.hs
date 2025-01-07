@@ -92,6 +92,7 @@ saveRollupPlutus path oref addr = do
   BS.writeFile (assetsPath </> "rollupInfo.json") $ prettyPrintJSON $ dataToJSON rollupInfo
 
   IO.writeFile (assetsPath </> "dataTokens.txt") $ toDataTokens update
+  IO.writeFile (assetsPath </> "dataTokensAmount.txt") . show . length $ update
 
 saveParkingSpotPlutus :: FilePath -> IO ()
 saveParkingSpotPlutus path = do

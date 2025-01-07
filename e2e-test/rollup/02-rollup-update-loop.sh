@@ -20,7 +20,7 @@ else
     pause=4
 fi
 
-counter=0
+rollupCounter=$(cat $privpath/rollupCounter.var)
 protocolParams=$assets/protocol.json
 
 unitDatum=$assets/unit.cbor
@@ -75,13 +75,9 @@ while $loop; do
 
 	dataUtxoTx=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef.tx")
 	dataUtxo=$dataUtxoTx#0
-	if [ $counter -le 1 ]; then
-	    echo "using input 1"
-	    # echo $(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN)
+	if [ $rollupCounter -le 1 ]; then
 	    in2=$dataUtxoTx#1
 	else
-	    echo "using input 2"
-	    # echo $(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN)
 	    in2=$dataUtxoTx#2
 	fi
 
@@ -102,7 +98,6 @@ while $loop; do
 	  --tx-out-inline-datum-cbor-file $unitDatum | sed 's/^[^ ]* //')
 
 	if [ ! -s $dataTokensDiscardedFile ]; then
-	    echo "branch 1"
 	    cardano-cli conway transaction build \
 	      --testnet-magic $mN \
 	      --tx-in $in2 \
@@ -119,7 +114,6 @@ while $loop; do
 	      --mint-redeemer-cbor-file $dataRedeemer \
 	      --out-file $keypath/dataRef.txbody
 	else
-	    echo "branch 2"
 	    dataTokensDiscarded=$(cat $dataTokensDiscardedFile)
 	    dataTokensDiscardedMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
 	      --protocol-params-file $assets/protocol.json \
@@ -143,22 +137,6 @@ while $loop; do
 	      --mint-redeemer-cbor-file $dataRedeemer \
 	      --out-file $keypath/dataRef.txbody
 	fi
-
-	# cardano-cli conway transaction build \
-	#   --testnet-magic $mN \
-	#   --tx-in $in2 \
-	#   --tx-in $dataUtxo \
-	#   --tx-in-script-file $parkingSpotPolicy \
-	#   --tx-in-inline-datum-present \
-	#   --tx-in-redeemer-cbor-file $unitRedeemer \
-	#   --tx-in-collateral $collateral \
-	#   --tx-out "$(cat $keypath/parkingSpot.addr) + $dataTokensMinCost lovelace + $dataTokens" \
-	#   --tx-out-inline-datum-cbor-file $unitDatum \
-	#   --change-address $(cat $keypath/alice.addr) \
-	#   --mint "1 $dataPolicyId.$dataTokenName" \
-	#   --mint-script-file $dataPolicy \
-	#   --mint-redeemer-cbor-file $dataRedeemer \
-	#   --out-file $keypath/dataRef.txbody
 
 	cardano-cli conway transaction sign \
 	  --testnet-magic $mN \
@@ -223,15 +201,16 @@ while $loop; do
 
 	#-------------------------------- :rollup summary: -------------------------------
 
-	counter=$((counter + 1))
+	rollupCounter=$((rollupCounter + 1))
 
 	echo ""
-	echo "Rollup-update completed.  Rollups completed: $counter."
+	echo "Rollup-update completed.  Rollups completed: $rollupCounter."
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOut.tx)"
 
     #-------------------------------- :cleanup before next batch: -------------------------------
 
     printf "2" > $privpath/aliceIdx.flag
+    printf "$rollupCounter" > $privpath/rollupCounter.var
 	
     mv $keypath/nextRollupOut.tx $keypath/rollupOut.tx
     mv $assets/newRollupInfo.json $assets/rollupInfo.json

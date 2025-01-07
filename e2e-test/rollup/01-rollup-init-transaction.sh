@@ -201,7 +201,7 @@ done
 #-------------------------------- :epilogue: -------------------------------
 
 touch $assets/dataTokensDiscarded.txt
-printf "0" > $assets/dataTokensAmount.txt
+printf "0" > $privpath/rollupCounter.var
 printf "1" > $privpath/aliceIdx.flag
 
 echo ""
