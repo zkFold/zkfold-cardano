@@ -14,8 +14,9 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), FilePath, IO, String, concat, drop, error, length, replicate,
-                                                              return, show, take, zipWith, ($), (++), (-), (.), (<$>), (==))
+import           Prelude                                     (Either (..), FilePath, IO, String, concat, drop, error,
+                                                              length, replicate, return, show, take, zipWith, ($), (++),
+                                                              (-), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO

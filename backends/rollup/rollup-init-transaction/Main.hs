@@ -20,8 +20,9 @@ import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                                          Show (..), String, concat, const, either, error, length, maybe, putStr, read,
-                                                          replicate, return, zipWith, ($), (++), (.), (-))
+                                                          Show (..), String, concat, const, either, error, length,
+                                                          maybe, putStr, read, replicate, return, zipWith, ($), (++),
+                                                          (-), (.))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.FilePath                         (takeFileName, (</>))
