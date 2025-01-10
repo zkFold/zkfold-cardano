@@ -15,9 +15,10 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), Int, Integer, IO, String, concat, error,
-                                                              length, replicate, show, zip, zipWith, ($), (++),
-                                                              (-), (.), (<$>), (==))
+import           Prelude                                     (Either (..), IO, Int, Integer, String, concat, error,
+                                                              length, replicate, show, zip, zipWith, ($), (++), (-),
+                                                              (.), (<$>), (==))
+import           Rollup.Example                              (evolve)
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
@@ -25,7 +26,6 @@ import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 import           Text.Printf                                 (printf)
 
-import           Rollup.Example                              (evolve)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))

@@ -1,10 +1,10 @@
 module Rollup.Example where
 
-import PlutusLedgerApi.V3
-import Prelude                      (Integer, IO, return, ($))
-import System.Random                (randomRIO)
+import           PlutusLedgerApi.V3
+import           Prelude                      (IO, Integer, return, ($))
+import           System.Random                (randomRIO)
 
-import ZkFold.Cardano.OnChain.Utils (dataToBlake)
+import           ZkFold.Cardano.OnChain.Utils (dataToBlake)
 
 rmax :: Integer
 rmax = 1000
