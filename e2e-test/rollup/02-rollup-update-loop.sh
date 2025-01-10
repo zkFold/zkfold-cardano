@@ -73,24 +73,27 @@ while $loop; do
 	echo "Sending update data token..."
 	echo ""
 
-	dataUtxoTx=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef.tx")
-	dataUtxo=$dataUtxoTx#0
-	if [ $rollupCounter -le 1 ]; then
-	    in2=$dataUtxoTx#1
-	else
-	    in2=$dataUtxoTx#2
-	fi
+	# dataUtxoTx=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef.tx")
+	# dataUtxo=$dataUtxoTx#0
+	# if [ $rollupCounter -le 1 ]; then
+	#     in2=$dataUtxoTx#1
+	# else
+	#     in2=$dataUtxoTx#2
+	# fi
 
 	dataPolicyId=$(cardano-cli conway transaction policyid --script-file $dataPolicy)
-	dataTokenName=$(cat $assets/dataNewTokenName.txt)
+	dataTokenName01=$(cat $assets/dataTokenName-01.txt)
+	dataTokenName02=$(cat $assets/dataTokenName-02.txt)
         dataTokens=$(cat $assets/dataTokens.txt)
-	dataTokensDiscardedFile="$assets/dataTokensDiscarded.txt"
+	# dataTokensDiscardedFile="$assets/dataTokensDiscarded.txt"
 
         tokensAmount=$(cat $assets/dataTokensAmount.txt)
 	
 	echo "Reference UTxO with $tokensAmount data tokens:"
 	echo "$dataTokens"
         echo ""
+
+exit 1
 
 	dataTokensMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
 	  --protocol-params-file $assets/protocol.json \

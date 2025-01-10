@@ -378,6 +378,8 @@ executable rollup-update-loop
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-update-loop
+  other-modules:
+    Rollup.Example
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -388,6 +390,7 @@ executable rollup-update-loop
     filepath                       ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
+    random                         ,
     symbolic-base                  ,
     zkfold-cardano                 ,
     QuickCheck

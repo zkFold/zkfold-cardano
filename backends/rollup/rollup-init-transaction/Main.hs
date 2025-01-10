@@ -6,7 +6,7 @@ import           Cardano.Api.Shelley                     (PlutusScript (..), fro
                                                           scriptDataToJsonDetailedSchema,
                                                           shelleyPayAddrToPlutusPubKHash)
 import           Codec.CBOR.Write                        (toStrictByteString)
-import           Control.Monad                           (void)
+import           Control.Monad                           (mapM, void)
 import           Data.Aeson                              (encode)
 import qualified Data.Aeson                              as Aeson
 import           Data.Bifunctor                          (first)
@@ -19,9 +19,9 @@ import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
-import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                                          Show (..), String, concat, const, either, error, length,
-                                                          maybe, putStr, read, replicate, return, zipWith, ($), (++),
+import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Int, Integer, Maybe (..),
+                                                          Show (..), String, concat, const, either, error, length, map,
+                                                          maybe, putStr, read, replicate, return, zipWith, ($), (<$>), (++),
                                                           (-), (.))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
@@ -38,12 +38,18 @@ import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
-import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC                     (nftPolicyCompiled, parkingSpotCompiled, rollupCompiled,
                                                           rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), RollupSetup (..))
 
+
+updateLength :: Int
+updateLength = 2
+
+rmax :: Integer
+rmax = 1000
 
 rollupFee, threadLovelace :: Lovelace
 rollupFee      = Lovelace 15000000
@@ -51,8 +57,10 @@ threadLovelace = Lovelace  3000000
 
 saveRollupPlutus :: FilePath -> TxOutRef -> V3.Address -> IO ()
 saveRollupPlutus path oref addr = do
-  x  <- generate arbitrary
-  ps <- generate arbitrary
+  x         <- generate arbitrary
+  ps        <- generate arbitrary
+  seeds     <- mapM (\_ -> randomRIO (1, rmax)) [1..updateLength]
+  iniState' <- randomRIO (0, bls12_381_field_prime - 1)
 
   let contract = IdentityCircuitContract x ps
 
@@ -60,11 +68,11 @@ saveRollupPlutus path oref addr = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n"
 
-  let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
-      F iniState'                = iniState
+  let (ledgerRules, _, _) = identityCircuitVerificationBytes x ps
 
-      dataUpdate = [dataToBlake iniState]
-      update     = [dataToBlake dataUpdate]
+      dataUpdate  = map (\s -> [dataToBlake s]) seeds
+      update      = dataToBlake <$> dataUpdate
+      iniState    = F iniState'
 
       protoNextState = dataToBlake (iniState, update, [] :: [V3.TxOut], lovelaceValue rollupFee)
       nextState      = toInput protoNextState
@@ -132,7 +140,7 @@ main = do
 
         Left err -> error $ "parse error: " ++ show err
 
-    _ -> error "Error: please provide a pair of command-line string-arguments.\n"
+    _ -> error "Error: please provide a pair of command-line arguments.\n"
 
 
 ----- HELPER FUNCTIONS -----

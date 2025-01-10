@@ -6,6 +6,7 @@ import           Cardano.Api.Shelley                         (PlutusScript (..),
                                                               scriptDataFromJsonDetailedSchema,
                                                               scriptDataToJsonDetailedSchema, toPlutusData)
 import           Codec.CBOR.Write                            (toStrictByteString)
+import           Control.Monad
 import           Data.Aeson                                  (decode)
 import qualified Data.Aeson                                  as Aeson
 import qualified Data.ByteString                             as BS
@@ -14,8 +15,8 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), FilePath, IO, String, concat, drop, error,
-                                                              length, replicate, return, show, take, zipWith, ($), (++),
+import           Prelude                                     (Either (..), Int, Integer, IO, String, concat, error,
+                                                              length, replicate, show, zip, zipWith, ($), (++),
                                                               (-), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
@@ -24,6 +25,7 @@ import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 import           Text.Printf                                 (printf)
 
+import           Rollup.Example                              (evolve)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
@@ -36,34 +38,30 @@ import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer
 rollupFee :: Lovelace
 rollupFee = Lovelace 15000000
 
+rmax :: Integer
+rmax = 1000
+
 -- | Compute next rollup info
-nextRollup :: FilePath -> Fr -> RollupInfo -> IO RollupInfo
-nextRollup path x rollupInfo = do
+nextRollup :: Fr -> RollupInfo -> IO RollupInfo
+nextRollup x rollupInfo = do
   ps <- generate arbitrary
 
   -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  let updateLength = 1
+  let dataUpdate1 = riDataUpdate rollupInfo
+      protoState1 = riProtoState rollupInfo
 
-  let dataUpdate1            = riDataUpdate rollupInfo
-      protoState1            = riProtoState rollupInfo
-      UpdateRollup _ update1 = riRedeemer   rollupInfo
+      state1 = toInput protoState1
 
-      state1      = toInput protoState1
+  dataUpdate2 <- mapM (\bs -> evolve bs) dataUpdate1
 
-      dataUpdate2 = protoState1 : dataUpdate1
-      preUpdate2  = dataToBlake dataUpdate2 : update1
-      update2     = take updateLength preUpdate2
+  let update2     = dataToBlake <$> dataUpdate2
       protoState2 = dataToBlake (state1, update2, [] :: [TxOut], lovelaceValue rollupFee)
 
-      state2      = toInput protoState2
+      state2 = toInput protoState2
 
       (_, _, proof2)  = stateCheckVerificationBytes x ps state2
       rollupRedeemer2 = UpdateRollup proof2 update2
-
-  IO.writeFile (path </> "newDataTokens.txt") $ toDataTokens update2
-  IO.writeFile (path </> "newDataTokensDiscarded.txt") $ toDataTokens $ drop updateLength preUpdate2
-  IO.writeFile (path </> "newDataTokensAmount.txt") . show . length $ update2
 
   return $ RollupInfo dataUpdate2 protoState2 rollupRedeemer2
 
@@ -83,22 +81,28 @@ main = do
 
       let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-      let RollupInfo dataUpdate protoNextState rollupRedeemer = rollupInfo
+      let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
 
-      newRollupInfo <- nextRollup assetsPath x rollupInfo
+      newRollupInfo <- nextRollup x rollupInfo
 
       let nextState    = toInput protoNextState
           F nextState' = nextState
 
-      let rollupDataRedeemer = NewData dataUpdate
+      let dataUpdateIndexed = zip dataUpdate [1 :: Int ..]
 
       BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR nextState'
-      BS.writeFile (assetsPath </> "dataRedeemer.cbor") $ dataToCBOR rollupDataRedeemer
+
+      mapM_ (\(dat, idx) -> BS.writeFile (assetsPath </> (printf "dataRedeemer-%02d.cbor" idx)) . dataToCBOR . NewData $ dat) dataUpdateIndexed
+
       BS.writeFile (assetsPath </> "redeemerRollup.cbor") $ dataToCBOR rollupRedeemer
 
       BS.writeFile (assetsPath </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
 
-      IO.writeFile (assetsPath </> "dataNewTokenName.txt") . byteStringAsHex . fromBuiltin . dataToBlake $ dataUpdate
+      IO.writeFile (assetsPath </> "newDataTokens.txt") $ toDataTokens update
+      IO.writeFile (assetsPath </> "newDataTokensAmount.txt") . show . length $ update
+
+      mapM_ (\(dat, idx) -> IO.writeFile (assetsPath </> (printf "dataTokenName-%02d.txt" idx))
+                            . byteStringAsHex . fromBuiltin . dataToBlake $ dat) dataUpdateIndexed
 
     Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
 

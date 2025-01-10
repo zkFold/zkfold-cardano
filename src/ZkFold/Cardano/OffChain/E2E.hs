@@ -36,7 +36,7 @@ deriving newtype instance FromJSON (V.Vector 19 Fr)
 deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
 deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)
 
-data RollupInfo = RollupInfo { riDataUpdate :: [BuiltinByteString]
+data RollupInfo = RollupInfo { riDataUpdate :: [[BuiltinByteString]]
                              , riProtoState :: BuiltinByteString
                              , riRedeemer   :: RollupRedeemer
                              } deriving stock (Show, Generic)
