@@ -127,11 +127,14 @@ parkScriptMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
   --tx-out $(cat $keypath/parkingSpot.addr)+0 \
   --tx-out-reference-script-file "$assets/rollup.plutus" | sed 's/^[^ ]* //')
 
+in2value=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$in2" '.[$key].value.lovelace')
+
 cardano-cli conway transaction build \
   --testnet-magic $mN \
   --tx-in $in2 \
   --tx-out "$(cat $keypath/parkingSpot.addr) + $parkScriptMinCost lovelace" \
   --tx-out-reference-script-file $assets/rollup.plutus \
+  --tx-out "$(cat $keypath/alice.addr) + $((in2value / 2)) lovelace" \
   --change-address $(cat $keypath/alice.addr) \
   --out-file $keypath/parkedScript.txbody
 
@@ -160,47 +163,8 @@ while true; do
     fi
 done
 
-#-------------------------------- :initial data utxo: -------------------------------
-
-# echo "Sending UTxO for initial data update..."
-
-# in3=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#1
-
-# cardano-cli conway transaction build \
-#   --testnet-magic $mN \
-#   --tx-in $in3 \
-#   --tx-out "$(cat $keypath/parkingSpot.addr) + $rollupLovelaceValue lovelace" \
-#   --tx-out-inline-datum-cbor-file $unitDatum \
-#   --change-address $(cat $keypath/alice.addr) \
-#   --out-file $keypath/prevDataRef.txbody
-
-# cardano-cli conway transaction sign \
-#   --testnet-magic $mN \
-#   --tx-body-file $keypath/prevDataRef.txbody \
-#   --signing-key-file $keypath/alice.skey \
-#   --out-file $keypath/prevDataRef.tx
-
-# cardano-cli conway transaction submit \
-#     --testnet-magic $mN \
-#     --tx-file $keypath/prevDataRef.tx
-
-# prevDataRefTx=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef.tx")
-# prevDataRefOut=$prevDataRefTx#0
-# while true; do
-#     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$prevDataRefOut" 'has($key) | tostring')
-#     if [ $txOnChain == "false" ]; then
-# 	echo "Waiting to see initial data UTxO onchain..."
-# 	sleep $pause
-#     else
-# 	echo ""
-# 	echo "Transaction Id: $prevDataRefTx"
-# 	break
-#     fi
-# done
-
 #-------------------------------- :epilogue: -------------------------------
 
-touch $assets/dataTokensDiscarded.txt
 printf "0" > $privpath/rollupCounter.var
 printf "1" > $privpath/aliceIdx.flag
 

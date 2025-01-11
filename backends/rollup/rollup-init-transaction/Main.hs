@@ -20,8 +20,8 @@ import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Int, Integer,
-                                                          Maybe (..), Show (..), String, concat, const, either, error,
-                                                          length, map, maybe, putStr, read, replicate, return, zipWith,
+                                                          Maybe (..), Show (..), String, const, either, error,
+                                                          length, map, maybe, putStr, read, return,
                                                           ($), (++), (-), (.), (<$>))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
@@ -33,7 +33,6 @@ import           Test.QuickCheck.Gen                     (generate)
 import           Text.Parsec                             (many1)
 import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
-import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
@@ -100,7 +99,6 @@ saveRollupPlutus path oref addr = do
   BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR iniState'
   BS.writeFile (assetsPath </> "rollupInfo.json") $ prettyPrintJSON $ dataToJSON rollupInfo
 
-  IO.writeFile (assetsPath </> "dataTokens.txt") $ toDataTokens update
   IO.writeFile (assetsPath </> "dataTokensAmount.txt") . show . length $ update
 
 saveParkingSpotPlutus :: FilePath -> IO ()
@@ -204,13 +202,3 @@ parseAddress addressStr = do
                   shelleyPayAddrToPlutusPubKHash shellyAddr
     return $ V3.Address (PubKeyCredential pkh) Nothing
 
--- | Get hex representation of bytestring
-byteStringAsHex :: BS.ByteString -> String
-byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
-
--- | String of data tokens to be used by cardano-cli
-toDataTokens :: [BuiltinByteString] -> String
-toDataTokens update = concat $ zipWith zipper update wrapups
-    where
-      zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
-      wrapups      = replicate (length update - 1) " + " ++ [""]
