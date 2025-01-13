@@ -1,49 +1,55 @@
 cradle:
   cabal:
-    - path: "./src"
+    - path: "zkfold-backends/symbolic/symbolic-init-transaction/Main.hs"
+      component: "zkfold-backends:exe:symbolic-init-transaction"
+
+    - path: "zkfold-backends/symbolic/symbolic-transfer-transaction/Main.hs"
+      component: "zkfold-backends:exe:symbolic-transfer-transaction"
+
+    - path: "zkfold-backends/symbolic/symbolic-withdraw-transaction/Main.hs"
+      component: "zkfold-backends:exe:symbolic-withdraw-transaction"
+
+    - path: "zkfold-backends/plonk/plonk-init-transaction/Main.hs"
+      component: "zkfold-backends:exe:plonk-init-transaction"
+
+    - path: "zkfold-backends/plonk/plonk-transfer-transaction/Main.hs"
+      component: "zkfold-backends:exe:plonk-transfer-transaction"
+
+    - path: "zkfold-backends/plonk/plonk-minting-transaction/Main.hs"
+      component: "zkfold-backends:exe:plonk-minting-transaction"
+
+    - path: "zkfold-backends/symbolic-balancing/balancing-init-transaction/Main.hs"
+      component: "zkfold-backends:exe:balancing-init-transaction"
+
+    - path: "zkfold-backends/symbolic-balancing/balancing-parse-input/Main.hs"
+      component: "zkfold-backends:exe:balancing-parse-input"
+
+    - path: "zkfold-backends/symbolic-balancing/balancing-parse-input/Backend/JsonToData.hs"
+      component: "zkfold-backends:exe:balancing-parse-input"
+
+    - path: "zkfold-backends/rollup/rollup-init-transaction/Main.hs"
+      component: "zkfold-backends:exe:rollup-init-transaction"
+
+    - path: "zkfold-backends/rollup/rollup-update-loop/Main.hs"
+      component: "zkfold-backends:exe:rollup-update-loop"
+
+    - path: "zkfold-cardano/src"
       component: "lib:zkfold-cardano"
 
-    - path: "./test"
+    - path: "zkfold-cardano/test"
       component: "zkfold-cardano:test:test"
 
-    - path: "./benchs/bench-cpu-mem/Main.hs"
-      component: "zkfold-cardano:bench:bench-cpu-mem"
+    - path: "zkfold-contracts/src"
+      component: "lib:zkfold-contracts"
 
-    - path: "./benchs/bench-cpu-mem/Bench/Statistics.hs"
-      component: "zkfold-cardano:bench:bench-cpu-mem"
+    - path: "zkfold-contracts/bench/src"
+      component: "zkfold-contracts:lib:zkfold-benchmark"
 
-    - path: "./benchs/bench-rollup/Main.hs"
-      component: "zkfold-cardano:bench:bench-rollup"
+    - path: "zkfold-contracts/bench/bench-cpu-mem/Main.hs"
+      component: "zkfold-contracts:bench:bench-cpu-mem"
 
-    - path: "./benchs/bench-rollup/Bench/Statistics.hs"
-      component: "zkfold-cardano:bench:bench-rollup"
+    - path: "zkfold-contracts/bench/bench-rollup/Main.hs"
+      component: "zkfold-contracts:bench:bench-rollup"
 
-    - path: "./benchs/bench-rollup/Bench/Utils.hs"
-      component: "zkfold-cardano:bench:bench-rollup"
-
-    - path: "./backends/symbolic/symbolic-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:symbolic-init-transaction"
-
-    - path: "./backends/symbolic/symbolic-transfer-transaction/Main.hs"
-      component: "zkfold-cardano:exe:symbolic-transfer-transaction"
-
-    - path: "./backends/symbolic/symbolic-withdraw-transaction/Main.hs"
-      component: "zkfold-cardano:exe:symbolic-withdraw-transaction"
-
-    - path: "./backends/plonk/plonk-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:plonk-init-transaction"
-
-    - path: "./backends/plonk/plonk-transfer-transaction/Main.hs"
-      component: "zkfold-cardano:exe:plonk-transfer-transaction"
-
-    - path: "./backends/plonk/plonk-minting-transaction/Main.hs"
-      component: "zkfold-cardano:exe:plonk-minting-transaction"
-
-    - path: "./backends/rollup/rollup-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:rollup-init-transaction"
-
-    - path: "./backends/rollup/rollup-init-transaction/Backend/NFT.hs"
-      component: "zkfold-cardano:exe:rollup-init-transaction"
-
-    - path: "./backends/rollup/rollup-update-loop/Main.hs"
-      component: "zkfold-cardano:exe:rollup-update-loop"
+    - path: "zkfold-example/src"
+      component: "lib:zkfold-example"

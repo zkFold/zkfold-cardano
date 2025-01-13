@@ -37,7 +37,7 @@ TODO
 
 ### Setting up a local testnet
 
-To run a local testnet, follow instructions in `e2e-test/README.md`.
+To run a local testnet, follow instructions in `scripts/README.md`.
 
 ### End-to-end tests (in progress)
 

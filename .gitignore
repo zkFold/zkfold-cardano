@@ -27,9 +27,9 @@ compiled_scripts/*
 logs
 *.svg
 
-e2e-test/*/keys
+scripts/*/keys
 local-testnet/example
 assets
 test-data
-e2e-test/local-testnet/example/
-e2e-test/*/priv
+scripts/local-testnet/example/
+scripts/*/priv
