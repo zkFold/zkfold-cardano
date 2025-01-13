@@ -1,35 +1,26 @@
 module Main where
 
 import           Cardano.Api                             hiding (Lovelace)
-import           Cardano.Api.Shelley                     (PlutusScript (..), shelleyPayAddrToPlutusPubKHash)
 import           Data.Aeson                              (encode)
-import           Data.Bifunctor                          (first)
 import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
 import           Data.String                             (IsString (fromString))
-import qualified Data.Text                               as T
-import qualified Data.Text.Encoding                      as TE
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
-import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
-import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                                          Show (..), String, const, either, error, maybe, putStr, read,
-                                                          return, ($), (++), (.))
+import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Show (..), error,
+                                                          putStr, return, ($), (++))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.FilePath                         (takeFileName, (</>))
 import           System.Random                           (randomRIO)
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
-import           Text.Parsec                             (many1)
-import           Text.Parsec.Char                        (digit)
-import           Text.Parsec.String                      (Parser)
-import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, dataToJSON, savePlutus)
+import           ZkFold.Cardano.OffChain.Utils           (currencySymbolOf, dataToCBOR, dataToJSON, parseAddress,
+                                                          parseTxOutRef, savePlutus)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, parkingSpotCompiled)
@@ -37,9 +28,10 @@ import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), Rollu
                                                           rollupCompiled)
 import           ZkFold.Cardano.UPLC.RollupData          (rollupDataCompiled)
 
+rollupFee :: Lovelace
+rollupFee = Lovelace 15000000
 
-rollupFee, threadLovelace :: Lovelace
-rollupFee      = Lovelace 15000000
+threadLovelace :: Lovelace
 threadLovelace = Lovelace  3000000
 
 saveRollupPlutus :: FilePath -> TxOutRef -> V3.Address -> IO ()
@@ -123,43 +115,3 @@ main = do
         Left err -> error $ "parse error: " ++ show err
 
     _ -> error "Error: please provide a pair of command-line string-arguments.\n"
-
-
------ HELPER FUNCTIONS -----
-
--- | Credential of compiled validator script
-credentialOf :: CompiledCode a -> Credential
-credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript
-               . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
-
--- | Currency symbol of compiled minting script
-currencySymbolOf :: CompiledCode a -> CurrencySymbol
-currencySymbolOf = CurrencySymbol . toBuiltin . serialiseToRawBytes . hashScript
-                   . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
-
--- | Parser for a positive integer
-integerParser :: Parser Integer
-integerParser = do
-  digits <- many1 digit
-  return $ read digits
-
--- | Parse TxOutRef
-parseTxOutRef :: String -> Either String TxOutRef
-parseTxOutRef orefStr = do
-  (txIdHex, txIxStr) <- case T.splitOn (T.pack "#") (T.pack orefStr) of
-    [txIdHex, txIxStr] -> Right (txIdHex, txIxStr)
-    _                  -> Left "Failed to parse TxOutRef"
-  txId <- case deserialiseFromRawBytesHex AsTxId (TE.encodeUtf8 txIdHex) of
-    Right txId' -> Right . V3.TxId . toBuiltin . serialiseToRawBytes $ txId'
-    Left err    -> Left $ "Failed to parse TxId: " ++ show err
-  txIx <- first (const "Failed to parse TxIx") (readEither (T.unpack txIxStr))
-  return $ TxOutRef txId txIx
-
--- | Parse address in era
-parseAddress :: String -> Either String V3.Address
-parseAddress addressStr = do
-    shellyAddr <- either (const $ Left "Failed to parse Shelly address") Right $
-                  deserialiseFromBech32 (AsAddress AsShelleyAddr) (T.pack addressStr)
-    pkh        <- maybe (Left "Failed to parse address pubkey hash") Right $
-                  shelleyPayAddrToPlutusPubKHash shellyAddr
-    return $ V3.Address (PubKeyCredential pkh) Nothing

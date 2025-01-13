@@ -1,15 +1,13 @@
 module Main where
 
 import           Cardano.Api                                 hiding (Lovelace, TxOut)
-import           Cardano.Api.Shelley                         (PlutusScript (..), scriptDataFromJsonDetailedSchema,
-                                                              toPlutusData)
+import           Cardano.Api.Shelley                         (scriptDataFromJsonDetailedSchema, toPlutusData)
 import           Data.Aeson                                  (decode)
 import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
-import           PlutusTx                                    (CompiledCode)
 import           Prelude                                     (Either (..), IO, String, concat, error, length, replicate,
                                                               return, show, zipWith, ($), (++), (-), (.), (<$>), (==))
 import           System.Directory                            (getCurrentDirectory)
@@ -17,11 +15,10 @@ import           System.FilePath                             (takeFileName, (</>
 import qualified System.IO                                   as IO
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
-import           Text.Printf                                 (printf)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit     (IdentityCircuitContract (..), stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils               (dataToCBOR, dataToJSON)
+import           ZkFold.Cardano.OffChain.Utils               (byteStringAsHex, dataToCBOR, dataToJSON, scriptHashOf)
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupInfo (..), RollupRedeemer (..))
@@ -34,8 +31,6 @@ rollupFee = Lovelace 15000000
 nextRollup :: Fr -> RollupInfo -> IO RollupInfo
 nextRollup x rollupInfo = do
   ps <- generate arbitrary
-
-  -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
   let dataUpdate1            = riDataUpdate rollupInfo
       protoState1            = riProtoState rollupInfo
@@ -97,15 +92,3 @@ main = do
       IO.writeFile (assetsPath </> "dataUpdateLength.txt") . show . length $ update
 
     Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"
-
-
------ HELPER FUNCTIONS -----
-
--- | Get hex representation of bytestring
-byteStringAsHex :: BS.ByteString -> String
-byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
-
--- | Script hash of compiled validator
-scriptHashOf :: CompiledCode a -> V3.ScriptHash
-scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
-               . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
