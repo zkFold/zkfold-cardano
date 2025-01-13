@@ -1,0 +1,86 @@
+cabal-version:      3.0
+
+name:               zkfold-example
+version:            0.1.0.0
+category:           Testing, Cryptography, Math, Symbolic Computation
+author:             Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
+maintainer:         info@zkfold.io
+license:            MIT
+build-type:         Simple
+
+common lang
+  default-language: Haskell2010
+  default-extensions:
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    ImportQualifiedPost
+    LambdaCase
+    NumericUnderscores
+    GeneralizedNewtypeDeriving
+    StandaloneDeriving
+    ViewPatterns
+    AllowAmbiguousTypes
+    FlexibleContexts
+    RankNTypes
+    TypeApplications
+    DataKinds
+    InstanceSigs
+    MultiParamTypeClasses
+    RecordWildCards
+    ScopedTypeVariables
+    FlexibleInstances
+    NoImplicitPrelude
+  ghc-options:
+    -Wall
+    -Wnoncanonical-monad-instances
+    -Wincomplete-uni-patterns
+    -Wincomplete-record-updates
+    -Wredundant-constraints
+    -Widentities
+    -- -Wunused-packages
+    -Wmissing-deriving-strategies
+
+common lang-extra
+  ghc-options:
+    -fobject-code
+    -fno-specialise
+    -fno-spec-constr
+    -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas
+    -fno-strictness
+    -fno-unbox-strict-fields 
+    -fno-unbox-small-strict-fields
+    -fno-full-laziness
+    -fexpose-all-unfoldings
+    -- Comment the following line to enable PlutusTx error messages
+    -- By default, we defer the errors as they mess with the HLS
+    -fplugin-opt PlutusTx.Plugin:defer-errors
+
+library
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  exposed-modules:
+    ZkFold.Cardano.Examples.EqualityCheck
+    ZkFold.Cardano.Examples.IdentityCircuit
+  hs-source-dirs:   src
+  build-depends:
+    adjunctions                    ,
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    cardano-api                    ,
+    cborg                          ,
+    containers                     ,
+    flat                           ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
+    vector                         ,
+    symbolic-base                  ,
+    zkfold-cardano                 ,
