@@ -39,6 +39,8 @@ dataRedeemer01=$assets/dataRedeemer-01.cbor
 dataRedeemer02=$assets/dataRedeemer-02.cbor
 dataRedeemer03=$assets/dataRedeemer-03.cbor
 
+bridgeHash=$assets/bridgeDatumHash.txt
+
 nftPolicy=$assets/nftPolicy.plutus
 nftPolicyId=$(cardano-cli conway transaction policyid --script-file $nftPolicy)
 nftPolicyNm="7a6b466f6c64"  # token name: "zkFold"
@@ -207,6 +209,8 @@ while $loop; do
 	  --tx-out "$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.$nftPolicyNm" \
 	  --tx-out-inline-datum-cbor-file $state \
 	  --tx-out "$(cat $keypath/bob.addr) + $rollupFee lovelace" \
+	  --tx-out "$(cat $keypath/parkingSpot.addr) + 995610 lovelace" \
+	  --tx-out-datum-hash $(cat $bridgeHash) \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --out-file $keypath/rollupOut.txbody
 
@@ -230,7 +234,7 @@ while $loop; do
 
     #-------------------------------- :cleanup before next batch: -------------------------------
 
-    printf "2" > $privpath/aliceIdx.flag
+    printf "3" > $privpath/aliceIdx.flag
     printf "$rollupCounter" > $privpath/rollupCounter.var
 	
     mv $keypath/nextRollupOut.tx $keypath/rollupOut.tx

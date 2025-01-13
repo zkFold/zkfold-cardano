@@ -354,6 +354,8 @@ executable rollup-init-transaction
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-init-transaction
+  other-modules:
+    Rollup.Example
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,

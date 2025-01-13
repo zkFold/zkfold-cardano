@@ -15,10 +15,10 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), IO, Int, Integer, String, concat, error,
-                                                              length, replicate, show, zip, zipWith, ($), (++), (-),
+import           Prelude                                     (Either (..), IO, Int, Integer, Maybe (..), String, concat, error,
+                                                              length, read, replicate, show, zip, zipWith, ($), (++), (-),
                                                               (.), (<$>), (==))
-import           Rollup.Example                              (evolve)
+import           Rollup.Example                              (datumHashEx1, evolve)
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
 import qualified System.IO                                   as IO
@@ -31,19 +31,20 @@ import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerifica
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.UPLC                         (rollupDataCompiled)
+import           ZkFold.Cardano.UPLC                         (parkingSpotCompiled, rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
 import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..))
 
-rollupFee :: Lovelace
+rollupFee, minReq :: Lovelace
 rollupFee = Lovelace 15000000
+minReq    = Lovelace   995610    
 
 rmax :: Integer
 rmax = 1000
 
 -- | Compute next rollup info
-nextRollup :: Fr -> RollupInfo -> IO RollupInfo
-nextRollup x rollupInfo = do
+nextRollup :: Fr -> Integer -> RollupInfo -> IO RollupInfo
+nextRollup x parkingTag rollupInfo = do
   ps <- generate arbitrary
 
   -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
@@ -55,8 +56,14 @@ nextRollup x rollupInfo = do
 
   dataUpdate2 <- mapM (\bs -> evolve bs) dataUpdate1
 
+  let bridgeTxOut = TxOut { txOutAddress         = Address (credentialOf $ parkingSpotCompiled parkingTag) Nothing
+                          , txOutValue           = lovelaceValue minReq
+                          , txOutDatum           = OutputDatumHash datumHashEx1
+                          , txOutReferenceScript = Nothing
+                          }
+
   let update2     = dataToBlake <$> dataUpdate2
-      protoState2 = dataToBlake (state1, update2, [] :: [TxOut], lovelaceValue rollupFee)
+      protoState2 = dataToBlake (state1, update2, [bridgeTxOut], lovelaceValue rollupFee)
 
       state2 = toInput protoState2
 
@@ -74,6 +81,7 @@ main = do
       assetsPath     = path </> "assets"
 
   rollupInfoE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfo.json")
+  parkingTag  <- read @Integer <$> IO.readFile (assetsPath </> "parkingTag.txt")
 
   case rollupInfoE of
     Right rollupInfoScriptData -> do
@@ -83,7 +91,7 @@ main = do
 
       let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
 
-      newRollupInfo <- nextRollup x rollupInfo
+      newRollupInfo <- nextRollup x parkingTag rollupInfo
 
       let nextState    = toInput protoNextState
           F nextState' = nextState
@@ -121,6 +129,11 @@ dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
 
+-- | Credential of compiled validator script
+credentialOf :: CompiledCode a -> Credential
+credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript
+               . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
+
 -- | Script hash of compiled validator
 scriptHashOf :: CompiledCode a -> V3.ScriptHash
 scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
@@ -132,4 +145,3 @@ toDataTokens update = concat $ zipWith zipper update wrapups
     where
       zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
       wrapups      = replicate (length update - 1) " + " ++ [""]
-

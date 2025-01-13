@@ -20,7 +20,7 @@ import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Int, Integer,
-                                                          Maybe (..), Show (..), String, const, either, error,
+                                                          Maybe (..), Show (..), String, concat, const, either, error,
                                                           length, map, maybe, putStr, read, return,
                                                           ($), (++), (-), (.), (<$>))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
@@ -33,8 +33,10 @@ import           Test.QuickCheck.Gen                     (generate)
 import           Text.Parsec                             (many1)
 import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
+import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
+import           Rollup.Example                          (datumHashBSEx1, datumHashEx1)
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
@@ -50,12 +52,21 @@ updateLength = 3
 rmax :: Integer
 rmax = 1000
 
-rollupFee, threadLovelace :: Lovelace
+rollupFee, threadLovelace, minReq :: Lovelace
 rollupFee      = Lovelace 15000000
 threadLovelace = Lovelace  3000000
+minReq         = Lovelace   995610    
 
-saveRollupPlutus :: FilePath -> TxOutRef -> V3.Address -> IO ()
-saveRollupPlutus path oref addr = do
+saveParkingSpotPlutus :: FilePath -> Integer -> IO ()
+saveParkingSpotPlutus path parkingTag = do
+  savePlutus (path </> "assets" </> "parkingSpot.plutus") $ parkingSpotCompiled parkingTag
+  IO.writeFile (path </> "assets" </> "parkingTag.txt") $ show parkingTag
+
+saveNftPolicyPlutus :: FilePath -> TxOutRef -> IO ()
+saveNftPolicyPlutus path oref = savePlutus (path </> "assets" </> "nftPolicy.plutus") $ nftPolicyCompiled oref
+
+saveRollupPlutus :: FilePath -> Integer -> TxOutRef -> V3.Address -> IO ()
+saveRollupPlutus path parkingTag oref addr = do
   x         <- generate arbitrary
   ps        <- generate arbitrary
   seeds     <- mapM (\_ -> randomRIO (1, rmax)) [1..updateLength]
@@ -73,7 +84,13 @@ saveRollupPlutus path oref addr = do
       update      = dataToBlake <$> dataUpdate
       iniState    = F iniState'
 
-      protoNextState = dataToBlake (iniState, update, [] :: [V3.TxOut], lovelaceValue rollupFee)
+  let bridgeTxOut = V3.TxOut { txOutAddress         = Address (credentialOf $ parkingSpotCompiled parkingTag) Nothing
+                             , txOutValue           = lovelaceValue minReq
+                             , txOutDatum           = OutputDatumHash datumHashEx1
+                             , txOutReferenceScript = Nothing
+                             }
+
+      protoNextState = dataToBlake (iniState, update, [bridgeTxOut], lovelaceValue rollupFee)
       nextState      = toInput protoNextState
 
       (_, _, proof) = stateCheckVerificationBytes x ps nextState
@@ -100,14 +117,7 @@ saveRollupPlutus path oref addr = do
   BS.writeFile (assetsPath </> "rollupInfo.json") $ prettyPrintJSON $ dataToJSON rollupInfo
 
   IO.writeFile (assetsPath </> "dataTokensAmount.txt") . show . length $ update
-
-saveParkingSpotPlutus :: FilePath -> IO ()
-saveParkingSpotPlutus path = do
-  randomInt <- randomRIO (1, 10000)
-  savePlutus (path </> "assets" </> "parkingSpot.plutus") $ parkingSpotCompiled randomInt
-
-saveNftPolicyPlutus :: FilePath -> TxOutRef -> IO ()
-saveNftPolicyPlutus path oref = savePlutus (path </> "assets" </> "nftPolicy.plutus") $ nftPolicyCompiled oref
+  IO.writeFile (assetsPath </> "bridgeDatumHash.txt") . byteStringAsHex . fromBuiltin $ datumHashBSEx1
 
 main :: IO ()
 main = do
@@ -130,9 +140,11 @@ main = do
             return (nftOref, addr)
       case argsE of
         Right (nftOref, addr) -> do
-          saveRollupPlutus path nftOref addr
-          saveParkingSpotPlutus path
+          parkingTag <- randomRIO (1, 10000)
+
+          saveParkingSpotPlutus path parkingTag
           saveNftPolicyPlutus path nftOref
+          saveRollupPlutus path parkingTag nftOref addr
 
           putStr "\nDone serializing plutus scripts and initializing state.\n\n"
 
@@ -201,4 +213,8 @@ parseAddress addressStr = do
     pkh        <- maybe (Left "Failed to parse address pubkey hash") Right $
                   shelleyPayAddrToPlutusPubKHash shellyAddr
     return $ V3.Address (PubKeyCredential pkh) Nothing
+
+-- | Get hex representation of bytestring
+byteStringAsHex :: BS.ByteString -> String
+byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
 
