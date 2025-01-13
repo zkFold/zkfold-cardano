@@ -24,13 +24,11 @@ import qualified UntypedPlutusCore                           as UPLC
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
-import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..))
+import           ZkFold.Cardano.Examples.IdentityCircuit
 import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.UPLC                         (rollupCompiled)
-import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..), RollupSetup (..))
+import           ZkFold.Cardano.UPLC.Rollup                       
 
 
 --------------- SETUP  ----------------

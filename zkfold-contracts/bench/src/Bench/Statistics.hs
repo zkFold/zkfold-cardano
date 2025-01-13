@@ -1,4 +1,4 @@
-module Bench.Statistics (TestSize (..), printHeader, printSizeStatistics) where
+module Bench.Statistics (TestSize (..), printHeader, printSizeStatistics, getCostsCek) where
 
 import qualified Data.ByteString                                   as BS
 import           Data.SatInt                                       (fromSatInt)

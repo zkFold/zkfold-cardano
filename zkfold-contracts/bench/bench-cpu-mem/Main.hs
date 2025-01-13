@@ -1,4 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
@@ -6,10 +14,6 @@ module Main where
 
 
 import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
-import           Cardano.Api                              (File (..), IsPlutusScriptLanguage, PlutusScript,
-                                                           PlutusScriptV3, writeFileTextEnvelope)
-import           Cardano.Api.Shelley                      (PlutusScript (..))
-import           Control.Monad                            (void)
 import qualified Data.ByteString                          as BS
 import qualified Data.Maybe                               as Haskell
 import           Data.String                              (IsString (fromString))
@@ -18,8 +22,9 @@ import           Flat.Types                               ()
 import           PlutusCore                               (DefaultFun, DefaultUni)
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude                         (($), (.))
+import           PlutusTx                                 (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
+                                                           unsafeApplyCode)
+import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
 import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
                                                            (.))
 import           System.Directory                         (createDirectoryIfMissing)
@@ -30,13 +35,15 @@ import           Text.Printf                              (hPrintf)
 import qualified UntypedPlutusCore                        as UPLC
 import           UntypedPlutusCore                        (UnrestrictedProgram (..))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC                      (plonkVerifierCompiled, plonkVerifierTokenCompiled,
-                                                           plonkVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkVerifierToken   (plonkVerifierTokenCompiled)
+import           ZkFold.Cardano.UPLC.PlonkVerifierTx      (plonkVerifierTxCompiled)
+
 
 contextPlonk :: ProofBytes -> ScriptContext
 contextPlonk redeemerProof = ScriptContext
@@ -133,12 +140,21 @@ saveFlat2 input proof filePath code =
            `unsafeApplyCode` liftCodeDef (toBuiltinData input)
            `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
-writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
-writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
+untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedPlonkVerifier computation input' proof' =
+    check
+    ( verify @PlonkupPlutus @HaskellCore
+        computation
+        (unsafeFromBuiltinData input')
+        (unsafeFromBuiltinData proof')
+    )
 
-savePlutus :: FilePath -> CompiledCode a -> IO ()
-savePlutus filePath =
-  writePlutusScriptToFile @PlutusScriptV3 filePath . PlutusScriptSerialised . serialiseCompiledCode
+
+plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+plonkVerifierCompiled computation =
+    $$(compile [|| untypedPlonkVerifier ||])
+    `unsafeApplyCode` liftCodeDef computation
+
 
 main :: IO ()
 main = do
