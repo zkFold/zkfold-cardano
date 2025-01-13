@@ -22,7 +22,6 @@ else
     pause=4
 fi
 
-unitDatum=$assets/unit.cbor
 unitRedeemer=$assets/unit.cbor
 state=$assets/datum.cbor
 rollupLovelaceValue=3000000
@@ -134,7 +133,8 @@ cardano-cli conway transaction build \
   --tx-in $in2 \
   --tx-out "$(cat $keypath/parkingSpot.addr) + $parkScriptMinCost lovelace" \
   --tx-out-reference-script-file $assets/rollup.plutus \
-  --tx-out "$(cat $keypath/alice.addr) + $((in2value / 2)) lovelace" \
+  --tx-out "$(cat $keypath/alice.addr) + $((in2value / 3)) lovelace" \
+  --tx-out "$(cat $keypath/alice.addr) + $((in2value / 3)) lovelace" \
   --change-address $(cat $keypath/alice.addr) \
   --out-file $keypath/parkedScript.txbody
 

@@ -45,7 +45,7 @@ import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), R
 
 
 updateLength :: Int
-updateLength = 2
+updateLength = 3
 
 rmax :: Integer
 rmax = 1000
