@@ -8,7 +8,7 @@ import           PlutusTx.Prelude                            ((.))
 
 import           ZkFold.Base.Algebra.Basic.Field             (toZp)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (PointCompressed)
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (CompressedPoint)
 import           ZkFold.Base.Data.ByteString                 (toByteString)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (FromTranscript (..), ToTranscript (..))
 import           ZkFold.Cardano.OffChain.BLS12_381           (convertZp)
@@ -29,7 +29,7 @@ instance FromTranscript BuiltinByteString F where
 instance ToTranscript BuiltinByteString Fr where
     toTranscript = integerToByteString LittleEndian 32 . convertZp
 
-instance ToTranscript BuiltinByteString (PointCompressed BLS12_381_G1) where
+instance ToTranscript BuiltinByteString (CompressedPoint BLS12_381_G1) where
     toTranscript = toBuiltin . toByteString
 
 instance FromTranscript BuiltinByteString Fr where

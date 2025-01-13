@@ -11,15 +11,15 @@ module ZkFold.Cardano.OnChain.Plonkup where
 import           Data.Functor.Rep                            (Rep, Representable)
 import           GHC.Base                                    (Ord)
 import           GHC.Generics                                (Par1, U1)
-import           PlutusTx                                    (UnsafeFromData (..))
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude                            (Bool (..), BuiltinUnit, check, ($), (&&), (.), (<>), (==))
+import           PlutusTx.Prelude                            (Bool (..), ($), (&&), (.), (<>), (==))
 import           Prelude                                     (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Algebra.Basic.Number
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
-import           ZkFold.Base.Protocol.NonInteractiveProof
+import           ZkFold.Base.Algebra.Basic.Number            (KnownNat)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1)
+import           ZkFold.Base.Protocol.NonInteractiveProof    (CompatibleNonInteractiveProofs (..), CoreFunction,
+                                                              NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
@@ -196,12 +196,3 @@ instance
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof
-
-untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-untypedPlonkVerifier computation input' proof' =
-    check
-    ( verify @PlonkupPlutus @HaskellCore
-        computation
-        (unsafeFromBuiltinData input')
-        (unsafeFromBuiltinData proof')
-    )
