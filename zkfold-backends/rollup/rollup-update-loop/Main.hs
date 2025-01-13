@@ -1,13 +1,9 @@
 module Main where
 
 import           Cardano.Api                                 hiding (Lovelace, TxOut)
-import           Cardano.Api.Ledger                          (toCBOR)
-import           Cardano.Api.Shelley                         (PlutusScript (..), fromPlutusData,
-                                                              scriptDataFromJsonDetailedSchema,
-                                                              scriptDataToJsonDetailedSchema, toPlutusData)
-import           Codec.CBOR.Write                            (toStrictByteString)
+import           Cardano.Api.Shelley                         (PlutusScript (..), scriptDataFromJsonDetailedSchema,
+                                                              toPlutusData)
 import           Data.Aeson                                  (decode)
-import qualified Data.Aeson                                  as Aeson
 import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
@@ -24,13 +20,12 @@ import           Test.QuickCheck.Gen                         (generate)
 import           Text.Printf                                 (printf)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
-import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
+import           ZkFold.Cardano.Examples.IdentityCircuit     (IdentityCircuitContract (..), stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils               (dataToCBOR, dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.UPLC                         (rollupDataCompiled)
-import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
-import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..))
+import           ZkFold.Cardano.UPLC.Rollup                  (RollupInfo (..), RollupRedeemer (..))
+import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..), rollupDataCompiled)
 
 rollupFee :: Lovelace
 rollupFee = Lovelace 15000000
@@ -71,7 +66,7 @@ main = do
   currentDir <- getCurrentDirectory
   let currentDirName = takeFileName currentDir
       path           = if currentDirName == "rollup" then (".." </> "..")
-                          else if currentDirName == "e2e-test" then ".." else "."
+                          else if currentDirName == "scripts" then ".." else "."
       assetsPath     = path </> "assets"
 
   rollupInfoE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfo.json")
@@ -109,14 +104,6 @@ main = do
 -- | Get hex representation of bytestring
 byteStringAsHex :: BS.ByteString -> String
 byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
-
--- | Serialise data to CBOR.
-dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
-
--- | Serialise data to CBOR and then wrap it in a JSON object.
-dataToJSON :: ToData a => a -> Aeson.Value
-dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
 
 -- | Script hash of compiled validator
 scriptHashOf :: CompiledCode a -> V3.ScriptHash

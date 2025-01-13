@@ -1,21 +1,14 @@
 module Main where
 
-import           Cardano.Api                           (prettyPrintJSON, unsafeHashableScriptData)
-import           Cardano.Api.Shelley                   (fromPlutusData, scriptDataToJsonDetailedSchema)
+import           Cardano.Api                           (prettyPrintJSON)
 import           Data.Aeson                            (decode)
-import qualified Data.Aeson                            as Aeson
 import           Data.ByteString                       as BS (writeFile)
 import qualified Data.ByteString.Lazy                  as BL
 import           Data.Maybe                            (fromJust)
-import qualified PlutusLedgerApi.V3                    as V3
-import           PlutusTx                              (ToData (..))
 import           Prelude                               (IO, Show (..), putStr, ($), (++), (.), (<$>))
 
-import           ZkFold.Cardano.Examples.EqualityCheck (equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E           (EqualityCheckContract (..))
-
-dataToJSON :: ToData a => a -> Aeson.Value
-dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
+import           ZkFold.Cardano.Examples.EqualityCheck (EqualityCheckContract(..), equalityCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils         (dataToJSON)
 
 main :: IO ()
 main = do

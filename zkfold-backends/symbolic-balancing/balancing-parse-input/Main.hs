@@ -1,32 +1,25 @@
 module Main where
 
 import           Backend.JsonToData                      (parseJsonToTxInInfoList)
-import           Cardano.Api                             (IsPlutusScriptLanguage, PlutusScriptV3, prettyPrintJSON,
-                                                          unsafeHashableScriptData, writeFileTextEnvelope)
-import           Cardano.Api.Ledger                      (toCBOR)
-import           Cardano.Api.Shelley                     (File (..), PlutusScript (..), fromPlutusData,
-                                                          scriptDataToJsonDetailedSchema)
-import           Codec.CBOR.Write                        (toStrictByteString)
-import           Control.Monad                           (void)
+import           Cardano.Api                             hiding (Lovelace)
 import           Data.Aeson                              (decode)
-import qualified Data.Aeson                              as Aeson
 import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
 import           Data.Maybe                              (fromJust)
 import           PlutusLedgerApi.V3                      as V3
-import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins.Internal              (serialiseData)
 import           PlutusTx.Prelude                        (Ordering (..), blake2b_224, compare, sortBy)
-import           Prelude                                 (Either (..), FilePath, IO, Maybe (..), Show (..), concat,
-                                                          putStr, sequenceA, ($), (++), (.), (<$>), (>>))
+import           Prelude                                 (Either (..), IO, Maybe (..), Show (..), concat, putStr,
+                                                          sequenceA, ($), (++), (.), (<$>), (>>))
 import           System.Directory                        (getCurrentDirectory)
 import           System.Exit                             (exitFailure)
 import           System.FilePath                         (takeFileName, (</>))
 
-import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
+import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
+                                                          identityCircuitVerificationBytes, stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
-import           ZkFold.Cardano.UPLC                     (plonkVerifierTxCompiled')
+import           ZkFold.Cardano.UPLC.PlonkVerifierTx     (plonkVerifierTxCompiled')
 
 
 main :: IO ()
@@ -35,7 +28,7 @@ main = do
   let path = case takeFileName currentDir of
         "symbolic-balancing" -> ".." </> ".."
         "backends"           -> ".."
-        "e2e-test"           -> ".."
+        "scripts"            -> ".."
         _                    -> "."
 
   IdentityCircuitContract x ps <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "symbolic-contract-data.json")
@@ -73,23 +66,6 @@ main = do
 
 
 ----- HELPER FUNCTIONS -----
-
--- | Write serialized script to a file.
-writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
-writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
-
--- | Serialize plutus script.
-savePlutus :: FilePath -> CompiledCode a -> IO ()
-savePlutus filePath =
-  writePlutusScriptToFile @PlutusScriptV3 filePath . PlutusScriptSerialised . V3.serialiseCompiledCode
-
--- | Serialise data to CBOR and then wrap it in a JSON object.
-dataToJSON :: ToData a => a -> Aeson.Value
-dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . V3.toData
-
--- | Serialise data to CBOR.
-dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . V3.toData
 
 -- | Compare function for 'TxOutRef'
 outRefCompare :: TxOutRef -> TxOutRef -> Ordering

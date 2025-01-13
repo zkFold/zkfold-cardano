@@ -1,14 +1,8 @@
 module Main where
 
 import           Cardano.Api                             hiding (Lovelace)
-import           Cardano.Api.Ledger                      (toCBOR)
-import           Cardano.Api.Shelley                     (PlutusScript (..), fromPlutusData,
-                                                          scriptDataToJsonDetailedSchema,
-                                                          shelleyPayAddrToPlutusPubKHash)
-import           Codec.CBOR.Write                        (toStrictByteString)
-import           Control.Monad                           (void)
+import           Cardano.Api.Shelley                     (PlutusScript (..), shelleyPayAddrToPlutusPubKHash)
 import           Data.Aeson                              (encode)
-import qualified Data.Aeson                              as Aeson
 import           Data.Bifunctor                          (first)
 import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
@@ -33,13 +27,15 @@ import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
 import           Text.Read                               (readEither)
 
-import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
+import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
+                                                          identityCircuitVerificationBytes, stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, dataToJSON, savePlutus)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.UPLC                     (nftPolicyCompiled, parkingSpotCompiled, rollupCompiled,
-                                                          rollupDataCompiled)
-import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), RollupSetup (..))
+import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, parkingSpotCompiled)
+import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..),
+                                                          rollupCompiled)
+import           ZkFold.Cardano.UPLC.RollupData          (rollupDataCompiled)
 
 
 rollupFee, threadLovelace :: Lovelace
@@ -101,9 +97,9 @@ main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
-        "rollup"   -> ".." </> ".."
-        "e2e-test" -> ".."
-        _          -> "."
+        "rollup"  -> ".." </> ".."
+        "scripts" -> ".."
+        _         -> "."
 
   createDirectoryIfMissing True $ path </> "test-data"
   createDirectoryIfMissing True $ path </> "assets"
@@ -130,23 +126,6 @@ main = do
 
 
 ----- HELPER FUNCTIONS -----
-
--- | Serialise data to CBOR and then wrap it in a JSON object.
-dataToJSON :: ToData a => a -> Aeson.Value
-dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
-
--- | Serialise data to CBOR.
-dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
-
--- | Write serialized script to a file.
-writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
-writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
-
--- | Serialize plutus script
-savePlutus :: FilePath -> CompiledCode a -> IO ()
-savePlutus filePath =
-  writePlutusScriptToFile @PlutusScriptV3 filePath . PlutusScriptSerialised . serialiseCompiledCode
 
 -- | Credential of compiled validator script
 credentialOf :: CompiledCode a -> Credential
