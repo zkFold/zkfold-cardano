@@ -1,6 +1,5 @@
 module Main where
 
-import           Backend.JsonToData                      (parseJsonToTxInInfoList)
 import           Cardano.Api                             hiding (Lovelace)
 import           Data.Aeson                              (decode)
 import qualified Data.ByteString                         as BS
@@ -8,7 +7,7 @@ import qualified Data.ByteString.Lazy                    as BL
 import           Data.Maybe                              (fromJust)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx.Builtins.Internal              (serialiseData)
-import           PlutusTx.Prelude                        (Ordering (..), blake2b_224, compare, sortBy)
+import           PlutusTx.Prelude                        (blake2b_224, sortBy)
 import           Prelude                                 (Either (..), IO, Maybe (..), Show (..), concat, putStr,
                                                           sequenceA, ($), (++), (.), (<$>), (>>))
 import           System.Directory                        (getCurrentDirectory)
@@ -17,10 +16,9 @@ import           System.FilePath                         (takeFileName, (</>))
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
+import           ZkFold.Cardano.OffChain.Utils
 import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
 import           ZkFold.Cardano.UPLC.PlonkVerifierTx     (plonkVerifierTxCompiled')
-
 
 main :: IO ()
 main = do
@@ -63,13 +61,3 @@ main = do
       BS.writeFile (assetsPath </> "redeemerSymbolicVerifier.json") $ prettyPrintJSON $ dataToJSON proof
 
     Left errMsg -> putStr ("Error: " ++ errMsg ++ "\n\n") >> exitFailure
-
-
------ HELPER FUNCTIONS -----
-
--- | Compare function for 'TxOutRef'
-outRefCompare :: TxOutRef -> TxOutRef -> Ordering
-outRefCompare o1 o2 =
-    case compare (txOutRefId o1) (txOutRefId o2) of
-        EQ  -> compare (txOutRefIdx o1) (txOutRefIdx o2)
-        ord -> ord

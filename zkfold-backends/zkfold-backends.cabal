@@ -210,8 +210,6 @@ executable balancing-parse-input
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   symbolic-balancing/balancing-parse-input
-  other-modules:
-    Backend.JsonToData
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
