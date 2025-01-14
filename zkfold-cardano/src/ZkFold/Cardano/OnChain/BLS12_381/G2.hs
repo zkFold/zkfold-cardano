@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-orphans   #-}
 
 module ZkFold.Cardano.OnChain.BLS12_381.G2 where

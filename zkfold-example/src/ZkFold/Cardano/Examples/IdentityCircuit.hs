@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TypeOperators  #-}
-
 module ZkFold.Cardano.Examples.IdentityCircuit where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)

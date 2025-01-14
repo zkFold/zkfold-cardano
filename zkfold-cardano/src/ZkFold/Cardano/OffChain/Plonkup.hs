@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
-{-# LANGUAGE ExplicitNamespaces #-}
 
 module ZkFold.Cardano.OffChain.Plonkup where
 

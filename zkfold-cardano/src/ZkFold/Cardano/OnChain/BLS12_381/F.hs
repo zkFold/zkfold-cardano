@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveAnyClass  #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies    #-}
-
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module ZkFold.Cardano.OnChain.BLS12_381.F where

@@ -35,6 +35,10 @@ common lang
     ScopedTypeVariables
     FlexibleInstances
     NoImplicitPrelude
+    TemplateHaskell
+    DeriveAnyClass
+    NamedFieldPuns
+    OverloadedStrings
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -76,21 +80,13 @@ library
     ZkFold.Cardano.UPLC.Wallet
   hs-source-dirs:   src
   build-depends:
-    aeson                          ,
     base                >=4.9 && <5,
-    bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
-    directory                      ,
-    flat                           ,
     plutus-core             ^>=1.36,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     plutus-tx-plugin        ^>=1.36,
-    QuickCheck                     ,
     symbolic-base                  ,
     zkfold-cardano                 ,
-    zkfold-example                 ,
 
 library zkfold-benchmark
   import:           lang
@@ -100,21 +96,13 @@ library zkfold-benchmark
     Bench.Utils
   hs-source-dirs:   bench/src
   build-depends:
-    aeson                          ,
     base                >=4.9 && <5,
     bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
-    directory                      ,
     flat                           ,
     plutus-core             ^>=1.36,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     plutus-tx-plugin        ^>=1.36,
-    QuickCheck                     ,
-    symbolic-base                  ,
-    zkfold-cardano                 ,
-    zkfold-example                 ,
 
 benchmark bench-cpu-mem
   import:           lang
@@ -125,11 +113,8 @@ benchmark bench-cpu-mem
   hs-source-dirs:   bench/bench-cpu-mem
   type:             exitcode-stdio-1.0
   build-depends:
-    aeson                          ,
     base                >=4.9 && <5,
     bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
     directory                      ,
     flat                           ,
     plutus-core             ^>=1.36,
@@ -155,8 +140,6 @@ benchmark bench-rollup
     aeson                          ,
     base                >=4.9 && <5,
     bytestring                     ,
-    cardano-api                    ,
-    containers                     ,
     directory                      ,
     filepath                       ,
     plutus-core             ^>=1.36,

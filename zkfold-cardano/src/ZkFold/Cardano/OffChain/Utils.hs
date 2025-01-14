@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module ZkFold.Cardano.OffChain.Utils where
 
 import           Cardano.Api         hiding (Lovelace)

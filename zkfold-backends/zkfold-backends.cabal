@@ -35,6 +35,7 @@ common lang
     ScopedTypeVariables
     FlexibleInstances
     NoImplicitPrelude
+    OverloadedStrings
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -72,11 +73,7 @@ executable symbolic-init-transaction
     aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
-    cardano-api                    ,
     directory                      ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
     zkfold-cardano                 ,
     QuickCheck                     ,
     zkfold-example                 ,
@@ -90,17 +87,11 @@ executable symbolic-transfer-transaction
   main-is:          Main.hs
   hs-source-dirs:   symbolic/symbolic-transfer-transaction
   build-depends:
-    aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
     cborg                          ,
     parsec                         ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    zkfold-cardano                 ,
-    zkfold-example                 ,
-    zkfold-contracts               ,
 
 executable symbolic-withdraw-transaction
   import:           lang
@@ -114,11 +105,8 @@ executable symbolic-withdraw-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
     zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-contracts               ,
 
 executable plonk-init-transaction
   import:           lang
@@ -131,11 +119,7 @@ executable plonk-init-transaction
     aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
-    cardano-api                    ,
     directory                      ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
     zkfold-cardano                 ,
     zkfold-example                 ,
     zkfold-contracts               ,
@@ -149,15 +133,11 @@ executable plonk-transfer-transaction
   main-is:          Main.hs
   hs-source-dirs:   plonk/plonk-transfer-transaction
   build-depends:
-    aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
     cborg                          ,
     parsec                         ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    zkfold-cardano                 ,
 
 executable plonk-minting-transaction
   import:           lang
@@ -171,12 +151,9 @@ executable plonk-minting-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
-    cborg                          ,
     plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
     zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-contracts               ,
 
 executable balancing-init-transaction
   import:           lang
@@ -189,15 +166,8 @@ executable balancing-init-transaction
     aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
     directory                      ,
     filepath                       ,
-    parsec                         ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
-    symbolic-base                  ,
     zkfold-cardano                 ,
     zkfold-example                 ,
     zkfold-contracts               ,
@@ -215,13 +185,10 @@ executable balancing-parse-input
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
-    cborg                          ,
     directory                      ,
     filepath                       ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
-    text                           ,
     zkfold-cardano                 ,
     zkfold-example                 ,
     zkfold-contracts               ,
@@ -238,15 +205,11 @@ executable rollup-init-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
-    cborg                          ,
     directory                      ,
     filepath                       ,
-    parsec                         ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
     random                         ,
-    text                           ,
     zkfold-cardano                 ,
     zkfold-example                 ,
     zkfold-contracts               ,
@@ -264,11 +227,9 @@ executable rollup-update-loop
     base              >= 4.9 && < 5,
     bytestring                     ,
     cardano-api                    ,
-    cborg                          ,
     directory                      ,
     filepath                       ,
     plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
     symbolic-base                  ,
     zkfold-cardano                 ,
     zkfold-example                 ,

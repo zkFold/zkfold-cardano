@@ -35,6 +35,8 @@ common lang
     ScopedTypeVariables
     FlexibleInstances
     NoImplicitPrelude
+    DeriveAnyClass
+    TypeOperators
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -70,17 +72,7 @@ library
     ZkFold.Cardano.Examples.IdentityCircuit
   hs-source-dirs:   src
   build-depends:
-    adjunctions                    ,
     aeson                          ,
     base              >= 4.9 && < 5,
-    bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
-    containers                     ,
-    flat                           ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
-    vector                         ,
     symbolic-base                  ,
     zkfold-cardano                 ,

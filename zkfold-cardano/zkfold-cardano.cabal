@@ -35,6 +35,14 @@ common lang
     ScopedTypeVariables
     FlexibleInstances
     NoImplicitPrelude
+    ExplicitNamespaces
+    OverloadedStrings
+    DeriveAnyClass
+    TemplateHaskell
+    TypeFamilies
+    NoStarIsType
+    TypeOperators
+    UndecidableInstances
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -86,13 +94,9 @@ library
     text                           ,
     cardano-api                    ,
     cborg                          ,
-    containers                     ,
-    flat                           ,
     parsec                         ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
-    vector                         ,
     symbolic-base                  ,
 
 test-suite test
@@ -123,7 +127,6 @@ test-suite test
     hspec                          ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
     tasty                          ,
     tasty-expected-failure         ,
     tasty-hunit                    ,
