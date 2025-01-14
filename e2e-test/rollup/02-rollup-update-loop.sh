@@ -49,6 +49,12 @@ parkingSpotAddr=$(cat $keypath/parkingSpot.addr)
 
 collateral=$(cardano-cli transaction txid --tx-file "$keypath/splitAlice.tx")#0
 
+#---------------------------- :numeric parameters: ----------------------------
+
+rollupLovelaceValue=3000000  # Value (in lovelaces) to be transfered with each rollup
+rollupFee=15000000  # rollup fee
+rollupsBeforeCleanup=5  # number of rollups before data token cleanup
+
 #---------------------------------- :macros: ----------------------------------
 
 query_utxo_has_key() {
@@ -93,11 +99,6 @@ data_token_tx_submit () {
 	--tx-file $keypath/$txFile
 }
 
-#---------------------------- :numeric parameters: ----------------------------
-
-rollupLovelaceValue=3000000  # Value (in lovelaces) to be transfered with each rollup
-rollupFee=15000000  # rollup fee
-
 #-------------------------------- :rollup loop: -------------------------------
 
 loop=true
@@ -111,6 +112,10 @@ while $loop; do
 	echo "Waiting to see rollup tx onchain..."
 	sleep $pause
     else
+	if [ $((rollupCounter % rollupsBeforeCleanup)) -eq 0 ] && [ $rollupCounter -gt 0 ]; then
+	    ./rollup/data-cleanup.sh  # Regularly burn used data tokens
+	fi
+
 	echo ""
 	echo "Starting next rollup update..."
 	echo ""
@@ -119,7 +124,7 @@ while $loop; do
 
 	#------------------------------ :send update data token: -----------------------------
 
-	echo "Sending update data token..."
+	echo "Sending update data tokens..."
 	echo ""
 
 	if [ ! -f $keypath/prevDataRef-01.tx ]; then
@@ -192,7 +197,12 @@ while $loop; do
 	echo ""
 
 	aliceIdx=$(cat $privpath/aliceIdx.flag)
-	in1=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")#$aliceIdx
+	dataCleaned=$(cat $privpath/dataCleaned.flag)
+	if [ "$dataCleaned" -eq 0 ]; then
+	    in1=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")#$aliceIdx
+	else
+	    in1=$(cardano-cli conway transaction txid --tx-file "$keypath/dataClean.tx")#0
+	fi
 
 	cardano-cli conway transaction build \
 	  --testnet-magic $mN \
@@ -235,6 +245,7 @@ while $loop; do
     #-------------------------------- :cleanup before next batch: -------------------------------
 
     printf "3" > $privpath/aliceIdx.flag
+    printf "0" > $privpath/dataCleaned.flag
     printf "$rollupCounter" > $privpath/rollupCounter.var
 	
     mv $keypath/nextRollupOut.tx $keypath/rollupOut.tx

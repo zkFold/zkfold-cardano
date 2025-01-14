@@ -167,6 +167,7 @@ done
 
 printf "0" > $privpath/rollupCounter.var
 printf "1" > $privpath/aliceIdx.flag
+printf "0" > $privpath/dataCleaned.flag
 
 echo ""
 echo "Initialization completed."
