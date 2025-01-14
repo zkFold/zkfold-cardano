@@ -1,4 +1,4 @@
-# Off-chain code for constructing zkFold Symbolic transactions
+# zkFold: Off-chain code for constructing zkFold Symbolic transactions
 
 Contains off-chain code for different types of zkFold Symbolic transactions.
 
