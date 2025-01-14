@@ -1,23 +1,23 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ExplicitNamespaces #-}
 
 module ZkFold.Cardano.OffChain.Plonkup where
 
-import           GHC.Generics
-import           PlutusTx.Builtins
+import           GHC.Generics                                      (Par1 (..))
+import           PlutusTx.Builtins                                 (BuiltinByteString)
 import           PlutusTx.Prelude                                  (($), (.))
 import           Prelude                                           (fromIntegral)
 
-import           ZkFold.Base.Algebra.Basic.Number
+import           ZkFold.Base.Algebra.Basic.Number                  (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2)
 import           ZkFold.Base.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                      (Plonkup)
-import           ZkFold.Base.Protocol.Plonkup.Input
+import           ZkFold.Base.Protocol.Plonkup.Input                (PlonkupInput (..))
 import           ZkFold.Base.Protocol.Plonkup.Proof
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup
 import           ZkFold.Cardano.OffChain.BLS12_381                 (convertG1, convertG2, convertZp)
-import           ZkFold.Cardano.OnChain.BLS12_381
+import           ZkFold.Cardano.OnChain.BLS12_381.F                (F (..))
 import           ZkFold.Cardano.OnChain.Plonkup.Data               (InputBytes, ProofBytes (..), SetupBytes (..))
 import           ZkFold.Prelude                                    (log2ceiling)
 

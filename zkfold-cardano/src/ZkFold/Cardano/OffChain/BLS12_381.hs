@@ -1,7 +1,7 @@
 module ZkFold.Cardano.OffChain.BLS12_381 where
 
 import           GHC.Natural                                 (naturalToInteger)
-import           PlutusTx.Builtins
+import           PlutusTx.Builtins                           (BuiltinByteString, Integer, toBuiltin)
 import           PlutusTx.Prelude                            ((.))
 
 import           ZkFold.Base.Algebra.Basic.Field             (Zp, fromZp)

@@ -1,7 +1,7 @@
 module ZkFold.Cardano.OnChain.Utils where
 
-import           PlutusLedgerApi.V3
-import           PlutusTx.Builtins
+import           PlutusLedgerApi.V3 (BuiltinByteString, Credential, CurrencySymbol, ScriptPurpose (..), ToData (..))
+import           PlutusTx.Builtins  (Integer, blake2b_224, serialiseData)
 import           PlutusTx.Prelude   (Bool (..), Eq (..), (.))
 
 type ScriptLabel = Integer  -- Implements distinct addresses for scripts
