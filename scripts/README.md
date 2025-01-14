@@ -1,11 +1,5 @@
 # Cli scripts
 
-
-## Docs
-
-We have a description of transactions in `src-docs`.
-
-
 ## Scripts
 
 Execution instructions for *Plonk*, *Rollup* and *Symbolic*.
