@@ -24,9 +24,6 @@ cradle:
     - path: "zkfold-backends/symbolic-balancing/balancing-parse-input/Main.hs"
       component: "zkfold-backends:exe:balancing-parse-input"
 
-    - path: "zkfold-backends/symbolic-balancing/balancing-parse-input/Backend/JsonToData.hs"
-      component: "zkfold-backends:exe:balancing-parse-input"
-
     - path: "zkfold-backends/rollup/rollup-init-transaction/Main.hs"
       component: "zkfold-backends:exe:rollup-init-transaction"
 
