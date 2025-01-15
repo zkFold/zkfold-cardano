@@ -16,8 +16,7 @@ import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
 import           Prelude                                     (Either (..), IO, Int, Integer, Maybe (..), String, concat, error,
-                                                              length, read, replicate, show, zip, zipWith, ($), (++), (-),
-                                                              (.), (<$>), (==))
+                                                              length, read, show, zip, ($), (.), (<$>), (==))
 import           Rollup.Example                              (datumHashEx1, evolve)
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
@@ -31,16 +30,13 @@ import           ZkFold.Cardano.Examples.IdentityCircuit     (stateCheckVerifica
 import           ZkFold.Cardano.OffChain.E2E                 (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.UPLC                         (parkingSpotCompiled, rollupDataCompiled)
+import           ZkFold.Cardano.UPLC                         (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer (..))
 import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer (..))
 
 rollupFee, minReq :: Lovelace
 rollupFee = Lovelace 15000000
 minReq    = Lovelace   995610    
-
-rmax :: Integer
-rmax = 1000
 
 -- | Compute next rollup info
 nextRollup :: Fr -> Integer -> RollupInfo -> IO RollupInfo
@@ -133,10 +129,3 @@ credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawByte
 scriptHashOf :: CompiledCode a -> V3.ScriptHash
 scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
                . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
-
--- | String of data tokens to be used by cardano-cli
-toDataTokens :: [BuiltinByteString] -> String
-toDataTokens update = concat $ zipWith zipper update wrapups
-    where
-      zipper bbs s = "1 " ++ (show $ scriptHashOf rollupDataCompiled) ++ "." ++ (byteStringAsHex $ fromBuiltin bbs) ++ s
-      wrapups      = replicate (length update - 1) " + " ++ [""]

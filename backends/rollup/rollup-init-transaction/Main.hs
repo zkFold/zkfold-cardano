@@ -176,11 +176,6 @@ credentialOf :: CompiledCode a -> Credential
 credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript
                . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
 
--- | Script hash of compiled validator
-scriptHashOf :: CompiledCode a -> V3.ScriptHash
-scriptHashOf = V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript . PlutusScript plutusScriptVersion
-               . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
-
 -- | Currency symbol of compiled minting script
 currencySymbolOf :: CompiledCode a -> CurrencySymbol
 currencySymbolOf = CurrencySymbol . toBuiltin . serialiseToRawBytes . hashScript
