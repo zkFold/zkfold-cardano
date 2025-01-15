@@ -4,12 +4,12 @@ module Main where
 
 import           Cardano.Api                    hiding (Key, Lovelace, TxOut)
 import           Cardano.Api.Ledger             (toCBOR)
-import           Cardano.Api.Shelley            (PlutusScript (..), fromPlutusData) 
+import           Cardano.Api.Shelley            (PlutusScript (..), fromPlutusData)
 import           Codec.CBOR.Write               (toStrictByteString)
 import           Data.Aeson
 import           Data.Aeson.Key                 (toText)
 import           Data.Aeson.KeyMap              (toList)
-import           Data.Aeson.Types               (Parser, parseMaybe) 
+import           Data.Aeson.Types               (Parser, parseMaybe)
 import qualified Data.ByteString                as BS
 import qualified Data.ByteString.Lazy           as BL
 import           Data.Maybe                     (Maybe (..), fromMaybe)
@@ -17,18 +17,18 @@ import           Data.String                    (fromString)
 import qualified Data.Text                      as T
 import qualified PlutusLedgerApi.V3             as V3
 import           PlutusTx                       (CompiledCode, ToData, toData)
-import           Prelude                        (Either (..), Int, IO, Show, String, concatMap, fst, map, putStrLn,
-                                                 return, show, unlines, ($), (<$>), (<*>), (++), (==), (.))
+import           Prelude                        (Either (..), IO, Int, Show, String, concatMap, fst, map, putStrLn,
+                                                 return, show, unlines, ($), (++), (.), (<$>), (<*>), (==))
+import qualified Rollup.CardanoCli              as Cli
 import           System.Directory               (getCurrentDirectory)
 import           System.FilePath                (takeFileName, (</>))
 import qualified System.IO                      as IO
 
-import qualified Rollup.CardanoCli              as Cli
 import           ZkFold.Cardano.UPLC            (rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..))
 
 data Utxo = Utxo
-  { utxoKey :: String
+  { utxoKey   :: String
   , utxoValue :: TxOut
   } deriving stock Show
 
@@ -74,7 +74,7 @@ instance FromJSON TokenValue where
   parseJSON = withObject "TokenValue" $ \v -> do
     tokenMap <- v .:? thePolicyId :: Parser (Maybe Object)
     let tokens = case tokenMap of
-          Nothing -> []
+          Nothing  -> []
           Just obj -> [(T.unpack (toText k), 1) | (k, _) <- toList obj]
     return $ TokenValue tokens
 
@@ -120,7 +120,7 @@ parseTokenValue obj = fromMaybe (TokenValue []) (parseMaybe parseJSON (Object ob
 
 -- | Extract keys and token names
 extractKeysAndTokens :: [Utxo] -> ([String], [String])
-extractKeysAndTokens utxoList = 
+extractKeysAndTokens utxoList =
   let keys = map utxoKey utxoList
       tokenNames = concatMap (map fst . tokens . txOutValue . utxoValue) utxoList
   in (keys, tokenNames)

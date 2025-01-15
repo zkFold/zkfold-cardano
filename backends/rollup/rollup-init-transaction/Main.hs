@@ -21,8 +21,9 @@ import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Int, Integer,
                                                           Maybe (..), Show (..), String, concat, const, either, error,
-                                                          length, map, maybe, putStr, read, return,
-                                                          ($), (++), (-), (.), (<$>))
+                                                          length, map, maybe, putStr, read, return, ($), (++), (-), (.),
+                                                          (<$>))
+import           Rollup.Example                          (datumHashBSEx1, datumHashEx1)
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.FilePath                         (takeFileName, (</>))
@@ -36,7 +37,6 @@ import           Text.Parsec.String                      (Parser)
 import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
-import           Rollup.Example                          (datumHashBSEx1, datumHashEx1)
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
@@ -55,7 +55,7 @@ rmax = 1000
 rollupFee, threadLovelace, minReq :: Lovelace
 rollupFee      = Lovelace 15000000
 threadLovelace = Lovelace  3000000
-minReq         = Lovelace   995610    
+minReq         = Lovelace   995610
 
 saveParkingSpotPlutus :: FilePath -> Integer -> IO ()
 saveParkingSpotPlutus path parkingTag = do

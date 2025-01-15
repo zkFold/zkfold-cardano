@@ -1,6 +1,6 @@
 module Rollup.CardanoCli where
 
-import Prelude
+import           Prelude
 
 -- Due to lack of composability of transactions built with cardano-cli, we need to dynamically
 -- generate cardano-cli code for transactions with variable inputs and/or variable minting

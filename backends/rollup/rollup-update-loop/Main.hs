@@ -15,8 +15,8 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode)
-import           Prelude                                     (Either (..), IO, Int, Integer, Maybe (..), String, concat, error,
-                                                              length, read, show, zip, ($), (.), (<$>), (==))
+import           Prelude                                     (Either (..), IO, Int, Integer, Maybe (..), String, concat,
+                                                              error, length, read, show, zip, ($), (.), (<$>), (==))
 import           Rollup.Example                              (datumHashEx1, evolve)
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
@@ -36,7 +36,7 @@ import           ZkFold.Cardano.UPLC.RollupData              (RollupDataRedeemer
 
 rollupFee, minReq :: Lovelace
 rollupFee = Lovelace 15000000
-minReq    = Lovelace   995610    
+minReq    = Lovelace   995610
 
 -- | Compute next rollup info
 nextRollup :: Fr -> Integer -> RollupInfo -> IO RollupInfo
