@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module ZkFold.Cardano.UPLC.Common where
 
 import           PlutusLedgerApi.V1.Value (flattenValue)

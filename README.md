@@ -9,7 +9,7 @@ Integration of zkFold Symbolic smart contracts with the Cardano blockchain. The 
 
 ## Building the project
 
-This project can be built with Cabal 3.10.2.1 and GHC 9.6.3.
+This project can be built with Cabal 3.10.3.0 and GHC 9.6.6.
 
 Crypotgraphic depencencies needed for building Haskell packages:
 
