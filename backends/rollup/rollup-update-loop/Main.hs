@@ -50,11 +50,12 @@ nextRollup x parkingTag rollupInfo = do
   -- putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
   let dataUpdate1 = riDataUpdate rollupInfo
-      protoState1 = riProtoState rollupInfo
+      state1      = riState      rollupInfo
+      -- protoState1 = riProtoState rollupInfo
 
-      state1 = toInput protoState1
+      -- state1 = toInput protoState1
 
-  dataUpdate2 <- mapM (\bs -> evolve bs) dataUpdate1
+  dataUpdate2 <- mapM evolve dataUpdate1
 
   let bridgeTxOut = TxOut { txOutAddress         = Address (credentialOf $ parkingSpotCompiled parkingTag) Nothing
                           , txOutValue           = lovelaceValue minReq
@@ -62,15 +63,15 @@ nextRollup x parkingTag rollupInfo = do
                           , txOutReferenceScript = Nothing
                           }
 
-  let update2     = dataToBlake <$> dataUpdate2
-      protoState2 = dataToBlake (state1, update2, [bridgeTxOut], lovelaceValue rollupFee)
+  let update2 = dataToBlake <$> dataUpdate2
+      state2  = toInput $ dataToBlake (state1, update2, [bridgeTxOut], lovelaceValue rollupFee)
 
-      state2 = toInput protoState2
+      -- state2 = toInput protoState2
 
       (_, _, proof2)  = stateCheckVerificationBytes x ps state2
       rollupRedeemer2 = UpdateRollup proof2 update2
 
-  return $ RollupInfo dataUpdate2 protoState2 rollupRedeemer2
+  return $ RollupInfo dataUpdate2 state2 rollupRedeemer2
 
 main :: IO ()
 main = do
@@ -89,12 +90,12 @@ main = do
 
       let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-      let RollupInfo dataUpdate protoNextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
+      let RollupInfo dataUpdate nextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
 
       newRollupInfo <- nextRollup x parkingTag rollupInfo
 
-      let nextState    = toInput protoNextState
-          F nextState' = nextState
+      -- let nextState    = toInput protoNextState
+      let F nextState' = nextState
 
       let dataUpdateIndexed = zip dataUpdate [1 :: Int ..]
 

@@ -90,8 +90,8 @@ saveRollupPlutus path parkingTag oref addr = do
                              , txOutReferenceScript = Nothing
                              }
 
-      protoNextState = dataToBlake (iniState, update, [bridgeTxOut], lovelaceValue rollupFee)
-      nextState      = toInput protoNextState
+      nextState = toInput $ dataToBlake (iniState, update, [bridgeTxOut], lovelaceValue rollupFee)
+      -- nextState      = toInput protoNextState
 
       (_, _, proof) = stateCheckVerificationBytes x ps nextState
 
@@ -105,7 +105,7 @@ saveRollupPlutus path parkingTag oref addr = do
                     }
 
   let rollupRedeemer = UpdateRollup proof update
-      rollupInfo     = RollupInfo { riDataUpdate = dataUpdate, riProtoState = protoNextState, riRedeemer = rollupRedeemer }
+      rollupInfo     = RollupInfo { riDataUpdate = dataUpdate, riState = nextState, riRedeemer = rollupRedeemer }
 
   let assetsPath = path </> "assets"
 
