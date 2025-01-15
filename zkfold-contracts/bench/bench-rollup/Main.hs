@@ -26,7 +26,7 @@ import           ZkFold.Cardano.Examples.IdentityCircuit
 import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (ProofBytes (..), SetupBytes (..))
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.UPLC.Rollup                       
+import           ZkFold.Cardano.UPLC.Rollup
 
 
 --------------- SETUP  ----------------

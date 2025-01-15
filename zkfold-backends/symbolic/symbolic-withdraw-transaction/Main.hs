@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy                  as BL
 import           Data.Maybe                            (fromJust)
 import           Prelude                               (IO, Show (..), putStr, ($), (++), (.), (<$>))
 
-import           ZkFold.Cardano.Examples.EqualityCheck (EqualityCheckContract(..), equalityCheckVerificationBytes)
+import           ZkFold.Cardano.Examples.EqualityCheck (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils         (dataToJSON)
 
 main :: IO ()
