@@ -91,7 +91,6 @@ saveRollupPlutus path parkingTag oref addr = do
                              }
 
       nextState = toInput $ dataToBlake (iniState, update, [bridgeTxOut], lovelaceValue rollupFee)
-      -- nextState      = toInput protoNextState
 
       (_, _, proof) = stateCheckVerificationBytes x ps nextState
 

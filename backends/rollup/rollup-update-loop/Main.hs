@@ -51,9 +51,6 @@ nextRollup x parkingTag rollupInfo = do
 
   let dataUpdate1 = riDataUpdate rollupInfo
       state1      = riState      rollupInfo
-      -- protoState1 = riProtoState rollupInfo
-
-      -- state1 = toInput protoState1
 
   dataUpdate2 <- mapM evolve dataUpdate1
 
@@ -65,8 +62,6 @@ nextRollup x parkingTag rollupInfo = do
 
   let update2 = dataToBlake <$> dataUpdate2
       state2  = toInput $ dataToBlake (state1, update2, [bridgeTxOut], lovelaceValue rollupFee)
-
-      -- state2 = toInput protoState2
 
       (_, _, proof2)  = stateCheckVerificationBytes x ps state2
       rollupRedeemer2 = UpdateRollup proof2 update2
@@ -94,7 +89,6 @@ main = do
 
       newRollupInfo <- nextRollup x parkingTag rollupInfo
 
-      -- let nextState    = toInput protoNextState
       let F nextState' = nextState
 
       let dataUpdateIndexed = zip dataUpdate [1 :: Int ..]
