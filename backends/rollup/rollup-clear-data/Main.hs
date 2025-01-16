@@ -11,8 +11,8 @@ import qualified Data.ByteString                as BS
 import qualified Data.ByteString.Lazy           as BL
 import qualified PlutusLedgerApi.V3             as V3
 import           PlutusTx                       (CompiledCode, ToData, toData)
-import           Prelude                        (Either (..), IO, String, concatMap, fst, map, putStrLn,
-                                                 show, unlines, ($), (++), (.), (==))
+import           Prelude                        (Either (..), IO, String, concatMap, fst, map, putStrLn, show, unlines,
+                                                 ($), (++), (.), (==))
 import qualified Rollup.CardanoCli              as Cli
 import qualified Rollup.ParseJson               as J
 import           System.Directory               (getCurrentDirectory)
