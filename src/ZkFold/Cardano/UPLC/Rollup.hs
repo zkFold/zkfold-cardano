@@ -114,8 +114,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
       filter (\case
         TxOut _ _ (OutputDatumHash _) Nothing -> True
         _                                     -> False)
-      -- $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail $ BI.tail outs
-      $ initOuts $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail outs
+      $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail outs
 
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)
@@ -149,11 +148,3 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
 --     txOutValue out == threadValue
 -- -- TODO: implement other cases
 -- rollup _ _ _ = False
-
-
------ HELPER FUNCTIONS -----
-
-initOuts :: [TxOut] -> [TxOut]
-initOuts [_]    =  []
-initOuts (x:xs) =  x : initOuts xs
-initOuts []     =  traceError "rollup: missing change output"
