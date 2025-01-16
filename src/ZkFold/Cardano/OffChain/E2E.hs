@@ -15,6 +15,7 @@ import           Prelude                                     (Show)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
 import qualified ZkFold.Base.Data.Vector                     as V
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret
+import           ZkFold.Cardano.OnChain.BLS12_381            (F (..))
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupRedeemer)
 
 -- These types can only be used for testing.
@@ -36,8 +37,8 @@ deriving newtype instance FromJSON (V.Vector 19 Fr)
 deriving anyclass instance ToJSON   (PlonkupProverSecret BLS12_381_G1)
 deriving anyclass instance FromJSON (PlonkupProverSecret BLS12_381_G1)
 
-data RollupInfo = RollupInfo { riDataUpdate :: [BuiltinByteString]
-                             , riProtoState :: BuiltinByteString
+data RollupInfo = RollupInfo { riDataUpdate :: [[BuiltinByteString]]
+                             , riState      :: F
                              , riRedeemer   :: RollupRedeemer
                              } deriving stock (Show, Generic)
 

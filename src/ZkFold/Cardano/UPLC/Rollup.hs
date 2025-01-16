@@ -114,7 +114,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
       filter (\case
         TxOut _ _ (OutputDatumHash _) Nothing -> True
         _                                     -> False)
-      $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail $ BI.tail outs
+      $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail outs
 
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)

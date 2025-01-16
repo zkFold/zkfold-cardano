@@ -20,6 +20,7 @@ else
     pause=4
 fi
 
+rollupCounter=$(cat $privpath/rollupCounter.var)
 protocolParams=$assets/protocol.json
 
 unitDatum=$assets/unit.cbor
@@ -31,20 +32,72 @@ rollupRedeemer=$assets/redeemerRollup.cbor
 rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
 rollupScriptFile=$assets/rollup.plutus
 rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
+rollupAddr=$(cat $keypath/rollup.addr)
 
 dataPolicy=$assets/rollupData.plutus
-dataRedeemer=$assets/dataRedeemer.cbor
+dataRedeemer01=$assets/dataRedeemer-01.cbor
+dataRedeemer02=$assets/dataRedeemer-02.cbor
+dataRedeemer03=$assets/dataRedeemer-03.cbor
+
+bridgeHash=$assets/bridgeDatumHash.txt
 
 nftPolicy=$assets/nftPolicy.plutus
 nftPolicyId=$(cardano-cli conway transaction policyid --script-file $nftPolicy)
 nftPolicyNm="7a6b466f6c64"  # token name: "zkFold"
 
-parkingSpotPolicy=$assets/parkingSpot.plutus
+parkingSpotAddr=$(cat $keypath/parkingSpot.addr)
+
+collateral=$(cardano-cli transaction txid --tx-file "$keypath/splitAlice.tx")#0
 
 #---------------------------- :numeric parameters: ----------------------------
 
 rollupLovelaceValue=3000000  # Value (in lovelaces) to be transfered with each rollup
 rollupFee=15000000  # rollup fee
+rollupsBeforeCleanup=5  # number of rollups before data token cleanup
+
+#---------------------------------- :macros: ----------------------------------
+
+query_utxo_has_key() {
+    local addr=$1
+    local txout=$2
+    cardano-cli query utxo --address $addr --testnet-magic $mN --out-file /dev/stdout |
+        jq -r --arg key $txout 'has($key) | tostring'
+}
+
+data_token_tx_build () {	
+    local in=$1
+    local dataTokenName=$2
+    local dataRedeemer=$3
+    local txbodyFile=$4
+    cardano-cli conway transaction build \
+      --testnet-magic $mN \
+      --tx-in $in \
+      --tx-in-collateral $collateral \
+      --tx-out "$(cat $keypath/parkingSpot.addr) + $dataTokensMinCost lovelace + 1 $dataPolicyId.$dataTokenName" \
+      --tx-out-inline-datum-cbor-file $unitDatum \
+      --change-address $(cat $keypath/alice.addr) \
+      --mint "1 $dataPolicyId.$dataTokenName" \
+      --mint-script-file $dataPolicy \
+      --mint-redeemer-cbor-file $dataRedeemer \
+      --out-file $keypath/$txbodyFile
+}
+
+data_token_tx_sign () {
+    local txbodyFile=$1
+    local txFile=$2
+    cardano-cli conway transaction sign \
+      --testnet-magic $mN \
+      --tx-body-file $keypath/$txbodyFile \
+      --signing-key-file $keypath/alice.skey \
+      --out-file $keypath/$txFile
+}
+    
+data_token_tx_submit () {
+    local txFile=$1
+    cardano-cli conway transaction submit \
+	--testnet-magic $mN \
+	--tx-file $keypath/$txFile
+}
 
 #-------------------------------- :rollup loop: -------------------------------
 
@@ -53,12 +106,16 @@ printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
     inR=$(cardano-cli transaction txid --tx-file "$keypath/rollupOut.tx")#0
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/rollup.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$inR" 'has($key) | tostring')
+    txOnChain=$(query_utxo_has_key $rollupAddr $inR)
 
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see rollup tx onchain..."
 	sleep $pause
     else
+	if [ $((rollupCounter % rollupsBeforeCleanup)) -eq 0 ] && [ $rollupCounter -gt 0 ]; then
+	    ./rollup/data-cleanup.sh  # Regularly burn used data tokens
+	fi
+
 	echo ""
 	echo "Starting next rollup update..."
 	echo ""
@@ -67,71 +124,72 @@ while $loop; do
 
 	#------------------------------ :send update data token: -----------------------------
 
-	echo "Sending update data token..."
+	echo "Sending update data tokens..."
 	echo ""
 
-	dataUtxoTx=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef.tx")
-	dataUtxo=$dataUtxoTx#0
-
-	in2=$dataUtxoTx#1
+	if [ ! -f $keypath/prevDataRef-01.tx ]; then
+	    in201=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#1
+	    in202=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#2
+	    in203=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#3
+	else
+	    in201=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef-01.tx")#1
+	    in202=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef-02.tx")#1
+	    in203=$(cardano-cli conway transaction txid --tx-file "$keypath/prevDataRef-03.tx")#1
+	fi	    
 
 	dataPolicyId=$(cardano-cli conway transaction policyid --script-file $dataPolicy)
-	dataTokenName=$(cat $assets/dataNewTokenName.txt)
-        dataTokens=$(cat $assets/dataTokens.txt)
+	dataTokenName01=$(cat $assets/dataTokenName-01.txt)
+	dataTokenName02=$(cat $assets/dataTokenName-02.txt)
+	dataTokenName03=$(cat $assets/dataTokenName-03.txt)
 
-        updateLength=$(cat $assets/dataUpdateLength.txt)
+        tokensAmount=$(cat $assets/dataTokensAmount.txt)
 	
-	echo "Reference UTxO with $updateLength data tokens:"
-	echo "$dataTokens"
+	echo "Will use $tokensAmount reference UTxOs with data tokens."
         echo ""
 
 	dataTokensMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
 	  --protocol-params-file $assets/protocol.json \
-	  --tx-out "$(cat $keypath/parkingSpot.addr) + $dataTokens" \
+	  --tx-out "$(cat $keypath/parkingSpot.addr) + 1 $dataPolicyId.$dataTokenName01" \
 	  --tx-out-inline-datum-cbor-file $unitDatum | sed 's/^[^ ]* //')
 
-	cardano-cli conway transaction build \
-	  --testnet-magic $mN \
-	  --tx-in $in2 \
-	  --tx-in $dataUtxo \
-	  --tx-in-script-file $parkingSpotPolicy \
-	  --tx-in-inline-datum-present \
-	  --tx-in-redeemer-cbor-file $unitRedeemer \
-	  --tx-in-collateral $in2 \
-	  --tx-out "$(cat $keypath/parkingSpot.addr) + $dataTokensMinCost lovelace + $dataTokens" \
-	  --tx-out-inline-datum-cbor-file $unitDatum \
-	  --change-address $(cat $keypath/alice.addr) \
-	  --mint "1 $dataPolicyId.$dataTokenName" \
-	  --mint-script-file $dataPolicy \
-	  --mint-redeemer-cbor-file $dataRedeemer \
-	  --out-file $keypath/dataRef.txbody
+	data_token_tx_build $in201 $dataTokenName01 $dataRedeemer01 "dataRef-01.txbody"
+	data_token_tx_build $in202 $dataTokenName02 $dataRedeemer02 "dataRef-02.txbody"
+	data_token_tx_build $in203 $dataTokenName03 $dataRedeemer03 "dataRef-03.txbody"
 
-	cardano-cli conway transaction sign \
-	  --testnet-magic $mN \
-	  --tx-body-file $keypath/dataRef.txbody \
-	  --signing-key-file $keypath/alice.skey \
-	  --out-file $keypath/dataRef.tx
+	data_token_tx_sign "dataRef-01.txbody" "dataRef-01.tx"
+	data_token_tx_sign "dataRef-02.txbody" "dataRef-02.tx"
+	data_token_tx_sign "dataRef-03.txbody" "dataRef-03.tx"
 
-	cardano-cli conway transaction submit \
-	    --testnet-magic $mN \
-	    --tx-file $keypath/dataRef.tx
+	data_token_tx_submit "dataRef-01.tx"
+	data_token_tx_submit "dataRef-02.tx"
+	data_token_tx_submit "dataRef-03.tx"
 
-	dataRefTx=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef.tx")
-	dataRefOut=$dataRefTx#0
+	dataRefTx01=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-01.tx")
+	dataRefTx02=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-02.tx")
+	dataRefTx03=$(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-03.tx")
+	dataRefOut01=$dataRefTx01#0
+	dataRefOut02=$dataRefTx02#0
+	dataRefOut03=$dataRefTx03#0
 	while true; do
-	    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$dataRefOut" 'has($key) | tostring')
-	    if [ $txOnChain == "false" ]; then
-		echo "Waiting to see update data token onchain..."
+	    txOnChain01=$(query_utxo_has_key $parkingSpotAddr $dataRefOut01)
+	    txOnChain02=$(query_utxo_has_key $parkingSpotAddr $dataRefOut02)
+	    txOnChain03=$(query_utxo_has_key $parkingSpotAddr $dataRefOut03)
+	    if [ $txOnChain01 == "false" ] || [ $txOnChain02 == "false" ] || [ $txOnChain03 == "false" ]; then
+		echo "Waiting to see update data tokens onchain..."
 		sleep $pause
 	    else
 		echo ""
-		echo "Transaction Id: $dataRefTx"
+		echo "Transaction Id: $dataRefTx01"
+		echo "Transaction Id: $dataRefTx02"
+		echo "Transaction Id: $dataRefTx03"
 		echo ""
 		break
 	    fi
 	done
 
-	cp $keypath/dataRef.tx $keypath/prevDataRef.tx
+	cp $keypath/dataRef-01.tx $keypath/prevDataRef-01.tx
+	cp $keypath/dataRef-02.tx $keypath/prevDataRef-02.tx
+	cp $keypath/dataRef-03.tx $keypath/prevDataRef-03.tx
 
 	#-------------------------------- :rollup transaction: -------------------------------
 
@@ -139,7 +197,12 @@ while $loop; do
 	echo ""
 
 	aliceIdx=$(cat $privpath/aliceIdx.flag)
-	in1=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")#$aliceIdx
+	dataCleaned=$(cat $privpath/dataCleaned.flag)
+	if [ "$dataCleaned" -eq 0 ]; then
+	    in1=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")#$aliceIdx
+	else
+	    in1=$(cardano-cli conway transaction txid --tx-file "$keypath/dataClean.tx")#0
+	fi
 
 	cardano-cli conway transaction build \
 	  --testnet-magic $mN \
@@ -149,11 +212,15 @@ while $loop; do
 	  --spending-plutus-script-v3 \
 	  --spending-reference-tx-in-inline-datum-present \
 	  --spending-reference-tx-in-redeemer-cbor-file $rollupRedeemer \
-	  --read-only-tx-in-reference $(cardano-cli conway transaction txid --tx-file "$keypath/dataRef.tx")#0 \
-	  --tx-in-collateral $in1 \
+	  --read-only-tx-in-reference $(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-01.tx")#0 \
+	  --read-only-tx-in-reference $(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-02.tx")#0 \
+	  --read-only-tx-in-reference $(cardano-cli conway transaction txid --tx-file "$keypath/dataRef-03.tx")#0 \
+	  --tx-in-collateral $collateral \
 	  --tx-out "$(cat $keypath/rollup.addr) + $rollupLovelaceValue lovelace + 1 $nftPolicyId.$nftPolicyNm" \
 	  --tx-out-inline-datum-cbor-file $state \
 	  --tx-out "$(cat $keypath/bob.addr) + $rollupFee lovelace" \
+	  --tx-out "$(cat $keypath/parkingSpot.addr) + 995610 lovelace" \
+	  --tx-out-datum-hash $(cat $bridgeHash) \
 	  --change-address $(cat $keypath/alice.addr) \
 	  --out-file $keypath/rollupOut.txbody
 
@@ -169,16 +236,21 @@ while $loop; do
 
 	#-------------------------------- :rollup summary: -------------------------------
 
+	rollupCounter=$((rollupCounter + 1))
+
 	echo ""
-	echo "Rollup-update completed.  Length of data update: $updateLength."
+	echo "Rollup-update completed.  Rollups completed: $rollupCounter."
 	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOut.tx)"
 
     #-------------------------------- :cleanup before next batch: -------------------------------
 
-    printf "2" > $privpath/aliceIdx.flag
+    printf "3" > $privpath/aliceIdx.flag
+    printf "0" > $privpath/dataCleaned.flag
+    printf "$rollupCounter" > $privpath/rollupCounter.var
 	
     mv $keypath/nextRollupOut.tx $keypath/rollupOut.tx
     mv $assets/newRollupInfo.json $assets/rollupInfo.json
+    mv $assets/newDataTokensAmount.txt $assets/dataTokensAmount.txt
 
     fi
     loop=$(cat $keypath/rollup-loop.flag)

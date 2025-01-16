@@ -354,6 +354,8 @@ executable rollup-init-transaction
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-init-transaction
+  other-modules:
+    Rollup.Example
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -378,6 +380,8 @@ executable rollup-update-loop
   ghc-options:      -rtsopts
   main-is:          Main.hs
   hs-source-dirs:   backends/rollup/rollup-update-loop
+  other-modules:
+    Rollup.Example
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -388,6 +392,30 @@ executable rollup-update-loop
     filepath                       ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
+    random                         ,
     symbolic-base                  ,
     zkfold-cardano                 ,
     QuickCheck
+
+executable rollup-clear-data
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/rollup/rollup-clear-data
+  other-modules:
+    Rollup.CardanoCli
+    Rollup.ParseJson
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    cardano-api                    ,
+    cborg                          ,
+    directory                      ,
+    filepath                       ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    text                           ,
+    zkfold-cardano

@@ -9,7 +9,7 @@ set -o pipefail
 assets=../assets
 keypath=./rollup/keys
 
-find $keypath/ -type f ! -name "alice.*" -exec rm {} +
+find $keypath/ -type f \( ! -name "alice.*" -and ! -name "splitAlice.tx" \) -exec rm {} +
 rm -r $assets
 
 echo ""

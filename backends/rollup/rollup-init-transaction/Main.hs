@@ -6,7 +6,7 @@ import           Cardano.Api.Shelley                     (PlutusScript (..), fro
                                                           scriptDataToJsonDetailedSchema,
                                                           shelleyPayAddrToPlutusPubKHash)
 import           Codec.CBOR.Write                        (toStrictByteString)
-import           Control.Monad                           (void)
+import           Control.Monad                           (mapM, void)
 import           Data.Aeson                              (encode)
 import qualified Data.Aeson                              as Aeson
 import           Data.Bifunctor                          (first)
@@ -19,37 +19,58 @@ import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Prelude                        ((<>))
-import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Integer, Maybe (..),
-                                                          Show (..), String, const, either, error, maybe, putStr, read,
-                                                          return, ($), (++), (.))
+import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Int, Integer,
+                                                          Maybe (..), Show (..), String, concat, const, either, error,
+                                                          length, map, maybe, putStr, read, return, ($), (++), (-), (.),
+                                                          (<$>))
+import           Rollup.Example                          (datumHashBSEx1, datumHashEx1)
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
 import           System.FilePath                         (takeFileName, (</>))
+import qualified System.IO                               as IO
 import           System.Random                           (randomRIO)
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 import           Text.Parsec                             (many1)
 import           Text.Parsec.Char                        (digit)
 import           Text.Parsec.String                      (Parser)
+import           Text.Printf                             (printf)
 import           Text.Read                               (readEither)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..), RollupInfo (..))
-import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC                     (nftPolicyCompiled, parkingSpotCompiled, rollupCompiled,
                                                           rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupRedeemer (..), RollupSetup (..))
 
 
-rollupFee, threadLovelace :: Lovelace
+updateLength :: Int
+updateLength = 3
+
+rmax :: Integer
+rmax = 1000
+
+rollupFee, threadLovelace, minReq :: Lovelace
 rollupFee      = Lovelace 15000000
 threadLovelace = Lovelace  3000000
+minReq         = Lovelace   995610
 
-saveRollupPlutus :: FilePath -> TxOutRef -> V3.Address -> IO ()
-saveRollupPlutus path oref addr = do
-  x  <- generate arbitrary
-  ps <- generate arbitrary
+saveParkingSpotPlutus :: FilePath -> Integer -> IO ()
+saveParkingSpotPlutus path parkingTag = do
+  savePlutus (path </> "assets" </> "parkingSpot.plutus") $ parkingSpotCompiled parkingTag
+  IO.writeFile (path </> "assets" </> "parkingTag.txt") $ show parkingTag
+
+saveNftPolicyPlutus :: FilePath -> TxOutRef -> IO ()
+saveNftPolicyPlutus path oref = savePlutus (path </> "assets" </> "nftPolicy.plutus") $ nftPolicyCompiled oref
+
+saveRollupPlutus :: FilePath -> Integer -> TxOutRef -> V3.Address -> IO ()
+saveRollupPlutus path parkingTag oref addr = do
+  x         <- generate arbitrary
+  ps        <- generate arbitrary
+  seeds     <- mapM (\_ -> randomRIO (1, rmax)) [1..updateLength]
+  iniState' <- randomRIO (0, bls12_381_field_prime - 1)
 
   let contract = IdentityCircuitContract x ps
 
@@ -57,14 +78,19 @@ saveRollupPlutus path oref addr = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n"
 
-  let (ledgerRules, iniState, _) = identityCircuitVerificationBytes x ps
-      F iniState'                = iniState
+  let (ledgerRules, _, _) = identityCircuitVerificationBytes x ps
 
-      dataUpdate = [dataToBlake iniState]
-      update     = [dataToBlake dataUpdate]
+      dataUpdate  = map (\s -> [dataToBlake s]) seeds
+      update      = dataToBlake <$> dataUpdate
+      iniState    = F iniState'
 
-      protoNextState = dataToBlake (iniState, update, [] :: [V3.TxOut], lovelaceValue rollupFee)
-      nextState      = toInput protoNextState
+  let bridgeTxOut = V3.TxOut { txOutAddress         = Address (credentialOf $ parkingSpotCompiled parkingTag) Nothing
+                             , txOutValue           = lovelaceValue minReq
+                             , txOutDatum           = OutputDatumHash datumHashEx1
+                             , txOutReferenceScript = Nothing
+                             }
+
+      nextState = toInput $ dataToBlake (iniState, update, [bridgeTxOut], lovelaceValue rollupFee)
 
       (_, _, proof) = stateCheckVerificationBytes x ps nextState
 
@@ -78,7 +104,7 @@ saveRollupPlutus path oref addr = do
                     }
 
   let rollupRedeemer = UpdateRollup proof update
-      rollupInfo     = RollupInfo { riDataUpdate = dataUpdate, riProtoState = protoNextState, riRedeemer = rollupRedeemer }
+      rollupInfo     = RollupInfo { riDataUpdate = dataUpdate, riState = nextState, riRedeemer = rollupRedeemer }
 
   let assetsPath = path </> "assets"
 
@@ -89,13 +115,8 @@ saveRollupPlutus path oref addr = do
   BS.writeFile (assetsPath </> "datum.cbor") $ dataToCBOR iniState'
   BS.writeFile (assetsPath </> "rollupInfo.json") $ prettyPrintJSON $ dataToJSON rollupInfo
 
-saveParkingSpotPlutus :: FilePath -> IO ()
-saveParkingSpotPlutus path = do
-  randomInt <- randomRIO (1, 10000)
-  savePlutus (path </> "assets" </> "parkingSpot.plutus") $ parkingSpotCompiled randomInt
-
-saveNftPolicyPlutus :: FilePath -> TxOutRef -> IO ()
-saveNftPolicyPlutus path oref = savePlutus (path </> "assets" </> "nftPolicy.plutus") $ nftPolicyCompiled oref
+  IO.writeFile (assetsPath </> "dataTokensAmount.txt") . show . length $ update
+  IO.writeFile (assetsPath </> "bridgeDatumHash.txt") . byteStringAsHex . fromBuiltin $ datumHashBSEx1
 
 main :: IO ()
 main = do
@@ -118,15 +139,17 @@ main = do
             return (nftOref, addr)
       case argsE of
         Right (nftOref, addr) -> do
-          saveRollupPlutus path nftOref addr
-          saveParkingSpotPlutus path
+          parkingTag <- randomRIO (1, 10000)
+
+          saveParkingSpotPlutus path parkingTag
           saveNftPolicyPlutus path nftOref
+          saveRollupPlutus path parkingTag nftOref addr
 
           putStr "\nDone serializing plutus scripts and initializing state.\n\n"
 
         Left err -> error $ "parse error: " ++ show err
 
-    _ -> error "Error: please provide a pair of command-line string-arguments.\n"
+    _ -> error "Error: please provide a pair of command-line arguments.\n"
 
 
 ----- HELPER FUNCTIONS -----
@@ -184,3 +207,8 @@ parseAddress addressStr = do
     pkh        <- maybe (Left "Failed to parse address pubkey hash") Right $
                   shelleyPayAddrToPlutusPubKHash shellyAddr
     return $ V3.Address (PubKeyCredential pkh) Nothing
+
+-- | Get hex representation of bytestring
+byteStringAsHex :: BS.ByteString -> String
+byteStringAsHex bs = concat $ BS.foldr' (\w s -> (printf "%02x" w):s) [] bs
+
