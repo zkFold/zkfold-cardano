@@ -57,7 +57,7 @@ dataCleanOut=$dataCleanTx#0
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$dataCleanOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
-	echo "Waiting to see data token's burning transaction onchain..."
+	echo "Waiting to see data tokens' burning transaction onchain..."
 	sleep $pause
     else
 	echo ""

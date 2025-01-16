@@ -406,6 +406,7 @@ executable rollup-clear-data
   hs-source-dirs:   backends/rollup/rollup-clear-data
   other-modules:
     Rollup.CardanoCli
+    Rollup.ParseJson
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,

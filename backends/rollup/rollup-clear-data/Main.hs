@@ -6,77 +6,28 @@ import           Cardano.Api                    hiding (Key, Lovelace, TxOut)
 import           Cardano.Api.Ledger             (toCBOR)
 import           Cardano.Api.Shelley            (PlutusScript (..), fromPlutusData)
 import           Codec.CBOR.Write               (toStrictByteString)
-import           Data.Aeson
-import           Data.Aeson.Key                 (toText)
-import           Data.Aeson.KeyMap              (toList)
-import           Data.Aeson.Types               (Parser, parseMaybe)
+import           Data.Aeson                     (eitherDecode)
 import qualified Data.ByteString                as BS
 import qualified Data.ByteString.Lazy           as BL
-import           Data.Maybe                     (Maybe (..), fromMaybe)
-import           Data.String                    (fromString)
-import qualified Data.Text                      as T
 import qualified PlutusLedgerApi.V3             as V3
 import           PlutusTx                       (CompiledCode, ToData, toData)
-import           Prelude                        (Either (..), IO, Int, Show, String, concatMap, fst, map, putStrLn,
-                                                 return, show, unlines, ($), (++), (.), (<$>), (<*>), (==))
+import           Prelude                        (Either (..), IO, String, concatMap, fst, map, putStrLn,
+                                                 show, unlines, ($), (++), (.), (==))
 import qualified Rollup.CardanoCli              as Cli
+import qualified Rollup.ParseJson               as J
 import           System.Directory               (getCurrentDirectory)
 import           System.FilePath                (takeFileName, (</>))
 import qualified System.IO                      as IO
 
-import           ZkFold.Cardano.UPLC            (rollupDataCompiled)
 import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..))
 
-data Utxo = Utxo
-  { utxoKey   :: String
-  , utxoValue :: TxOut
-  } deriving stock Show
 
-data TxOut = TxOut
-  { txOutAddress         :: String
-  , txOutDatum           :: Maybe String
-  , txOutInlineDatum     :: Maybe InlineDatum
-  , txOutInlineDatumhash :: Maybe String
-  , txOutReferenceScript :: Maybe String
-  , txOutValue           :: TokenValue
-  } deriving stock Show
-
-data InlineDatum = InlineDatum
-  { constructor :: Int
-  , fields      :: [String]
-  } deriving stock Show
-
-data TokenValue = TokenValue
-  { tokens :: [(String, Int)]
-  } deriving stock Show
-
-instance FromJSON Utxo where
-  parseJSON = withObject "Utxo" $ \v ->
-    Utxo <$> v .: "key" <*> v .: "value"
-
-instance FromJSON TxOut where
-  parseJSON = withObject "TxOut" $ \v ->
-    TxOut <$> v .: "address"
-          <*> v .:? "datum"
-          <*> v .:? "inlineDatum"
-          <*> v .:? "inlineDatumhash"
-          <*> v .:? "referenceScript"
-          <*> (parseTokenValue <$> v .: "value")
-
-instance FromJSON InlineDatum where
-  parseJSON = withObject "InlineDatum" $ \v ->
-    InlineDatum <$> v .: "constructor" <*> v .:? "fields" .!= []
-
-thePolicyId :: Key
-thePolicyId = fromString . show . scriptHashOf $ rollupDataCompiled
-
-instance FromJSON TokenValue where
-  parseJSON = withObject "TokenValue" $ \v -> do
-    tokenMap <- v .:? thePolicyId :: Parser (Maybe Object)
-    let tokens = case tokenMap of
-          Nothing  -> []
-          Just obj -> [(T.unpack (toText k), 1) | (k, _) <- toList obj]
-    return $ TokenValue tokens
+-- | Extract keys and token names from parsed UTxOs
+extractKeysAndTokens :: [J.Utxo] -> ([String], [String])
+extractKeysAndTokens utxos  =
+  let keys       = map J.utxoKey utxos
+      tokenNames = concatMap (map fst . J.tokens . J.txOutValue . J.utxoValue) utxos
+  in (keys, tokenNames)
 
 main :: IO ()
 main = do
@@ -113,14 +64,3 @@ scriptHashOf = V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes . hashScript .
 -- | Serialise data to CBOR.
 dataToCBOR :: ToData a => a -> BS.ByteString
 dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
-
--- | Parse token values
-parseTokenValue :: Object -> TokenValue
-parseTokenValue obj = fromMaybe (TokenValue []) (parseMaybe parseJSON (Object obj))
-
--- | Extract keys and token names
-extractKeysAndTokens :: [Utxo] -> ([String], [String])
-extractKeysAndTokens utxoList =
-  let keys = map utxoKey utxoList
-      tokenNames = concatMap (map fst . tokens . txOutValue . utxoValue) utxoList
-  in (keys, tokenNames)
