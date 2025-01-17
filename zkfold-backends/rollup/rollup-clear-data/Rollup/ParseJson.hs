@@ -2,18 +2,18 @@
 
 module Rollup.ParseJson where
 
-import           Cardano.Api         hiding (Key, Lovelace, TxOut)
+import           Cardano.Api                    hiding (Key, Lovelace, TxOut)
 import           Data.Aeson
-import           Data.Aeson.Key      (toText)
-import           Data.Aeson.KeyMap   (toList)
-import           Data.Aeson.Types    (Parser, parseMaybe)
-import           Data.Maybe          (Maybe (..), fromMaybe)
-import           Data.String         (fromString)
-import qualified Data.Text           as T
-import           Prelude             (Int, Show, String, return, show, ($), (.), (<$>), (<*>))
+import           Data.Aeson.Key                 (toText)
+import           Data.Aeson.KeyMap              (toList)
+import           Data.Aeson.Types               (Parser, parseMaybe)
+import           Data.Maybe                     (Maybe (..), fromMaybe)
+import           Data.String                    (fromString)
+import qualified Data.Text                      as T
+import           Prelude                        (Int, Show, String, return, show, ($), (.), (<$>), (<*>))
 
-import           ZkFold.Cardano.UPLC.RollupData (rollupDataCompiled)
 import           ZkFold.Cardano.OffChain.Utils
+import           ZkFold.Cardano.UPLC.RollupData (rollupDataCompiled)
 
 
 data Utxo = Utxo

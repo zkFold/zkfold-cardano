@@ -10,9 +10,8 @@ import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx.Prelude                        ((<>))
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Int, Integer,
-                                                          Maybe (..), Show (..), error,
-                                                          length, map, putStr, return, ($), (++), (-), (.),
-                                                          (<$>))
+                                                          Maybe (..), Show (..), error, length, map, putStr, return,
+                                                          ($), (++), (-), (.), (<$>))
 import           Rollup.Example                          (datumHashBSEx1, datumHashEx1)
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                      (getArgs)
@@ -24,8 +23,8 @@ import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (currencySymbolOf, dataToCBOR, dataToJSON, parseAddress,
-                                                          parseTxOutRef, savePlutus, credentialOf, byteStringAsHex)
+import           ZkFold.Cardano.OffChain.Utils           (byteStringAsHex, credentialOf, currencySymbolOf, dataToCBOR,
+                                                          dataToJSON, parseAddress, parseTxOutRef, savePlutus)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, parkingSpotCompiled)

@@ -21,7 +21,7 @@ import           PlutusTx.Prelude                         hiding (toList, (*), (
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (F(..), toF)
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (F (..), toF)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
