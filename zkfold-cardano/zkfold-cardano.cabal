@@ -110,6 +110,7 @@ test-suite test
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
+    base-orphans          ^>= 0.9.3,
     base16-bytestring              ,
     bytestring                     ,
     containers                     ,
