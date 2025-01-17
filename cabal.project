@@ -33,7 +33,7 @@ index-state:
 source-repository-package
   type: git
   location: https://github.com/geniusyield/atlas
-  tag: v0.8.1
+  tag: v0.10.0
   --sha256: sha256-aPpHuturhSPQrSnnzsPLpTF6xzg3dMpN0Y6s/Qr0lnw=
 
 test-show-details: direct
