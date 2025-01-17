@@ -27,8 +27,23 @@ cradle:
     - path: "zkfold-backends/rollup/rollup-init-transaction/Main.hs"
       component: "zkfold-backends:exe:rollup-init-transaction"
 
+    - path: "zkfold-backends/rollup/rollup-init-transaction/Rollup/Example.hs"
+      component: "zkfold-backends:exe:rollup-init-transaction"
+
     - path: "zkfold-backends/rollup/rollup-update-loop/Main.hs"
       component: "zkfold-backends:exe:rollup-update-loop"
+
+    - path: "zkfold-backends/rollup/rollup-update-loop/Rollup/Example.hs"
+      component: "zkfold-backends:exe:rollup-update-loop"
+
+    - path: "zkfold-backends/rollup/rollup-clear-data/Main.hs"
+      component: "zkfold-backends:exe:rollup-clear-data"
+
+    - path: "zkfold-backends/rollup/rollup-clear-data/Rollup/CardanoCli.hs"
+      component: "zkfold-backends:exe:rollup-clear-data"
+
+    - path: "zkfold-backends/rollup/rollup-clear-data/Rollup/ParseJson.hs"
+      component: "zkfold-backends:exe:rollup-clear-data"
 
     - path: "zkfold-cardano/src"
       component: "lib:zkfold-cardano"

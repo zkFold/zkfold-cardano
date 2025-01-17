@@ -21,7 +21,7 @@ import           PlutusTx.Prelude                         hiding (toList, (*), (
 import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (toF)
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (F(..), toF)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
@@ -52,8 +52,8 @@ data RollupRedeemer =
 -- makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('ForwardValidation,1),('CombineValue,2),('AdjustStake,3),('UpgradeScript,4)]
 makeIsDataIndexed ''RollupRedeemer [('UpdateRollup, 0)]
 
-data RollupInfo = RollupInfo { riDataUpdate :: [BuiltinByteString]
-                             , riProtoState :: BuiltinByteString
+data RollupInfo = RollupInfo { riDataUpdate :: [[BuiltinByteString]]
+                             , riState      :: F
                              , riRedeemer   :: RollupRedeemer
                              } deriving stock (Show, Generic)
 
@@ -123,7 +123,7 @@ untypedRollup (RollupSetup ledgerRules dataCurrency threadValue feeAddress) ctx'
       filter (\case
         TxOut _ _ (OutputDatumHash _) Nothing -> True
         _                                     -> False)
-      $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail $ BI.tail outs
+      $ unsafeFromBuiltinData @[TxOut] $ BI.mkList $ BI.tail $ BI.tail outs
 
     -- Compute the next state
     state' = byteStringToInteger BigEndian $ dataToBlake (toF state, update, bridgeOutputs, feeVal)

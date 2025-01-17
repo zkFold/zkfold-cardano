@@ -67,9 +67,9 @@ You can also see the state of all wallets with `./plonk/05-show-all.sh`.
 
 ### Rollup
 
-Rollup scripts implement a prototype *rollup loop*.  Currently rollup transactions process batches of two rollup updates, which are submitted as two parallel transactions.
+Rollup scripts implement a prototype *rollup loop*.  Currently rollup transactions process batches of three update data tokens (minted in "parallel" transactions).
 
-For concreteness, in this prototype the "rollup update" (which is a list) is constructed by appending the "state" (which is a field element) associated to the previous update.  This can be easily generalized.
+Every five rollup transactions, used data tokens are burned.
 
 To execute the following steps, please make `scripts` your active directory.
 
