@@ -7,6 +7,7 @@ module ZkFold.Cardano.UPLC.Wallet where
 import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V1.Value                 (lovelaceValue)
 import           PlutusLedgerApi.V3
+import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show, foldl1)
@@ -53,23 +54,34 @@ makeLift ''WalletRedeemer
 makeIsDataIndexed ''WalletRedeemer [('WalletRedeemer, 0)]
 
 {-# INLINABLE wallet #-}
+-- | This script verifies that a transaction was either signed with a signature or has a ZKP associated with it allowing to access the funds.
+-- If the script purpose is Spending, it forwards the verification to the corresponding contract
+--
 wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
 wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) =
-    case scriptInfo of
-        SpendingScript _ _ -> forwardingReward (getTxId $ txInfoId) () ctx
-        _                  -> case wrCreds of
-              SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
-              SpendWithWeb2Token w2c  -> zkpPasses w2c && outputsCorrect w2c
+    case (scriptInfo, maybeScriptHash) of
+      (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
+      (SpendingScript _ _, _)               -> False
+      _                                     -> case wrCreds of
+            SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
+            SpendWithWeb2Token w2c  -> zkpPasses w2c && outputsCorrect w2c
     where
+        maybeScriptHash = do
+            inp <- findOwnInput ctx
+            let addrCreds = addressCredential . txOutAddress . txInInfoResolved $ inp
+            case addrCreds of
+              ScriptCredential scr -> pure $ getScriptHash scr
+              _                    -> Nothing
+
         compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl1 appendByteString [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
         zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck (compressedPI w2c) wrZkp
 
         outputsCorrect Web2Creds {..} = and
-            [ length txInfoOutputs == 2                 -- only two outputs
+            [ length txInfoOutputs == 2                           -- only two outputs
             , all ((== NoOutputDatum) . txOutDatum) txInfoOutputs -- datums are empty
-            , lovelaceValue (Lovelace wAmount) == txOutValue (head txInfoOutputs) -- the amount is correct
+            , lovelaceValue (Lovelace wAmount) == txOutValue (head txInfoOutputs)  -- the amount is correct
             , wrTxRecipient == (getCredential . txOutAddress) (head txInfoOutputs) -- the recipient's address is correct
-            , wsPubKeyHash == (getCredential . txOutAddress) (txInfoOutputs !! 1) -- the wallet's change address is correct
+            , wsPubKeyHash == (getCredential . txOutAddress) (txInfoOutputs !! 1)  -- the wallet's change address is correct
             ]
 
         getCredential :: Address -> BuiltinByteString
