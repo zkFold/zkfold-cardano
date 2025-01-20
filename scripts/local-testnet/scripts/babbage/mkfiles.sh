@@ -43,7 +43,7 @@ ROOT=${LOCDIR}/example
 if [ -d "./${LOCDIR}" ]; then
     mkdir -p "${ROOT}"
 else
-    echo "Please run script from directory 'scripts'."
+    echo "Please run script from directory 'e2e-test'."
     exit 1
 fi
 
@@ -86,8 +86,8 @@ $CARDANO_CLI byron genesis genesis \
   --protocol-parameters-file "${ROOT}/byron.genesis.spec.json" \
   --genesis-output-dir "${ROOT}/byron-gen-command"
 
-cp ${LOCDIR}/scripts/babbage/alonzo-babbage-test-genesis.json "${ROOT}/genesis.alonzo.spec.json"
-cp ${LOCDIR}/scripts/babbage/conway-babbage-test-genesis.json "${ROOT}/genesis.conway.spec.json"
+cp ${LOCDIR}/e2e-test/babbage/alonzo-babbage-test-genesis.json "${ROOT}/genesis.alonzo.spec.json"
+cp ${LOCDIR}/e2e-test/babbage/conway-babbage-test-genesis.json "${ROOT}/genesis.conway.spec.json"
 
 cp ${LOCDIR}/configuration/defaults/byron-mainnet/configuration.yaml "${ROOT}/"
 $SED -i "${ROOT}/configuration.yaml" \

@@ -20,9 +20,9 @@ source-repository-package
   subdir: symbolic-base
 
 packages:
-    zkfold-backends
+    zkfold-cardano-backends
     zkfold-cardano
-    zkfold-contracts
+    zkfold-cardano-scripts
     zkfold-example
 
 package cardano-crypto-praos

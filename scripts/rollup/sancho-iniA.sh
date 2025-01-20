@@ -16,7 +16,7 @@ if [ -d "./rollup" ]; then
     mkdir -p $keypath
     mkdir -p $privpath
 else
-    echo "Please run script from directory 'scripts'."
+    echo "Please run script from directory 'e2e-test'."
     exit 1
 fi
 
