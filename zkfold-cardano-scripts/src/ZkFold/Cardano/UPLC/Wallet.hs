@@ -14,7 +14,7 @@ import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
-import           Prelude                                  (Show, foldl1)
+import           Prelude                                  (Show)
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (fromInput, toF, toInput)
@@ -77,7 +77,7 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
               ScriptCredential scr -> pure $ getScriptHash scr
               _                    -> Nothing
 
-        compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl1 appendByteString [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
+        compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl appendByteString "" [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
         zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck (compressedPI w2c) wrZkp
 
         outputsCorrect Web2Creds {..} = and

@@ -276,3 +276,27 @@ executable rollup-clear-data
     text                           ,
     zkfold-cardano                 ,
     zkfold-cardano-scripts
+
+
+executable smart-wallet-validator 
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/symbolic/smart-wallet-validator
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    cardano-api                    ,
+    cborg                          ,
+    directory                      ,
+    filepath                       ,
+    flat                           ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
+    serialise                      ,
+    text                           ,
+    zkfold-cardano
