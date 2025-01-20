@@ -112,9 +112,9 @@ main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
-        "rollup"  -> ".." </> ".."
+        "rollup"   -> ".." </> ".."
         "e2e-test" -> ".."
-        _         -> "."
+        _          -> "."
 
   createDirectoryIfMissing True $ path </> "test-data"
   createDirectoryIfMissing True $ path </> "assets"

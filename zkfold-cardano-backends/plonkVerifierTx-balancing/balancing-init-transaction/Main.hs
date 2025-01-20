@@ -20,9 +20,9 @@ main = do
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
         "plonkVerifierTx-balancing" -> ".." </> ".."
-        "backends"           -> ".."
-        "e2e-test"            -> ".."
-        _                    -> "."
+        "backends"                  -> ".."
+        "e2e-test"                  -> ".."
+        _                           -> "."
 
   createDirectoryIfMissing True $ path </> "test-data"
   createDirectoryIfMissing True $ path </> "assets"

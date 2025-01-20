@@ -25,9 +25,9 @@ main = do
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
         "plonkVerifierTx-balancing" -> ".." </> ".."
-        "backends"           -> ".."
-        "e2e-test"            -> ".."
-        _                    -> "."
+        "backends"                  -> ".."
+        "e2e-test"                  -> ".."
+        _                           -> "."
 
   IdentityCircuitContract x ps <- fromJust . decode <$> BL.readFile (path </> "test-data" </> "plonkVerifierTx-contract-data.json")
 
