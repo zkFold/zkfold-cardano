@@ -23,6 +23,7 @@ else
 fi
 
 unitDatum=$assets/unit.cbor
+someDatum=$assets/someDatum.cbor
 
 echo ""
 echo "Initialization..."
@@ -63,11 +64,18 @@ parkScriptMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
   --tx-out $(cat $keypath/parkingSpot.addr)+0 \
   --tx-out-reference-script-file "$assets/symbolic.plutus" | sed 's/^[^ ]* //')
 
+someDatumMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
+  --protocol-params-file $assets/protocol.json \
+  --tx-out "$(cat $keypath/parkingSpot.addr) + 0 lovelace" \
+  --tx-out-inline-datum-cbor-file $someDatum | sed 's/^[^ ]* //')
+
 cardano-cli conway transaction build \
   --testnet-magic $mN \
   --tx-in $in1 \
-  --tx-out "$(cat $keypath/parkingSpot.addr) + $parkScriptMinCost lovelace " \
+  --tx-out "$(cat $keypath/parkingSpot.addr) + $parkScriptMinCost lovelace" \
   --tx-out-reference-script-file $assets/symbolic.plutus \
+  --tx-out "$(cat $keypath/parkingSpot.addr) + $someDatumMinCost lovelace" \
+  --tx-out-inline-datum-cbor-file $someDatum \
   --change-address $(cat $keypath/alice.addr) \
   --out-file $keypath/parkedScript.txbody
 
@@ -137,6 +145,9 @@ done
 
 cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file $assets/utxo1.json
 cardano-cli conway query utxo --address $(cat $keypath/symbolic.addr) --testnet-magic $mN --out-file $assets/utxo2.json
+symbolicScriptOut=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#1
+cardano-cli conway query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout |
+	   jq -r --arg key "$symbolicScriptOut" 'to_entries | map(select(.key == $key)) | from_entries' > $assets/utxo3.json
 
 echo ""
 echo "Initialization completed."

@@ -67,7 +67,10 @@ parseJsonToTxInInfoList mscripts jsonInput = do
 
         -- Parse ReferenceScript
         referenceScript <- case parseEither (.:? "referenceScript") utxoInfo of
-            Right (Just refScriptObject) -> parseReferenceScript refScriptObject
+            -- Right (Just refScriptObject) -> parseReferenceScript refScriptObject
+            Right (Just refScriptObject) -> do
+              sh <- parseEither (parseJSON @Cardano.Api.ScriptHash) refScriptObject
+              return . Just . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes $ sh
             Right Nothing                -> Right Nothing
             Left err                     -> Left $ "Failed to parse referenceScript: " ++ err
 
@@ -97,29 +100,42 @@ parseInlineDatum v =
     let datE = scriptDataFromJsonDetailedSchema v
 
     in case datE of
-      Right dat -> (Right . Just . OutputDatum . Datum . dataToBuiltinData . toPlutusData . getScriptData $ dat)
+      -- Right dat -> (Right . Just . OutputDatum . Datum . dataToBuiltinData . toPlutusData . getScriptData $ dat)
+      Right dat -> (Right . Just . OutputDatum $ (unsafeFromData . toPlutusData . getScriptData $ dat :: Datum))
       Left _    -> Left "JSON error: scriptdata json error"
 
 -- Helper to parse reference script
-parseReferenceScript :: Aeson.Value -> Either String (Maybe (V3.ScriptHash))
-parseReferenceScript (Object obj) = do
-    scriptObj <- case parseEither (.:? "script") obj of
-        Right (Just script) -> Right (Just script)
-        Right Nothing       -> Right Nothing
-        Left err            -> Left $ "Failed to parse 'script' object: " ++ err
-    case scriptObj of
-        Just (Object script) -> do
-            cborHex <- case parseEither (.:? "cborHex") script of
-                Right (Just (String cborHexStr)) -> Right (TE.encodeUtf8 cborHexStr)
-                Right (Just _)                   -> Left "Failed to parse 'cborHex'"
-                Right Nothing                    -> Left "Missing 'cborHex' in reference script"
-                Left err                         -> Left $ "Failed to parse 'cborHex': " ++ err
-            -- Decode CBOR hex bytes
-            cborHSD <- either (const (Left "Invalid CBOR hex")) Right $
-              deserialiseFromCBOR AsHashableScriptData cborHex
-            return $ Just . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes . hashScriptDataBytes $ cborHSD
-        _                    -> Right Nothing
-parseReferenceScript _ = Right Nothing
+-- parseReferenceScript :: Aeson.Value -> Either String (Maybe PlutusScriptV3)
+-- parseReferenceScript (Object obj) = do
+--     scriptObj <- case parseEither (.:? "script") obj of
+--         Right (Just script) -> Right (Just script)
+--         Right Nothing       -> Right Nothing
+--         Left err            -> Left $ "Failed to parse 'script' object: " ++ err
+--     case scriptObj of
+--         Just (Object script) -> do
+--             cborHex <- case parseEither (.:? "cborHex") script of
+--                 Right (Just (String cborHexStr)) -> Right (TE.encodeUtf8 cborHexStr)
+--                 Right (Just _)                   -> Left "Failed to parse 'cborHex'"
+--                 Right Nothing                    -> Left "Missing 'cborHex' in reference script"
+--                 Left err                         -> Left $ "Failed to parse 'cborHex': " ++ err
+--             -- Decode CBOR hex bytes
+-- --            cborHSD <- either (const (Left "Invalid CBOR hex")) Right $
+--             cborHSD <- either (Left . show) Right $
+--               deserialiseFromCBOR AsHashableScriptData cborHex
+-- --              deserialiseFromCBOR AsPlutusScriptV3 cborHex
+--             return $ Just . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes . hashScriptDataBytes $ cborHSD
+--         _                    -> Right Nothing
+-- parseReferenceScript _ = Right Nothing
+
+-- parseReferenceScript (Object obj) = do
+--   scriptObj <- case parseEither (.:? "script") obj of
+--     Right (Just script) -> Right (Just script)
+--     Right Nothing       -> Right Nothing
+--     Left err            -> Left $ "Failed to parse 'script' object: " ++ err
+--   case scriptObj of
+--     Just (Object script) -> do
+--       s <- parseEither parseJSON (Object script)
+--       return $ Just s
 
 -- Experimental function to parse and display a TxIn
 displayTxIn :: BL.ByteString -> Either String Cardano.Api.TxIn

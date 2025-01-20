@@ -32,6 +32,8 @@ symbolicTx=$(cardano-cli transaction txid --tx-file "$keypath/fundSymb.tx")
 in1=$symbolicTx#1
 in2=$symbolicTx#0
 
+ref1=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#1
+
 echo ""
 echo "Retrieving funds from Symbolic [exec units]..."
 echo ""
@@ -44,9 +46,12 @@ cardano-cli conway transaction build \
   --spending-plutus-script-v3 \
   --spending-reference-tx-in-inline-datum-present \
   --spending-reference-tx-in-redeemer-file $symbolicRedeemer \
+  --read-only-tx-in-reference $ref1 \
   --tx-in-collateral $in1 \
   --tx-out "$(cat $keypath/alice.addr) + 10000000 lovelace" \
   --change-address $(cat $keypath/alice.addr) \
+  --invalid-before 30000 \
+  --invalid-hereafter 40000 \
   --calculate-plutus-script-cost $keypath/symbolic-exec-units.log
 
 exit 1
@@ -59,9 +64,12 @@ cardano-cli conway transaction build \
   --spending-plutus-script-v3 \
   --spending-reference-tx-in-inline-datum-present \
   --spending-reference-tx-in-redeemer-file $symbolicRedeemer \
+  --read-only-tx-in-reference $ref1 \
   --tx-in-collateral $in1 \
   --tx-out "$(cat $keypath/alice.addr) + 10000000 lovelace" \
   --change-address $(cat $keypath/alice.addr) \
+  --invalid-before 30000 \
+  --invalid-hereafter 40000 \
   --out-file $keypath/retrieveSymb.txbody
 
 cardano-cli conway transaction sign \

@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell   #-}
+
 module ZkFold.Cardano.UPLC.PlonkVerifierTx where
 
 import           PlutusTx                                 (unsafeFromBuiltinData)
@@ -8,6 +10,12 @@ import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInter
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
+
+import           PlutusLedgerApi.V1.Value                 (lovelaceValueOf)
+import           PlutusLedgerApi.V3                       (Lovelace (..), OutputDatum (..), Redeemer (..), ScriptContext (..), ToData (..),
+                                                           TxId (..), TxInInfo (..), TxInfo (..), TxOut (..), TxOutRef (..))
+import           PlutusTx                                 (makeIsDataIndexed)
+import           PlutusTx.Prelude                         (Bool, filter, head, isNothing, length, mempty, not, tail, (&&), (==), (>))
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --
@@ -39,7 +47,7 @@ untypedPlonkVerifierTx contract ctx =
       infBeforeReInputs    = BI.tail infoFields
       infoBeforeOutputs    = BI.tail infBeforeReInputs
 
-      -- Some hepers functions
+      -- Some helper functions
       tail5 = BI.tail . BI.tail . BI.tail . BI.tail . BI.tail
 
       mkTuple4 a b c d =
@@ -58,7 +66,10 @@ untypedPlonkVerifierTx' contract ctx =
     where
       -- Extracting transaction data
       ins    = BI.head infoFields                -- txInfoInputs
-      txData = ins
+      refs   = BI.head infBeforeReInputs         -- txInfoReferenceInputs
+      refs'  = toBuiltinData . filter (isNothing . txOutReferenceScript . txInInfoResolved)
+                 $ unsafeFromBuiltinData @[TxInInfo] refs
+      txData = mkTuple2 ins refs'
 
       -- Computing public input from the transaction data
       input = toInput . blake2b_224 . BI.serialiseData $ txData
@@ -70,3 +81,11 @@ untypedPlonkVerifierTx' contract ctx =
       scriptContextTxInfo' = BI.snd $ BI.unsafeDataAsConstr ctx
       info                 = BI.head scriptContextTxInfo'
       infoFields           = BI.snd $ BI.unsafeDataAsConstr info
+      infBeforeReInputs    = BI.tail infoFields
+
+      -- Some helper functions
+      mkTuple2 a b =
+        BI.mkList $
+          BI.mkCons a $
+            BI.mkCons b $
+              BI.mkNilData BI.unitval

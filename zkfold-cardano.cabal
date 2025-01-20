@@ -306,6 +306,27 @@ executable balancing-parse-input
     text                           ,
     zkfold-cardano                 ,
 
+executable balancing-experiment
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  hs-source-dirs:   backends/symbolic-balancing/balancing-experiment
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    cardano-api                    ,
+    cborg                          ,
+    directory                      ,
+    filepath                       ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    plutus-tx-plugin        ^>=1.36,
+    text                           ,
+    zkfold-cardano
+
 executable plonk-init-transaction
   import:           lang
   import:           lang-extra
