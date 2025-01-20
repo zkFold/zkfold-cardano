@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:zkfold-cardano-scripts"
+
+    - path: "bench/src"
+      component: "zkfold-cardano-scripts:lib:zkfold-benchmark"
+
+    - path: "bench/bench-cpu-mem/Main.hs"
+      component: "zkfold-cardano-scripts:bench:bench-cpu-mem"
+
+    - path: "bench/bench-rollup/Main.hs"
+      component: "zkfold-cardano-scripts:bench:bench-rollup"

@@ -22,7 +22,7 @@ jobs:
         
     - name: Install C dependencies
       run: |
-        CARDANO_NODE_VERSION='9.1.0'
+        CARDANO_NODE_VERSION='10.1.3'
         IOHKNIX_VERSION=$(curl https://raw.githubusercontent.com/IntersectMBO/cardano-node/$CARDANO_NODE_VERSION/flake.lock | jq -r '.nodes.iohkNix.locked.rev')
         echo "iohk-nix version: $IOHKNIX_VERSION"
 
@@ -95,8 +95,8 @@ jobs:
     - name: Setup Haskell
       uses: haskell-actions/setup@v2.6.2
       with:
-        ghc-version: '9.6.3'
-        cabal-version: '3.10.2.1'
+        ghc-version: '9.6.6'
+        cabal-version: '3.10.3.0'
 
     - name: Cache
       uses: actions/cache@v4.0.1
