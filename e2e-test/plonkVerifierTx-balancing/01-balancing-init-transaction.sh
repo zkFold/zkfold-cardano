@@ -81,7 +81,7 @@ cardano-cli conway transaction submit \
     --testnet-magic $mN \
     --tx-file $keypath/parkedScript.tx
 
-parkedTx=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")
+parkedTx=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")
 parkedOut=$parkedTx#0
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
@@ -121,7 +121,7 @@ cardano-cli conway transaction submit \
     --testnet-magic $mN \
     --tx-file $keypath/fundSymb.tx
 
-plonkVerifierTxTx=$(cardano-cli transaction txid --tx-file "$keypath/fundSymb.tx")
+plonkVerifierTxTx=$(cardano-cli conway transaction txid --tx-file "$keypath/fundSymb.tx")
 plonkVerifierTxOut=$plonkVerifierTxTx#0
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/plonkVerifierTx.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$plonkVerifierTxOut" 'has($key) | tostring')

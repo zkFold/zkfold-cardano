@@ -25,10 +25,10 @@ fi
 cabal run balancing-parse-input
 
 plonkVerifierTxRedeemer=$assets/redeemerPlonkVerifierTx.json
-plonkVerifierTxScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
+plonkVerifierTxScript=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#0
 
 # in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[1]')
-plonkVerifierTxTx=$(cardano-cli transaction txid --tx-file "$keypath/fundSymb.tx")
+plonkVerifierTxTx=$(cardano-cli conway transaction txid --tx-file "$keypath/fundSymb.tx")
 in1=$plonkVerifierTxTx#1
 in2=$plonkVerifierTxTx#0
 
@@ -74,7 +74,7 @@ cardano-cli conway transaction submit \
     --testnet-magic $mN \
     --tx-file $keypath/retrieveSymb.tx
 
-retrieveTx=$(cardano-cli transaction txid --tx-file "$keypath/retrieveSymb.tx")
+retrieveTx=$(cardano-cli conway transaction txid --tx-file "$keypath/retrieveSymb.tx")
 retrieveOut=$retrieveTx#0
 while true; do
     txOnChain=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$retrieveOut" 'has($key) | tostring')
