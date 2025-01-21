@@ -25,7 +25,7 @@ echo "alice address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $magic)"
 echo ""
 
-plonkVerifierToken=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierToken.tx")#0
+plonkVerifierToken=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierToken.tx")#0
 policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifierToken.plutus")
 
 #-------------------------- :tokenname and redeemer: ---------------------------
@@ -82,7 +82,7 @@ echo ""
 sleep $pause
 
 echo ""
-echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/minting-transaction.tx")"
+echo "transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/minting-transaction.tx")"
 echo ""
 echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"

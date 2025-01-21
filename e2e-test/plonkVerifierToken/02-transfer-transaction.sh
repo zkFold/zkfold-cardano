@@ -69,7 +69,7 @@ echo ""
 sleep $pause
 
 echo ""
-echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierToken-transfer.tx")"
+echo "transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierToken-transfer.tx")"
 echo ""
 echo "forwardingMint address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/forwardingMint.addr) --testnet-magic $magic)"

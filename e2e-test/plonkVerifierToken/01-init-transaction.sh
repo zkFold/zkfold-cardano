@@ -41,7 +41,7 @@ cardano-cli conway query protocol-parameters \
   --testnet-magic $magic \
   --out-file $assets/protocol.json
 
-plonkVerifierSize=$(stat -c%s "$assets/plonkVerifier.plutus")
+plonkVerifierSize=$(stat -c%s "$assets/plonkVerifierToken.plutus")
 
 forwardingMintSize=$(stat -c%s "$assets/forwardingMint.plutus")
 
@@ -118,9 +118,9 @@ echo ""
 sleep $pause
 
 echo ""
-echo "plonkVerifierToken transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierToken.tx")"
+echo "plonkVerifierToken transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierToken.tx")"
 echo ""
-echo "forwardingMint transaction id: $(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")"
+echo "forwardingMint transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/forwardingMint.tx")"
 echo ""
 echo "zkfold-main address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/zkfold-main.addr) --testnet-magic $magic)"

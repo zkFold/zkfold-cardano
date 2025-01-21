@@ -26,11 +26,11 @@ echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"
 echo ""
 
-plonkVerifierToken=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierToken.tx")#0
-forwardingMintReference=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
+plonkVerifierToken=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierToken.tx")#0
+forwardingMintReference=$(cardano-cli conway transaction txid --tx-file "$keypath/forwardingMint.tx")#0
 policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkVerifierToken.plutus")
 
-forwardingMintIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
+forwardingMintIn=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierToken-transfer.tx")#0
 
 #-------------------------- :tokenname and redeemer: ---------------------------
 

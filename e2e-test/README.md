@@ -35,7 +35,7 @@ To initialize the system:
 
 ##### Local testnet (initialization)
 
-a. Create a local testnet with `./local-testnet/e2e-test/babbage/mkfiles.sh`.
+a. Create a local testnet with `./local-testnet/scripts/babbage/mkfiles.sh`.
 
 b. Start the testnet with `./local-testnet/example/run/all.sh`.  (To stop the testnet, press ^C twice.)
 
