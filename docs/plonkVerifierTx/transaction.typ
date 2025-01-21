@@ -195,7 +195,7 @@
     ]
   ] else []
   let sscripts = if staking.len() > 0 [
-    *Staking e2e-test:*
+    *Staking script:*
     #for sscript in staking [
       - #sscript
     ]

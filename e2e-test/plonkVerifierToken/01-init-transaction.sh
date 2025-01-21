@@ -14,7 +14,7 @@ assets=../assets
 magic=$(cat $privpath/testnet.flag)
 
 echo ""
-echo "someone wants to create an address with e2e-test."
+echo "someone wants to create an address with scripts."
 echo ""
 
 in1=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic $magic --out-file  /dev/stdout | jq -r 'keys[0]')
@@ -24,7 +24,7 @@ echo "someone address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic $magic)"
 echo ""
 
-#------------------------------- :create e2e-test: ------------------------------
+#------------------------------- :create scripts: ------------------------------
 
 cabal run plonkVerifierToken-init-transaction
 

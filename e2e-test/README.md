@@ -1,9 +1,9 @@
-# Cli e2e-test
+# Cli scripts
 
 
 ## Docs
 
-We have a description of transactions in `src-docs`.
+We have a description of transactions in `docs`.
 
 
 ## Scripts
@@ -56,9 +56,9 @@ To initialize the plonk system, run `./plonkVerifierToken/local-init-system.sh`.
 
 #### PlonkVerifierToken Transactions
 
-To perform the transactions (on either SanchoNet or local testnet), execute the following 4 e2e-test.
+To perform the transactions (on either SanchoNet or local testnet), execute the following 4 scripts.
 
-- `./plonkVerifierToken/01-init-transaction.sh` to publish Plutus e2e-test on the blockchain.
+- `./plonkVerifierToken/01-init-transaction.sh` to publish Plutus scripts on the blockchain.
 - `./plonkVerifierToken/02-transfer-transaction.sh` to set up a reward for burning a token.
 - `./plonkVerifierToken/03-minting-transaction.sh` to mint and send a token to the owner.
 - `./plonkVerifierToken/04-burning-transaction.sh` to burn the token and receive the reward.
@@ -67,7 +67,7 @@ You can also see the state of all wallets with `./plonkVerifierToken/05-show-all
 
 ### Rollup
 
-Rollup e2e-test implement a prototype *rollup loop*.  Currently rollup transactions process batches of three update data tokens (minted in "parallel" transactions).
+Rollup scripts implement a prototype *rollup loop*.  Currently rollup transactions process batches of three update data tokens (minted in "parallel" transactions).
 
 Every five rollup transactions, used data tokens are burned.
 

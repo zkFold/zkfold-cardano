@@ -34,7 +34,7 @@ cardano-cli conway query protocol-parameters \
   --testnet-magic $mN \
   --out-file $assets/protocol.json
 
-#------------------------------- :create e2e-test: ------------------------------
+#------------------------------- :create scripts: ------------------------------
 
 cabal run balancing-init-transaction
 

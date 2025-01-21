@@ -25,8 +25,8 @@ Plutus script for posting rollup data on-chain.
 ### RollupDeposit (in progress)
 Plutus proxy script for depositing funds into the rollup.
 
-### Wallet (in progress)
-...
+### Wallet
+This script verifies that a transaction was either signed with a signature or has a ZKP associated with it allowing to access the funds.
 
 ## Benchmark of the Plonk verifier
 

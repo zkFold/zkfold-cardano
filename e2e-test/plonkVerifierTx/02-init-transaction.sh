@@ -10,7 +10,7 @@ keypath=./keys
 assets=../assets
 
 echo ""
-echo "someone wants to create an address with e2e-test."
+echo "someone wants to create an address with scripts."
 echo ""
 
 in=$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic 4 --out-file  /dev/stdout | jq -r 'keys[0]')
@@ -26,7 +26,7 @@ cardano-cli conway stake-address build \
     --out-file "$keypath/plonkVerifierTxStaking.addr" \
     --testnet-magic 4
 
-#------------------------------- :create e2e-test: -----------------------------
+#------------------------------- :create scripts: -----------------------------
 
 cabal run plonkVerifierTx-init-transaction
 

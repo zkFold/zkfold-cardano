@@ -55,7 +55,7 @@ cardano-cli conway address build \
 
 bobAddress=$(cat $keypath/bob.addr)
 
-#------------------------------- :create e2e-test: ------------------------------
+#------------------------------- :create scripts: ------------------------------
 
 cabal run rollup-init-transaction -- $in1 $bobAddress
 
