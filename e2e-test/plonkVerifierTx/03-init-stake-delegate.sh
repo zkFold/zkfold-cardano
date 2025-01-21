@@ -55,7 +55,7 @@ echo ""
 sleep 60
 
 echo ""
-echo "register transaction id: $(cardano-cli transaction txid --tx-file "$keypath/delegate-staking-script.tx")"
+echo "register transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/delegate-staking-script.tx")"
 echo ""
 
 # H.note_ "Check if Plutus staking script address was registered"
@@ -125,7 +125,7 @@ echo ""
 sleep 60
 
 echo ""
-echo "delegate transaction id: $(cardano-cli transaction txid --tx-file "$keypath/delegate-staking-script.tx")"
+echo "delegate transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/delegate-staking-script.tx")"
 echo ""
 
 # H.note_ "Check to see if staking script was delegated"

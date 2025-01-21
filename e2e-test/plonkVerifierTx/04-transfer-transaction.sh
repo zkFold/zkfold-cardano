@@ -54,7 +54,7 @@ echo ""
 sleep 60
 
 echo ""
-echo "transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierTx-transfer.tx")"
+echo "transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierTx-transfer.tx")"
 echo ""
 echo "forwardingReward address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/forwardingReward.addr) --testnet-magic 4)"

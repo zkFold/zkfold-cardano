@@ -21,11 +21,11 @@ echo "bob address:"
 echo "$(cardano-cli query utxo --testnet-magic 4 --address $(cat $keypath/bob.addr))"
 echo ""
 
-plonkVerifierTx=$(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierTx.tx")#0
-forwardingRewardReference=$(cardano-cli transaction txid --tx-file "$keypath/forwardingMint.tx")#0
+plonkVerifierTx=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierTx.tx")#0
+forwardingRewardReference=$(cardano-cli conway transaction txid --tx-file "$keypath/forwardingMint.tx")#0
 base16=$(cardano-cli conway address info --address "$keypath/plonkVerifierTx.addr" /dev/stdout | jq -r 'keys[0]')
 
-forwardingRewardIn=$(cardano-cli transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
+forwardingRewardIn=$(cardano-cli conway transaction txid --tx-file "$keypath/plonk-transfer.tx")#0
 
 #---------------------------------- :redeemer: ---------------------------------
 

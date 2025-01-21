@@ -93,9 +93,9 @@ echo ""
 sleep 60
 
 echo ""
-echo "plonkVerifierTx transaction id: $(cardano-cli transaction txid --tx-file "$keypath/plonkVerifierTx.tx")"
+echo "plonkVerifierTx transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/plonkVerifierTx.tx")"
 echo ""
-echo "forwardingReward transaction id: $(cardano-cli transaction txid --tx-file "$keypath/forwardingReward.tx")"
+echo "forwardingReward transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/forwardingReward.tx")"
 echo ""
 echo "zkfold-main address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/zkfold-main.addr) --testnet-magic 4)"
