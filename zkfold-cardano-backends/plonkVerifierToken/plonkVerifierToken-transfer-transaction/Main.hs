@@ -13,5 +13,5 @@ main = do
   policyidE <- parse parsePolicyId "" . head <$> getArgs
 
   case policyidE of
-    Right policyid -> BS.writeFile "../assets/datumPlonk.cbor" $ toStrictByteString $ toCBOR $ serialiseToRawBytes policyid
+    Right policyid -> BS.writeFile "../assets/datumPlonkVerifierToken.cbor" $ toStrictByteString $ toCBOR $ serialiseToRawBytes policyid
     Left err       -> print $ "parse" ++ show err

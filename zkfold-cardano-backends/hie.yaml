@@ -9,14 +9,14 @@ cradle:
     - path: "plonkVerifierTx/plonkVerifierTx-withdraw-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:plonkVerifierTx-withdraw-transaction"
 
-    - path: "plonk/plonk-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonk-init-transaction"
+    - path: "plonkVerifierToken/plonkVerifierToken-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-init-transaction"
 
-    - path: "plonk/plonk-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonk-transfer-transaction"
+    - path: "plonkVerifierToken/plonkVerifierToken-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-transfer-transaction"
 
-    - path: "plonk/plonk-minting-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonk-minting-transaction"
+    - path: "plonkVerifierToken/plonkVerifierToken-minting-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-minting-transaction"
 
     - path: "plonkVerifierTx-balancing/balancing-init-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:balancing-init-transaction"

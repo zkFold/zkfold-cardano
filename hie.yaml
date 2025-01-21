@@ -1,5 +1,11 @@
 cradle:
   cabal:
+    - path: "zkfold-cardano/src"
+      component: "lib:zkfold-cardano"
+
+    - path: "zkfold-cardano/test"
+      component: "zkfold-cardano:test:test"
+
     - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-init-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:plonkVerifierTx-init-transaction"
 
@@ -44,12 +50,6 @@ cradle:
 
     - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Rollup/ParseJson.hs"
       component: "zkfold-cardano-backends:exe:rollup-clear-data"
-
-    - path: "zkfold-cardano/src"
-      component: "lib:zkfold-cardano"
-
-    - path: "zkfold-cardano/test"
-      component: "zkfold-cardano:test:test"
 
     - path: "zkfold-cardano-scripts/src"
       component: "lib:zkfold-cardano-scripts"

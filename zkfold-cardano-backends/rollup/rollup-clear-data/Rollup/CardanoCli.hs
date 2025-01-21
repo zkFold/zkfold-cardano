@@ -21,7 +21,7 @@ initialCodeBlock =
   , "dataPolicy=$assets/rollupData.plutus"
   , "dataCleanRedeemer=$assets/dataCleanRedeemer.cbor"
   , "parkingSpotPolicy=$assets/parkingSpot.plutus"
-  , "collateral=$(cardano-cli transaction txid --tx-file \"$keypath/splitAlice.tx\")#0"
+  , "collateral=$(cardano-cli conway transaction txid --tx-file \"$keypath/splitAlice.tx\")#0"
   , ""
   , "in1=$(cardano-cli conway transaction txid --tx-file \"$keypath/rollupOut.tx\")#3"
   , "dataPolicyId=$(cardano-cli conway transaction policyid --script-file $dataPolicy)"
