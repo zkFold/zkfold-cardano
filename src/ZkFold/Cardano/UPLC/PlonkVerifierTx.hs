@@ -3,16 +3,11 @@
 
 module ZkFold.Cardano.UPLC.PlonkVerifierTx where
 
-import           PlutusLedgerApi.V1.Value                 (lovelaceValueOf)
-import           PlutusLedgerApi.V3                       (Extended (..), Interval (..), Lovelace (..), LowerBound (..),
-                                                           OutputDatum (..), POSIXTime, POSIXTimeRange, Redeemer (..),
-                                                           ScriptContext (..), ToData (..), TxId (..), TxInInfo (..),
-                                                           TxInfo (..), TxOut (..), TxOutRef (..), UpperBound (..))
-import           PlutusTx                                 (makeIsDataIndexed, unsafeFromBuiltinData)
+import           PlutusLedgerApi.V3                       (ToData (..), TxInInfo (..), TxOut (..))
+import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, blake2b_224, check,
-                                                           filter, head, isNothing, length, mempty, not, tail,
-                                                           traceError, ($), (&&), (.), (==), (>))
+import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check,
+                                                           filter, isNothing, traceError, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
