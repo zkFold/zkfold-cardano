@@ -41,6 +41,8 @@ common lang
     FlexibleInstances
     NoImplicitPrelude
     OverloadedStrings
+    ExplicitNamespaces
+    TypeOperators
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -84,8 +86,9 @@ executable plonkVerifierTx-init-transaction
     directory                      ,
     zkfold-cardano                 ,
     QuickCheck                     ,
+    zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano-scripts         ,
 
 executable plonkVerifierTx-transfer-transaction
   import:           lang
@@ -128,9 +131,10 @@ executable plonkVerifierToken-init-transaction
     base              >= 4.9 && < 5,
     bytestring                     ,
     directory                      ,
+    symbolic-base                  ,
     zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano-scripts         ,
     QuickCheck                     ,
 
 executable plonkVerifierToken-transfer-transaction
@@ -146,6 +150,7 @@ executable plonkVerifierToken-transfer-transaction
     cardano-api                    ,
     cborg                          ,
     parsec                         ,
+    zkfold-cardano                 ,
 
 executable plonkVerifierToken-minting-transaction
   import:           lang
@@ -160,6 +165,7 @@ executable plonkVerifierToken-minting-transaction
     bytestring                     ,
     cardano-api                    ,
     plutus-ledger-api       ^>=1.36,
+    symbolic-base                  ,
     zkfold-cardano                 ,
     zkfold-example                 ,
 

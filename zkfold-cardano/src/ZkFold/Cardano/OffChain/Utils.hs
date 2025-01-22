@@ -25,6 +25,16 @@ import           Text.Parsec.Char     (digit)
 import           Text.Parsec.String   (Parser)
 import           Text.Printf          (printf)
 import           Text.Read            (readEither)
+import ZkFold.Cardano.OnChain.BLS12_381.F (F(..), fromInput)
+import           Data.String                           (IsString (..))
+
+-- | convert PolicyId to ByteString
+toPolicyid :: SerialiseAsRawBytes a => a -> BS.ByteString
+toPolicyid = toStrictByteString . toCBOR . serialiseToRawBytes
+
+-- | create TokenName to ByteString
+createTokenName :: F -> BS.ByteString
+createTokenName = fromString . show . UsingRawBytesHex . AssetName . fromBuiltin . fromInput 
 
 -- | Write serialized script to a file.
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()

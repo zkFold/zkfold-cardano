@@ -1,5 +1,8 @@
 module Main where
 
+import           Prelude 
+
+{-
 import           Data.Aeson                            (encode)
 import qualified Data.ByteString.Lazy                  as BL
 import           Prelude                               (Bool (..), IO, Show (..), putStr, ($), (++))
@@ -11,9 +14,10 @@ import           ZkFold.Cardano.Examples.EqualityCheck (EqualityCheckContract (.
 import           ZkFold.Cardano.OffChain.Utils         (savePlutus)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingRewardCompiled)
 import           ZkFold.Cardano.UPLC.PlonkVerifierTx   (plonkVerifierTxCompiled)
+-}
 
 main :: IO ()
-main = do
+main = undefined {- do
   x           <- generate arbitrary
   ps          <- generate arbitrary
   targetValue <- generate arbitrary
@@ -31,3 +35,4 @@ main = do
 
   savePlutus "../../assets/plonkVerifierTx.plutus" $ plonkVerifierTxCompiled setup
   savePlutus "../../assets/forwardingReward.plutus" forwardingRewardCompiled
+-}
