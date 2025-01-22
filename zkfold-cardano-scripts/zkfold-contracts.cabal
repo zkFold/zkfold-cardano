@@ -39,6 +39,7 @@ common lang
     DeriveAnyClass
     NamedFieldPuns
     OverloadedStrings
+    TypeOperators
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
