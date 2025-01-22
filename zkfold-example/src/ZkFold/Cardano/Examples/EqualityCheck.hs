@@ -3,7 +3,6 @@ module ZkFold.Cardano.Examples.EqualityCheck where
 import           Data.Aeson                                  (FromJSON, ToJSON)
 import           GHC.Generics                                (Generic, Par1 (..), U1 (..), type (:*:) (..))
 import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
@@ -13,7 +12,7 @@ import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecre
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup              ()
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes, SetupBytes)
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
@@ -44,8 +43,3 @@ equalityCheckVerificationBytes x ps targetValue =
         (input, proof) = prove @(PlonkupN (U1 :*: U1) (Par1 :*: U1) 32) @HaskellCore setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
-
-testEqualityCheckContract :: Fr -> PlonkupProverSecret BLS12_381_G1 -> Fr -> Haskell.Bool
-testEqualityCheckContract x ps targetValue =
-    let (s, i, p) = equalityCheckVerificationBytes x ps targetValue
-    in verify @PlonkupPlutus @HaskellCore s i p
