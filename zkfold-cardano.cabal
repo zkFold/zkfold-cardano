@@ -332,13 +332,13 @@ executable balancing-init-transaction
     zkfold-cardano                 ,
     QuickCheck                     ,
 
-executable balancing-parse-input
+executable balancing-plonk-verifier
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   backends/symbolic-balancing/balancing-parse-input
+  hs-source-dirs:   backends/symbolic-balancing/balancing-plonk-verifier
   other-modules:
     Backend.JsonToData
   build-depends:
@@ -354,27 +354,6 @@ executable balancing-parse-input
     plutus-tx-plugin        ^>=1.36,
     text                           ,
     zkfold-cardano                 ,
-
-executable balancing-experiment
-  import:           lang
-  import:           lang-extra
-  default-language: Haskell2010
-  ghc-options:      -rtsopts
-  main-is:          Main.hs
-  hs-source-dirs:   backends/symbolic-balancing/balancing-experiment
-  build-depends:
-    aeson                          ,
-    base              >= 4.9 && < 5,
-    bytestring                     ,
-    cardano-api                    ,
-    cborg                          ,
-    directory                      ,
-    filepath                       ,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
-    text                           ,
-    zkfold-cardano
 
 executable rollup-init-transaction
   import:           lang

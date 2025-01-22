@@ -20,7 +20,7 @@ import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes)
 import           ZkFold.Cardano.OffChain.E2E             (IdentityCircuitContract (..))
-import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, plonkVerifierTxCompiled')
+import           ZkFold.Cardano.UPLC                     (parkingSpotCompiled, plonkVerifierTxCompiled)
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
@@ -54,16 +54,16 @@ main = do
 
   putStr $ "x: " ++ show x ++ "\n" ++ "ps: " ++ show ps ++ "\n\n"
 
-  -- let input         = F 26217937587563095239723870254092982918845276250263818911301829349969290592256  -- an arbitrary value
   let (setup, _, _) = identityCircuitVerificationBytes x ps
 
   let assetsPath = path </> "assets"
 
-  savePlutus (assetsPath </> "symbolic.plutus") $ plonkVerifierTxCompiled' setup
+  savePlutus (assetsPath </> "symbolic.plutus") $ plonkVerifierTxCompiled setup
   savePlutus (assetsPath </> "parkingSpot.plutus") $ parkingSpotCompiled 54
 
   BS.writeFile (assetsPath </> "unit.cbor") $ dataToCBOR ()
   BS.writeFile (assetsPath </> "someDatum.cbor") $ plutusDataToCBOR someDatum
+
 
 ----- HELPER FUNCTIONS -----
 

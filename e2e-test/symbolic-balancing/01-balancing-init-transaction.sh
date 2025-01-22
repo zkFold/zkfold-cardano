@@ -148,6 +148,7 @@ cardano-cli conway query utxo --address $(cat $keypath/symbolic.addr) --testnet-
 symbolicScriptOut=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#1
 cardano-cli conway query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout |
 	   jq -r --arg key "$symbolicScriptOut" 'to_entries | map(select(.key == $key)) | from_entries' > $assets/utxo3.json
+cp $keypath/alice.addr $assets/alice.addr
 
 echo ""
 echo "Initialization completed."

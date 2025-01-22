@@ -10,7 +10,6 @@ module ZkFold.Cardano.UPLC
   ( nftPolicyCompiled
   , parkingSpotCompiled
   , plonkVerifierTxCompiled
-  , plonkVerifierTxCompiled'
   , plonkVerifierTokenCompiled
   , plonkVerifierCompiled
   , forwardingRewardCompiled
@@ -31,7 +30,7 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data    (SetupBytes)
 import           ZkFold.Cardano.UPLC.Common             (untypedNftPolicy, untypedParkingSpot)
 import           ZkFold.Cardano.UPLC.ForwardingScripts  (untypedForwardingMint, untypedForwardingReward)
 import           ZkFold.Cardano.UPLC.PlonkVerifierToken (untypedPlonkVerifierToken)
-import           ZkFold.Cardano.UPLC.PlonkVerifierTx    (untypedPlonkVerifierTx, untypedPlonkVerifierTx')
+import           ZkFold.Cardano.UPLC.PlonkVerifierTx    (untypedPlonkVerifierTx)
 import           ZkFold.Cardano.UPLC.Rollup             (RollupSetup, untypedRollup)
 import           ZkFold.Cardano.UPLC.RollupData         (untypedRollupData)
 
@@ -49,11 +48,6 @@ parkingSpotCompiled tag =
 plonkVerifierTxCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 plonkVerifierTxCompiled contract =
     $$(compile [|| untypedPlonkVerifierTx ||])
-    `unsafeApplyCode` liftCodeDef contract
-
-plonkVerifierTxCompiled' :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
-plonkVerifierTxCompiled' contract =
-    $$(compile [|| untypedPlonkVerifierTx' ||])
     `unsafeApplyCode` liftCodeDef contract
 
 plonkVerifierTokenCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
