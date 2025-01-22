@@ -6,8 +6,8 @@ module ZkFold.Cardano.UPLC.PlonkVerifierTx where
 import           PlutusLedgerApi.V3                       (ToData (..), TxInInfo (..), TxOut (..))
 import           PlutusTx                                 (unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check,
-                                                           filter, isNothing, traceError, ($), (.))
+import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, filter,
+                                                           isNothing, traceError, ($), (.))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
