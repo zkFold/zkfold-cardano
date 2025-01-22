@@ -3,21 +3,21 @@
 
 module ZkFold.Cardano.UPLC.PlonkVerifierTx where
 
-import           PlutusTx                                 (unsafeFromBuiltinData)
+import           PlutusLedgerApi.V1.Value                 (lovelaceValueOf)
+import           PlutusLedgerApi.V3                       (Extended (..), Interval (..), Lovelace (..), LowerBound (..),
+                                                           OutputDatum (..), POSIXTime, POSIXTimeRange, Redeemer (..),
+                                                           ScriptContext (..), ToData (..), TxId (..), TxInInfo (..),
+                                                           TxInfo (..), TxOut (..), TxOutRef (..), UpperBound (..))
+import           PlutusTx                                 (makeIsDataIndexed, unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, ($), (.))
+import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, blake2b_224, check,
+                                                           filter, head, isNothing, length, mempty, not, tail,
+                                                           traceError, ($), (&&), (.), (==), (>))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
-
-import           PlutusLedgerApi.V1.Value                 (lovelaceValueOf)
-import           PlutusLedgerApi.V3                       (Lovelace (..), OutputDatum (..), Redeemer (..), ScriptContext (..), ToData (..),
-                                                           TxId (..), TxInInfo (..), TxInfo (..), TxOut (..), TxOutRef (..), POSIXTimeRange,
-                                                           LowerBound (..), UpperBound (..), Interval (..), Extended (..), POSIXTime)
-import           PlutusTx                                 (makeIsDataIndexed)
-import           PlutusTx.Prelude                         (Bool (..), filter, head, isNothing, length, mempty, not, tail, traceError, (&&), (==), (>))
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --

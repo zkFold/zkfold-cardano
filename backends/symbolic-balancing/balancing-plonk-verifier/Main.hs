@@ -19,7 +19,8 @@ import           PlutusLedgerApi.V3                      as V3
 import           PlutusTx                                (CompiledCode)
 import           PlutusTx.Builtins.Internal              (serialiseData)
 import qualified PlutusTx.Builtins.Internal              as BI
-import           PlutusTx.Prelude                        (Bool (..), Ordering (..), blake2b_224, compare, concat, sortBy)
+import           PlutusTx.Prelude                        (Bool (..), Ordering (..), blake2b_224, compare, concat,
+                                                          sortBy)
 import           Prelude                                 (Either (..), Maybe (..), Show (..), error, return, sequenceA,
                                                           ($), (++), (.), (<$>))
 import           System.Directory                        (getCurrentDirectory)
@@ -58,7 +59,7 @@ main = do
   -- Reference inputs
   txin3 <- parseJsonToTxInInfoList [ Just $ parkingSpotCompiled 54 ] <$> BL.readFile (assetsPath </> "utxo3.json")
   let referencesE = [txin3]
-  
+
   -- Outputs
   addr1T <- TIO.readFile (assetsPath </> "alice.addr")
   let val1 = Lovelace 10000000
@@ -74,11 +75,11 @@ main = do
     Right (txIns, txRefs, addr1) -> do
       let out1   = TxOut addr1 (lovelaceValue val1) NoOutputDatum Nothing
           txOuts = [out1]
-          
+
       putStr $ "\nInputs:\n" ++ (show txIns) ++ "\n\n"
       putStr $ "Reference inputs:\n" ++ (show txRefs) ++ "\n\n"
       putStr $ "Outputs:\n" ++ (show txOuts) ++ "\n\n"
-      
+
       let txInsSorted = sortBy (\u v -> outRefCompare (txInInfoOutRef u) (txInInfoOutRef v)) txIns
       let txInsBD  = toBuiltinData txInsSorted
           txRefsBD = toBuiltinData txRefs
