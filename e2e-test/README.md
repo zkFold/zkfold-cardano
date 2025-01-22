@@ -118,6 +118,8 @@ To resume rollup update loop, simply execute step 2 again.  To reset and start a
 
 ### Symbolic balancing
 
+Symbolic balancing refers to estimating the cost of executing `plonkVerifierTx` validator.  The implemented example can easily be generalized.
+
 Instructions:  Create local testnet (follow instruction in section *Plonk* above).  Then, from directory `e2e-test`, execute the following shell commands.
 
 0. Create Alice's wallet and fund it:
@@ -132,7 +134,7 @@ Instructions:  Create local testnet (follow instruction in section *Plonk* above
 
 2. Get exec units and estimated fee for retrieval transaction:
 ```shell
-./symbolic-balancing/02-balancing-parse-input.sh
+./symbolic-balancing/02-balancing-plonk-verifier.sh
 ```
 
 ### Symbolic
