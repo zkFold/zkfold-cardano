@@ -1,11 +1,12 @@
 module Main where
 
-import           Cardano.Api        (SerialiseAsRawBytes (..), parsePolicyId)
-import           Data.ByteString    as BS (writeFile)
-import           Prelude            (Either (..), IO, Show (..), head, print, ($), (++), (.), (<$>))
-import           System.Environment (getArgs)
-import           Text.Parsec        (parse)
-import ZkFold.Cardano.OffChain.Utils (toPolicyid)
+import           Cardano.Api                   (SerialiseAsRawBytes (..), parsePolicyId)
+import           Data.ByteString               as BS (writeFile)
+import           Prelude                       (Either (..), IO, Show (..), head, print, ($), (++), (.), (<$>))
+import           System.Environment            (getArgs)
+import           Text.Parsec                   (parse)
+
+import           ZkFold.Cardano.OffChain.Utils (toPolicyid)
 
 main :: IO ()
 main = do

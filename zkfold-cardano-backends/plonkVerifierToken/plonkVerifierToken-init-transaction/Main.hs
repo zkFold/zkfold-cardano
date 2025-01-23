@@ -1,23 +1,23 @@
 module Main where
 
-import           Prelude                                (Bool (..), IO, ($))
-import           System.Directory                       (createDirectoryIfMissing)
-import           Test.QuickCheck.Arbitrary              (Arbitrary (..))
-import           Test.QuickCheck.Gen                    (generate)
-
-import           ZkFold.Cardano.Examples.EqualityCheck  (equalityCheckContract)
-import           ZkFold.Cardano.OffChain.Utils          (savePlutus)
-import           ZkFold.Cardano.UPLC.ForwardingScripts  (forwardingMintCompiled)
-import           ZkFold.Cardano.UPLC.PlonkVerifierToken (plonkVerifierTokenCompiled)
 import           GHC.Generics                                (Par1 (..), U1 (..), type (:*:) (..))
-import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkSetup)
-import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
+import           Prelude                                     (Bool (..), IO, ($))
+import           System.Directory                            (createDirectoryIfMissing)
+import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
+import           Test.QuickCheck.Gen                         (generate)
+
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
-import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
+import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
-import ZkFold.Prelude (writeFileJSON)
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
+import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
+import           ZkFold.Cardano.Examples.EqualityCheck       (equalityCheckContract)
+import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkSetup)
+import           ZkFold.Cardano.OffChain.Utils               (savePlutus)
+import           ZkFold.Cardano.UPLC.ForwardingScripts       (forwardingMintCompiled)
+import           ZkFold.Cardano.UPLC.PlonkVerifierToken      (plonkVerifierTokenCompiled)
+import           ZkFold.Prelude                              (writeFileJSON)
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
 
 main :: IO ()
 main = do
@@ -47,7 +47,7 @@ main = do
   -- save the things needed for the prover
   -- writeFileJSON "../assets/setupProve.json" setupP
   writeFileJSON "../assets/plonkupProverSecret.json" (ps :: PlonkupProverSecret BLS12_381_G1)
-  
+
   -- this part only exists in the example, this is a cheat sheet
   writeFileJSON "../assets/privateInputs.json" targetValue
 

@@ -12,46 +12,45 @@
 module Main where
 
 
-import           Bench.Statistics                         (TestSize (..), printHeader, printSizeStatistics)
-import qualified Data.ByteString                          as BS
-import qualified Data.Maybe                               as Haskell
-import           Data.String                              (IsString (fromString))
-import           Flat                                     (flat)
-import           Flat.Types                               ()
-import           PlutusCore                               (DefaultFun, DefaultUni)
-import qualified PlutusLedgerApi.V2                       as V2
+import           Bench.Statistics                            (TestSize (..), printHeader, printSizeStatistics)
+import qualified Data.ByteString                             as BS
+import qualified Data.Maybe                                  as Haskell
+import           Data.String                                 (IsString (fromString))
+import           Flat                                        (flat)
+import           Flat.Types                                  ()
+import           GHC.Generics                                (Par1 (..), U1 (..), type (:*:) (..))
+import           PlutusCore                                  (DefaultFun, DefaultUni)
+import qualified PlutusLedgerApi.V2                          as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
-                                                           unsafeApplyCode)
-import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
-import           Prelude                                  hiding (Bool, Eq (..), Fractional (..), Num (..), length, ($),
-                                                           (.))
-import           System.Directory                         (createDirectoryIfMissing)
-import           System.IO                                (Handle, stdout)
-import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
-import           Test.QuickCheck.Gen                      (generate)
-import           Text.Printf                              (hPrintf)
-import qualified UntypedPlutusCore                        as UPLC
-import           UntypedPlutusCore                        (UnrestrictedProgram (..))
+import           PlutusTx                                    (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
+                                                              unsafeApplyCode)
+import           PlutusTx.Prelude                            (BuiltinUnit, check, ($), (.))
+import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), Num (..), length,
+                                                              ($), (.))
+import           System.Directory                            (createDirectoryIfMissing)
+import           System.IO                                   (Handle, stdout)
+import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
+import           Test.QuickCheck.Gen                         (generate)
+import           Text.Printf                                 (hPrintf)
+import qualified UntypedPlutusCore                           as UPLC
+import           UntypedPlutusCore                           (UnrestrictedProgram (..))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckContract)
-import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
-import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC.PlonkVerifierToken   (plonkVerifierTokenCompiled)
-import           ZkFold.Cardano.UPLC.PlonkVerifierTx      (plonkVerifierTxCompiled)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
+import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
+import           ZkFold.Cardano.Examples.EqualityCheck       (equalityCheckContract)
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.OnChain.Plonkup              ()
+import           ZkFold.Cardano.OffChain.Utils               (savePlutus)
+import qualified ZkFold.Cardano.OnChain.BLS12_381.F          as F
+import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.UPLC.PlonkVerifierToken      (plonkVerifierTokenCompiled)
+import           ZkFold.Cardano.UPLC.PlonkVerifierTx         (plonkVerifierTxCompiled)
+import qualified ZkFold.Symbolic.Compiler                    as ZK
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..))
-import qualified ZkFold.Symbolic.Compiler as ZK
-import           GHC.Generics                                (Par1 (..), U1 (..), type (:*:) (..))
 
 
 contextPlonk :: ProofBytes -> ScriptContext

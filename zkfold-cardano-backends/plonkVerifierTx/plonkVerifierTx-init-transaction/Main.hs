@@ -1,6 +1,6 @@
 module Main where
 
-import           Prelude 
+import           Prelude
 
 {-
 import           Data.Aeson                            (encode)

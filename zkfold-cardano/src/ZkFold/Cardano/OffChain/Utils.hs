@@ -1,32 +1,34 @@
 module ZkFold.Cardano.OffChain.Utils where
 
-import           Cardano.Api          hiding (Lovelace)
-import           Cardano.Api.Ledger   (toCBOR)
-import           Cardano.Api.Shelley  (PlutusScript (..), fromPlutusData, scriptDataFromJsonDetailedSchema,
-                                       scriptDataToJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
-import           Codec.CBOR.Write     (toStrictByteString)
-import           Control.Monad        (void, zipWithM)
-import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
-import qualified Data.Aeson.Key       as Key
-import qualified Data.Aeson.KeyMap    as KeyMap
-import           Data.Aeson.Types     as Aeson (Result (..), Value (..), parse, parseEither)
-import           Data.Bifunctor       (first)
-import qualified Data.ByteString      as BS
-import qualified Data.ByteString.Lazy as BL
+import           Cardano.Api                        hiding (Lovelace)
+import           Cardano.Api.Ledger                 (toCBOR)
+import           Cardano.Api.Shelley                (PlutusScript (..), fromPlutusData,
+                                                     scriptDataFromJsonDetailedSchema, scriptDataToJsonDetailedSchema,
+                                                     shelleyPayAddrToPlutusPubKHash, toPlutusData)
+import           Codec.CBOR.Write                   (toStrictByteString)
+import           Control.Monad                      (void, zipWithM)
+import           Data.Aeson                         (decode, eitherDecode, parseJSON, (.:), (.:?))
+import qualified Data.Aeson.Key                     as Key
+import qualified Data.Aeson.KeyMap                  as KeyMap
+import           Data.Aeson.Types                   as Aeson (Result (..), Value (..), parse, parseEither)
+import           Data.Bifunctor                     (first)
+import qualified Data.ByteString                    as BS
+import qualified Data.ByteString.Lazy               as BL
 import           Data.Either
-import           Data.Maybe           (fromMaybe)
-import qualified Data.Text            as T
-import qualified Data.Text.Encoding   as TE
-import           PlutusLedgerApi.V3   as V3
-import           PlutusTx             (CompiledCode)
-import           Prelude              hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           Text.Parsec          (many1)
-import           Text.Parsec.Char     (digit)
-import           Text.Parsec.String   (Parser)
-import           Text.Printf          (printf)
-import           Text.Read            (readEither)
-import ZkFold.Cardano.OnChain.BLS12_381.F (F(..), fromInput)
-import           Data.String                           (IsString (..))
+import           Data.Maybe                         (fromMaybe)
+import           Data.String                        (IsString (..))
+import qualified Data.Text                          as T
+import qualified Data.Text.Encoding                 as TE
+import           PlutusLedgerApi.V3                 as V3
+import           PlutusTx                           (CompiledCode)
+import           Prelude                            hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import           Text.Parsec                        (many1)
+import           Text.Parsec.Char                   (digit)
+import           Text.Parsec.String                 (Parser)
+import           Text.Printf                        (printf)
+import           Text.Read                          (readEither)
+
+import           ZkFold.Cardano.OnChain.BLS12_381.F (F (..), fromInput)
 
 -- | convert PolicyId to ByteString
 toPolicyid :: SerialiseAsRawBytes a => a -> BS.ByteString
@@ -34,7 +36,7 @@ toPolicyid = toStrictByteString . toCBOR . serialiseToRawBytes
 
 -- | create TokenName to ByteString
 createTokenName :: F -> BS.ByteString
-createTokenName = fromString . show . UsingRawBytesHex . AssetName . fromBuiltin . fromInput 
+createTokenName = fromString . show . UsingRawBytesHex . AssetName . fromBuiltin . fromInput
 
 -- | Write serialized script to a file.
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
