@@ -1,0 +1,141 @@
+cabal-version:      3.0
+
+name:               zkfold-cardano
+version:            0.1.0.0
+category:           Testing, Cryptography, Math, Symbolic Computation
+author:             Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
+maintainer:         info@zkfold.io
+license:            MIT
+build-type:         Simple
+
+common lang
+  default-language: Haskell2010
+  default-extensions:
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    ImportQualifiedPost
+    LambdaCase
+    NumericUnderscores
+    GeneralizedNewtypeDeriving
+    StandaloneDeriving
+    ViewPatterns
+    AllowAmbiguousTypes
+    FlexibleContexts
+    RankNTypes
+    TypeApplications
+    DataKinds
+    InstanceSigs
+    MultiParamTypeClasses
+    RecordWildCards
+    ScopedTypeVariables
+    FlexibleInstances
+    NoImplicitPrelude
+    ExplicitNamespaces
+    OverloadedStrings
+    DeriveAnyClass
+    TemplateHaskell
+    TypeFamilies
+    NoStarIsType
+    TypeOperators
+    UndecidableInstances
+  ghc-options:
+    -Wall
+    -Wnoncanonical-monad-instances
+    -Wincomplete-uni-patterns
+    -Wincomplete-record-updates
+    -Wredundant-constraints
+    -Widentities
+    -- -Wunused-packages
+    -Wmissing-deriving-strategies
+
+common lang-extra
+  ghc-options:
+    -fobject-code
+    -fno-specialise
+    -fno-spec-constr
+    -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas
+    -fno-strictness
+    -fno-unbox-strict-fields 
+    -fno-unbox-small-strict-fields
+    -fno-full-laziness
+    -fexpose-all-unfoldings
+    -- Comment the following line to enable PlutusTx error messages
+    -- By default, we defer the errors as they mess with the HLS
+    -fplugin-opt PlutusTx.Plugin:defer-errors
+
+library
+  import:           lang
+  import:           lang-extra
+  default-language: Haskell2010
+  exposed-modules:
+    ZkFold.Cardano.OffChain.BLS12_381
+    ZkFold.Cardano.OffChain.Plonkup
+    ZkFold.Cardano.OffChain.Transcript
+    ZkFold.Cardano.OffChain.Utils
+    ZkFold.Cardano.OnChain.BLS12_381
+    ZkFold.Cardano.OnChain.BLS12_381.F
+    ZkFold.Cardano.OnChain.BLS12_381.G1
+    ZkFold.Cardano.OnChain.BLS12_381.G2
+    ZkFold.Cardano.OnChain.Plonkup
+    ZkFold.Cardano.OnChain.Plonkup.Data
+    ZkFold.Cardano.OnChain.Utils
+  hs-source-dirs:   src
+  build-depends:
+    adjunctions                    ,
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    bytestring                     ,
+    text                           ,
+    cardano-api                    ,
+    cborg                          ,
+    parsec                         ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    symbolic-base                  ,
+
+test-suite test
+  import:           lang
+  default-language: Haskell2010
+  type:             exitcode-stdio-1.0
+  ghc-options:      -rtsopts
+  main-is:          Main.hs
+  other-modules:
+    Tests.Compatibility
+  build-depends:
+    aeson                          ,
+    base              >= 4.9 && < 5,
+    base-orphans          ^>= 0.9.3,
+    base16-bytestring              ,
+    bytestring                     ,
+    containers                     ,
+    -- cardano-api:{cardano-api, gen} ,
+    -- cardano-cli                    ,
+    -- cardano-ledger-alonzo          ,
+    -- cardano-ledger-core            ,
+    -- cardano-ledger-shelley         ,
+    -- cardano-prelude                ,
+    -- cardano-testnet        ^>=10.0.0,
+    directory                      ,
+    filepath                       ,
+    hedgehog                       ,
+    hedgehog-extras                ,
+    hspec                          ,
+    plutus-ledger-api       ^>=1.36,
+    plutus-tx               ^>=1.36,
+    tasty                          ,
+    tasty-expected-failure         ,
+    tasty-hunit                    ,
+    tasty-quickcheck               ,
+    tasty-hedgehog                 ,
+    text                           ,
+    unordered-containers           ,
+    QuickCheck                     ,
+    symbolic-base                  ,
+    zkfold-cardano                 ,
+  hs-source-dirs:   test
