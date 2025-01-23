@@ -1,14 +1,5 @@
-<<<<<<< HEAD:zkfold-cardano-backends/symbolic-balancing/balancing-plonk-verifier/Backend/JsonToData.hs
 {-# LANGUAGE OverloadedStrings #-}
 
-module Backend.JsonToData where
-
-import           Cardano.Api
-import           Cardano.Api.Shelley  (PlutusScript (..), scriptDataFromJsonDetailedSchema,
-                                       shelleyPayAddrToPlutusPubKHash, toPlutusData)
-import           Control.Monad        (zipWithM)
-import           Data.Aeson           (eitherDecode, parseJSON, (.:), (.:?))
-=======
 module ZkFold.Cardano.OffChain.Utils where
 
 import           Cardano.Api          hiding (Lovelace)
@@ -17,8 +8,7 @@ import           Cardano.Api.Shelley  (PlutusScript (..), fromPlutusData, script
                                        scriptDataToJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
 import           Codec.CBOR.Write     (toStrictByteString)
 import           Control.Monad        (void, zipWithM)
-import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
->>>>>>> main:zkfold-cardano/src/ZkFold/Cardano/OffChain/Utils.hs
+import           Data.Aeson           (eitherDecode, parseJSON, (.:), (.:?))
 import qualified Data.Aeson.Key       as Key
 import qualified Data.Aeson.KeyMap    as KeyMap
 import           Data.Aeson.Types     as Aeson (Value (..), parseEither)
@@ -51,9 +41,13 @@ savePlutus filePath =
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
 
+-- | Serialise Plutus data to CBOR.
+plutusDataToCBOR :: Data -> BS.ByteString
+plutusDataToCBOR = toStrictByteString . toCBOR . fromPlutusData
+
 -- | Serialise data to CBOR.
 dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
+dataToCBOR = plutusDataToCBOR . toData
 
 -- | Credential of compiled validator script
 credentialOf :: CompiledCode a -> V3.Credential
