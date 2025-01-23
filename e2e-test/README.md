@@ -3,16 +3,16 @@
 
 ## Docs
 
-We have a description of transactions in `src-docs`.
+We have a description of transactions in `docs`.
 
 
 ## Scripts
 
-Execution instructions for *Plonk*, *Rollup* and *Symbolic*.
+Execution instructions for *PlonkVerifierToken*, *Rollup* and *PlonkVerifierTx*.
 
-### Plonk
+### PlonkVerifierToken
 
-You can choose to run the plonk verifier example on either **SanchoNet** or a **local** testnet.  The initial-setup depends on your choice.
+You can choose to run the `plonkVerifierToken` on either **SanchoNet** or a **local** testnet.  The initial-setup depends on your choice.
 
 In either case, make `e2e-test` your active directory.
 
@@ -29,9 +29,9 @@ on your working shell.
 
 To initialize the system:
 
-- Execute `./plonk/sancho-init-addrs.sh` to initialize needed wallets.  The address of *someone*'s wallet will be displayed.
+- Execute `./plonkVerifierToken/sancho-init-addrs.sh` to initialize needed wallets.  The address of *someone*'s wallet will be displayed.
 - Fund *someone*'s wallet (typically using SanchoNet's public [Faucet](https://sancho.network/faucet)).
-- Execute `./plonk/sancho-init-funding.sh` to fund the remaining wallets.  (Alternatively, manually transfer some Ada to all generated wallets, but make sure *someone*'s wallet gets at least two UTxO's with funds.)
+- Execute `./plonkVerifierToken/sancho-init-funding.sh` to fund the remaining wallets.  (Alternatively, manually transfer some Ada to all generated wallets, but make sure *someone*'s wallet gets at least two UTxO's with funds.)
 
 ##### Local testnet (initialization)
 
@@ -52,18 +52,18 @@ If "syncProgress" is less than 100%, stop the testnet, `sudo rm -r ./local-testn
 
 This concludes initialization of the local testnet.
 
-To initialize the plonk system, run `./plonk/local-init-system.sh`.
+To initialize the plonk system, run `./plonkVerifierToken/local-init-system.sh`.
 
-#### Plonk Transactions
+#### PlonkVerifierToken Transactions
 
 To perform the transactions (on either SanchoNet or local testnet), execute the following 4 scripts.
 
-- `./plonk/01-init-transaction.sh` to publish Plutus scripts on the blockchain.
-- `./plonk/02-transfer-transaction.sh` to set up a reward for burning a token.
-- `./plonk/03-minting-transaction.sh` to mint and send a token to the owner.
-- `./plonk/04-burning-transaction.sh` to burn the token and receive the reward.
+- `./plonkVerifierToken/01-init-transaction.sh` to publish Plutus scripts on the blockchain.
+- `./plonkVerifierToken/02-transfer-transaction.sh` to set up a reward for burning a token.
+- `./plonkVerifierToken/03-minting-transaction.sh` to mint and send a token to the owner.
+- `./plonkVerifierToken/04-burning-transaction.sh` to burn the token and receive the reward.
 
-You can also see the state of all wallets with `./plonk/05-show-all.sh`.
+You can also see the state of all wallets with `./plonkVerifierToken/05-show-all.sh`.
 
 ### Rollup
 
@@ -88,7 +88,7 @@ b. After funding wallet, split single UTxO into two:
 
 <u>On local testnet</u>:
 
-(To initialize local testnet, follow instructions in section *Plonk* above.)
+(To initialize local testnet, follow instructions in section *PlonkVerifierToken* above.)
 
 Create Alice's wallet, fund it and split single UTxO into two:
 ```shell
@@ -116,27 +116,27 @@ To resume rollup update loop, simply execute step 2 again.  To reset and start a
 *Note:*  if working on local testnet, keep in mind that it sometimes behaves erratically, like failing to submit Txs even if message "Transaction successfully submitted" is displayed.
 
 
-### Symbolic balancing
+### PlonkVerifierTx balancing
 
-Symbolic balancing refers to estimating the cost of executing `plonkVerifierTx` validator.  The implemented example can easily be generalized.
+PlonkVerifierTx balancing refers to estimating the cost of executing `plonkVerifierTx` validator.  The implemented example can easily be generalized.
 
-Instructions:  Create local testnet (follow instruction in section *Plonk* above).  Then, from directory `e2e-test`, execute the following shell commands.
+Instructions:  Create local testnet (follow instruction in section *PlonkVerifierToken* above).  Then, from directory `e2e-test`, execute the following shell commands.
 
 0. Create Alice's wallet and fund it:
 ```shell
-./symbolic-balancing/local-ini.sh
+./plonkVerifierTx-balancing/local-ini.sh
 ```
 
-1. Initialization and funding of SymbolicVerifier script address:
+1. Initialization and funding of PlonkVerifierTx script address:
 ```shell
-./symbolic-balancing/01-balancing-init-transaction.sh
+./plonkVerifierTx-balancing/01-balancing-init-transaction.sh
 ```
 
 2. Get exec units and estimated fee for retrieval transaction:
 ```shell
-./symbolic-balancing/02-balancing-plonk-verifier.sh
+./plonkVerifierTx-balancing/02-balancing-plonk-verifier.sh
 ```
 
-### Symbolic
+### PlonkVerifierTx
 
 (In progress.)

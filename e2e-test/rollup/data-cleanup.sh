@@ -28,7 +28,7 @@ dataCleanRedeemer=$assets/dataCleanRedeemer.cbor
 
 parkingSpotPolicy=$assets/parkingSpot.plutus
 
-collateral=$(cardano-cli transaction txid --tx-file "$keypath/splitAlice.tx")#0
+collateral=$(cardano-cli conway transaction txid --tx-file "$keypath/splitAlice.tx")#0
 
 #---------------------------- :data tokens cleanup: ---------------------------
 

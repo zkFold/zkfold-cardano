@@ -1,49 +1,67 @@
 cradle:
   cabal:
-    - path: "./src"
+    - path: "zkfold-cardano/src"
       component: "lib:zkfold-cardano"
 
-    - path: "./test"
+    - path: "zkfold-cardano/test"
       component: "zkfold-cardano:test:test"
 
-    - path: "./benchs/bench-cpu-mem/Main.hs"
-      component: "zkfold-cardano:bench:bench-cpu-mem"
+    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierTx-init-transaction"
 
-    - path: "./benchs/bench-cpu-mem/Bench/Statistics.hs"
-      component: "zkfold-cardano:bench:bench-cpu-mem"
+    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierTx-transfer-transaction"
 
-    - path: "./benchs/bench-rollup/Main.hs"
-      component: "zkfold-cardano:bench:bench-rollup"
+    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-withdraw-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierTx-withdraw-transaction"
 
-    - path: "./benchs/bench-rollup/Bench/Statistics.hs"
-      component: "zkfold-cardano:bench:bench-rollup"
+    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-init-transaction"
 
-    - path: "./benchs/bench-rollup/Bench/Utils.hs"
-      component: "zkfold-cardano:bench:bench-rollup"
+    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-transfer-transaction"
 
-    - path: "./backends/symbolic/symbolic-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:symbolic-init-transaction"
+    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-minting-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-minting-transaction"
 
-    - path: "./backends/symbolic/symbolic-transfer-transaction/Main.hs"
-      component: "zkfold-cardano:exe:symbolic-transfer-transaction"
+    - path: "zkfold-cardano-backends/plonkVerifierTx-balancing/balancing-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:balancing-init-transaction"
 
-    - path: "./backends/symbolic/symbolic-withdraw-transaction/Main.hs"
-      component: "zkfold-cardano:exe:symbolic-withdraw-transaction"
+    - path: "zkfold-cardano-backends/plonkVerifierTx-balancing/balancing-parse-input/Main.hs"
+      component: "zkfold-cardano-backends:exe:balancing-parse-input"
 
-    - path: "./backends/plonk/plonk-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:plonk-init-transaction"
+    - path: "zkfold-cardano-backends/rollup/rollup-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:rollup-init-transaction"
 
-    - path: "./backends/plonk/plonk-transfer-transaction/Main.hs"
-      component: "zkfold-cardano:exe:plonk-transfer-transaction"
+    - path: "zkfold-cardano-backends/rollup/rollup-init-transaction/Rollup/Example.hs"
+      component: "zkfold-cardano-backends:exe:rollup-init-transaction"
 
-    - path: "./backends/plonk/plonk-minting-transaction/Main.hs"
-      component: "zkfold-cardano:exe:plonk-minting-transaction"
+    - path: "zkfold-cardano-backends/rollup/rollup-update-loop/Main.hs"
+      component: "zkfold-cardano-backends:exe:rollup-update-loop"
 
-    - path: "./backends/rollup/rollup-init-transaction/Main.hs"
-      component: "zkfold-cardano:exe:rollup-init-transaction"
+    - path: "zkfold-cardano-backends/rollup/rollup-update-loop/Rollup/Example.hs"
+      component: "zkfold-cardano-backends:exe:rollup-update-loop"
 
-    - path: "./backends/rollup/rollup-init-transaction/Backend/NFT.hs"
-      component: "zkfold-cardano:exe:rollup-init-transaction"
+    - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Main.hs"
+      component: "zkfold-cardano-backends:exe:rollup-clear-data"
 
-    - path: "./backends/rollup/rollup-update-loop/Main.hs"
-      component: "zkfold-cardano:exe:rollup-update-loop"
+    - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Rollup/CardanoCli.hs"
+      component: "zkfold-cardano-backends:exe:rollup-clear-data"
+
+    - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Rollup/ParseJson.hs"
+      component: "zkfold-cardano-backends:exe:rollup-clear-data"
+
+    - path: "zkfold-cardano-scripts/src"
+      component: "lib:zkfold-cardano-scripts"
+
+    - path: "zkfold-cardano-scripts/bench/src"
+      component: "zkfold-cardano-scripts:lib:zkfold-benchmark"
+
+    - path: "zkfold-cardano-scripts/bench/bench-cpu-mem/Main.hs"
+      component: "zkfold-cardano-scripts:bench:bench-cpu-mem"
+
+    - path: "zkfold-cardano-scripts/bench/bench-rollup/Main.hs"
+      component: "zkfold-cardano-scripts:bench:bench-rollup"
+
+    - path: "zkfold-example/src"
+      component: "lib:zkfold-example"

@@ -1,0 +1,46 @@
+cradle:
+  cabal:
+    - path: "plonkVerifierTx/plonkVerifierTx-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierTx-init-transaction"
+
+    - path: "plonkVerifierTx/plonkVerifierTx-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierTx-transfer-transaction"
+
+    - path: "plonkVerifierTx/plonkVerifierTx-withdraw-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierTx-withdraw-transaction"
+
+    - path: "plonkVerifierToken/plonkVerifierToken-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-init-transaction"
+
+    - path: "plonkVerifierToken/plonkVerifierToken-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-transfer-transaction"
+
+    - path: "plonkVerifierToken/plonkVerifierToken-minting-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkVerifierToken-minting-transaction"
+
+    - path: "plonkVerifierTx-balancing/balancing-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:balancing-init-transaction"
+
+    - path: "plonkVerifierTx-balancing/balancing-parse-input/Main.hs"
+      component: "zkfold-cardano-backends:exe:balancing-parse-input"
+
+    - path: "rollup/rollup-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:rollup-init-transaction"
+
+    - path: "rollup/rollup-init-transaction/Rollup/Example.hs"
+      component: "zkfold-cardano-backends:exe:rollup-init-transaction"
+
+    - path: "rollup/rollup-update-loop/Main.hs"
+      component: "zkfold-cardano-backends:exe:rollup-update-loop"
+
+    - path: "rollup/rollup-update-loop/Rollup/Example.hs"
+      component: "zkfold-cardano-backends:exe:rollup-update-loop"
+
+    - path: "rollup/rollup-clear-data/Main.hs"
+      component: "zkfold-cardano-backends:exe:rollup-clear-data"
+
+    - path: "rollup/rollup-clear-data/Rollup/CardanoCli.hs"
+      component: "zkfold-cardano-backends:exe:rollup-clear-data"
+
+    - path: "rollup/rollup-clear-data/Rollup/ParseJson.hs"
+      component: "zkfold-cardano-backends:exe:rollup-clear-data"

@@ -29,7 +29,7 @@ unitRedeemer=$assets/unit.cbor
 state=$assets/datum.cbor
 
 rollupRedeemer=$assets/redeemerRollup.cbor
-rollupScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
+rollupScript=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#0
 rollupScriptFile=$assets/rollup.plutus
 rollupVerifierSize=$(stat -c%s "$rollupScriptFile")
 rollupAddr=$(cat $keypath/rollup.addr)
@@ -47,7 +47,7 @@ nftPolicyNm="7a6b466f6c64"  # token name: "zkFold"
 
 parkingSpotAddr=$(cat $keypath/parkingSpot.addr)
 
-collateral=$(cardano-cli transaction txid --tx-file "$keypath/splitAlice.tx")#0
+collateral=$(cardano-cli conway transaction txid --tx-file "$keypath/splitAlice.tx")#0
 
 #---------------------------- :numeric parameters: ----------------------------
 
@@ -105,7 +105,7 @@ loop=true
 printf "$loop" > $keypath/rollup-loop.flag
 
 while $loop; do
-    inR=$(cardano-cli transaction txid --tx-file "$keypath/rollupOut.tx")#0
+    inR=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")#0
     txOnChain=$(query_utxo_has_key $rollupAddr $inR)
 
     if [ $txOnChain == "false" ]; then
@@ -240,7 +240,7 @@ while $loop; do
 
 	echo ""
 	echo "Rollup-update completed.  Rollups completed: $rollupCounter."
-	echo "Transaction Id: $(cardano-cli transaction txid --tx-file $keypath/nextRollupOut.tx)"
+	echo "Transaction Id: $(cardano-cli conway transaction txid --tx-file $keypath/nextRollupOut.tx)"
 
     #-------------------------------- :cleanup before next batch: -------------------------------
 

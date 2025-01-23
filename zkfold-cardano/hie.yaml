@@ -1,0 +1,7 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:zkfold-cardano"
+
+    - path: "test"
+      component: "zkfold-cardano:test:test"
