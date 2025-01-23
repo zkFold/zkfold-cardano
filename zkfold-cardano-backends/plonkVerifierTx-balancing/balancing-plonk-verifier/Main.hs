@@ -9,8 +9,9 @@ import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import           PlutusLedgerApi.V3                      as V3
 import qualified PlutusTx.Builtins.Internal              as BI
 import           PlutusTx.Prelude                        (blake2b_224, sortBy)
-import           Prelude                                 (Bool (..), Either (..), IO, Maybe (..), Show (..), concat, error, putStr,
-                                                          readFile, return, sequenceA, ($), (++), (.), (<$>))
+import           Prelude                                 (Bool (..), Either (..), IO, Maybe (..), Show (..), concat,
+                                                          error, putStr, readFile, return, sequenceA, ($), (++), (.),
+                                                          (<$>))
 import           System.Directory                        (getCurrentDirectory)
 import           System.FilePath                         (takeFileName, (</>))
 
