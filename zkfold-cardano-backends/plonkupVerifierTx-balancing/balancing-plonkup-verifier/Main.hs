@@ -20,7 +20,7 @@ import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContrac
 import           ZkFold.Cardano.OffChain.Utils
 import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierTx     (plonkupVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
 
 
 main :: IO ()

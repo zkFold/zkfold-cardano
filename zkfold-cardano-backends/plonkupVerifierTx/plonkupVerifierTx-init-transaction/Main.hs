@@ -10,7 +10,7 @@ import           Test.QuickCheck.Gen                   (generate)
 import           ZkFold.Cardano.Examples.EqualityCheck (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils         (savePlutus)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingRewardCompiled)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierTx (plonkupVerifierTxCompiled)
 
 main :: IO ()
 main = do

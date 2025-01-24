@@ -41,8 +41,8 @@ import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierToken   (plonkupVerifierTokenCompiled)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierTx      (plonkupVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierTx    (plonkupVerifierTxCompiled)
 
 
 contextPlonkup :: ProofBytes -> ScriptContext

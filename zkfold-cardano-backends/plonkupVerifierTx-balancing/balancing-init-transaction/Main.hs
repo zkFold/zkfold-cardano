@@ -19,7 +19,7 @@ import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContrac
                                                           identityCircuitVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, savePlutus)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierTx     (plonkupVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
 
 
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
