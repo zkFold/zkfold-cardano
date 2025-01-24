@@ -88,14 +88,6 @@ sampleAddress = Address (PubKeyCredential . PubKeyHash $
                          (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BuiltinByteString)
                         ) Nothing
 
--- -- | An arbitrary value.
--- sampleValue :: V2.Value
--- sampleValue = lovelaceValue $ V2.Lovelace 100000000
-
--- -- | An arbitrary fee.
--- sampleFee :: V2.Lovelace
--- sampleFee = V2.Lovelace 10000000
-
 -- | 'change' = 'value' - 'fee'
 sampleChange :: V2.Value
 sampleChange = lovelaceValue $ V2.Lovelace 90000000
