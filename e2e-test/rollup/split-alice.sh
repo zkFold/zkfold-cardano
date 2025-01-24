@@ -18,8 +18,8 @@ else
     pause=4
 fi
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
-alice0=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r '. | to_entries[0].value.value.lovelace')
+in1=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
+alice0=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r '. | to_entries[0].value.value.lovelace')
 
 echo "Split Alice's funds (at UTxO #0) into three separate UTxO's..."
 
@@ -44,7 +44,7 @@ cardano-cli conway transaction submit \
 splitTx=$(cardano-cli conway transaction txid --tx-file "$keypath/splitAlice.tx")
 splitOut=$splitTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$splitOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$splitOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see splitting tx onchain..."
 	sleep $pause

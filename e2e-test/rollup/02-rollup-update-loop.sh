@@ -60,7 +60,7 @@ rollupsBeforeCleanup=5  # number of rollups before data token cleanup
 query_utxo_has_key() {
     local addr=$1
     local txout=$2
-    cardano-cli query utxo --address $addr --testnet-magic $mN --out-file /dev/stdout |
+    cardano-cli conway query utxo --address $addr --testnet-magic $mN --out-file /dev/stdout |
         jq -r --arg key $txout 'has($key) | tostring'
 }
 

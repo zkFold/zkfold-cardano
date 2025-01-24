@@ -38,7 +38,7 @@ cardano-cli conway address build \
 
 #----------------------------------- :funding: -----------------------------------
 
-in1=$(cardano-cli query utxo --address $(cat $keypath0/utxo1.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
+in1=$(cardano-cli conway query utxo --address $(cat $keypath0/utxo1.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[0]')
 
 cardano-cli conway transaction build \
   --tx-in $in1 \
@@ -61,7 +61,7 @@ lastTx=$(cardano-cli conway transaction txid --tx-file "$keypath/tx.signed")
 lastTxOut=$lastTx#0
 
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$lastTxOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$lastTxOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see initial funding tx onchain..."
 	sleep $pause

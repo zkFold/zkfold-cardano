@@ -25,13 +25,13 @@ fi
 cabal run balancing-plonk-verifier
 
 plonkVerifierTxRedeemer=$assets/redeemerSymbolicVerifier.json
-plonkVerifierTxScript=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#0
+plonkVerifierTxScript=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#0
 
-plonkVerifierTxTx=$(cardano-cli transaction txid --tx-file "$keypath/fundSymb.tx")
+plonkVerifierTxTx=$(cardano-cli conway transaction txid --tx-file "$keypath/fundSymb.tx")
 in1=$plonkVerifierTxTx#1
 in2=$plonkVerifierTxTx#0
 
-ref1=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#1
+ref1=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#1
 
 cardano-cli conway transaction build \
   --testnet-magic $mN \

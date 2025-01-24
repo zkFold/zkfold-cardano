@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module ZkFold.Cardano.OffChain.Utils where
 
 import           Cardano.Api          hiding (Lovelace)
@@ -41,13 +39,9 @@ savePlutus filePath =
 dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . toData
 
--- | Serialise Plutus data to CBOR.
-plutusDataToCBOR :: Data -> BS.ByteString
-plutusDataToCBOR = toStrictByteString . toCBOR . fromPlutusData
-
 -- | Serialise data to CBOR.
 dataToCBOR :: ToData a => a -> BS.ByteString
-dataToCBOR = plutusDataToCBOR . toData
+dataToCBOR = toStrictByteString . toCBOR . fromPlutusData . toData
 
 -- | Credential of compiled validator script
 credentialOf :: CompiledCode a -> V3.Credential

@@ -19,6 +19,7 @@ import           Data.String                              (IsString (fromString)
 import           Flat                                     (flat)
 import           Flat.Types                               ()
 import           PlutusCore                               (DefaultFun, DefaultUni)
+import           PlutusLedgerApi.V1.Value                 (lovelaceValue)
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
 import           PlutusTx                                 (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
@@ -81,12 +82,30 @@ dummyRedeemer = ProofBytes e e e e e e e e e e e e e 0 0 0 0 0 0 0 0 0 0 0 0 (F.
 dummyCredential :: Credential
 dummyCredential = ScriptCredential . ScriptHash $ toBuiltin (fromString "deadbeef" :: BS.ByteString)
 
+-- | An arbitrary address.
+sampleAddress :: Address
+sampleAddress = Address (PubKeyCredential . PubKeyHash $
+                         (fromString "8b1dd80eb5d1da1afad0ed5a6be7eb9e46481a74621cb7d787caa3fc" :: BuiltinByteString)
+                        ) Nothing
+
+-- -- | An arbitrary value.
+-- sampleValue :: V2.Value
+-- sampleValue = lovelaceValue $ V2.Lovelace 100000000
+
+-- -- | An arbitrary fee.
+-- sampleFee :: V2.Lovelace
+-- sampleFee = V2.Lovelace 10000000
+
+-- | 'change' = 'value' - 'fee'
+sampleChange :: V2.Value
+sampleChange = lovelaceValue $ V2.Lovelace 90000000
+
 contextTx :: ProofBytes -> ScriptContext
 contextTx redeemerProof = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs = []                     :: [TxInInfo]
     , txInfoReferenceInputs = []            :: [TxInInfo]
-    , txInfoOutputs = []                    :: [V2.TxOut]
+    , txInfoOutputs = [ TxOut sampleAddress sampleChange NoOutputDatum Nothing ]
     , txInfoFee = V2.Lovelace 0             :: V2.Lovelace
     , txInfoMint = mempty                   :: V2.Value
     , txInfoTxCerts = []                    :: [TxCert]
@@ -147,7 +166,6 @@ untypedPlonkVerifier computation input' proof' =
         (unsafeFromBuiltinData input')
         (unsafeFromBuiltinData proof')
     )
-
 
 plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
 plonkVerifierCompiled computation =

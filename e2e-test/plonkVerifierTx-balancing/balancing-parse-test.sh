@@ -27,7 +27,6 @@ cabal run balancing-parse-input
 plonkVerifierTxRedeemer=$assets/redeemerPlonkVerifierTx.json
 plonkVerifierTxScript=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#0
 
-# in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'keys[1]')
 plonkVerifierTxTx=$(cardano-cli conway transaction txid --tx-file "$keypath/fundSymb.tx")
 in1=$plonkVerifierTxTx#1
 in2=$plonkVerifierTxTx#0
@@ -62,7 +61,8 @@ cardano-cli conway transaction submit \
 retrieveTx=$(cardano-cli conway transaction txid --tx-file "$keypath/retrieveSymb.tx")
 retrieveOut=$retrieveTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$retrieveOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
+		    jq -r --arg key "$retrieveOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see fund retrieving from PlonkVerifierTx..."
 	sleep $pause

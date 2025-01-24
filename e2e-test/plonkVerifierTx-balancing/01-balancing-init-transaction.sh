@@ -57,7 +57,7 @@ cardano-cli conway address build \
 
 echo "Parking 'plonkVerifierTx.plutus'..."
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
+in1=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
 
 parkScriptMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
   --protocol-params-file $assets/protocol.json \
@@ -92,7 +92,7 @@ cardano-cli conway transaction submit \
 parkedTx=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")
 parkedOut=$parkedTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see script parked onchain..."
 	sleep $pause
@@ -109,7 +109,7 @@ done
 
 echo "Initial transfer to 'plonkVerifierTx'..."
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
+in1=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
 
 cardano-cli conway transaction build \
   --testnet-magic $mN \
@@ -132,7 +132,8 @@ cardano-cli conway transaction submit \
 plonkVerifierTxTx=$(cardano-cli conway transaction txid --tx-file "$keypath/fundSymb.tx")
 plonkVerifierTxOut=$plonkVerifierTxTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/plonkVerifierTx.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$plonkVerifierTxOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/plonkVerifierTx.addr) --testnet-magic $mN --out-file /dev/stdout |
+		    jq -r --arg key "$plonkVerifierTxOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see initial transfer to plonkVerifierTx..."
 	sleep $pause
@@ -145,7 +146,7 @@ done
 
 cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file $assets/utxo1.json
 cardano-cli conway query utxo --address $(cat $keypath/plonkVerifierTx.addr) --testnet-magic $mN --out-file $assets/utxo2.json
-plonkVerifierTxScriptOut=$(cardano-cli transaction txid --tx-file "$keypath/parkedScript.tx")#1
+plonkVerifierTxScriptOut=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")#1
 cardano-cli conway query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout |
 	   jq -r --arg key "$plonkVerifierTxScriptOut" 'to_entries | map(select(.key == $key)) | from_entries' > $assets/utxo3.json
 cp $keypath/alice.addr $assets/alice.addr

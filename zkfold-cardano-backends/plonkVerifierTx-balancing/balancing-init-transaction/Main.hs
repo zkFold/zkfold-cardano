@@ -9,7 +9,7 @@ import qualified Data.ByteString.Lazy                    as BL
 import           Data.String                             (fromString)
 import           PlutusLedgerApi.V3                      as V3
 import           Prelude                                 (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
-                                                          (++))
+                                                          (++), (.))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.FilePath                         (takeFileName, (</>))
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
@@ -17,7 +17,7 @@ import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, plutusDataToCBOR, savePlutus)
+import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, savePlutus)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.PlonkVerifierTx     (plonkVerifierTxCompiled)
 
@@ -25,8 +25,8 @@ import           ZkFold.Cardano.UPLC.PlonkVerifierTx     (plonkVerifierTxCompile
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
 writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
 
-someDatum :: Data
-someDatum = Constr 0 [B $ fromString "deadbeef"]
+someDatum :: Datum
+someDatum = Datum . dataToBuiltinData $ Constr 0 [B $ fromString "deadbeef"]
 
 main :: IO ()
 main = do
@@ -56,4 +56,4 @@ main = do
   savePlutus (assetsPath </> "parkingSpot.plutus") $ parkingSpotCompiled 54
 
   BS.writeFile (assetsPath </> "unit.cbor") $ dataToCBOR ()
-  BS.writeFile (assetsPath </> "someDatum.cbor") $ plutusDataToCBOR someDatum
+  BS.writeFile (assetsPath </> "someDatum.cbor") $ dataToCBOR someDatum
