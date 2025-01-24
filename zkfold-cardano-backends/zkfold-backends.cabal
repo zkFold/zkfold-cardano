@@ -70,13 +70,13 @@ common lang-extra
     -- By default, we defer the errors as they mess with the HLS
     -fplugin-opt PlutusTx.Plugin:defer-errors
 
-executable plonkVerifierTx-init-transaction
+executable plonkupVerifierTx-init-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierTx/plonkVerifierTx-init-transaction
+  hs-source-dirs:   plonkupVerifierTx/plonkupVerifierTx-init-transaction
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -87,13 +87,13 @@ executable plonkVerifierTx-init-transaction
     zkfold-example                 ,
     zkfold-cardano-scripts               ,
 
-executable plonkVerifierTx-transfer-transaction
+executable plonkupVerifierTx-transfer-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierTx/plonkVerifierTx-transfer-transaction
+  hs-source-dirs:   plonkupVerifierTx/plonkupVerifierTx-transfer-transaction
   build-depends:
     base              >= 4.9 && < 5,
     bytestring                     ,
@@ -101,13 +101,13 @@ executable plonkVerifierTx-transfer-transaction
     cborg                          ,
     parsec                         ,
 
-executable plonkVerifierTx-withdraw-transaction
+executable plonkupVerifierTx-withdraw-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierTx/plonkVerifierTx-withdraw-transaction
+  hs-source-dirs:   plonkupVerifierTx/plonkupVerifierTx-withdraw-transaction
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -116,13 +116,13 @@ executable plonkVerifierTx-withdraw-transaction
     zkfold-cardano                 ,
     zkfold-example                 ,
 
-executable plonkVerifierToken-init-transaction
+executable plonkupVerifierToken-init-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierToken/plonkVerifierToken-init-transaction
+  hs-source-dirs:   plonkupVerifierToken/plonkupVerifierToken-init-transaction
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -133,13 +133,13 @@ executable plonkVerifierToken-init-transaction
     zkfold-cardano-scripts               ,
     QuickCheck                     ,
 
-executable plonkVerifierToken-transfer-transaction
+executable plonkupVerifierToken-transfer-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierToken/plonkVerifierToken-transfer-transaction
+  hs-source-dirs:   plonkupVerifierToken/plonkupVerifierToken-transfer-transaction
   build-depends:
     base              >= 4.9 && < 5,
     bytestring                     ,
@@ -147,13 +147,13 @@ executable plonkVerifierToken-transfer-transaction
     cborg                          ,
     parsec                         ,
 
-executable plonkVerifierToken-minting-transaction
+executable plonkupVerifierToken-minting-transaction
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierToken/plonkVerifierToken-minting-transaction
+  hs-source-dirs:   plonkupVerifierToken/plonkupVerifierToken-minting-transaction
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -169,7 +169,7 @@ executable balancing-init-transaction
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierTx-balancing/balancing-init-transaction
+  hs-source-dirs:   plonkupVerifierTx-balancing/balancing-init-transaction
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -184,13 +184,13 @@ executable balancing-init-transaction
     zkfold-cardano-scripts         ,
     QuickCheck
 
-executable balancing-plonk-verifier
+executable balancing-plonkup-verifier
   import:           lang
   import:           lang-extra
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   plonkVerifierTx-balancing/balancing-plonk-verifier
+  hs-source-dirs:   plonkupVerifierTx-balancing/balancing-plonkup-verifier
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,

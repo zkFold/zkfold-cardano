@@ -41,12 +41,12 @@ import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
-import           ZkFold.Cardano.UPLC.PlonkVerifierToken   (plonkVerifierTokenCompiled)
-import           ZkFold.Cardano.UPLC.PlonkVerifierTx      (plonkVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierToken   (plonkupVerifierTokenCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierTx      (plonkupVerifierTxCompiled)
 
 
-contextPlonk :: ProofBytes -> ScriptContext
-contextPlonk redeemerProof = ScriptContext
+contextPlonkup :: ProofBytes -> ScriptContext
+contextPlonkup redeemerProof = ScriptContext
   { scriptContextTxInfo = TxInfo
     { txInfoInputs = []                     :: [TxInInfo]
     , txInfoReferenceInputs = []            :: [TxInInfo]
@@ -116,30 +116,30 @@ contextTx redeemerProof = ScriptContext
     scriptContextScriptInfo = RewardingScript dummyCredential
   }
 
-plonkVerifierTxScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierTxScript paramsSetup ctx =
-    getPlcNoAnn $ plonkVerifierTxCompiled paramsSetup
+plonkupVerifierTxScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkupVerifierTxScript paramsSetup ctx =
+    getPlcNoAnn $ plonkupVerifierTxCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-plonkVerifierTokenScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierTokenScript paramsSetup ctx =
-    getPlcNoAnn $ plonkVerifierTokenCompiled paramsSetup
+plonkupVerifierTokenScript :: SetupBytes -> ScriptContext -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkupVerifierTokenScript paramsSetup ctx =
+    getPlcNoAnn $ plonkupVerifierTokenCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-plonkVerifierScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
-plonkVerifierScript paramsSetup input proof =
-    getPlcNoAnn $ plonkVerifierCompiled paramsSetup
+plonkupVerifierScript :: SetupBytes -> InputBytes -> ProofBytes -> UPLC.Program UPLC.NamedDeBruijn DefaultUni DefaultFun ()
+plonkupVerifierScript paramsSetup input proof =
+    getPlcNoAnn $ plonkupVerifierCompiled paramsSetup
        `unsafeApplyCode` liftCodeDef (toBuiltinData input)
        `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
-printCostsPlonkVerifierTx :: Handle -> SetupVerify PlonkupPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifierTx h s ctx = printSizeStatistics h NoSize (plonkVerifierTxScript s ctx)
+printCostsPlonkupVerifierTx :: Handle -> SetupVerify PlonkupPlutus -> ScriptContext -> IO ()
+printCostsPlonkupVerifierTx h s ctx = printSizeStatistics h NoSize (plonkupVerifierTxScript s ctx)
 
-printCostsPlonkVerifierToken :: Handle -> SetupVerify PlonkupPlutus -> ScriptContext -> IO ()
-printCostsPlonkVerifierToken h s ctx = printSizeStatistics h NoSize (plonkVerifierTokenScript s ctx)
+printCostsPlonkupVerifierToken :: Handle -> SetupVerify PlonkupPlutus -> ScriptContext -> IO ()
+printCostsPlonkupVerifierToken h s ctx = printSizeStatistics h NoSize (plonkupVerifierTokenScript s ctx)
 
-printCostsPlonkVerifier :: Handle -> SetupVerify PlonkupPlutus -> Input PlonkupPlutus -> Proof PlonkupPlutus -> IO ()
-printCostsPlonkVerifier h s i p = printSizeStatistics h NoSize (plonkVerifierScript s i p)
+printCostsPlonkupVerifier :: Handle -> SetupVerify PlonkupPlutus -> Input PlonkupPlutus -> Proof PlonkupPlutus -> IO ()
+printCostsPlonkupVerifier h s i p = printSizeStatistics h NoSize (plonkupVerifierScript s i p)
 
 saveFlat ctx filePath code =
    BS.writeFile ("./" <> filePath <> ".flat") . flat . UnrestrictedProgram <$> getPlcNoAnn $ code
@@ -150,8 +150,8 @@ saveFlat2 input proof filePath code =
            `unsafeApplyCode` liftCodeDef (toBuiltinData input)
            `unsafeApplyCode` liftCodeDef (toBuiltinData proof)
 
-untypedPlonkVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
-untypedPlonkVerifier computation input' proof' =
+untypedPlonkupVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedPlonkupVerifier computation input' proof' =
     check
     ( verify @PlonkupPlutus @HaskellCore
         computation
@@ -159,9 +159,9 @@ untypedPlonkVerifier computation input' proof' =
         (unsafeFromBuiltinData proof')
     )
 
-plonkVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
-plonkVerifierCompiled computation =
-    $$(compile [|| untypedPlonkVerifier ||])
+plonkupVerifierCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+plonkupVerifierCompiled computation =
+    $$(compile [|| untypedPlonkupVerifier ||])
     `unsafeApplyCode` liftCodeDef computation
 
 
@@ -176,26 +176,26 @@ main = do
 
     createDirectoryIfMissing True "assets"
 
-    savePlutus "assets/plonkVerifierTx" $ plonkVerifierTxCompiled setup
-    savePlutus "assets/plonkVerifierToken"    $ plonkVerifierTokenCompiled setup
-    savePlutus "assets/plonkVerifier"      $ plonkVerifierCompiled setup
-    saveFlat (contextTx proof) "assets/plonkPlonkVerifierTx" $ plonkVerifierTxCompiled setup
-    saveFlat (contextPlonk proof) "assets/plonkVerifierTokenScript"   $ plonkVerifierTokenCompiled setup
-    saveFlat2 input proof "assets/plonkVerifierScript"  $ plonkVerifierCompiled setup
+    savePlutus "assets/plonkupVerifierTx.plutus" $ plonkupVerifierTxCompiled setup
+    savePlutus "assets/plonkupVerifierToken.plutus" $ plonkupVerifierTokenCompiled setup
+    savePlutus "assets/plonkupVerifier.plutus" $ plonkupVerifierCompiled setup
+    saveFlat (contextTx proof) "assets/plonkupVerifierTxScript" $ plonkupVerifierTxCompiled setup
+    saveFlat (contextPlonkup proof) "assets/plonkupVerifierTokenScript"   $ plonkupVerifierTokenCompiled setup
+    saveFlat2 input proof "assets/plonkupVerifierScript"  $ plonkupVerifierCompiled setup
 
     hPrintf h "\n\n"
-    hPrintf h "Run \'plonkVerifier\'\n\n"
+    hPrintf h "Run \'plonkupVerifier\'\n\n"
     printHeader h
-    printCostsPlonkVerifier h setup input proof
+    printCostsPlonkupVerifier h setup input proof
     hPrintf h "\n\n"
     hPrintf h "\n\n"
-    hPrintf h "Run \'plonkVerifierToken\'\n\n"
+    hPrintf h "Run \'plonkupVerifierToken\'\n\n"
     printHeader h
-    printCostsPlonkVerifierToken h setup $ contextPlonk proof
+    printCostsPlonkupVerifierToken h setup $ contextPlonkup proof
     hPrintf h "\n\n"
     hPrintf h "\n\n"
-    hPrintf h "Run \'plonkVerifierTx\'\n\n"
+    hPrintf h "Run \'plonkupVerifierTx\'\n\n"
     printHeader h
-    printCostsPlonkVerifierTx h setup $ contextTx proof
+    printCostsPlonkupVerifierTx h setup $ contextTx proof
     hPrintf h "\n\n"
 
