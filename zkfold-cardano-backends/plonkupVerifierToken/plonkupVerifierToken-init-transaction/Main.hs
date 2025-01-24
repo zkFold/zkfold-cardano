@@ -1,15 +1,15 @@
 module Main where
 
-import           Data.Aeson                             (encode)
-import qualified Data.ByteString.Lazy                   as BL
-import           Prelude                                (Bool (..), IO, Show (..), putStr, ($), (++))
-import           System.Directory                       (createDirectoryIfMissing)
-import           Test.QuickCheck.Arbitrary              (Arbitrary (..))
-import           Test.QuickCheck.Gen                    (generate)
+import           Data.Aeson                               (encode)
+import qualified Data.ByteString.Lazy                     as BL
+import           Prelude                                  (Bool (..), IO, Show (..), putStr, ($), (++))
+import           System.Directory                         (createDirectoryIfMissing)
+import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
+import           Test.QuickCheck.Gen                      (generate)
 
-import           ZkFold.Cardano.Examples.EqualityCheck  (EqualityCheckContract (..), equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils          (savePlutus)
-import           ZkFold.Cardano.UPLC.ForwardingScripts  (forwardingMintCompiled)
+import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
+import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
 main :: IO ()
