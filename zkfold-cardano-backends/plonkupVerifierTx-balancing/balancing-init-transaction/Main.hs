@@ -1,15 +1,11 @@
 module Main where
 
-import           Cardano.Api                             (IsPlutusScriptLanguage, writeFileTextEnvelope)
-import           Cardano.Api.Shelley                     (File (..), PlutusScript (..))
-import           Control.Monad                           (void)
 import           Data.Aeson                              (encode)
 import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
 import           Data.String                             (fromString)
 import           PlutusLedgerApi.V3                      as V3
-import           Prelude                                 (Bool (..), FilePath, IO, Maybe (..), Show (..), putStr, ($),
-                                                          (++), (.))
+import           Prelude                                 (Bool (..), IO, Show (..), putStr, ($), (++), (.))
 import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
 import           System.FilePath                         (takeFileName, (</>))
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
@@ -21,9 +17,6 @@ import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, savePlutus
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
 
-
-writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
-writePlutusScriptToFile filePath script = void $ writeFileTextEnvelope (File filePath) Nothing script
 
 someDatum :: Datum
 someDatum = Datum . dataToBuiltinData $ Constr 0 [B $ fromString "deadbeef"]
