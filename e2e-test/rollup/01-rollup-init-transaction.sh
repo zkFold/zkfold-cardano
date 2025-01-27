@@ -27,9 +27,9 @@ state=$assets/datum.cbor
 rollupLovelaceValue=3000000
 nftPolicy=$assets/nftPolicy.plutus
 
-in1=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
+in1=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
 	  jq -r 'to_entries | map(select(.value.value.lovelace > 5000000)) | .[0].key')
-in2=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
+in2=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout |
 	  jq -r 'to_entries | map(select(.value.value.lovelace > 5000000)) | .[1].key')
 
 echo ""
@@ -105,7 +105,7 @@ cardano-cli conway transaction submit \
 rollupTx=$(cardano-cli conway transaction txid --tx-file "$keypath/rollupOut.tx")
 rollupOut=$rollupTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/rollup.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$rollupOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/rollup.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$rollupOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see initial rollup tx onchain..."
 	sleep $pause
@@ -126,7 +126,7 @@ parkScriptMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
   --tx-out $(cat $keypath/parkingSpot.addr)+0 \
   --tx-out-reference-script-file "$assets/rollup.plutus" | sed 's/^[^ ]* //')
 
-in2value=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$in2" '.[$key].value.lovelace')
+in2value=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$in2" '.[$key].value.lovelace')
 
 cardano-cli conway transaction build \
   --testnet-magic $mN \
@@ -151,7 +151,7 @@ cardano-cli conway transaction submit \
 parkedTx=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")
 parkedOut=$parkedTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$parkedOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see script parked onchain..."
 	sleep $pause

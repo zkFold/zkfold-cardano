@@ -12,7 +12,7 @@ import qualified Data.ByteString.Lazy           as BL
 import qualified PlutusLedgerApi.V3             as V3
 import           PlutusTx                       (CompiledCode, ToData, toData)
 import           Prelude                        (Either (..), IO, String, concatMap, fst, map, putStrLn, show, unlines,
-                                                 ($), (++), (.), (==))
+                                                 ($), (++), (.))
 import qualified Rollup.CardanoCli              as Cli
 import qualified Rollup.ParseJson               as J
 import           System.Directory               (getCurrentDirectory)
@@ -32,10 +32,11 @@ extractKeysAndTokens utxos  =
 main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
-  let currentDirName = takeFileName currentDir
-      path           = if currentDirName == "rollup" then (".." </> "..")
-                          else if currentDirName == "e2e-test" then ".." else "."
-      assetsPath     = path </> "assets"
+  let path       = case takeFileName currentDir of
+                     "rollup"   -> ".." </> ".."
+                     "e2e-test" -> ".."
+                     _          -> "."
+      assetsPath = path </> "assets"
 
   BS.writeFile (assetsPath </> "dataCleanRedeemer.cbor") . dataToCBOR $ OldData
 

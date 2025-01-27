@@ -72,11 +72,11 @@ library
   exposed-modules:
     ZkFold.Cardano.UPLC.Common
     ZkFold.Cardano.UPLC.ForwardingScripts
-    ZkFold.Cardano.UPLC.PlonkVerifierToken
+    ZkFold.Cardano.UPLC.PlonkupVerifierToken
     ZkFold.Cardano.UPLC.Rollup
     ZkFold.Cardano.UPLC.RollupData
     ZkFold.Cardano.UPLC.RollupDeposit
-    ZkFold.Cardano.UPLC.PlonkVerifierTx
+    ZkFold.Cardano.UPLC.PlonkupVerifierTx
     ZkFold.Cardano.UPLC.Wallet
   hs-source-dirs:   src
   build-depends:

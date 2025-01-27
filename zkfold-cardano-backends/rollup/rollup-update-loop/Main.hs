@@ -10,7 +10,7 @@ import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          as V3
 import           Prelude                                     (Either (..), IO, Int, Integer, Maybe (..), error, length,
-                                                              read, show, zip, ($), (.), (<$>), (==))
+                                                              read, show, zip, ($), (.), (<$>))
 import           Rollup.Example                              (datumHashEx1, evolve)
 import           System.Directory                            (getCurrentDirectory)
 import           System.FilePath                             (takeFileName, (</>))
@@ -61,10 +61,11 @@ nextRollup x parkingTag rollupInfo = do
 main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
-  let currentDirName = takeFileName currentDir
-      path           = if currentDirName == "rollup" then (".." </> "..")
-                          else if currentDirName == "e2e-test" then ".." else "."
-      assetsPath     = path </> "assets"
+  let path       = case takeFileName currentDir of
+                     "rollup"   -> ".." </> ".."
+                     "e2e-test" -> ".."
+                     _          -> "."
+      assetsPath = path </> "assets"
 
   rollupInfoE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assetsPath </> "rollupInfo.json")
   parkingTag  <- read @Integer <$> IO.readFile (assetsPath </> "parkingTag.txt")

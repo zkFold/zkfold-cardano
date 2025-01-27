@@ -10,10 +10,10 @@ localmagic=42
 pause=4
 assets=../assets
 keypath0=./local-testnet/example/utxo-keys
-keypath=./rollup/keys
-privpath=./rollup/priv
+keypath=./plonkupVerifierTx-balancing/keys
+privpath=./plonkupVerifierTx-balancing/priv
 
-if [ -d "./rollup" ]; then
+if [ -d "./plonkupVerifierTx-balancing" ]; then
     mkdir -p $assets
     mkdir -p $keypath
     mkdir -p $privpath
@@ -25,7 +25,7 @@ fi
 printf "$localmagic" > $privpath/testnet.flag
 mN=$localmagic
 
-./rollup/init-alice.sh
+./plonkupVerifierTx-balancing/init-alice.sh
 
 echo "Now funding Alice..."
 
@@ -76,5 +76,5 @@ echo ""
 echo "Alice's wallet:"
 echo "$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN)"
 echo ""
-
-./rollup/split-alice.sh
+echo "Done."
+echo ""

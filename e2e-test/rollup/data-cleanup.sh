@@ -34,7 +34,7 @@ collateral=$(cardano-cli conway transaction txid --tx-file "$keypath/splitAlice.
 
 dataPolicyId=$(cardano-cli conway transaction policyid --script-file $dataPolicy)
 
-cardano-cli query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout |
+cardano-cli conway query utxo --address $(cat $keypath/parkingSpot.addr) --testnet-magic $mN --out-file /dev/stdout |
            jq -r --arg key $dataPolicyId 'to_entries | map(select(.value.value | has($key)))' > $assets/dataTokensBurn.json
 
 cabal run rollup-clear-data
@@ -55,7 +55,7 @@ cardano-cli conway transaction submit \
 dataCleanTx=$(cardano-cli conway transaction txid --tx-file "$keypath/dataClean.tx")
 dataCleanOut=$dataCleanTx#0
 while true; do
-    txOnChain=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$dataCleanOut" 'has($key) | tostring')
+    txOnChain=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file /dev/stdout | jq -r --arg key "$dataCleanOut" 'has($key) | tostring')
     if [ $txOnChain == "false" ]; then
 	echo "Waiting to see data tokens' burning transaction onchain..."
 	sleep $pause
