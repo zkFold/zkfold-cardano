@@ -6,10 +6,10 @@ import           Cardano.Api.Shelley  (PlutusScript (..), fromPlutusData, script
                                        scriptDataToJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash, toPlutusData)
 import           Codec.CBOR.Write     (toStrictByteString)
 import           Control.Monad        (void, zipWithM)
-import           Data.Aeson           (decode, eitherDecode, parseJSON, (.:), (.:?))
+import           Data.Aeson           (eitherDecode, parseJSON, (.:), (.:?))
 import qualified Data.Aeson.Key       as Key
 import qualified Data.Aeson.KeyMap    as KeyMap
-import           Data.Aeson.Types     as Aeson (Result (..), Value (..), parse, parseEither)
+import           Data.Aeson.Types     as Aeson (Value (..), parseEither)
 import           Data.Bifunctor       (first)
 import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as BL
@@ -134,7 +134,10 @@ parseJsonToTxInInfoList mscripts jsonInput = do
 
         -- Parse ReferenceScript
         referenceScript <- case parseEither (.:? "referenceScript") utxoInfo of
-            Right (Just refScriptObject) -> parseReferenceScript refScriptObject
+            -- Right (Just refScriptObject) -> parseReferenceScript refScriptObject
+            Right (Just refScriptObject) -> do
+              sh <- parseEither (parseJSON @Cardano.Api.ScriptHash) refScriptObject
+              return . Just . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes $ sh
             Right Nothing                -> Right Nothing
             Left err                     -> Left $ "Failed to parse referenceScript: " ++ err
 
@@ -149,45 +152,14 @@ parseJsonToTxInInfoList mscripts jsonInput = do
 
     parseEntry _ _ = Left "Failed to parse TxInInfo entry"
 
--- Helper to parse inline datum
+-- | Helper to parse inline datum
 parseInlineDatum :: Aeson.Value -> Either String (Maybe OutputDatum)
 parseInlineDatum v =
     let datE = scriptDataFromJsonDetailedSchema v
 
     in case datE of
-      Right dat -> (Right . Just . OutputDatum . Datum . dataToBuiltinData . toPlutusData . getScriptData $ dat)
+      Right dat -> (Right . Just . OutputDatum $ (unsafeFromData . toPlutusData . getScriptData $ dat :: Datum))
       Left _    -> Left "JSON error: scriptdata json error"
-
--- Helper to parse reference script
-parseReferenceScript :: Aeson.Value -> Either String (Maybe (V3.ScriptHash))
-parseReferenceScript (Object obj) = do
-    scriptObj <- case parseEither (.:? "script") obj of
-        Right (Just script) -> Right (Just script)
-        Right Nothing       -> Right Nothing
-        Left err            -> Left $ "Failed to parse 'script' object: " ++ err
-    case scriptObj of
-        Just (Object script) -> do
-            cborHex <- case parseEither (.:? "cborHex") script of
-                Right (Just (String cborHexStr)) -> Right (TE.encodeUtf8 cborHexStr)
-                Right (Just _)                   -> Left "Failed to parse 'cborHex'"
-                Right Nothing                    -> Left "Missing 'cborHex' in reference script"
-                Left err                         -> Left $ "Failed to parse 'cborHex': " ++ err
-            -- Decode CBOR hex bytes
-            cborHSD <- either (const (Left "Invalid CBOR hex")) Right $
-              deserialiseFromCBOR AsHashableScriptData cborHex
-            return $ Just . V3.ScriptHash . V3.toBuiltin . serialiseToRawBytes . hashScriptDataBytes $ cborHSD
-        _                    -> Right Nothing
-parseReferenceScript _ = Right Nothing
-
--- Experimental function to parse and display a TxIn
-displayTxIn :: BL.ByteString -> Either String Cardano.Api.TxIn
-displayTxIn jsonInput = do
-    txIn <- case decode jsonInput of
-        Just value -> case parse parseJSON value :: Result TxIn of
-                        Success txIn -> Right txIn
-                        Error err    -> Left $ "Failed to parse TxIn: " ++ err
-        Nothing    -> Left "Invalid JSON input"
-    return txIn
 
 -- | Compare function for 'TxOutRef'
 outRefCompare :: TxOutRef -> TxOutRef -> Ordering

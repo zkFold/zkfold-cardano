@@ -10,10 +10,13 @@ repository cardano-haskell-packages
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
 packages:
-    zkfold-backends
+    zkfold-cardano-backends
     zkfold-cardano
-    zkfold-contracts
+    zkfold-cardano-scripts
     zkfold-example
+
+package cardano-crypto-praos
+  flags: -external-libsodium-vrf
 
 write-ghc-environment-files: never
 
