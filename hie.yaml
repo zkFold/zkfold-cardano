@@ -6,29 +6,29 @@ cradle:
     - path: "zkfold-cardano/test"
       component: "zkfold-cardano:test:test"
 
-    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-init-transaction"
+    - path: "zkfold-cardano-backends/plonkupVerifierTx/plonkupVerifierTx-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierTx-init-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-transfer-transaction"
+    - path: "zkfold-cardano-backends/plonkupVerifierTx/plonkupVerifierTx-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierTx-transfer-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-withdraw-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-withdraw-transaction"
+    - path: "zkfold-cardano-backends/plonkupVerifierTx/plonkupVerifierTx-withdraw-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierTx-withdraw-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-init-transaction"
+    - path: "zkfold-cardano-backends/plonkupVerifierToken/plonkupVerifierToken-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierToken-init-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-transfer-transaction"
+    - path: "zkfold-cardano-backends/plonkupVerifierToken/plonkupVerifierToken-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierToken-transfer-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-minting-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-minting-transaction"
+    - path: "zkfold-cardano-backends/plonkupVerifierToken/plonkupVerifierToken-minting-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierToken-minting-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierTx-balancing/balancing-init-transaction/Main.hs"
+    - path: "zkfold-cardano-backends/plonkupVerifierTx-balancing/balancing-init-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:balancing-init-transaction"
 
-    - path: "zkfold-cardano-backends/plonkVerifierTx-balancing/balancing-parse-input/Main.hs"
-      component: "zkfold-cardano-backends:exe:balancing-parse-input"
+    - path: "zkfold-cardano-backends/plonkupVerifierTx-balancing/balancing-plonkup-verifier/Main.hs"
+      component: "zkfold-cardano-backends:exe:balancing-plonkup-verifier"
 
     - path: "zkfold-cardano-backends/rollup/rollup-init-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:rollup-init-transaction"
@@ -62,6 +62,33 @@ cradle:
 
     - path: "zkfold-cardano-scripts/bench/bench-rollup/Main.hs"
       component: "zkfold-cardano-scripts:bench:bench-rollup"
+
+    - path: "zkfold-cli/app/Main.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/Balancing/Balancing.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/PlonkupVerifierToken/PlonkupVerifierToken.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/PlonkupVerifierTx/PlonkupVerifierTx.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/Rollup/CardanoCli.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/Rollup/Data.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/Rollup/Example.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/Rollup/ParseJson.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/Rollup/Rollup.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
 
     - path: "zkfold-example/src"
       component: "lib:zkfold-example"
