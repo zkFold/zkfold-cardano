@@ -85,7 +85,7 @@ executable plonkupVerifierTx-init-transaction
     zkfold-cardano                 ,
     QuickCheck                     ,
     zkfold-example                 ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano-scripts         ,
 
 executable plonkupVerifierTx-transfer-transaction
   import:           lang
@@ -130,7 +130,7 @@ executable plonkupVerifierToken-init-transaction
     directory                      ,
     zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano-scripts         ,
     QuickCheck                     ,
 
 executable plonkupVerifierToken-transfer-transaction
@@ -225,7 +225,7 @@ executable rollup-init-transaction
     random                         ,
     zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano-scripts         ,
     QuickCheck
 
 executable rollup-update-loop
@@ -250,7 +250,7 @@ executable rollup-update-loop
     symbolic-base                  ,
     zkfold-cardano                 ,
     zkfold-example                 ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano-scripts         ,
     QuickCheck
 
 executable rollup-clear-data

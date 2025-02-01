@@ -92,10 +92,10 @@ main = do
 
       IO.writeFile (assetsPath </> "newDataTokensAmount.txt") . show . length $ update
 
-      mapM_ (\(dat, idx) -> BS.writeFile (assetsPath </> (printf "dataRedeemer-%02d.cbor" idx))
+      mapM_ (\(dat, idx) -> BS.writeFile (assetsPath </> printf "dataRedeemer-%02d.cbor" idx)
                             . dataToCBOR . NewData $ dat) dataUpdateIndexed
 
-      mapM_ (\(dat, idx) -> IO.writeFile (assetsPath </> (printf "dataTokenName-%02d.txt" idx))
+      mapM_ (\(dat, idx) -> IO.writeFile (assetsPath </> printf "dataTokenName-%02d.txt" idx)
                             . byteStringAsHex . fromBuiltin . dataToBlake $ dat) dataUpdateIndexed
 
     Left _                     -> error "JSON error: unreadable 'rollupInfo.json'"

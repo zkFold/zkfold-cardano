@@ -1,28 +1,28 @@
 cradle:
   cabal:
-    - path: "plonkVerifierTx/plonkVerifierTx-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-init-transaction"
+    - path: "plonkupVerifierTx/plonkupVerifierTx-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierTx-init-transaction"
 
-    - path: "plonkVerifierTx/plonkVerifierTx-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-transfer-transaction"
+    - path: "plonkupVerifierTx/plonkupVerifierTx-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierTx-transfer-transaction"
 
-    - path: "plonkVerifierTx/plonkVerifierTx-withdraw-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-withdraw-transaction"
+    - path: "plonkupVerifierTx/plonkupVerifierTx-withdraw-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierTx-withdraw-transaction"
 
-    - path: "plonkVerifierToken/plonkVerifierToken-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-init-transaction"
+    - path: "plonkupVerifierToken/plonkupVerifierToken-init-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierToken-init-transaction"
 
-    - path: "plonkVerifierToken/plonkVerifierToken-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-transfer-transaction"
+    - path: "plonkupVerifierToken/plonkupVerifierToken-transfer-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierToken-transfer-transaction"
 
-    - path: "plonkVerifierToken/plonkVerifierToken-minting-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-minting-transaction"
+    - path: "plonkupVerifierToken/plonkupVerifierToken-minting-transaction/Main.hs"
+      component: "zkfold-cardano-backends:exe:plonkupVerifierToken-minting-transaction"
 
-    - path: "plonkVerifierTx-balancing/balancing-init-transaction/Main.hs"
+    - path: "plonkupVerifierTx-balancing/balancing-init-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:balancing-init-transaction"
 
-    - path: "plonkVerifierTx-balancing/balancing-parse-input/Main.hs"
-      component: "zkfold-cardano-backends:exe:balancing-parse-input"
+    - path: "plonkupVerifierTx-balancing/balancing-plonkup-verifier/Main.hs"
+      component: "zkfold-cardano-backends:exe:balancing-plonkup-verifier"
 
     - path: "rollup/rollup-init-transaction/Main.hs"
       component: "zkfold-cardano-backends:exe:rollup-init-transaction"
