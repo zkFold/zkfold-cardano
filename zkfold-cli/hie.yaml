@@ -1,0 +1,28 @@
+cradle:
+  cabal:
+    - path: "app/Main.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/Balancing/Balancing.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/PlonkupVerifierToken/PlonkupVerifierToken.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/PlonkupVerifierTx/PlonkupVerifierTx.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/Rollup/CardanoCli.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/Rollup/Data.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/Rollup/Example.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/Rollup/ParseJson.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/Rollup/Rollup.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
