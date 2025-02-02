@@ -12,6 +12,9 @@ cradle:
     - path: "app/PlonkupVerifierToken/Transaction/Init.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
+    - path: "app/PlonkupVerifierToken/Transaction/Minting.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
     - path: "app/PlonkupVerifierToken/Transaction/Transfer.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 

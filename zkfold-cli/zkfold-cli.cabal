@@ -81,6 +81,7 @@ executable zkfold-cli
         Balancing.Balancing
         PlonkupVerifierToken.PlonkupVerifierToken
         PlonkupVerifierToken.Transaction.Init
+        PlonkupVerifierToken.Transaction.Minting
         PlonkupVerifierToken.Transaction.Transfer
         PlonkupVerifierTx.PlonkupVerifierTx
         Rollup.CardanoCli
@@ -93,6 +94,7 @@ executable zkfold-cli
         atlas-cardano                  ,
         base              >= 4.9 && < 5,
         bytestring                     ,
+        containers                     ,
         directory                      ,
         zkfold-cardano                 ,
         zkfold-example                 ,

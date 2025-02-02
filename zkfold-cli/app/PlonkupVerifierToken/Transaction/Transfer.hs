@@ -38,8 +38,3 @@ sendDatum nid providers skey changeAddr txIn validator datum = do
         signAndSubmitConfirmed txBody
 
     print $ "transaction id: " ++ show txid
-
-
-
-
-
