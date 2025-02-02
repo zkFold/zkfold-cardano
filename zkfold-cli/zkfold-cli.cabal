@@ -80,6 +80,7 @@ executable zkfold-cli
     other-modules:
         Balancing.Balancing
         PlonkupVerifierToken.PlonkupVerifierToken
+        PlonkupVerifierToken.Transaction.Init
         PlonkupVerifierTx.PlonkupVerifierTx
         Rollup.CardanoCli
         Rollup.Data
@@ -88,6 +89,7 @@ executable zkfold-cli
         Rollup.Rollup
     build-depends:
         aeson                          ,
+        atlas-cardano                  ,
         base              >= 4.9 && < 5,
         bytestring                     ,
         directory                      ,
