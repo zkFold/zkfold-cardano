@@ -81,6 +81,7 @@ executable zkfold-cli
         Balancing.Balancing
         PlonkupVerifierToken.PlonkupVerifierToken
         PlonkupVerifierToken.Transaction.Init
+        PlonkupVerifierToken.Transaction.Transfer
         PlonkupVerifierTx.PlonkupVerifierTx
         Rollup.CardanoCli
         Rollup.Data
@@ -104,5 +105,6 @@ executable zkfold-cli
         text                           ,
         random                         ,
         symbolic-base                  ,
+        serialise                      ,
         parsec                         ,
         QuickCheck                     ,

@@ -1,24 +1,19 @@
-module PlonkupVerifierToken.Transaction.Init where
+module PlonkupVerifierToken.Transaction.Init (sendScript) where
 
-import           GeniusYield.GYConfig           (GYCoreConfig (cfgNetworkId))
+
 import           GeniusYield.Transaction.Common (minimumUTxO)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types              (GYAddress, GYAnyScript (..), GYPaymentSigningKey, GYProviders,
                                                  GYScript, GYTxIn, GYTxOut (..), PlutusVersion (..),
-                                                 gyGetProtocolParameters, valueFromLovelace)
-import           Prelude
-
--- | Our Context.
-data Ctx = Ctx
-  { ctxCoreCfg   :: !GYCoreConfig
-  , ctxProviders :: !GYProviders
-  }
+                                                 gyGetProtocolParameters, valueFromLovelace, GYNetworkId)
+import           Prelude                        (IO, Maybe (..), Show (..), String, print, toInteger, ($), (++), (<>))
 
 type ScriptName = String
 
 -- | Sending a compiled script to the network.
 sendScript ::
-  Ctx ->
+  GYNetworkId ->
+  GYProviders ->
   GYPaymentSigningKey ->
   GYAddress ->
   GYTxIn PlutusV3 ->
@@ -26,18 +21,17 @@ sendScript ::
   GYScript 'PlutusV3 ->
   ScriptName ->
   IO ()
-sendScript ctx skey changeAddr txIn sendTo validator name = do
-    pkh <- addressToPubKeyHashIO sendTo
-    let nid       = cfgNetworkId $ ctxCoreCfg ctx
-        providers = ctxProviders ctx
-
-        w1 = User' skey Nothing changeAddr
+sendScript nid providers skey changeAddr txIn sendTo validator name = do
+    pkh <- addressToPubKeyHashIO changeAddr
+    let w1 = User' skey Nothing changeAddr
+        validator' = Just $ GYPlutusScript validator
+        outMin = GYTxOut sendTo (valueFromLovelace 0) Nothing validator'
 
     params <- gyGetProtocolParameters providers
-    let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params undefined
+    let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
 
-        skeleton = mustHaveInput txIn
-                <> mustHaveOutput (GYTxOut (userAddr w1) calculateMin Nothing (Just $ GYPlutusScript validator))
+    let skeleton = mustHaveInput txIn
+                <> mustHaveOutput (GYTxOut sendTo calculateMin Nothing validator')
                 <> mustBeSignedBy pkh
 
     txid <- runGYTxGameMonadIO nid providers $ asUser w1 $ do

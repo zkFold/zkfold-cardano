@@ -33,7 +33,7 @@ main = do
     --
     ("token", "init")        -> tokenInit path
     ("token", "minting")     -> tokenMinting path
-    ("token", "transfer")    -> tokenTransfer path args
+    ("token", "transfer")    -> tokenTransfer
     --
     ("tx", "init")           -> txInit path
     ("tx", "transfer")       -> txTransfer path args
