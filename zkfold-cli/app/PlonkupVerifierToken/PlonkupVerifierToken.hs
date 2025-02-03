@@ -8,6 +8,7 @@ import           Data.Aeson                                (decode, encode)
 import qualified Data.ByteString.Lazy                      as BL
 import           Data.Maybe                                (fromJust)
 import           GeniusYield.Types.Script                  (mintingPolicyId, mintingPolicyIdToApi, validatorFromPlutus)
+import           PlonkupVerifierToken.Transaction.Burning  (burnTokens)
 import           PlonkupVerifierToken.Transaction.Init     (sendScript)
 import           PlonkupVerifierToken.Transaction.Minting  (sendMintTokens)
 import           PlonkupVerifierToken.Transaction.Transfer (sendDatum)
@@ -56,9 +57,20 @@ tokenInit path = do
     sendScript nid providers skey changeAddr txIn sendTo plonkupVerifierToken "plonkupVerifierToken"
     sendScript nid providers skey changeAddr txIn sendTo forwardingMint "forwardingMint"
 
-dummyRedeemer :: ProofBytes
-dummyRedeemer = ProofBytes e e e e e e e e e e e e e 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
-    where e = ""
+tokenTransfer :: IO ()
+tokenTransfer = do
+    let nid = undefined
+        providers = undefined
+        skey = undefined
+        changeAddr = undefined
+        txIn = undefined
+        fmLabel = 0
+        forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
+        policyid = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
+
+    let datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
+
+    sendDatum nid providers skey changeAddr txIn forwardingMint datum
 
 tokenMinting :: FilePath -> IO ()
 tokenMinting path = do
@@ -82,24 +94,36 @@ tokenMinting path = do
 
     sendMintTokens nid providers skey changeAddr txIn sendTo plonkupVerifierToken txidSetup redeemer assetName
 
-{-
-unitDatum :: GYDatum
-unitDatum = datumFromPlutusData ()
--- datumFromApi' :: Api.HashableScriptData -> GYDatum
--- unsafeHashableScriptData :: ScriptData -> HashableScriptData
--}
+dummyRedeemer :: ProofBytes
+dummyRedeemer = ProofBytes e e e e e e e e e e e e e 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
+    where e = ""
 
-tokenTransfer :: IO ()
-tokenTransfer = do
+tokenBurning :: FilePath -> IO ()
+tokenBurning path = do
+    let testData = path </> "test-data"
+
+    let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
+
     let nid = undefined
         providers = undefined
         skey = undefined
         changeAddr = undefined
-        txIn = undefined
-        fmLabel = 0
-        forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
+        txIn1 = undefined
+        txIn2 = undefined
+        forwardingMintIn = undefined
+        ownAddr = undefined
+        txidSetup = undefined
+        txidForward = undefined
+        setup = undefined
+        plonkupVerifierToken = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
+        forwardingMint       = validatorFromPlutus $ forwardingMintCompiled fmLabel
         policyid = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
+        datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
 
-    let datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
+    EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
-    sendDatum nid providers skey changeAddr txIn forwardingMint datum
+    let (_, input, _) = equalityCheckVerificationBytes x ps targetValue
+        assetName = AssetName $ fromBuiltin $ F.fromInput input
+        redeemer = toBuiltinData dummyRedeemer
+
+    burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr plonkupVerifierToken forwardingMint txidSetup txidForward redeemer assetName datum

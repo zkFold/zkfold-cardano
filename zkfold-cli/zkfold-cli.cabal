@@ -80,6 +80,7 @@ executable zkfold-cli
     other-modules:
         Balancing.Balancing
         PlonkupVerifierToken.PlonkupVerifierToken
+        PlonkupVerifierToken.Transaction.Burning
         PlonkupVerifierToken.Transaction.Init
         PlonkupVerifierToken.Transaction.Minting
         PlonkupVerifierToken.Transaction.Transfer

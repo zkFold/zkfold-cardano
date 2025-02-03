@@ -2,7 +2,7 @@ module Main where
 
 import           Balancing.Balancing                       (balancingInit, balancingPlonkup)
 import           Control.Monad                             (when)
-import           PlonkupVerifierToken.PlonkupVerifierToken (tokenInit, tokenMinting, tokenTransfer)
+import           PlonkupVerifierToken.PlonkupVerifierToken (tokenBurning, tokenInit, tokenMinting, tokenTransfer)
 import           PlonkupVerifierTx.PlonkupVerifierTx       (txInit, txTransfer, txWithdraw)
 import           Prelude                                   (Eq (..), IO, String, head, null, print, tail, ($))
 import           Rollup.Rollup                             (rollupClear, rollupInit, rollupUpdate)
@@ -32,8 +32,9 @@ main = do
     ("balancing", "plonkup") -> balancingPlonkup path
     --
     ("token", "init")        -> tokenInit path
-    ("token", "minting")     -> tokenMinting path
     ("token", "transfer")    -> tokenTransfer
+    ("token", "minting")     -> tokenMinting path
+    ("token", "burning")     -> tokenBurning path
     --
     ("tx", "init")           -> txInit path
     ("tx", "transfer")       -> txTransfer path args
