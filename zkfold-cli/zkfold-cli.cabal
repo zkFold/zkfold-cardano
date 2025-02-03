@@ -79,7 +79,6 @@ executable zkfold-cli
     hs-source-dirs:   app
     other-modules:
         Balancing.Balancing
-        PlonkupVerifierToken.PlonkupVerifierToken
         PlonkupVerifierToken.Transaction.Burning
         PlonkupVerifierToken.Transaction.Init
         PlonkupVerifierToken.Transaction.Minting

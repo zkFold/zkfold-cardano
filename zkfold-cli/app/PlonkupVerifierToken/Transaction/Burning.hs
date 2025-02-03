@@ -1,12 +1,29 @@
-module PlonkupVerifierToken.Transaction.Burning (burnTokens) where
+module PlonkupVerifierToken.Transaction.Burning (tokenBurning) where
 
-import           Cardano.Api                    (AssetName)
-import qualified Cardano.Api                    as Api
-import           Data.Coerce                    (coerce)
+import           Cardano.Api                              (AssetName (..), SerialiseAsRawBytes (..))
+import qualified Cardano.Api                              as Api
+import           Cardano.Api.Ledger                       (toCBOR)
+import           Codec.CBOR.Write                         (toLazyByteString)
+import qualified Codec.Serialise                          as Codec
+import           Data.Aeson                               (decode)
+import qualified Data.ByteString.Lazy                     as BL
+import           Data.Coerce                              (coerce)
+import           Data.Maybe                               (fromJust)
 import           GeniusYield.TxBuilder
-import           GeniusYield.Types             
-import           PlutusTx.Builtins              (BuiltinData, BuiltinByteString)
-import           Prelude                        (IO, Maybe (..), Show (..), print, ($), (++), (<>))
+import           GeniusYield.Types
+import           PlutusLedgerApi.V3                       (ToData (..), fromBuiltin)
+import           PlutusTx.Builtins                        (BuiltinByteString, BuiltinData)
+import           Prelude                                  (FilePath, IO, Maybe (..), Show (..), print, undefined, ($),
+                                                           (++), (.), (<$>), (<>))
+import           System.FilePath                          ((</>))
+
+import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
+import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes (..))
+import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
+
+
 
 tokenNameFromApi :: Api.AssetName -> GYTokenName
 tokenNameFromApi = coerce
@@ -27,7 +44,7 @@ burnTokens ::
   GYTxId ->
   BuiltinData ->
   AssetName ->
-  BuiltinByteString -> 
+  BuiltinByteString ->
   IO ()
 burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr plonkupVerifierToken forwardingMint txidSetup txidForward redeemer' assetName datum = do
     pkh <- addressToPubKeyHashIO changeAddr
@@ -60,3 +77,34 @@ burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr pl
         signAndSubmitConfirmed txBody
 
     print $ "transaction id: " ++ show txid
+
+tokenBurning :: FilePath -> IO ()
+tokenBurning path = do
+    let testData = path </> "test-data"
+
+    let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
+
+    let nid = undefined
+        providers = undefined
+        skey = undefined
+        changeAddr = undefined
+        txIn1 = undefined
+        txIn2 = undefined
+        forwardingMintIn = undefined
+        ownAddr = undefined
+        txidSetup = undefined
+        txidForward = undefined
+        setup = undefined
+        plonkupVerifierToken = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
+        forwardingMint       = validatorFromPlutus $ forwardingMintCompiled fmLabel
+        policyid = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
+        datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
+
+    EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
+
+    let (_, input, _) = equalityCheckVerificationBytes x ps targetValue
+        assetName = AssetName $ fromBuiltin $ F.fromInput input
+        redeemer = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
+
+    burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr plonkupVerifierToken forwardingMint txidSetup txidForward redeemer assetName datum
+

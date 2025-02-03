@@ -6,9 +6,6 @@ cradle:
     - path: "app/Balancing/Balancing.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "app/PlonkupVerifierToken/PlonkupVerifierToken.hs"
-      component: "zkfold-cli:exe:zkfold-cli"
-
     - path: "app/PlonkupVerifierToken/Transaction/Burning.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 

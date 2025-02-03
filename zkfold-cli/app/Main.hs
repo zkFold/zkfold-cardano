@@ -2,7 +2,10 @@ module Main where
 
 import           Balancing.Balancing                       (balancingInit, balancingPlonkup)
 import           Control.Monad                             (when)
-import           PlonkupVerifierToken.PlonkupVerifierToken (tokenBurning, tokenInit, tokenMinting, tokenTransfer)
+import           PlonkupVerifierToken.Transaction.Burning  (tokenBurning)
+import           PlonkupVerifierToken.Transaction.Init     (tokenInit)
+import           PlonkupVerifierToken.Transaction.Minting  (tokenMinting)
+import           PlonkupVerifierToken.Transaction.Transfer (tokenTransfer)
 import           PlonkupVerifierTx.PlonkupVerifierTx       (txInit, txTransfer, txWithdraw)
 import           Prelude                                   (Eq (..), IO, String, head, null, print, tail, ($))
 import           Rollup.Rollup                             (rollupClear, rollupInit, rollupUpdate)

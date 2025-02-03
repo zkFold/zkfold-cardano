@@ -1,13 +1,23 @@
-module PlonkupVerifierToken.Transaction.Transfer (sendDatum) where
+module PlonkupVerifierToken.Transaction.Transfer (tokenTransfer) where
 
-import           GeniusYield.Transaction.Common (minimumUTxO)
+import           Cardano.Api                           (SerialiseAsRawBytes (..))
+import           Cardano.Api.Ledger                    (toCBOR)
+import           Codec.CBOR.Write                      (toLazyByteString)
+import qualified Codec.Serialise                       as Codec
+import           GeniusYield.Transaction.Common        (minimumUTxO)
 import           GeniusYield.TxBuilder
-import           GeniusYield.Types              (GYAddress, GYNetworkId, GYPaymentSigningKey, GYProviders, GYScript,
-                                                 GYTxIn, GYTxOut (..), GYTxOutUseInlineDatum (..), PlutusVersion (..),
-                                                 addressFromValidator, datumFromPlutusData, gyGetProtocolParameters,
-                                                 valueFromLovelace)
-import           PlutusTx.Builtins              (BuiltinByteString)
-import           Prelude                        (IO, Maybe (..), Show (..), print, toInteger, ($), (++), (<>))
+import           GeniusYield.Types                     (GYAddress, GYNetworkId, GYPaymentSigningKey, GYProviders,
+                                                        GYScript, GYTxIn, GYTxOut (..), GYTxOutUseInlineDatum (..),
+                                                        PlutusVersion (..), addressFromValidator, datumFromPlutusData,
+                                                        gyGetProtocolParameters, valueFromLovelace)
+import           GeniusYield.Types.Script              (mintingPolicyId, mintingPolicyIdToApi, validatorFromPlutus)
+import           PlutusTx.Builtins                     (BuiltinByteString)
+import           Prelude                               (IO, Maybe (..), Show (..), print, toInteger, undefined, ($),
+                                                        (++), (<>))
+
+import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
+
+
 
 -- | Sending a datum script to the network.
 sendDatum ::
@@ -38,3 +48,18 @@ sendDatum nid providers skey changeAddr txIn validator datum = do
         signAndSubmitConfirmed txBody
 
     print $ "transaction id: " ++ show txid
+
+tokenTransfer :: IO ()
+tokenTransfer = do
+    let nid = undefined
+        providers = undefined
+        skey = undefined
+        changeAddr = undefined
+        txIn = undefined
+        fmLabel = 0
+        forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
+        policyid = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
+
+    let datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
+
+    sendDatum nid providers skey changeAddr txIn forwardingMint datum
