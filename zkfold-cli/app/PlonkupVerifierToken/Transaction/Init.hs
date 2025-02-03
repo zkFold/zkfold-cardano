@@ -3,9 +3,9 @@ module PlonkupVerifierToken.Transaction.Init (sendScript) where
 
 import           GeniusYield.Transaction.Common (minimumUTxO)
 import           GeniusYield.TxBuilder
-import           GeniusYield.Types              (GYAddress, GYAnyScript (..), GYPaymentSigningKey, GYProviders,
-                                                 GYScript, GYTxIn, GYTxOut (..), PlutusVersion (..),
-                                                 gyGetProtocolParameters, valueFromLovelace, GYNetworkId)
+import           GeniusYield.Types              (GYAddress, GYAnyScript (..), GYNetworkId, GYPaymentSigningKey,
+                                                 GYProviders, GYScript, GYTxIn, GYTxOut (..), PlutusVersion (..),
+                                                 gyGetProtocolParameters, valueFromLovelace)
 import           Prelude                        (IO, Maybe (..), Show (..), String, print, toInteger, ($), (++), (<>))
 
 type ScriptName = String
