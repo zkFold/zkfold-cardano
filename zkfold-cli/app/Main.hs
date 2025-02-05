@@ -2,6 +2,7 @@ module Main where
 
 import           Balancing.Balancing                       (balancingInit, balancingPlonkup)
 import           Control.Monad                             (when)
+import           GeniusYield.GYConfig                      (coreConfigIO)
 import           PlonkupVerifierToken.Transaction.Burning  (tokenBurning)
 import           PlonkupVerifierToken.Transaction.Init     (tokenInit)
 import           PlonkupVerifierToken.Transaction.Minting  (tokenMinting)
@@ -20,7 +21,9 @@ main = do
           "e2e-test" -> ".."
           _          -> "."
   --
-  (name : argsHelp) <- getArgs
+  (coreCfgPath : name : argsHelp) <- getArgs
+  --
+  coreCfg <- coreConfigIO coreCfgPath
 
   when (name == "help") $ print @String "help"
 

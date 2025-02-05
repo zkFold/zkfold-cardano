@@ -1,0 +1,16 @@
+{
+  "coreProvider": {
+      "cpiSocketPath": "FilePath",
+      "cpiKupoUrl": "Text"
+  },
+  "networkId": "42",
+  "logging": [
+      {
+          "type": {
+              "tag": "stderr"
+          },
+          "severity": "Debug",
+          "verbosity": "V2"
+      }
+  ]
+}
