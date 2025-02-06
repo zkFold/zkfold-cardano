@@ -6,11 +6,11 @@ import           Prelude                                     hiding (Bool, Eq (.
 import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
-import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
+import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
@@ -23,7 +23,7 @@ import           ZkFold.Symbolic.Data.FieldElement           (FieldElement)
 
 data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr
-  , ps          :: PlonkupProverSecret BLS12_381_G1
+  , ps          :: PlonkupProverSecret BLS12_381_G1_Point
   , targetValue :: Fr
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
@@ -31,13 +31,14 @@ data EqualityCheckContract = EqualityCheckContract {
 equalityCheckContract :: forall a c . (Symbolic c, FromConstant a (BaseField c)) => a -> FieldElement c -> Bool c
 equalityCheckContract targetValue inputValue = inputValue == fromConstant targetValue
 
-equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1 -> Fr -> (SetupBytes, InputBytes, ProofBytes)
+equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
     let ac = compile @Fr (equalityCheckContract @Fr @(ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1)) targetValue) :: ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1) Par1
 
         (omega, k1, k2) = getParams 32
         witnessInputs   = Par1 targetValue :*: U1
-        plonkup = Plonkup omega k1 k2 ac x :: PlonkupN (U1 :*: U1) (Par1 :*: U1) 32
+        (gs, h1) = getSecrectParams x
+        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN (U1 :*: U1) (Par1 :*: U1) 32
         setupP  = setupProve @_ @HaskellCore plonkup
         setupV  = setupVerify @_ @HaskellCore plonkup
         witness = (PlonkupWitnessInput @_ @(Par1 :*: U1) @_ (U1 :*: U1) witnessInputs, ps)
@@ -45,7 +46,7 @@ equalityCheckVerificationBytes x ps targetValue =
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
-testEqualityCheckContract :: Fr -> PlonkupProverSecret BLS12_381_G1 -> Fr -> Haskell.Bool
+testEqualityCheckContract :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> Haskell.Bool
 testEqualityCheckContract x ps targetValue =
     let (s, i, p) = equalityCheckVerificationBytes x ps targetValue
     in verify @PlonkupPlutus @HaskellCore s i p

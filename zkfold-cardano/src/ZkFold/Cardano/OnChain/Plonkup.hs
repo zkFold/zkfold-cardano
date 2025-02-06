@@ -6,13 +6,19 @@ module ZkFold.Cardano.OnChain.Plonkup where
 import           Data.Functor.Rep                            (Rep, Representable)
 import           GHC.Base                                    (Ord)
 import           GHC.Generics                                (Par1, U1)
-import           PlutusTx.Builtins
+import           PlutusTx.Builtins                           (BuiltinByteString, ByteOrder (..), blake2b_224,
+                                                              bls12_381_G1_compressed_generator,
+                                                              bls12_381_G1_uncompress,
+                                                              bls12_381_G2_compressed_generator,
+                                                              bls12_381_G2_uncompress, bls12_381_finalVerify,
+                                                              bls12_381_millerLoop, byteStringToInteger, consByteString,
+                                                              emptyByteString, integerToByteString)
 import           PlutusTx.Prelude                            (Bool (..), ($), (&&), (.), (<>), (==))
 import           Prelude                                     (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (CompatibleNonInteractiveProofs (..), CoreFunction,
                                                               NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
@@ -186,7 +192,7 @@ instance
         , KnownNat n
         , Ord (Rep i)
         , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2
-        , CoreFunction BLS12_381_G1 core
+        , CoreFunction BLS12_381_G1_Point core
         ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus core where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput

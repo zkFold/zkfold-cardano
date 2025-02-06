@@ -20,7 +20,7 @@ import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 import qualified UntypedPlutusCore                           as UPLC
 
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
 import           ZkFold.Cardano.Examples.IdentityCircuit
 import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
@@ -153,7 +153,7 @@ rollupScript setup ctx =
   getPlcNoAnn $ rollupCompiled setup
     `unsafeApplyCode` liftCodeDef (toBuiltinData ctx)
 
-costRollup :: Fr -> PlonkupProverSecret BLS12_381_G1 -> Int -> (Int, Integer, Integer)
+costRollup :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Int -> (Int, Integer, Integer)
 costRollup x ps n = (n, cpu, mem)
   where
     (setup, _, proof) = stateCheckVerificationBytes x ps . toF $ sampleNewState n
@@ -173,7 +173,7 @@ dataHeaders = ["Update length", "Exec Steps", "Exec Memory"]
 main :: IO ()
 main = do
   currentDir <- getCurrentDirectory
-  let path    = case takeFileName currentDir of
+  let path = case takeFileName currentDir of
         "data-analysis" -> "."
         "bench-rollup"  -> "data-analysis"
         "benchs"        -> "bench-rollup" </> "data-analysis"
