@@ -1,4 +1,4 @@
-module Rollup.Example where
+module ZkFold.Cardano.Rollup.Example where
 
 import           PlutusLedgerApi.V3           (DatumHash (..))
 import           PlutusTx.Builtins            (BuiltinByteString, ByteOrder (..), blake2b_256, integerToByteString)

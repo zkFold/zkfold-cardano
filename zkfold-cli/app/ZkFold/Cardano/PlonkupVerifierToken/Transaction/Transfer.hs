@@ -1,4 +1,4 @@
-module PlonkupVerifierToken.Transaction.Transfer (tokenTransfer) where
+module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer (tokenTransfer) where
 
 import           Cardano.Api                           (SerialiseAsRawBytes (..))
 import           Cardano.Api.Ledger                    (toCBOR)

@@ -1,4 +1,4 @@
-module Balancing.Balancing where
+module ZkFold.Cardano.Balancing.Balancing where
 
 import           Cardano.Api                             (prettyPrintJSON)
 import           Data.Aeson                              (decode, encode)

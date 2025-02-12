@@ -1,4 +1,4 @@
-module PlonkupVerifierTx.PlonkupVerifierTx where
+module ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx where
 
 import           Cardano.Api                           (SerialiseAsRawBytes (..), policyId, prettyPrintJSON)
 import           Cardano.Api.Ledger                    (toCBOR)

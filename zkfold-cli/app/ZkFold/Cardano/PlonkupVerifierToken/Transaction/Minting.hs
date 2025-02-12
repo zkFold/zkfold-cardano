@@ -1,4 +1,4 @@
-module PlonkupVerifierToken.Transaction.Minting (tokenMinting) where
+module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting (tokenMinting) where
 
 import           Cardano.Api                              (AssetName (..))
 import qualified Cardano.Api                              as Api

@@ -1,4 +1,4 @@
-module Rollup.Data where
+module ZkFold.Cardano.Rollup.Data where
 
 import           PlutusLedgerApi.V1.Value (Lovelace (..))
 import           Prelude                  (Int, Integer)

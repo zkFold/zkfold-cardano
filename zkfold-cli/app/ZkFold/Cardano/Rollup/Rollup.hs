@@ -1,4 +1,4 @@
-module Rollup.Rollup where
+module ZkFold.Cardano.Rollup.Rollup where
 
 import           Cardano.Api                                 (getScriptData, prettyPrintJSON)
 import           Cardano.Api.Shelley                         (scriptDataFromJsonDetailedSchema, toPlutusData)
@@ -17,10 +17,10 @@ import           Prelude                                     (Bool (..), Either 
                                                               Maybe (..), Show (..), String, concatMap, error, fst,
                                                               length, map, putStr, putStrLn, read, show, unlines, zip,
                                                               ($), (++), (-), (.), (<$>))
-import qualified Rollup.CardanoCli                           as Cli
-import           Rollup.Data                                 (minReq, rmax, rollupFee, threadLovelace, updateLength)
-import           Rollup.Example                              (datumHashBSEx1, datumHashEx1, evolve)
-import qualified Rollup.ParseJson                            as J
+import qualified ZkFold.Cardano.Rollup.CardanoCli                           as Cli
+import           ZkFold.Cardano.Rollup.Data                                 (minReq, rmax, rollupFee, threadLovelace, updateLength)
+import           ZkFold.Cardano.Rollup.Example                              (datumHashBSEx1, datumHashEx1, evolve)
+import qualified ZkFold.Cardano.Rollup.ParseJson                            as J
 import           System.Directory                            (createDirectoryIfMissing)
 import           System.FilePath                             ((</>))
 import qualified System.IO                                   as IO

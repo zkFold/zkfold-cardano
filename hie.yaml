@@ -21,37 +21,40 @@ cradle:
     - path: "zkfold-cli/app/Main.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/Balancing/Balancing.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Balancing.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/PlonkupVerifierToken/Transaction/Burning.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Options/Address.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/PlonkupVerifierToken/Transaction/Init.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Burning.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/PlonkupVerifierToken/Transaction/Minting.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Init.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/PlonkupVerifierToken/Transaction/Transfer.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Minting.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/PlonkupVerifierTx/PlonkupVerifierTx.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Transfer.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/Rollup/CardanoCli.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierTx/PlonkupVerifierTx.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/Rollup/Data.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/CardanoCli.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/Rollup/Example.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Data.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/Rollup/ParseJson.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Example.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/Rollup/Rollup.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/ParseJson.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Rollup.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
     - path: "zkfold-example/src"

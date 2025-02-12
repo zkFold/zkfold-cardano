@@ -1,4 +1,4 @@
-module PlonkupVerifierToken.Transaction.Burning (tokenBurning) where
+module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning (tokenBurning) where
 
 import           Cardano.Api                              (AssetName (..), SerialiseAsRawBytes (..))
 import qualified Cardano.Api                              as Api

@@ -1,4 +1,4 @@
-module Rollup.CardanoCli where
+module ZkFold.Cardano.Rollup.CardanoCli where
 
 import           Prelude
 

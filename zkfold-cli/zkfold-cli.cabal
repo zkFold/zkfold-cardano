@@ -78,17 +78,18 @@ executable zkfold-cli
     main-is:          Main.hs
     hs-source-dirs:   app
     other-modules:
-        Balancing.Balancing
-        PlonkupVerifierToken.Transaction.Burning
-        PlonkupVerifierToken.Transaction.Init
-        PlonkupVerifierToken.Transaction.Minting
-        PlonkupVerifierToken.Transaction.Transfer
-        PlonkupVerifierTx.PlonkupVerifierTx
-        Rollup.CardanoCli
-        Rollup.Data
-        Rollup.Example
-        Rollup.ParseJson
-        Rollup.Rollup
+        ZkFold.Cardano.Balancing.Balancing
+        ZkFold.Cardano.Options.Address
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
+        ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx
+        ZkFold.Cardano.Rollup.CardanoCli
+        ZkFold.Cardano.Rollup.Data
+        ZkFold.Cardano.Rollup.Example
+        ZkFold.Cardano.Rollup.ParseJson
+        ZkFold.Cardano.Rollup.Rollup
     build-depends:
         aeson                          ,
         atlas-cardano                  ,

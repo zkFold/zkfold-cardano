@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Rollup.ParseJson where
+module ZkFold.Cardano.Rollup.ParseJson where
 
 import           Cardano.Api                    hiding (Key, Lovelace, TxOut)
 import           Data.Aeson                     (FromJSON (..), Key, Object, Value (..), withObject)

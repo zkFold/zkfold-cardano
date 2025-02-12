@@ -1,4 +1,4 @@
-module PlonkupVerifierToken.Transaction.Init (tokenInit) where
+module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init (tokenInit) where
 
 
 import           Data.Aeson                               (encode)
