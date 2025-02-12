@@ -16,6 +16,8 @@ Flag Pedantic
 common lang
   default-language: Haskell2010
   default-extensions:
+    AllowAmbiguousTypes
+    DataKinds
     DeriveFoldable
     DeriveFunctor
     DeriveGeneric
@@ -23,24 +25,22 @@ common lang
     DeriveTraversable
     DerivingStrategies
     DerivingVia
-    ImportQualifiedPost
-    LambdaCase
-    NumericUnderscores
-    GeneralizedNewtypeDeriving
-    StandaloneDeriving
-    ViewPatterns
-    AllowAmbiguousTypes
     FlexibleContexts
-    RankNTypes
-    TypeApplications
-    DataKinds
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
     InstanceSigs
+    LambdaCase
     MultiParamTypeClasses
+    NoImplicitPrelude
+    NumericUnderscores
+    OverloadedStrings
+    RankNTypes
     RecordWildCards
     ScopedTypeVariables
-    FlexibleInstances
-    NoImplicitPrelude
-    OverloadedStrings
+    StandaloneDeriving
+    TypeApplications
+    ViewPatterns
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -94,19 +94,20 @@ executable zkfold-cli
         atlas-cardano                  ,
         base              >= 4.9 && < 5,
         bytestring                     ,
-        containers                     ,
-        directory                      ,
-        zkfold-cardano                 ,
-        zkfold-example                 ,
-        zkfold-cardano-scripts         ,
         cardano-api                    ,
         cborg                          ,
+        containers                     ,
+        directory                      ,
         filepath                       ,
+        optparse-applicative-fork      ,
+        parsec                         ,
         plutus-ledger-api       ^>=1.36,
         plutus-tx               ^>=1.36,
-        text                           ,
-        random                         ,
-        symbolic-base                  ,
-        serialise                      ,
-        parsec                         ,
         QuickCheck                     ,
+        random                         ,
+        serialise                      ,
+        symbolic-base                  ,
+        text                           ,
+        zkfold-cardano                 ,
+        zkfold-cardano-scripts         ,
+        zkfold-example                 ,

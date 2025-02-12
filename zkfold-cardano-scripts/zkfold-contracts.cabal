@@ -11,6 +11,9 @@ build-type:         Simple
 common lang
   default-language: Haskell2010
   default-extensions:
+    AllowAmbiguousTypes
+    DataKinds
+    DeriveAnyClass
     DeriveFoldable
     DeriveFunctor
     DeriveGeneric
@@ -18,27 +21,24 @@ common lang
     DeriveTraversable
     DerivingStrategies
     DerivingVia
-    ImportQualifiedPost
-    LambdaCase
-    NumericUnderscores
-    GeneralizedNewtypeDeriving
-    StandaloneDeriving
-    ViewPatterns
-    AllowAmbiguousTypes
     FlexibleContexts
-    RankNTypes
-    TypeApplications
-    DataKinds
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
     InstanceSigs
+    LambdaCase
     MultiParamTypeClasses
+    NamedFieldPuns
+    NoImplicitPrelude
+    NumericUnderscores
+    OverloadedStrings
+    RankNTypes
     RecordWildCards
     ScopedTypeVariables
-    FlexibleInstances
-    NoImplicitPrelude
+    StandaloneDeriving
     TemplateHaskell
-    DeriveAnyClass
-    NamedFieldPuns
-    OverloadedStrings
+    TypeApplications
+    ViewPatterns
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -123,10 +123,10 @@ benchmark bench-cpu-mem
     plutus-tx-plugin        ^>=1.36,
     QuickCheck                     ,
     symbolic-base                  ,
-    zkfold-cardano                 ,
-    zkfold-example                 ,
     zkfold-benchmark               ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano                 ,
+    zkfold-cardano-scripts         ,
+    zkfold-example                 ,
 
 benchmark bench-rollup
   import:           lang
@@ -148,7 +148,7 @@ benchmark bench-rollup
     plutus-tx-plugin        ^>=1.36,
     QuickCheck                     ,
     symbolic-base                  ,
-    zkfold-cardano                 ,
-    zkfold-example                 ,
     zkfold-benchmark               ,
-    zkfold-cardano-scripts               ,
+    zkfold-cardano                 ,
+    zkfold-cardano-scripts         ,
+    zkfold-example                 ,

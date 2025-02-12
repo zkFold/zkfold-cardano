@@ -11,6 +11,9 @@ build-type:         Simple
 common lang
   default-language: Haskell2010
   default-extensions:
+    AllowAmbiguousTypes
+    DataKinds
+    DeriveAnyClass
     DeriveFoldable
     DeriveFunctor
     DeriveGeneric
@@ -18,31 +21,28 @@ common lang
     DeriveTraversable
     DerivingStrategies
     DerivingVia
-    ImportQualifiedPost
-    LambdaCase
-    NumericUnderscores
-    GeneralizedNewtypeDeriving
-    StandaloneDeriving
-    ViewPatterns
-    AllowAmbiguousTypes
+    ExplicitNamespaces
     FlexibleContexts
-    RankNTypes
-    TypeApplications
-    DataKinds
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
     InstanceSigs
+    LambdaCase
     MultiParamTypeClasses
+    NoImplicitPrelude
+    NoStarIsType
+    NumericUnderscores
+    OverloadedStrings
+    RankNTypes
     RecordWildCards
     ScopedTypeVariables
-    FlexibleInstances
-    NoImplicitPrelude
-    ExplicitNamespaces
-    OverloadedStrings
-    DeriveAnyClass
+    StandaloneDeriving
     TemplateHaskell
+    TypeApplications
     TypeFamilies
-    NoStarIsType
     TypeOperators
     UndecidableInstances
+    ViewPatterns
   ghc-options:
     -Wall
     -Wnoncanonical-monad-instances
@@ -91,13 +91,13 @@ library
     aeson                          ,
     base              >= 4.9 && < 5,
     bytestring                     ,
-    text                           ,
     cardano-api                    ,
     cborg                          ,
     parsec                         ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     symbolic-base                  ,
+    text                           ,
 
 test-suite test
   import:           lang
