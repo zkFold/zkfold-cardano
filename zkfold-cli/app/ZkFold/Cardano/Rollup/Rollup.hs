@@ -17,10 +17,6 @@ import           Prelude                                     (Bool (..), Either 
                                                               Maybe (..), Show (..), String, concatMap, error, fst,
                                                               length, map, putStr, putStrLn, read, show, unlines, zip,
                                                               ($), (++), (-), (.), (<$>))
-import qualified ZkFold.Cardano.Rollup.CardanoCli                           as Cli
-import           ZkFold.Cardano.Rollup.Data                                 (minReq, rmax, rollupFee, threadLovelace, updateLength)
-import           ZkFold.Cardano.Rollup.Example                              (datumHashBSEx1, datumHashEx1, evolve)
-import qualified ZkFold.Cardano.Rollup.ParseJson                            as J
 import           System.Directory                            (createDirectoryIfMissing)
 import           System.FilePath                             ((</>))
 import qualified System.IO                                   as IO
@@ -38,6 +34,10 @@ import           ZkFold.Cardano.OffChain.Utils               (byteStringAsHex, c
                                                               savePlutus)
 import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
+import qualified ZkFold.Cardano.Rollup.CardanoCli            as Cli
+import           ZkFold.Cardano.Rollup.Data                  (minReq, rmax, rollupFee, threadLovelace, updateLength)
+import           ZkFold.Cardano.Rollup.Example               (datumHashBSEx1, datumHashEx1, evolve)
+import qualified ZkFold.Cardano.Rollup.ParseJson             as J
 import           ZkFold.Cardano.UPLC.Common                  (nftPolicyCompiled, parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupInfo (..), RollupRedeemer (..), RollupSetup (..),
                                                               rollupCompiled)

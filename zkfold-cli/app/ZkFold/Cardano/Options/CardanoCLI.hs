@@ -1,11 +1,11 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE GADTs               #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module ZkFold.Cardano.Options.CardanoCLI where
 
-import Cardano.CLI.EraBased.Options.Common (pSigningKeyFileOut)
+import           Cardano.CLI.EraBased.Options.Common (pSigningKeyFileOut)
 
 -- paymentSigningKeyFromApi + pSigningKeyFileOut
 

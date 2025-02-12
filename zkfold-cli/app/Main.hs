@@ -1,18 +1,20 @@
 module Main where
 
+import           Control.Monad                                            (when)
+import           GeniusYield.GYConfig                                     (coreConfigIO)
+import           Prelude                                                  (Eq (..), IO, String, head, null, print, tail,
+                                                                           ($))
+import           System.Directory                                         (getCurrentDirectory)
+import           System.Environment                                       (getArgs)
+import           System.FilePath                                          (takeFileName)
+
 import           ZkFold.Cardano.Balancing.Balancing                       (balancingInit, balancingPlonkup)
-import           Control.Monad                             (when)
-import           GeniusYield.GYConfig                      (coreConfigIO)
 import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  (tokenBurning)
 import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     (tokenInit)
 import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  (tokenMinting)
 import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer (tokenTransfer)
 import           ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx       (txInit, txTransfer, txWithdraw)
-import           Prelude                                   (Eq (..), IO, String, head, null, print, tail, ($))
 import           ZkFold.Cardano.Rollup.Rollup                             (rollupClear, rollupInit, rollupUpdate)
-import           System.Directory                          (getCurrentDirectory)
-import           System.Environment                        (getArgs)
-import           System.FilePath                           (takeFileName)
 
 main :: IO ()
 main = do
