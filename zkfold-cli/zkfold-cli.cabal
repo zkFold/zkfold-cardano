@@ -79,7 +79,8 @@ executable zkfold-cli
     hs-source-dirs:   app
     other-modules:
         ZkFold.Cardano.Balancing.Balancing
-        ZkFold.Cardano.Options.Address
+        ZkFold.Cardano.Options.CardanoCLI
+        ZkFold.Cardano.Options.ZkCLI
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
@@ -96,6 +97,7 @@ executable zkfold-cli
         base              >= 4.9 && < 5,
         bytestring                     ,
         cardano-api                    ,
+        cardano-cli                    ,
         cborg                          ,
         containers                     ,
         directory                      ,
