@@ -25,19 +25,19 @@ benchmarks: true
 
 source-repository-package
   type: git
-  location: https://github.com/zkFold/zkfold-base.git
-  tag: b88eb34362be2381340d366f68b5a18593f8d631
+  location: https://github.com/zkFold/symbolic.git
+  tag: 81a74ccc4e586924e68a098dd66d62e60aa63b41
   subdir: symbolic-base
 
 index-state:
-  , hackage.haskell.org 2025-01-31T18:30:19Z
-  , cardano-haskell-packages 2025-01-30T23:36:17Z
+  , hackage.haskell.org 2025-02-20T12:11:59Z
+  , cardano-haskell-packages 2025-02-15T18:39:38Z
 
 source-repository-package
   type: git
   location: https://github.com/geniusyield/atlas
-  tag: v0.11.0
-  --sha256: sha256-aPpHuturhSPQrSnnzsPLpTF6xzg3dMpN0Y6s/Qr0lnw=
+  tag: v0.11.1
+  --sha256: sha256-leT3lll0Fms4fjPuRqUBSRqjl28ARI+vIs1Xn14VO98=
 
 test-show-details: direct
 
