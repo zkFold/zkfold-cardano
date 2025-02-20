@@ -8,7 +8,7 @@ import           PlutusTx.Prelude                                  (($), (.))
 import           Prelude                                           (fromIntegral)
 
 import           ZkFold.Base.Algebra.Basic.Number                  (KnownNat, value)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1, BLS12_381_G2)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1_Point, BLS12_381_G2_Point)
 import           ZkFold.Base.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                      (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Input                (PlonkupInput (..))
@@ -22,7 +22,7 @@ import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN p i n = Plonkup p i n Par1 BLS12_381_G1 BLS12_381_G2 BuiltinByteString
+type PlonkupN p i n = Plonkup p i n Par1 BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString
 
 mkSetup :: forall p i n . KnownNat n => SetupVerify (PlonkupN p i n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =

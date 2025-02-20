@@ -12,7 +12,7 @@ import           Prelude                                     (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (CompatibleNonInteractiveProofs (..), CoreFunction,
                                                               NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
@@ -186,7 +186,7 @@ instance
         , KnownNat n
         , Ord (Rep i)
         , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2
-        , CoreFunction BLS12_381_G1 core
+        , CoreFunction BLS12_381_G1_Point core
         ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus core where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput

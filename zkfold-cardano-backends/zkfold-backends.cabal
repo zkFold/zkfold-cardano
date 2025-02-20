@@ -284,7 +284,7 @@ executable smart-wallet-validator
   default-language: Haskell2010
   ghc-options:      -rtsopts
   main-is:          Main.hs
-  hs-source-dirs:   backends/symbolic/smart-wallet-validator
+  hs-source-dirs:   smart-wallet-validator
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
@@ -294,9 +294,13 @@ executable smart-wallet-validator
     directory                      ,
     filepath                       ,
     flat                           ,
+    optparse-applicative           ,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     plutus-tx-plugin        ^>=1.36,
     serialise                      ,
     text                           ,
-    zkfold-cardano
+    symbolic-base                  ,
+    symbolic-cardano               ,
+    zkfold-cardano                 ,
+    zkfold-cardano-scripts
