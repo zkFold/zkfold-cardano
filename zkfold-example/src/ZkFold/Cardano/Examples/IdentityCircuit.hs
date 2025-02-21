@@ -7,7 +7,7 @@ import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (zero)
 import           ZkFold.Base.Algebra.Basic.Field             (toZp)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
@@ -46,8 +46,12 @@ stateCheckVerificationBytes x ps state =
     let F n             = state
         state'          = toZp n :: Fr
         (omega, k1, k2) = getParams 2
+        (gs, h1) = getSecrectParams @2 @BLS12_381_G1_Point @BLS12_381_G2_Point x
         witnessInputs   = Par1 state'
+<<<<<<< HEAD
         (gs, h1)        = getSecrectParams x
+=======
+>>>>>>> 0f58e9d (Fixed errors; using mock zkLogin)
         plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN (U1 :*: U1) Par1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
