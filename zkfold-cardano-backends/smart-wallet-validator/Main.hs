@@ -90,56 +90,19 @@ main = do
 
     savePlutus (path </> "assets" </> "smartWallet.plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString userId) (fromString pubKeyHash))
 
-type NGates = 2^24
-
-type Inp = (((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
-                            :*: (((((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
-                                   :*: (((U1 :*: U1) :*: (U1 :*: U1))
-                                        :*: ((U1 :*: U1) :*: (U1 :*: U1))))
-                                  :*: (((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
-                                       :*: (((U1 :*: U1) :*: (U1 :*: U1))
-                                            :*: ((U1 :*: U1) :*: (U1 :*: U1)))))
-                                 :*: U1))
-                           :*: (U1
-                                :*: (U1 :*: (((U1 :*: U1) :*: (U1 :*: U1)) :*: (U1 :*: U1))))
-
-type Out = (((Par1 :*: Vector 72)
-                             :*: ((Par1 :*: Vector 320)
-                                  :*: (Par1 :*: Vector 32)))
-                            :*: (((((Par1 :*: Vector 256)
-                                    :*: ((Par1 :*: Vector 1024)
-                                         :*: (Par1 :*: Vector 1024)))
-                                   :*: (((Par1 :*: Vector 256)
-                                         :*: (Par1 :*: Vector 256))
-                                        :*: ((Par1 :*: Vector 512)
-                                             :*: (Par1 :*: Vector 40))))
-                                  :*: (((Par1 :*: Vector 256)
-                                        :*: ((Par1 :*: Vector 512)
-                                             :*: (Par1 :*: Vector 1024)))
-                                       :*: (((Par1 :*: Vector 256)
-                                             :*: (Par1 :*: Vector 256))
-                                            :*: ((Par1 :*: Vector 80)
-                                                 :*: (Par1
-                                                      :*: Vector 80)))))
-                                 :*: Vector 2048))
-                           :*: (Vector 64
-                                :*: (Vector 256
-                                     :*: (((Par1 :*: Vector 320)
-                                           :*: (Vector 1
-                                                :*: Vector 17))
-                                          :*: (Vector 256 :*: U1))))
+type NGates = 2^16
 
 zkLoginSetupBytes :: SetupBytes
 zkLoginSetupBytes = mkSetup setupV
     where
         x = zero -- TODO: just to test compilation
 
-        ac = C.compile @Fr zkLoginMock :: ArithmeticCircuit Fr Inp Out Par1
+        ac = C.compile @Fr zkLoginMock
 
         (omega, k1, k2) = getParams (Number.value @NGates)
         (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
-        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Inp Out NGates
-        setupV  = setupVerify @_ @HaskellCore plonkup
+        plonkup = Plonkup omega k1 k2 ac h1 gs -- :: PlonkupN Inp Out NGates
+        setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
 
 
 
