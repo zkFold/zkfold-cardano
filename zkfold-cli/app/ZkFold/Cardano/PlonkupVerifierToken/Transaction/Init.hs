@@ -3,7 +3,7 @@ module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init (Transaction(..), to
 import           Cardano.Api                              (AddressAny, TxIn)
 import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
 import           Cardano.CLI.Types.Common                 (WitnessSigningData)
-import           Data.Aeson                               (encode)
+import           Data.Aeson                               (encode, encodeFile)
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Either                              (Either (..))
 import           GeniusYield.GYConfig                     (GYCoreConfig (..), coreConfigIO, withCfgProviders)
@@ -17,8 +17,8 @@ import           GeniusYield.Types.Address                (addressFromApi)
 import           GeniusYield.Types.Key                    (signingKeyFromApi)
 import           GeniusYield.Types.Script                 (validatorFromPlutus)
 import           GeniusYield.Types.TxOutRef               (txOutRefFromApi)
-import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..), Show (..),
-                                                           toInteger, writeFile, ($), (<>))
+import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..),
+                                                           toInteger, ($), (<>))
 import           System.Directory                         (createDirectoryIfMissing)
 import           System.FilePath                          ((</>))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
@@ -66,7 +66,7 @@ sendScript nid providers skey changeAddr txIn sendTo validator outFile = do
         txBody <- buildTxBody skeleton
         signAndSubmitConfirmed txBody
 
-    writeFile outFile $ show txid
+    encodeFile outFile txid
 
 tokenInit :: Transaction -> IO ()
 tokenInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) = do

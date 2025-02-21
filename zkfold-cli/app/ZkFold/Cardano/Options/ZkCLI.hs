@@ -10,13 +10,15 @@ import qualified Options.Applicative                                      as Opt
 import           Prelude
 
 import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
-                                                                           pOutFile, pTxInOnly)
+                                                                           pOutFile, pTxInOnly, pTxIdFile)
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as Init
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as Transfer
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as Minting
 
 data ClientCommand
     = TransactionInit Init.Transaction
     | TransactionTransfer Transfer.Transaction
+    | TransactionMinting Minting.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
@@ -40,6 +42,7 @@ pCmds path = do
       catMaybes
         [ fmap TransactionInit <$> pTransactionInit path
         , fmap TransactionTransfer <$> pTransactionTransfer
+        , fmap TransactionMinting <$>  pTransactionMinting path
         ]
 
 pTransactionInit :: FilePath -> Maybe (Parser Init.Transaction)
@@ -65,6 +68,20 @@ pTransactionTransfer = do
           <*> pTxInOnly
           <*> pWitnessSigningData
           <*> pChangeAddress
+          <*> pOutFile
+
+pTransactionMinting :: FilePath -> Maybe (Parser Minting.Transaction)
+pTransactionMinting path = do
+    pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        Minting.Transaction path
+          <$> pGYCoreConfig
+          <*> pTxInOnly
+          <*> pWitnessSigningData
+          <*> pChangeAddress
+          <*> pOutAddress
+          <*> pTxIdFile
           <*> pOutFile
 
 data ClientCommandErrors
@@ -94,9 +111,9 @@ data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
-  TransactionInit cmd -> ExceptT (Right <$> Init.tokenInit cmd)
+  TransactionInit     cmd -> ExceptT (Right <$> Init.tokenInit         cmd)
   TransactionTransfer cmd -> ExceptT (Right <$> Transfer.tokenTransfer cmd)
-  _ -> undefined
+  TransactionMinting  cmd -> ExceptT (Right <$> Minting.tokenMinting   cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

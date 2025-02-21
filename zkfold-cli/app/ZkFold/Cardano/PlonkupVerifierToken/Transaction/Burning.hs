@@ -30,22 +30,22 @@ tokenNameFromApi = coerce
 
 -- | burining tokens to the reward.
 burnTokens ::
-  GYNetworkId ->
-  GYProviders ->
-  GYPaymentSigningKey ->
-  GYAddress ->
-  GYTxIn PlutusV3 ->
-  GYTxIn PlutusV3 ->
-  GYTxOutRef ->
-  GYAddress ->
-  GYScript 'PlutusV3 ->
-  GYScript 'PlutusV3 ->
-  GYTxId ->
-  GYTxId ->
-  BuiltinData ->
-  AssetName ->
-  BuiltinByteString ->
-  IO ()
+    GYNetworkId ->
+    GYProviders ->
+    GYPaymentSigningKey ->
+    GYAddress ->
+    GYTxIn PlutusV3 ->
+    GYTxIn PlutusV3 ->
+    GYTxOutRef ->
+    GYAddress ->
+    GYScript 'PlutusV3 ->
+    GYScript 'PlutusV3 ->
+    GYTxId ->
+    GYTxId ->
+    BuiltinData ->
+    AssetName ->
+    BuiltinByteString ->
+    IO ()
 burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr plonkupVerifierToken forwardingMint txidSetup txidForward redeemer' assetName datum = do
     pkh <- addressToPubKeyHashIO changeAddr
     let w1 = User' skey Nothing changeAddr

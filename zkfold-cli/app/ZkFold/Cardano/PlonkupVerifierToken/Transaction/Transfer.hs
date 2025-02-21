@@ -6,6 +6,7 @@ import           Cardano.CLI.Read                      (SomeSigningWitness (..),
 import           Cardano.CLI.Types.Common              (WitnessSigningData)
 import           Codec.CBOR.Write                      (toLazyByteString)
 import qualified Codec.Serialise                       as Codec
+import           Data.Aeson                            (encodeFile)
 import           GeniusYield.GYConfig                  (GYCoreConfig (..), coreConfigIO, withCfgProviders)
 import           GeniusYield.Transaction.Common        (minimumUTxO)
 import           GeniusYield.TxBuilder
@@ -17,7 +18,8 @@ import           GeniusYield.Types                     (GYAddress, GYNetworkId, 
                                                         signingKeyFromApi, txOutRefFromApi, validatorFromPlutus,
                                                         valueFromLovelace)
 import           PlutusTx.Builtins                     (BuiltinByteString)
-import           Prelude
+import           Prelude                               (Either (..), FilePath, IO, Maybe (..), toInteger,
+                                                        ($), (<>))
 
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 
@@ -59,7 +61,7 @@ sendDatum nid providers skey changeAddr txIn validator datum outFile = do
         txBody <- buildTxBody skeleton
         signAndSubmitConfirmed txBody
 
-    writeFile outFile $ show txid
+    encodeFile outFile txid
 
 tokenTransfer :: Transaction -> IO ()
 tokenTransfer (Transaction pathCfg txIn sig changeAddr outFile) = do
