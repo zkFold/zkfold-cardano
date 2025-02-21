@@ -1,4 +1,4 @@
-module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init where
+module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init (Transaction(..), tokenInit) where
 
 import           Cardano.Api                              (AddressAny, TxIn)
 import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
@@ -17,8 +17,8 @@ import           GeniusYield.Types.Address                (addressFromApi)
 import           GeniusYield.Types.Key                    (signingKeyFromApi)
 import           GeniusYield.Types.Script                 (validatorFromPlutus)
 import           GeniusYield.Types.TxOutRef               (txOutRefFromApi)
-import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..), Show (..), String,
-                                                           error, print, toInteger, ($), (++), (<$>), (<>))
+import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..), Show (..),
+                                                           toInteger, writeFile, ($), (<>))
 import           System.Directory                         (createDirectoryIfMissing)
 import           System.FilePath                          ((</>))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
@@ -28,7 +28,7 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
-data TransactionInit = TransactionInit
+data Transaction = Transaction
     { curPath         :: !FilePath
     , pathCoreCfg     :: !FilePath
     , txIn            :: !TxIn
@@ -38,25 +38,18 @@ data TransactionInit = TransactionInit
     , outFile         :: !FilePath
     }
 
-type ScriptName = String
-
-fromRight' :: Either l r -> r
-fromRight' (Right x) = x
-fromRight' _         = error "fromRight', given a Left"
-
 -- | Sending a compiled script to the network.
 sendScript ::
-  GYNetworkId ->
-  GYProviders ->
-  GYPaymentSigningKey ->
-  GYAddress ->
-  GYTxIn PlutusV3 ->
-  GYAddress ->
-  GYScript 'PlutusV3 ->
-  ScriptName ->
-  FilePath ->
-  IO ()
-sendScript nid providers skey changeAddr txIn sendTo validator name _outFile = do
+    GYNetworkId ->
+    GYProviders ->
+    GYPaymentSigningKey ->
+    GYAddress ->
+    GYTxIn PlutusV3 ->
+    GYAddress ->
+    GYScript 'PlutusV3 ->
+    FilePath ->
+    IO ()
+sendScript nid providers skey changeAddr txIn sendTo validator outFile = do
     pkh <- addressToPubKeyHashIO changeAddr
     let w1 = User' skey Nothing changeAddr
         validator' = Just $ GYPlutusScript validator
@@ -73,10 +66,10 @@ sendScript nid providers skey changeAddr txIn sendTo validator name _outFile = d
         txBody <- buildTxBody skeleton
         signAndSubmitConfirmed txBody
 
-    print $ name ++ " transaction id: " ++ show txid
+    writeFile outFile $ show txid
 
-tokenInit :: TransactionInit -> IO ()
-tokenInit (TransactionInit path pathCfg txIn sig changeAddr outAddress outFile) = do
+tokenInit :: Transaction -> IO ()
+tokenInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) = do
     x           <- generate arbitrary
     ps          <- generate arbitrary
     targetValue <- generate arbitrary
@@ -95,16 +88,16 @@ tokenInit (TransactionInit path pathCfg txIn sig changeAddr outAddress outFile) 
 
     coreCfg <- coreConfigIO pathCfg
 
-    (APaymentSigningWitness sks) <- fromRight' <$> readWitnessSigningData sig
+    (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
-    let nid         = cfgNetworkId coreCfg
-        skey        = signingKeyFromApi sks
-        changeAddr' = addressFromApi changeAddr
-        txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo      = addressFromApi outAddress
-        plonkupVerifierToken = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
-        forwardingMint       = validatorFromPlutus $ forwardingMintCompiled fmLabel
+    let nid            = cfgNetworkId coreCfg
+        skey           = signingKeyFromApi sks
+        changeAddr'    = addressFromApi changeAddr
+        txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
+        sendTo         = addressFromApi outAddress
+        plonkupToken   = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
+        forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
 
     withCfgProviders coreCfg "main" $ \providers -> do
-      sendScript nid providers skey changeAddr' txIn' sendTo plonkupVerifierToken "plonkupVerifierToken" outFile
-      sendScript nid providers skey changeAddr' txIn' sendTo forwardingMint "forwardingMint" outFile
+        sendScript nid providers skey changeAddr' txIn' sendTo plonkupToken outFile
+        sendScript nid providers skey changeAddr' txIn' sendTo forwardingMint outFile

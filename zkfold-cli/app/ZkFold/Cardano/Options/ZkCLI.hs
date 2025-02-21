@@ -1,20 +1,22 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
-import           Cardano.Api                                          (Doc, ExceptT (..))
-import           Cardano.CLI.EraBased.Options.Common                  (pWitnessSigningData, subInfoParser)
-import           Cardano.CLI.Parser                                   (subParser)
-import           Data.Maybe                                           (catMaybes)
-import           Options.Applicative                                  (Parser, ParserInfo, ParserPrefs, asum, (<**>))
-import qualified Options.Applicative                                  as Opt
+import           Cardano.Api                                              (Doc, ExceptT (..))
+import           Cardano.CLI.EraBased.Options.Common                      (pWitnessSigningData)
+import           Cardano.CLI.Parser                                       (subParser)
+import           Data.Maybe                                               (catMaybes)
+import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
+                                                                           (<**>))
+import qualified Options.Applicative                                      as Opt
 import           Prelude
 
-import           ZkFold.Cardano.Options.CardanoCLI                    (pChangeAddress, pGYCoreConfig, pOutAddress,
-                                                                       pOutFile, pTxInOnly)
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init as Init
+import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
+                                                                           pOutFile, pTxInOnly)
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as Init
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as Transfer
 
 data ClientCommand
-  = TransactionCmds Init.TransactionInit
-  | TransactionCmds2 Init.TransactionInit
+    = TransactionInit Init.Transaction
+    | TransactionTransfer Transfer.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
@@ -36,29 +38,33 @@ pCmds :: FilePath -> Parser ClientCommand
 pCmds path = do
     asum $
       catMaybes
-        [ fmap TransactionCmds <$> pTransactionCmds path
+        [ fmap TransactionInit <$> pTransactionInit path
+        , fmap TransactionTransfer <$> pTransactionTransfer
         ]
 
-pTransactionCmds
-  :: FilePath
-  -> Maybe (Parser Init.TransactionInit)
-pTransactionCmds path =
-    subInfoParser
-      "transaction"
-      ( Opt.progDesc $ mconcat [ "Transaction commands." ] )
-      [ pTransactionInit path ]
-
-pTransactionInit :: FilePath -> Maybe (Parser Init.TransactionInit)
+pTransactionInit :: FilePath -> Maybe (Parser Init.Transaction)
 pTransactionInit path = do
     pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        Init.TransactionInit path
+        Init.Transaction path
           <$> pGYCoreConfig
           <*> pTxInOnly
           <*> pWitnessSigningData
           <*> pChangeAddress
           <*> pOutAddress
+          <*> pOutFile
+
+pTransactionTransfer :: Maybe (Parser Transfer.Transaction)
+pTransactionTransfer = do
+    pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        Transfer.Transaction
+          <$> pGYCoreConfig
+          <*> pTxInOnly
+          <*> pWitnessSigningData
+          <*> pChangeAddress
           <*> pOutFile
 
 data ClientCommandErrors
@@ -88,7 +94,8 @@ data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
-  TransactionCmds cmd -> ExceptT (Right <$> Init.tokenInit cmd)
+  TransactionInit cmd -> ExceptT (Right <$> Init.tokenInit cmd)
+  TransactionTransfer cmd -> ExceptT (Right <$> Transfer.tokenTransfer cmd)
   _ -> undefined
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
