@@ -20,21 +20,26 @@ import           System.Directory                            (createDirectoryIfM
 import           System.Environment                          (getArgs)
 import           System.FilePath                             (takeFileName, (</>))
 
-import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
+import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..), zero)
+import qualified ZkFold.Base.Algebra.Basic.Number            as Number
+import           ZkFold.Base.Algebra.Basic.Number            (Natural, type (^))
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (CyclicGroup (..))
+import           ZkFold.Base.Data.Vector                     (Vector)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
-import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
+import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes, SetupBytes)
 import           ZkFold.Cardano.UPLC.Wallet                  (WalletSetup (..), untypedWallet)
 import           ZkFold.Symbolic.Algorithms.RSA
-import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (zkLogin)
+import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (zkLogin, zkLoginMock)
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
+import qualified ZkFold.Symbolic.Compiler                    as C
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..))
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement           (FieldElement)
@@ -47,9 +52,9 @@ data UserData =
         { tokenHeader  :: String
         , tokenPayload :: String
         , signature    :: String
+        , certificate  :: String
         , amount       :: Natural
         , recipient    :: String
-        , certificate  :: String
         , pi           :: String
         , userId       :: String
         , pubKeyHash   :: String
@@ -83,22 +88,64 @@ main = do
 
     UserData{..} <- execParser opts
 
-    pure ()
+    savePlutus (path </> "assets" </> "smartWallet.plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString userId) (fromString pubKeyHash))
+
+type NGates = 2^24
+
+type Inp = (((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
+                            :*: (((((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
+                                   :*: (((U1 :*: U1) :*: (U1 :*: U1))
+                                        :*: ((U1 :*: U1) :*: (U1 :*: U1))))
+                                  :*: (((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
+                                       :*: (((U1 :*: U1) :*: (U1 :*: U1))
+                                            :*: ((U1 :*: U1) :*: (U1 :*: U1)))))
+                                 :*: U1))
+                           :*: (U1
+                                :*: (U1 :*: (((U1 :*: U1) :*: (U1 :*: U1)) :*: (U1 :*: U1))))
+
+type Out = (((Par1 :*: Vector 72)
+                             :*: ((Par1 :*: Vector 320)
+                                  :*: (Par1 :*: Vector 32)))
+                            :*: (((((Par1 :*: Vector 256)
+                                    :*: ((Par1 :*: Vector 1024)
+                                         :*: (Par1 :*: Vector 1024)))
+                                   :*: (((Par1 :*: Vector 256)
+                                         :*: (Par1 :*: Vector 256))
+                                        :*: ((Par1 :*: Vector 512)
+                                             :*: (Par1 :*: Vector 40))))
+                                  :*: (((Par1 :*: Vector 256)
+                                        :*: ((Par1 :*: Vector 512)
+                                             :*: (Par1 :*: Vector 1024)))
+                                       :*: (((Par1 :*: Vector 256)
+                                             :*: (Par1 :*: Vector 256))
+                                            :*: ((Par1 :*: Vector 80)
+                                                 :*: (Par1
+                                                      :*: Vector 80)))))
+                                 :*: Vector 2048))
+                           :*: (Vector 64
+                                :*: (Vector 256
+                                     :*: (((Par1 :*: Vector 320)
+                                           :*: (Vector 1
+                                                :*: Vector 17))
+                                          :*: (Vector 256 :*: U1))))
 
 zkLoginSetupBytes :: SetupBytes
 zkLoginSetupBytes = mkSetup setupV
     where
-        ac = compile @Fr (zkLogin @Fr @(ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1))) :: ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1) Par1
+        x = zero -- TODO: just to test compilation
 
-        (omega, k1, k2) = getParams (2 ^ 24)
-        plonkup = Plonkup omega k1 k2 ac x :: PlonkupN (U1 :*: U1) (Par1 :*: U1) 32
+        ac = C.compile @Fr zkLoginMock :: ArithmeticCircuit Fr Inp Out Par1
+
+        (omega, k1, k2) = getParams (Number.value @NGates)
+        (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
+        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Inp Out NGates
         setupV  = setupVerify @_ @HaskellCore plonkup
 
 
 
 validator :: SetupBytes -> WalletSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 validator zkp ws =
-    $$(compile [|| untypedWallet ||])
+    $$(PlutusTx.compile [|| untypedWallet ||])
     `unsafeApplyCode` liftCodeDef zkp
     `unsafeApplyCode` liftCodeDef ws
 

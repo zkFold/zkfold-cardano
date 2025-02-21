@@ -7,11 +7,11 @@ import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (zero)
 import           ZkFold.Base.Algebra.Basic.Field             (toZp)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
-import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams)
+import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.BLS12_381.F          (F (..))
@@ -32,7 +32,8 @@ identityCircuitVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point
 identityCircuitVerificationBytes x ps =
     let (omega, k1, k2) = getParams 2
         witnessInputs   = eval identityCircuit (U1 :*: U1) $ Par1 zero
-        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN (U1 :*: U1) Par1 2
+        (gs, h1)        = getSecrectParams @2 @BLS12_381_G1_Point @BLS12_381_G2_Point x
+        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN (U1 :*: U1) Par1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
         witness         = (PlonkupWitnessInput @_ @_ @BLS12_381_G1_Point (U1 :*: U1) witnessInputs, ps)
@@ -45,8 +46,9 @@ stateCheckVerificationBytes x ps state =
     let F n             = state
         state'          = toZp n :: Fr
         (omega, k1, k2) = getParams 2
+        (gs, h1) = getSecrectParams @2 @BLS12_381_G1_Point @BLS12_381_G2_Point x
         witnessInputs   = Par1 state'
-        plonkup         = Plonkup omega k1 k2 identityCircuit x :: PlonkupN (U1 :*: U1) Par1 2
+        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN (U1 :*: U1) Par1 2
         setupP          = setupProve @_ @HaskellCore plonkup
         setupV          = setupVerify @_ @HaskellCore plonkup
         witness         = (PlonkupWitnessInput (U1 :*: U1) witnessInputs, ps)
