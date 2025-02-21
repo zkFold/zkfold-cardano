@@ -1,123 +1,95 @@
-
 module ZkFold.Cardano.Options.ZkCLI where
 
-{-
-main :: IO ()
-main = toplevelExceptionHandler $ do
-  Crypto.cryptoInit
+import           Cardano.Api                                          (Doc, ExceptT (..))
+import           Cardano.CLI.EraBased.Options.Common                  (pWitnessSigningData, subInfoParser)
+import           Cardano.CLI.Parser                                   (subParser)
+import           Data.Maybe                                           (catMaybes)
+import           Options.Applicative                                  (Parser, ParserInfo, ParserPrefs, asum, (<**>))
+import qualified Options.Applicative                                  as Opt
+import           Prelude
 
-  envCli <- getEnvCli
+import           ZkFold.Cardano.Options.CardanoCLI                    (pChangeAddress, pGYCoreConfig, pOutAddress,
+                                                                       pOutFile, pTxInOnly)
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init as Init
 
-  GHC.mkTextEncoding "UTF-8" >>= GHC.setLocaleEncoding
-#ifdef UNIX
-  _ <- setFileCreationMask (otherModes `unionFileModes` groupModes)
-#endif
-  co <- Opt.customExecParser pref (opts envCli)
+data ClientCommand
+  = TransactionCmds Init.TransactionInit
+  | TransactionCmds2 Init.TransactionInit
 
-  orDie (docToText . renderClientCommandError) $ runClientCommand co
--}
-
-{-
-opts :: EnvCli -> ParserInfo ClientCommand
-opts envCli =
-  Opt.info (parseClientCommand envCli <**> Opt.helper) $
-    mconcat
-      [ Opt.fullDesc
-      , Opt.header $
-          mconcat
-            [ "cardano-cli - General purpose command-line utility to interact with cardano-node."
-            , " Provides specific commands to manage keys, addresses, build & submit transactions,"
-            , " certificates, etc."
-            ]
-      ]
+opts :: FilePath -> ParserInfo ClientCommand
+opts path =
+    Opt.info (pCmds path <**> Opt.helper) $
+      mconcat
+        [ Opt.fullDesc
+        , Opt.header $
+            mconcat
+              [ "zkfold-cli - Command-line utility to interact with cardano-node."
+              , " Provides specific commands to manage keys, addresses, build & submit transactions,"
+              , " certificates, etc."
+              ]
+        ]
 
 pref :: ParserPrefs
-pref =
-  Opt.prefs $
-    mconcat
-      [ showHelpOnEmpty
-      , helpEmbedBriefDesc PP.align
-      , helpRenderHelp customRenderHelp
-      ]
--}
+pref = Opt.prefs $ mconcat [] -- no help
 
+pCmds :: FilePath -> Parser ClientCommand
+pCmds path = do
+    asum $
+      catMaybes
+        [ fmap TransactionCmds <$> pTransactionCmds path
+        ]
+
+pTransactionCmds
+  :: FilePath
+  -> Maybe (Parser Init.TransactionInit)
+pTransactionCmds path =
+    subInfoParser
+      "transaction"
+      ( Opt.progDesc $ mconcat [ "Transaction commands." ] )
+      [ pTransactionInit path ]
+
+pTransactionInit :: FilePath -> Maybe (Parser Init.TransactionInit)
+pTransactionInit path = do
+    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        Init.TransactionInit path
+          <$> pGYCoreConfig
+          <*> pTxInOnly
+          <*> pWitnessSigningData
+          <*> pChangeAddress
+          <*> pOutAddress
+          <*> pOutFile
+
+data ClientCommandErrors
 
 {-
-pCmds :: ShelleyBasedEra era -> EnvCli -> Parser (Cmds era)
-pCmds era envCli = do
-  asum $
-    catMaybes
-      [ Just (AddressCmds <$> pAddressCmds envCli)
-      , Just (KeyCmds <$> pKeyCmds)
-      , fmap GenesisCmds <$> pGenesisCmds era envCli
-      , fmap GovernanceCmds <$> pGovernanceCmds era
-      , Just (NodeCmds <$> pNodeCmds)
-      , fmap QueryCmds <$> pQueryCmds era envCli
-      , fmap StakeAddressCmds <$> pStakeAddressCmds era envCli
-      , fmap StakePoolCmds <$> pStakePoolCmds era envCli
-      , fmap TextViewCmds <$> pTextViewCmds
-      , fmap TransactionCmds <$> pTransactionCmds era envCli
-      ]
--}
-
-{-
-pTransactionBuildCmd
-  :: ShelleyBasedEra era -> EnvCli -> Maybe (Parser (TransactionCmds era))
-pTransactionBuildCmd sbe envCli = do
-  era' <- forEraMaybeEon (toCardanoEra sbe)
-  pure $
-    subParser "build" $
-      Opt.info (pCmd era') $
-        Opt.progDescDoc $
-          Just $
-            mconcat
-              [ pretty @String "Build a balanced transaction (automatically calculates fees)"
-              , line
-              , line
-              , H.yellow $
-                  mconcat
-                    [ "Please note "
-                    , H.underline "the order"
-                    , " of some cmd options is crucial. If used incorrectly may produce "
-                    , "undesired tx body. See nested [] notation above for details."
-                    ]
-              ]
- where
-  pCmd era' = do
-    fmap TransactionBuildCmd $
-      TransactionBuildCmdArgs era'
-        <$> ( LocalNodeConnectInfo
-                <$> pConsensusModeParams
-                <*> pNetworkId envCli
-                <*> pSocketPath envCli
-            )
-        <*> optional pScriptValidity
-        <*> optional pWitnessOverride
-        <*> some (pTxIn sbe AutoBalance)
-        <*> many pReadOnlyReferenceTxIn
-        <*> many pRequiredSigner
-        <*> many pTxInCollateral
-        <*> optional pReturnCollateral
-        <*> optional pTotalCollateral
-        <*> many pTxOut
-        <*> pChangeAddress
-        <*> optional (pMintMultiAsset sbe AutoBalance)
-        <*> optional pInvalidBefore
-        <*> pInvalidHereafter sbe
-        <*> many (pCertificateFile AutoBalance)
-        <*> many (pWithdrawal AutoBalance)
-        <*> pTxMetadataJsonSchema
-        <*> many
-          ( pScriptFor
-              "auxiliary-script-file"
-              Nothing
-              "Filepath of auxiliary script(s)"
-          )
-        <*> many pMetadataFile
-        <*> pFeatured (toCardanoEra sbe) (optional pUpdateProposalFile)
-        <*> pVoteFiles sbe AutoBalance
-        <*> pProposalFiles sbe AutoBalance
-        <*> pTreasuryDonation sbe
-        <*> pTxBuildOutputOptions
+  case (name, command) of
+    --
+    ("balancing", "init")    -> balancingInit path
+    ("balancing", "plonkup") -> balancingPlonkup path
+    --
+    ("token", "init")        -> tokenInit path
+    ("token", "transfer")    -> tokenTransfer
+    ("token", "minting")     -> tokenMinting path
+    ("token", "burning")     -> tokenBurning path
+    --
+    ("tx", "init")           -> txInit path
+    ("tx", "transfer")       -> txTransfer path args
+    ("tx", "withdraw")       -> txWithdraw path
+    --
+    ("rollup", "clear")      -> rollupClear path
+    ("rollup", "init")       -> rollupInit path args
+    ("rollup", "update")     -> rollupUpdate path
+    --
+    _                        -> print @String "why?"
 
 -}
+
+runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
+runClientCommand = \case
+  TransactionCmds cmd -> ExceptT (Right <$> Init.tokenInit cmd)
+  _ -> undefined
+
+renderClientCommandError :: ClientCommandErrors -> Doc ann
+renderClientCommandError = undefined
