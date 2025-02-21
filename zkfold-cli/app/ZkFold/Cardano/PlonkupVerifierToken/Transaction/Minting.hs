@@ -1,7 +1,6 @@
 module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting (tokenMinting, Transaction(..)) where
 
 import           Cardano.Api                              (AddressAny, AssetName (..), TxIn)
-import qualified Cardano.Api                              as Api
 import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
 import           Cardano.CLI.Types.Common                 (WitnessSigningData)
 import           Data.Aeson                               (decode, decodeFileStrict, encodeFile)
@@ -30,13 +29,9 @@ data Transaction = Transaction
     , requiredSigners :: !WitnessSigningData
     , changeAddresses :: !AddressAny
     , outAddress      :: !AddressAny
-    , txIdFile        :: !FilePath
+    , txidSetupFile   :: !FilePath
     , outFile         :: !FilePath
     }
-
-
-tokenNameFromApi :: Api.AssetName -> GYTokenName
-tokenNameFromApi = coerce
 
 -- | Sending a tokens script to the address.
 sendMintTokens ::
@@ -57,7 +52,7 @@ sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup red
     let w1 = User' skey Nothing changeAddr
         txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
         redeemer = redeemerFromPlutus' redeemer'
-        tokenName = tokenNameFromApi assetName
+        tokenName = coerce assetName
         refScript = GYMintReference @PlutusV3 txOutRefSetup $ validatorToScript validator
         tokens = valueMake $ Map.singleton (GYToken (mintingPolicyId validator) tokenName) 1
         outMin = GYTxOut sendTo tokens Nothing Nothing
@@ -78,26 +73,27 @@ sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup red
     encodeFile outFile txid
 
 tokenMinting :: Transaction -> IO ()
-tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txIdFile outFile) = do
+tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txidSetupFile outFile) = do
     let testData = path </> "test-data"
 
     EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
         assetName = AssetName $ fromBuiltin $ F.fromInput input
-        redeemer = toBuiltinData proof
+        redeemer  = toBuiltinData proof
 
     coreCfg <- coreConfigIO pathCfg
 
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
-    (Just txId) <- decodeFileStrict txIdFile
+    (Just txId) <- decodeFileStrict txidSetupFile
 
     let nid            = cfgNetworkId coreCfg
         skey           = signingKeyFromApi sks
         changeAddr'    = addressFromApi changeAddr
         txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
         sendTo         = addressFromApi outAddress
+
         plonkupVerifierToken = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
 
     withCfgProviders coreCfg "main" $ \providers -> do

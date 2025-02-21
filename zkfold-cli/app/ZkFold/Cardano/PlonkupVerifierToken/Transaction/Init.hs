@@ -95,6 +95,7 @@ tokenInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) = do
         changeAddr'    = addressFromApi changeAddr
         txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
         sendTo         = addressFromApi outAddress
+        
         plonkupToken   = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
         forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
 

@@ -14,24 +14,26 @@ import           ZkFold.Cardano.Options.CardanoCLI                        (pChan
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as Init
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as Transfer
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as Minting
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as Burning
 
 data ClientCommand
     = TransactionInit Init.Transaction
     | TransactionTransfer Transfer.Transaction
     | TransactionMinting Minting.Transaction
+    | TransactionBurning Burning.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
     Opt.info (pCmds path <**> Opt.helper) $
-      mconcat
-        [ Opt.fullDesc
-        , Opt.header $
-            mconcat
-              [ "zkfold-cli - Command-line utility to interact with cardano-node."
-              , " Provides specific commands to manage keys, addresses, build & submit transactions,"
-              , " certificates, etc."
-              ]
-        ]
+        mconcat
+            [ Opt.fullDesc
+            , Opt.header $
+                mconcat
+                  [ "zkfold-cli - Command-line utility to interact with cardano-node."
+                  , " Provides specific commands to manage keys, addresses, build & submit transactions,"
+                  , " certificates, etc."
+                  ]
+            ]
 
 pref :: ParserPrefs
 pref = Opt.prefs $ mconcat [] -- no help
@@ -39,11 +41,12 @@ pref = Opt.prefs $ mconcat [] -- no help
 pCmds :: FilePath -> Parser ClientCommand
 pCmds path = do
     asum $
-      catMaybes
-        [ fmap TransactionInit <$> pTransactionInit path
-        , fmap TransactionTransfer <$> pTransactionTransfer
-        , fmap TransactionMinting <$>  pTransactionMinting path
-        ]
+        catMaybes
+            [ fmap TransactionInit     <$> pTransactionInit path
+            , fmap TransactionTransfer <$> pTransactionTransfer
+            , fmap TransactionMinting  <$> pTransactionMinting path
+            , fmap TransactionBurning  <$> pTransactionBurning path
+            ]
 
 pTransactionInit :: FilePath -> Maybe (Parser Init.Transaction)
 pTransactionInit path = do
@@ -51,12 +54,12 @@ pTransactionInit path = do
   where
     pCmd = do
         Init.Transaction path
-          <$> pGYCoreConfig
-          <*> pTxInOnly
-          <*> pWitnessSigningData
-          <*> pChangeAddress
-          <*> pOutAddress
-          <*> pOutFile
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutAddress
+            <*> pOutFile
 
 pTransactionTransfer :: Maybe (Parser Transfer.Transaction)
 pTransactionTransfer = do
@@ -64,25 +67,41 @@ pTransactionTransfer = do
   where
     pCmd = do
         Transfer.Transaction
-          <$> pGYCoreConfig
-          <*> pTxInOnly
-          <*> pWitnessSigningData
-          <*> pChangeAddress
-          <*> pOutFile
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutFile
 
 pTransactionMinting :: FilePath -> Maybe (Parser Minting.Transaction)
 pTransactionMinting path = do
-    pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         Minting.Transaction path
-          <$> pGYCoreConfig
-          <*> pTxInOnly
-          <*> pWitnessSigningData
-          <*> pChangeAddress
-          <*> pOutAddress
-          <*> pTxIdFile
-          <*> pOutFile
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutAddress
+            <*> pTxIdFile
+            <*> pOutFile
+
+pTransactionBurning :: FilePath -> Maybe (Parser Burning.Transaction)
+pTransactionBurning path = do
+    pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        Burning.Transaction path
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pTxInOnly
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutAddress
+            <*> pTxIdFile
+            <*> pTxIdFile
 
 data ClientCommandErrors
 
@@ -111,9 +130,10 @@ data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
-  TransactionInit     cmd -> ExceptT (Right <$> Init.tokenInit         cmd)
-  TransactionTransfer cmd -> ExceptT (Right <$> Transfer.tokenTransfer cmd)
-  TransactionMinting  cmd -> ExceptT (Right <$> Minting.tokenMinting   cmd)
+    TransactionInit     cmd -> ExceptT (Right <$> Init.tokenInit         cmd)
+    TransactionTransfer cmd -> ExceptT (Right <$> Transfer.tokenTransfer cmd)
+    TransactionMinting  cmd -> ExceptT (Right <$> Minting.tokenMinting   cmd)
+    TransactionBurning  cmd -> ExceptT (Right <$> Burning.tokenBurning   cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

@@ -74,10 +74,11 @@ tokenTransfer (Transaction pathCfg txIn sig changeAddr outFile) = do
         changeAddr'    = addressFromApi changeAddr
         txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
         fmLabel        = 0
+
         forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
         policyid       = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
 
     let datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
 
     withCfgProviders coreCfg "main" $ \providers -> do
-      sendDatum nid providers skey changeAddr' txIn' forwardingMint datum outFile
+        sendDatum nid providers skey changeAddr' txIn' forwardingMint datum outFile
