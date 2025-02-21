@@ -36,6 +36,7 @@ equalityCheckVerificationBytes x ps targetValue =
     let ac = compile @Fr (equalityCheckContract @Fr @(ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1)) targetValue) :: ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1) Par1
 
         (omega, k1, k2) = getParams 32
+        (gs, h1) = getSecrectParams @32 x
         witnessInputs   = Par1 targetValue :*: U1
         (gs, h1) = getSecrectParams x
         plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN (U1 :*: U1) (Par1 :*: U1) 32
