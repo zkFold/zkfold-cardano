@@ -1,55 +1,28 @@
 module Main where
 
-import           Control.Monad                                            (when)
-import           GeniusYield.GYConfig                                     (coreConfigIO)
-import           Prelude                                                  (Eq (..), IO, String, head, null, print, tail,
-                                                                           ($))
-import           System.Directory                                         (getCurrentDirectory)
-import           System.Environment                                       (getArgs)
-import           System.FilePath                                          (takeFileName)
+import           Cardano.Api                     (docToText)
+import           Cardano.CLI.TopHandler          (toplevelExceptionHandler)
+import qualified Cardano.Crypto.Init             as Crypto
+import           Control.Monad.Trans.Except.Exit (orDie)
+import qualified GHC.IO.Encoding                 as GHC
+import qualified Options.Applicative             as Opt
+import           Prelude                         (IO, Monad (..), ($), (.))
+import           System.Directory                (getCurrentDirectory)
+import           System.FilePath                 (takeFileName)
 
-import           ZkFold.Cardano.Balancing.Balancing                       (balancingInit, balancingPlonkup)
-import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  (tokenBurning)
-import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     (tokenInit)
-import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  (tokenMinting)
-import           ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer (tokenTransfer)
-import           ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx       (txInit, txTransfer, txWithdraw)
-import           ZkFold.Cardano.Rollup.Rollup                             (rollupClear, rollupInit, rollupUpdate)
+import           ZkFold.Cardano.Options.ZkCLI    (opts, pref, renderClientCommandError, runClientCommand)
 
 main :: IO ()
-main = do
+main = toplevelExceptionHandler $ do
+  Crypto.cryptoInit
+
+  GHC.mkTextEncoding "UTF-8" >>= GHC.setLocaleEncoding
+
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
           "e2e-test" -> ".."
           _          -> "."
-  --
-  (coreCfgPath : name : argsHelp) <- getArgs
-  --
-  coreCfg <- coreConfigIO coreCfgPath
 
-  when (name == "help") $ print @String "help"
+  co <- Opt.customExecParser pref (opts path)
 
-  when (null argsHelp) $ print @String "command?"
-
-  let command = head argsHelp
-      args    = tail argsHelp
-
-  case (name, command) of
-    --
-    ("balancing", "init")    -> balancingInit path
-    ("balancing", "plonkup") -> balancingPlonkup path
-    --
-    ("token", "init")        -> tokenInit path
-    ("token", "transfer")    -> tokenTransfer
-    ("token", "minting")     -> tokenMinting path
-    ("token", "burning")     -> tokenBurning path
-    --
-    ("tx", "init")           -> txInit path
-    ("tx", "transfer")       -> txTransfer path args
-    ("tx", "withdraw")       -> txWithdraw path
-    --
-    ("rollup", "clear")      -> rollupClear path
-    ("rollup", "init")       -> rollupInit path args
-    ("rollup", "update")     -> rollupUpdate path
-    --
-    _                        -> print @String "why?"
+  orDie (docToText . renderClientCommandError) $ runClientCommand co
