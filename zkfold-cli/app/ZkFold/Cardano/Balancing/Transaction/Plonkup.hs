@@ -1,60 +1,29 @@
-module ZkFold.Cardano.Balancing.Balancing where
+module ZkFold.Cardano.Balancing.Transaction.Plonkup where
 
 import           Cardano.Api                             (prettyPrintJSON)
-import           Data.Aeson                              (decode, encode)
+import           Data.Aeson                              (decode)
 import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
 import           Data.Maybe                              (fromJust)
-import           Data.String                             (fromString)
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
-import           PlutusLedgerApi.V3                      (BuiltinData, Data (..), Datum (..), Extended (..),
+import           PlutusLedgerApi.V3                      (BuiltinData, Extended (..),
                                                           Interval (..), Lovelace (..), LowerBound (..),
                                                           OutputDatum (..), POSIXTime, ToData (..), TxInInfo (..),
-                                                          TxOut (..), UpperBound (..), dataToBuiltinData)
+                                                          TxOut (..), UpperBound (..))
 import qualified PlutusTx.Builtins.Internal              as BI
 import           PlutusTx.Prelude                        (blake2b_224, sortBy)
 import           Prelude                                 (Bool (..), Either (..), FilePath, IO, Maybe (..), Show (..),
                                                           concat, error, putStr, readFile, return, sequenceA, ($), (++),
                                                           (.), (<$>))
-import           System.Directory                        (createDirectoryIfMissing)
 import           System.FilePath                         ((</>))
-import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
-import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, dataToJSON, outRefCompare, parseAddress,
-                                                          parseJsonToTxInInfoList, savePlutus)
+import           ZkFold.Cardano.OffChain.Utils           (dataToJSON, outRefCompare, parseAddress,
+                                                          parseJsonToTxInInfoList)
 import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
-
-someDatum :: Datum
-someDatum = Datum . dataToBuiltinData $ Constr 0 [B $ fromString "deadbeef"]
-
-balancingInit :: FilePath -> IO ()
-balancingInit path = do
-    let testData = path </> "test-data"
-        assets   = path </> "assets"
-
-    createDirectoryIfMissing True testData
-    createDirectoryIfMissing True assets
-
-    x           <- generate arbitrary
-    ps          <- generate arbitrary
-
-    let contract = IdentityCircuitContract x ps
-
-    BL.writeFile (testData </> "plonkupVerifierTx-contract-data.json") $ encode contract
-
-    let (setup, _, _) = identityCircuitVerificationBytes x ps
-
-    savePlutus (assets </> "plonkupVerifierTx.plutus") $ plonkupVerifierTxCompiled setup
-    savePlutus (assets </> "parkingSpot.plutus") $ parkingSpotCompiled 54
-
-    BS.writeFile (assets </> "unit.cbor") $ dataToCBOR ()
-    BS.writeFile (assets </> "someDatum.cbor") $ dataToCBOR someDatum
-
 
 balancingPlonkup :: FilePath -> IO ()
 balancingPlonkup path = do
@@ -122,5 +91,6 @@ mkTuple4 a b c d =
         BI.mkCons c $
           BI.mkCons d $
             BI.mkNilData BI.unitval
+
 
 

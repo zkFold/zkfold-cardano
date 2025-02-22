@@ -44,7 +44,6 @@ sendDatum ::
     FilePath ->
     IO ()
 sendDatum nid providers skey changeAddr txIn validator datum outFile = do
-    pkh <- addressToPubKeyHashIO changeAddr
     let w1 = User' skey Nothing changeAddr
         inlineDatum = Just (datumFromPlutusData datum, GYTxOutUseInlineDatum @PlutusV3)
         validdatorAddr = addressFromValidator nid validator
@@ -53,6 +52,7 @@ sendDatum nid providers skey changeAddr txIn validator datum outFile = do
     params <- gyGetProtocolParameters providers
     let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
 
+    pkh <- addressToPubKeyHashIO changeAddr
     let skeleton = mustHaveInput txIn
                 <> mustHaveOutput (GYTxOut validdatorAddr calculateMin inlineDatum Nothing)
                 <> mustBeSignedBy pkh
@@ -66,7 +66,6 @@ sendDatum nid providers skey changeAddr txIn validator datum outFile = do
 tokenTransfer :: Transaction -> IO ()
 tokenTransfer (Transaction pathCfg txIn sig changeAddr outFile) = do
     coreCfg <- coreConfigIO pathCfg
-
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
     let nid            = cfgNetworkId coreCfg
@@ -77,8 +76,7 @@ tokenTransfer (Transaction pathCfg txIn sig changeAddr outFile) = do
 
         forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
         policyid       = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
-
-    let datum = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
+        datum          = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
 
     withCfgProviders coreCfg "main" $ \providers -> do
         sendDatum nid providers skey changeAddr' txIn' forwardingMint datum outFile

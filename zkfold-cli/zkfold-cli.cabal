@@ -78,7 +78,9 @@ executable zkfold-cli
     main-is:          Main.hs
     hs-source-dirs:   app
     other-modules:
-        ZkFold.Cardano.Balancing.Balancing
+        ZkFold.Cardano.Balancing.Transaction.Init
+        ZkFold.Cardano.Balancing.Transaction.Plonkup
+        ZkFold.Cardano.Balancing.Transaction.Transfer
         ZkFold.Cardano.Options.CardanoCLI
         ZkFold.Cardano.Options.ZkCLI
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning

@@ -6,9 +6,9 @@ import qualified Cardano.Crypto.Init             as Crypto
 import           Control.Monad.Trans.Except.Exit (orDie)
 import qualified GHC.IO.Encoding                 as GHC
 import qualified Options.Applicative             as Opt
-import           Prelude                         (IO, Monad (..), ($), (.))
-import           System.Directory                (getCurrentDirectory)
-import           System.FilePath                 (takeFileName)
+import           Prelude                         (Bool (..), IO, Monad (..), ($), (.))
+import           System.Directory                (createDirectoryIfMissing, getCurrentDirectory)
+import           System.FilePath                 (takeFileName, (</>))
 
 import           ZkFold.Cardano.Options.ZkCLI    (opts, pref, renderClientCommandError, runClientCommand)
 
@@ -22,6 +22,11 @@ main = toplevelExceptionHandler $ do
   let path = case takeFileName currentDir of
           "e2e-test" -> ".."
           _          -> "."
+  let testData = path </> "test-data"
+      assets   = path </> "assets"
+
+  createDirectoryIfMissing True testData
+  createDirectoryIfMissing True assets
 
   co <- Opt.customExecParser pref (opts path)
 

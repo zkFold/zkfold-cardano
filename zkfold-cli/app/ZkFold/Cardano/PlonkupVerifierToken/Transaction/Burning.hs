@@ -57,7 +57,6 @@ burnTokens ::
     BuiltinByteString ->
     IO ()
 burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr plonkupVerifierToken forwardingMint txidSetup txidForward redeemer' assetName datum = do
-    pkh <- addressToPubKeyHashIO changeAddr
     let w1 = User' skey Nothing changeAddr
 
         txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
@@ -75,6 +74,7 @@ burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr pl
     let reward = valueFromLovelace 10000000
 
     -- --tx-in-collateral $collateral
+    pkh <- addressToPubKeyHashIO changeAddr
     let skeleton = mustHaveInput txIn1
                 <> mustHaveInput txIn2
                 <> mustHaveInput (GYTxIn @PlutusV3 forwardingMintIn witness)
@@ -89,9 +89,6 @@ burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr pl
 tokenBurning :: Transaction -> IO ()
 tokenBurning (Transaction path pathCfg txIn1 txIn2 forwardingMintIn sig changeAddr outAddress txidSetupFile txidForwardFile) = do
     let testData = path </> "test-data"
-
-    let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
-
     EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
     let (setup, input, _) = equalityCheckVerificationBytes x ps targetValue
@@ -99,13 +96,12 @@ tokenBurning (Transaction path pathCfg txIn1 txIn2 forwardingMintIn sig changeAd
         redeemer  = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
 
     coreCfg <- coreConfigIO pathCfg
-
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
-
     (Just txidSetup)   <- decodeFileStrict txidSetupFile
     (Just txidForward) <- decodeFileStrict txidForwardFile
 
-    let nid               = cfgNetworkId coreCfg
+    let fmLabel           = 0
+        nid               = cfgNetworkId coreCfg
         skey              = signingKeyFromApi sks
         changeAddr'       = addressFromApi changeAddr
         txIn1'            = GYTxIn (txOutRefFromApi txIn1) GYTxInWitnessKey

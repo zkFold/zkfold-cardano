@@ -17,9 +17,8 @@ import           GeniusYield.Types.Address                (addressFromApi)
 import           GeniusYield.Types.Key                    (signingKeyFromApi)
 import           GeniusYield.Types.Script                 (validatorFromPlutus)
 import           GeniusYield.Types.TxOutRef               (txOutRefFromApi)
-import           Prelude                                  (Bool (..), FilePath, IO, Maybe (..),
+import           Prelude                                  (FilePath, IO, Maybe (..),
                                                            toInteger, ($), (<>))
-import           System.Directory                         (createDirectoryIfMissing)
 import           System.FilePath                          ((</>))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
@@ -50,7 +49,6 @@ sendScript ::
     FilePath ->
     IO ()
 sendScript nid providers skey changeAddr txIn sendTo validator outFile = do
-    pkh <- addressToPubKeyHashIO changeAddr
     let w1 = User' skey Nothing changeAddr
         validator' = Just $ GYPlutusScript validator
         outMin = GYTxOut sendTo (valueFromLovelace 0) Nothing validator'
@@ -58,6 +56,7 @@ sendScript nid providers skey changeAddr txIn sendTo validator outFile = do
     params <- gyGetProtocolParameters providers
     let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
 
+    pkh <- addressToPubKeyHashIO changeAddr
     let skeleton = mustHaveInput txIn
                 <> mustHaveOutput (GYTxOut sendTo calculateMin Nothing validator')
                 <> mustBeSignedBy pkh
@@ -75,27 +74,20 @@ tokenInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) = do
     targetValue <- generate arbitrary
 
     let contract = EqualityCheckContract x ps targetValue
-
-    let testData = path </> "test-data"
-
-    createDirectoryIfMissing True testData
-
+        testData = path </> "test-data"
     BL.writeFile (testData </> "plonkup-raw-contract-data.json") $ encode contract
-
     let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
 
-    let fmLabel = 0  -- Use a different label (number) to get another 'forwardingMint' address
-
     coreCfg <- coreConfigIO pathCfg
-
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
-    let nid            = cfgNetworkId coreCfg
-        skey           = signingKeyFromApi sks
-        changeAddr'    = addressFromApi changeAddr
-        txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo         = addressFromApi outAddress
-        
+    let fmLabel     = 0  -- Use a different label (number) to get another 'forwardingMint' address
+        nid         = cfgNetworkId coreCfg
+        skey        = signingKeyFromApi sks
+        changeAddr' = addressFromApi changeAddr
+        txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
+        sendTo      = addressFromApi outAddress
+
         plonkupToken   = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
         forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
 

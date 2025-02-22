@@ -59,35 +59,7 @@ echo "Parking 'plonkupVerifierTx.plutus'..."
 
 in1=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
 
-parkScriptMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
-  --protocol-params-file $assets/protocol.json \
-  --tx-out $(cat $keypath/parkingSpot.addr)+0 \
-  --tx-out-reference-script-file "$assets/plonkupVerifierTx.plutus" | sed 's/^[^ ]* //')
-
-someDatumMinCost=$(cardano-cli conway transaction calculate-min-required-utxo \
-  --protocol-params-file $assets/protocol.json \
-  --tx-out "$(cat $keypath/parkingSpot.addr) + 0 lovelace" \
-  --tx-out-inline-datum-cbor-file $someDatum | sed 's/^[^ ]* //')
-
-cardano-cli conway transaction build \
-  --testnet-magic $mN \
-  --tx-in $in1 \
-  --tx-out "$(cat $keypath/parkingSpot.addr) + $parkScriptMinCost lovelace " \
-  --tx-out-reference-script-file $assets/plonkupVerifierTx.plutus \
-  --tx-out "$(cat $keypath/parkingSpot.addr) + $someDatumMinCost lovelace" \
-  --tx-out-inline-datum-cbor-file $someDatum \
-  --change-address $(cat $keypath/alice.addr) \
-  --out-file $keypath/parkedScript.txbody
-
-cardano-cli conway transaction sign \
-  --testnet-magic $mN \
-  --tx-body-file $keypath/parkedScript.txbody \
-  --signing-key-file $keypath/alice.skey \
-  --out-file $keypath/parkedScript.tx
-
-cardano-cli conway transaction submit \
-    --testnet-magic $mN \
-    --tx-file $keypath/parkedScript.tx
+...
 
 parkedTx=$(cardano-cli conway transaction txid --tx-file "$keypath/parkedScript.tx")
 parkedOut=$parkedTx#0
@@ -111,23 +83,7 @@ echo "Initial transfer to 'plonkupVerifierTx'..."
 
 in1=$(cardano-cli conway query utxo --address $(cat $keypath/alice.addr) --testnet-magic $mN --out-file  /dev/stdout | jq -r 'to_entries | map(select(.value.value.lovelace > 25000000)) | .[0].key')
 
-cardano-cli conway transaction build \
-  --testnet-magic $mN \
-  --tx-in $in1 \
-  --tx-out "$(cat $keypath/plonkupVerifierTx.addr) + 10000000 lovelace" \
-  --tx-out-inline-datum-cbor-file $unitDatum \
-  --change-address $(cat $keypath/alice.addr) \
-  --out-file $keypath/fundSymb.txbody
-
-cardano-cli conway transaction sign \
-  --testnet-magic $mN \
-  --tx-body-file $keypath/fundSymb.txbody \
-  --signing-key-file $keypath/alice.skey \
-  --out-file $keypath/fundSymb.tx
-
-cardano-cli conway transaction submit \
-    --testnet-magic $mN \
-    --tx-file $keypath/fundSymb.tx
+...
 
 plonkupVerifierTxTx=$(cardano-cli conway transaction txid --tx-file "$keypath/fundSymb.tx")
 plonkupVerifierTxOut=$plonkupVerifierTxTx#0

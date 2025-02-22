@@ -9,18 +9,20 @@ import           Options.Applicative                                      (Parse
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
+import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
-                                                                           pOutFile, pTxInOnly, pTxIdFile)
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as Init
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as Transfer
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as Minting
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as Burning
+                                                                           pOutFile, pTxIdFile, pTxInOnly)
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
 
 data ClientCommand
-    = TransactionInit Init.Transaction
-    | TransactionTransfer Transfer.Transaction
-    | TransactionMinting Minting.Transaction
-    | TransactionBurning Burning.Transaction
+    = TransactionTokenInit TokenInit.Transaction
+    | TransactionTokenTransfer TokenTransfer.Transaction
+    | TransactionTokenMinting TokenMinting.Transaction
+    | TransactionTokenBurning TokenBurning.Transaction
+    | TransactionBalancingInit BalancingInit.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
@@ -42,18 +44,19 @@ pCmds :: FilePath -> Parser ClientCommand
 pCmds path = do
     asum $
         catMaybes
-            [ fmap TransactionInit     <$> pTransactionInit path
-            , fmap TransactionTransfer <$> pTransactionTransfer
-            , fmap TransactionMinting  <$> pTransactionMinting path
-            , fmap TransactionBurning  <$> pTransactionBurning path
+            [ fmap TransactionTokenInit     <$> pTransactionTokenInit path
+            , fmap TransactionTokenTransfer <$> pTransactionTokenTransfer
+            , fmap TransactionTokenMinting  <$> pTransactionTokenMinting path
+            , fmap TransactionTokenBurning  <$> pTransactionTokenBurning path
+            , fmap TransactionBalancingInit <$> pTransactionBalancingInit
             ]
 
-pTransactionInit :: FilePath -> Maybe (Parser Init.Transaction)
-pTransactionInit path = do
+pTransactionTokenInit :: FilePath -> Maybe (Parser TokenInit.Transaction)
+pTransactionTokenInit path = do
     pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        Init.Transaction path
+        TokenInit.Transaction path
             <$> pGYCoreConfig
             <*> pTxInOnly
             <*> pWitnessSigningData
@@ -61,24 +64,24 @@ pTransactionInit path = do
             <*> pOutAddress
             <*> pOutFile
 
-pTransactionTransfer :: Maybe (Parser Transfer.Transaction)
-pTransactionTransfer = do
+pTransactionTokenTransfer :: Maybe (Parser TokenTransfer.Transaction)
+pTransactionTokenTransfer = do
     pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        Transfer.Transaction
+        TokenTransfer.Transaction
             <$> pGYCoreConfig
             <*> pTxInOnly
             <*> pWitnessSigningData
             <*> pChangeAddress
             <*> pOutFile
 
-pTransactionMinting :: FilePath -> Maybe (Parser Minting.Transaction)
-pTransactionMinting path = do
+pTransactionTokenMinting :: FilePath -> Maybe (Parser TokenMinting.Transaction)
+pTransactionTokenMinting path = do
     pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        Minting.Transaction path
+        TokenMinting.Transaction path
             <$> pGYCoreConfig
             <*> pTxInOnly
             <*> pWitnessSigningData
@@ -87,12 +90,12 @@ pTransactionMinting path = do
             <*> pTxIdFile
             <*> pOutFile
 
-pTransactionBurning :: FilePath -> Maybe (Parser Burning.Transaction)
-pTransactionBurning path = do
+pTransactionTokenBurning :: FilePath -> Maybe (Parser TokenBurning.Transaction)
+pTransactionTokenBurning path = do
     pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        Burning.Transaction path
+        TokenBurning.Transaction path
             <$> pGYCoreConfig
             <*> pTxInOnly
             <*> pTxInOnly
@@ -102,19 +105,25 @@ pTransactionBurning path = do
             <*> pOutAddress
             <*> pTxIdFile
             <*> pTxIdFile
+
+pTransactionBalancingInit :: Maybe (Parser BalancingInit.Transaction)
+pTransactionBalancingInit = do
+    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        BalancingInit.Transaction
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutAddress
+            <*> pOutFile
 
 data ClientCommandErrors
 
 {-
   case (name, command) of
-    --
-    ("balancing", "init")    -> balancingInit path
     ("balancing", "plonkup") -> balancingPlonkup path
-    --
-    ("token", "init")        -> tokenInit path
-    ("token", "transfer")    -> tokenTransfer
-    ("token", "minting")     -> tokenMinting path
-    ("token", "burning")     -> tokenBurning path
     --
     ("tx", "init")           -> txInit path
     ("tx", "transfer")       -> txTransfer path args
@@ -123,17 +132,15 @@ data ClientCommandErrors
     ("rollup", "clear")      -> rollupClear path
     ("rollup", "init")       -> rollupInit path args
     ("rollup", "update")     -> rollupUpdate path
-    --
-    _                        -> print @String "why?"
-
 -}
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
-    TransactionInit     cmd -> ExceptT (Right <$> Init.tokenInit         cmd)
-    TransactionTransfer cmd -> ExceptT (Right <$> Transfer.tokenTransfer cmd)
-    TransactionMinting  cmd -> ExceptT (Right <$> Minting.tokenMinting   cmd)
-    TransactionBurning  cmd -> ExceptT (Right <$> Burning.tokenBurning   cmd)
+    TransactionTokenInit     cmd -> ExceptT (Right <$> TokenInit.tokenInit         cmd)
+    TransactionTokenTransfer cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer cmd)
+    TransactionTokenMinting  cmd -> ExceptT (Right <$> TokenMinting.tokenMinting   cmd)
+    TransactionTokenBurning  cmd -> ExceptT (Right <$> TokenBurning.tokenBurning   cmd)
+    TransactionBalancingInit cmd -> ExceptT (Right <$> BalancingInit.balancingInit cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

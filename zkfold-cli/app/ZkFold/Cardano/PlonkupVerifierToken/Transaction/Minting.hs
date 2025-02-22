@@ -48,7 +48,6 @@ sendMintTokens ::
     FilePath ->
     IO ()
 sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup redeemer' assetName outFile = do
-    pkh <- addressToPubKeyHashIO changeAddr
     let w1 = User' skey Nothing changeAddr
         txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
         redeemer = redeemerFromPlutus' redeemer'
@@ -61,6 +60,7 @@ sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup red
     let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
 
     -- --tx-in-collateral $collateral
+    pkh <- addressToPubKeyHashIO changeAddr
     let skeleton = mustHaveInput txIn
                 <> mustHaveOutput (GYTxOut sendTo (calculateMin <> tokens) Nothing Nothing)
                 <> mustMint refScript redeemer tokenName 1
@@ -75,7 +75,6 @@ sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup red
 tokenMinting :: Transaction -> IO ()
 tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txidSetupFile outFile) = do
     let testData = path </> "test-data"
-
     EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
     let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
@@ -83,16 +82,14 @@ tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txidSetupF
         redeemer  = toBuiltinData proof
 
     coreCfg <- coreConfigIO pathCfg
-
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
-
     (Just txId) <- decodeFileStrict txidSetupFile
 
-    let nid            = cfgNetworkId coreCfg
-        skey           = signingKeyFromApi sks
-        changeAddr'    = addressFromApi changeAddr
-        txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo         = addressFromApi outAddress
+    let nid         = cfgNetworkId coreCfg
+        skey        = signingKeyFromApi sks
+        changeAddr' = addressFromApi changeAddr
+        txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
+        sendTo      = addressFromApi outAddress
 
         plonkupVerifierToken = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
 
