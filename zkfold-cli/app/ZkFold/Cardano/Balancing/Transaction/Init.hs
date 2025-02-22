@@ -1,4 +1,4 @@
-module ZkFold.Cardano.Balancing.Transaction.Init where
+module ZkFold.Cardano.Balancing.Transaction.Init (balancingInit, Transaction(..)) where
 
 import           Cardano.Api                    (AddressAny, TxIn)
 import           Cardano.CLI.Read               (SomeSigningWitness (..), readWitnessSigningData)
@@ -11,7 +11,7 @@ import           GeniusYield.TxBuilder
 import           GeniusYield.Types              (GYNetworkId, GYProviders, GYTxIn (..), GYTxOut (..),
                                                  GYTxOutUseInlineDatum (..), PlutusVersion (..), datumFromPlutusData,
                                                  gyGetProtocolParameters, valueFromLovelace)
-import           GeniusYield.Types.Address      (GYAddress, addressFromApi)
+import           GeniusYield.Types.Address      (GYAddress, addressFromApi, addressFromValidator)
 import           GeniusYield.Types.Key          (GYPaymentSigningKey, signingKeyFromApi)
 import           GeniusYield.Types.Script       (GYAnyScript (..), GYScript, validatorFromPlutus)
 import           GeniusYield.Types.TxIn         (GYTxInWitness (..))
@@ -27,7 +27,6 @@ data Transaction = Transaction
     , txIn            :: !TxIn
     , requiredSigners :: !WitnessSigningData
     , changeAddresses :: !AddressAny
-    , outAddress      :: !AddressAny
     , outFile         :: !FilePath
     }
 
@@ -69,7 +68,7 @@ parkScript nid providers skey changeAddr txIn sendTo validator datum outFile = d
     encodeFile outFile txid
 
 balancingInit :: Transaction -> IO ()
-balancingInit (Transaction pathCfg txIn sig changeAddr outAddress outFile) = do
+balancingInit (Transaction pathCfg txIn sig changeAddr outFile) = do
     coreCfg <- coreConfigIO pathCfg
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
@@ -77,9 +76,9 @@ balancingInit (Transaction pathCfg txIn sig changeAddr outAddress outFile) = do
         skey        = signingKeyFromApi sks
         changeAddr' = addressFromApi changeAddr
         txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo      = addressFromApi outAddress
 
         parkingSpot = validatorFromPlutus $ parkingSpotCompiled 54
+        sendTo      = addressFromValidator nid parkingSpot
         someDatum   = Datum . dataToBuiltinData $ Constr 0 [B $ fromString "deadbeef"]
 
     withCfgProviders coreCfg "main" $ \providers -> do

@@ -1,17 +1,25 @@
-module ZkFold.Cardano.Balancing.Transaction.Transfer where
+module ZkFold.Cardano.Balancing.Transaction.Transfer (balancingTransfer, Transaction(..)) where
 
+import           Cardano.Api
+import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
+import           Cardano.CLI.Types.Common                (WitnessSigningData)
 import           Data.Aeson                              (encode, encodeFile)
-import qualified Data.ByteString                         as BS
 import qualified Data.ByteString.Lazy                    as BL
+import           GeniusYield.GYConfig                    (GYCoreConfig (..), coreConfigIO, withCfgProviders)
 import           GeniusYield.Transaction.Common          (minimumUTxO)
 import           GeniusYield.TxBuilder
-import           GeniusYield.Types                       (GYAddress, GYNetworkId, GYPaymentSigningKey,
-                                                          GYProviders, GYScript, GYTxIn, GYTxOut (..),
+import           GeniusYield.Types                       (GYNetworkId, GYProviders, GYTxIn (..), GYTxOut (..),
                                                           GYTxOutUseInlineDatum (..), PlutusVersion (..),
                                                           datumFromPlutusData, gyGetProtocolParameters,
-                                                          valueFromLovelace, addressFromValidator)
-import           PlutusLedgerApi.V3                      (BuiltinByteString)
-import           Prelude                                 (FilePath, IO, Integral (..), Maybe (..),
+                                                          valueFromLovelace)
+import           GeniusYield.Types.Address               (GYAddress, addressFromApi, addressFromValidator)
+import           GeniusYield.Types.Key                   (GYPaymentSigningKey, signingKeyFromApi)
+import           GeniusYield.Types.Script                (validatorFromPlutus)
+import           GeniusYield.Types.TxIn                  (GYTxInWitness (..))
+import           GeniusYield.Types.TxOutRef              (txOutRefFromApi)
+import           PlutusLedgerApi.V3                      (Datum (..), toData)
+import           PlutusTx.Builtins                       (toBuiltin)
+import           Prelude                                 (Either (..), FilePath, IO, Integral (..), Maybe (..),
                                                           Semigroup (..), ($))
 import           System.FilePath                         ((</>))
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
@@ -19,42 +27,7 @@ import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, savePlutus)
-import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
-import           Data.Aeson                              (encode, encodeFile)
-import qualified Data.ByteString                         as BS
-import qualified Data.ByteString.Lazy                    as BL
-import           Data.String                             (fromString)
-import           GeniusYield.Transaction.Common          (minimumUTxO)
-import           GeniusYield.TxBuilder
-import           GeniusYield.Types                       (GYAddress, GYAnyScript (..), GYNetworkId, GYPaymentSigningKey,
-                                                          GYProviders, GYScript, GYTxIn (..), GYTxOut (..),
-                                                          GYTxOutUseInlineDatum (..), PlutusVersion (..),
-                                                          datumFromPlutusData, gyGetProtocolParameters,
-                                                          valueFromLovelace)
-import           PlutusLedgerApi.V3                      (BuiltinByteString, Data (..), Datum (..), dataToBuiltinData)
-import           Prelude                                 (FilePath, IO, Integral (..), Maybe (..),
-                                                          Semigroup (..), ($), (.), Either (..), undefined)
-import           System.FilePath                         ((</>))
-import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
-import           Test.QuickCheck.Gen                     (generate)
-
-import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
-                                                          identityCircuitVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (dataToCBOR, savePlutus)
-import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
-import Cardano.Api
-import Cardano.CLI.Types.Common (WitnessSigningData)
-import Cardano.CLI.Read (SomeSigningWitness(..), readWitnessSigningData)
-import GeniusYield.GYConfig
-import GeniusYield.Types.Script
-import GeniusYield.Types.Address
-import GeniusYield.Types.TxOutRef
-import GeniusYield.Types.Key
-import GeniusYield.Types.TxIn (GYTxInWitness(..))
-
 
 data Transaction = Transaction
     { curPath         :: !FilePath
@@ -62,7 +35,6 @@ data Transaction = Transaction
     , txIn            :: !TxIn
     , requiredSigners :: !WitnessSigningData
     , changeAddresses :: !AddressAny
-    , outAddress      :: !AddressAny
     , outFile         :: !FilePath
     }
 
@@ -73,22 +45,21 @@ initialTransfer ::
     GYPaymentSigningKey ->
     GYAddress ->
     GYTxIn PlutusV3 ->
-    GYScript 'PlutusV3 ->
-    BuiltinByteString ->
+    GYAddress ->
+    Datum ->
     FilePath ->
     IO ()
-initialTransfer nid providers skey changeAddr txIn validator datum outFile = do
+initialTransfer nid providers skey changeAddr txIn sendTo datum outFile = do
     let w1 = User' skey Nothing changeAddr
-        validdatorAddr = addressFromValidator nid validator
         inlineDatum = Just (datumFromPlutusData datum, GYTxOutUseInlineDatum @PlutusV3)
-        outMinDatum = GYTxOut validdatorAddr (valueFromLovelace 0) inlineDatum Nothing
+        outMinDatum = GYTxOut sendTo (valueFromLovelace 0) inlineDatum Nothing
 
     params <- gyGetProtocolParameters providers
     let calculateMinDatum = valueFromLovelace $ toInteger $ minimumUTxO params outMinDatum
 
     pkh <- addressToPubKeyHashIO changeAddr
     let skeleton = mustHaveInput txIn
-                <> mustHaveOutput (GYTxOut validdatorAddr calculateMinDatum inlineDatum Nothing)
+                <> mustHaveOutput (GYTxOut sendTo calculateMinDatum inlineDatum Nothing)
                 <> mustBeSignedBy pkh
 
     txid <- runGYTxGameMonadIO nid providers $ asUser w1 $ do
@@ -97,42 +68,8 @@ initialTransfer nid providers skey changeAddr txIn validator datum outFile = do
 
     encodeFile outFile txid
 
-
-{-
-tokenInit :: Transaction -> IO ()
-tokenInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) = do
-    x           <- generate arbitrary
-    ps          <- generate arbitrary
-    targetValue <- generate arbitrary
-
-    let contract = EqualityCheckContract x ps targetValue
-        testData = path </> "test-data"
-    BL.writeFile (testData </> "plonkup-raw-contract-data.json") $ encode contract
-    let (setup, _, _) = equalityCheckVerificationBytes x ps targetValue
-
-    coreCfg <- coreConfigIO pathCfg
-    (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
-
-    let fmLabel     = 0  -- Use a different label (number) to get another 'forwardingMint' address
-        nid         = cfgNetworkId coreCfg
-        skey        = signingKeyFromApi sks
-        changeAddr' = addressFromApi changeAddr
-        txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo      = addressFromApi outAddress
-
-        plonkupToken   = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
-        forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
-
-    withCfgProviders coreCfg "main" $ \providers -> do
-        sendScript nid providers skey changeAddr' txIn' sendTo plonkupToken outFile
-        sendScript nid providers skey changeAddr' txIn' sendTo forwardingMint outFile
-
--}
-
-balancingInit :: Transaction -> IO ()
-balancingInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) = do
-    undefined
-{-}
+balancingTransfer :: Transaction -> IO ()
+balancingTransfer (Transaction path pathCfg txIn sig changeAddr outFile) = do
     x           <- generate arbitrary
     ps          <- generate arbitrary
 
@@ -144,23 +81,12 @@ balancingInit (Transaction path pathCfg txIn sig changeAddr outAddress outFile) 
     coreCfg <- coreConfigIO pathCfg
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
-    let fmLabel     = 0  -- Use a different label (number) to get another 'forwardingMint' address
-        nid         = cfgNetworkId coreCfg
+    let nid         = cfgNetworkId coreCfg
         skey        = signingKeyFromApi sks
         changeAddr' = addressFromApi changeAddr
         txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo      = addressFromApi outAddress
 
-        -- plonkupTx   = validatorFromPlutus $ plonkupVerifierTxCompiled setup
-        parkingSpot = validatorFromPlutus $ parkingSpotCompiled 54
-        someDatum = Datum . dataToBuiltinData $ Constr 0 [B $ fromString "deadbeef"]
+        plonkupTxAddr = addressFromValidator nid $ validatorFromPlutus @PlutusV3 $ plonkupVerifierTxCompiled setup
+        someDatum     = Datum $ toBuiltin $ toData ()
 
-    withCfgProviders coreCfg "main" $ \providers -> do
-        undefined -- initialTransfer parkScript nid providers skey changeAddr' txIn' sendTo parkingSpot someDatum outFile
--}
-
-    -- savePlutus (assets </> "plonkupVerifierTx.plutus") $ plonkupVerifierTxCompiled setup
-    -- savePlutus (assets </> "parkingSpot.plutus") $ parkingSpotCompiled 54
-
-    -- BS.writeFile (assets </> "unit.cbor") $ dataToCBOR ()
-    -- BS.writeFile (assets </> "someDatum.cbor") $ dataToCBOR someDatum
+    withCfgProviders coreCfg "main" $ \providers -> initialTransfer nid providers skey changeAddr' txIn' plonkupTxAddr someDatum outFile

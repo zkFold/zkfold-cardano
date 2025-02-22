@@ -10,6 +10,7 @@ import qualified Options.Applicative                                      as Opt
 import           Prelude
 
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
+import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
 import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
                                                                            pOutFile, pTxIdFile, pTxInOnly)
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
@@ -18,11 +19,12 @@ import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as Tok
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
 
 data ClientCommand
-    = TransactionTokenInit TokenInit.Transaction
+    = TransactionTokenInit     TokenInit.Transaction
     | TransactionTokenTransfer TokenTransfer.Transaction
-    | TransactionTokenMinting TokenMinting.Transaction
-    | TransactionTokenBurning TokenBurning.Transaction
+    | TransactionTokenMinting  TokenMinting.Transaction
+    | TransactionTokenBurning  TokenBurning.Transaction
     | TransactionBalancingInit BalancingInit.Transaction
+    | TransactionBalancingTransfer BalancingTransfer.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
@@ -116,7 +118,18 @@ pTransactionBalancingInit = do
             <*> pTxInOnly
             <*> pWitnessSigningData
             <*> pChangeAddress
-            <*> pOutAddress
+            <*> pOutFile
+
+pTransactionBalancingTransfer :: FilePath -> Maybe (Parser BalancingTransfer.Transaction)
+pTransactionBalancingTransfer path = do
+    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        BalancingTransfer.Transaction path
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
             <*> pOutFile
 
 data ClientCommandErrors
@@ -136,11 +149,12 @@ data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
-    TransactionTokenInit     cmd -> ExceptT (Right <$> TokenInit.tokenInit         cmd)
-    TransactionTokenTransfer cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer cmd)
-    TransactionTokenMinting  cmd -> ExceptT (Right <$> TokenMinting.tokenMinting   cmd)
-    TransactionTokenBurning  cmd -> ExceptT (Right <$> TokenBurning.tokenBurning   cmd)
-    TransactionBalancingInit cmd -> ExceptT (Right <$> BalancingInit.balancingInit cmd)
+    TransactionTokenInit         cmd -> ExceptT (Right <$> TokenInit.tokenInit                 cmd)
+    TransactionTokenTransfer     cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer         cmd)
+    TransactionTokenMinting      cmd -> ExceptT (Right <$> TokenMinting.tokenMinting           cmd)
+    TransactionTokenBurning      cmd -> ExceptT (Right <$> TokenBurning.tokenBurning           cmd)
+    TransactionBalancingInit     cmd -> ExceptT (Right <$> BalancingInit.balancingInit         cmd)
+    TransactionBalancingTransfer cmd -> ExceptT (Right <$> BalancingTransfer.balancingTransfer cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined
