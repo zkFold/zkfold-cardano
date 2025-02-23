@@ -40,11 +40,13 @@ import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (zkLogin, zkLoginMo
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
 import qualified ZkFold.Symbolic.Compiler                    as C
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..))
-import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
+import           ZkFold.Symbolic.Data.Bool                   (Bool (..), true)
+import           ZkFold.Symbolic.Data.Combinators
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement           (FieldElement)
 import           ZkFold.Symbolic.Data.JWT                    (Certificate, ClientSecret (..), SecretBits,
                                                               TokenPayload (..), verifySignature)
+import           ZkFold.Symbolic.Data.UInt                   (UInt)
 import           ZkFold.Symbolic.Data.VarByteString
 
 data UserData =
@@ -92,16 +94,19 @@ main = do
 
 type NGates = 2^16
 
+constUInt :: forall ctx . Symbolic ctx => UInt 32 'Auto ctx -> Bool ctx 
+constUInt _ = true
+
 zkLoginSetupBytes :: SetupBytes
 zkLoginSetupBytes = mkSetup setupV
     where
         x = zero -- TODO: just to test compilation
 
-        ac = C.compile @Fr zkLoginMock
+        ac = C.compile @Fr constUInt --zkLoginMock
 
         (omega, k1, k2) = getParams (Number.value @NGates)
         (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
-        plonkup = Plonkup omega k1 k2 ac h1 gs -- :: PlonkupN Inp Out NGates
+        plonkup = Plonkup omega k1 k2 ac h1 gs
         setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
 
 
