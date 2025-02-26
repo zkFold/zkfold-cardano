@@ -21,10 +21,10 @@ cradle:
     - path: "zkfold-cli/app/Main.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Init.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Balancing.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
-    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Plonkup.hs"
+    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Init.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
     - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Transfer.hs"

@@ -9,6 +9,7 @@ import           Options.Applicative                                      (Parse
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
+import qualified ZkFold.Cardano.Balancing.Transaction.Balancing as Balancing
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
 import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
@@ -25,6 +26,7 @@ data ClientCommand
     | TransactionTokenBurning  TokenBurning.Transaction
     | TransactionBalancingInit BalancingInit.Transaction
     | TransactionBalancingTransfer BalancingTransfer.Transaction
+    | TransactionBalancing Balancing.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
@@ -46,11 +48,13 @@ pCmds :: FilePath -> Parser ClientCommand
 pCmds path = do
     asum $
         catMaybes
-            [ fmap TransactionTokenInit     <$> pTransactionTokenInit path
-            , fmap TransactionTokenTransfer <$> pTransactionTokenTransfer
-            , fmap TransactionTokenMinting  <$> pTransactionTokenMinting path
-            , fmap TransactionTokenBurning  <$> pTransactionTokenBurning path
-            , fmap TransactionBalancingInit <$> pTransactionBalancingInit
+            [ fmap TransactionTokenInit         <$> pTransactionTokenInit path
+            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer
+            , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path
+            , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path
+            , fmap TransactionBalancingInit     <$> pTransactionBalancingInit
+            , fmap TransactionBalancingTransfer <$> pTransactionBalancingTransfer path
+            , fmap TransactionBalancing         <$> pTransactionBalancing path
             ]
 
 pTransactionTokenInit :: FilePath -> Maybe (Parser TokenInit.Transaction)
@@ -132,12 +136,25 @@ pTransactionBalancingTransfer path = do
             <*> pChangeAddress
             <*> pOutFile
 
+pTransactionBalancing :: FilePath -> Maybe (Parser Balancing.Transaction)
+pTransactionBalancing path = do
+    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        Balancing.Transaction path
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutFile
+            <*> pTxIdFile
+            <*> pOutAddress
+
 data ClientCommandErrors
 
 {-
   case (name, command) of
-    ("balancing", "plonkup") -> balancingPlonkup path
-    --
     ("tx", "init")           -> txInit path
     ("tx", "transfer")       -> txTransfer path args
     ("tx", "withdraw")       -> txWithdraw path
@@ -155,6 +172,7 @@ runClientCommand = \case
     TransactionTokenBurning      cmd -> ExceptT (Right <$> TokenBurning.tokenBurning           cmd)
     TransactionBalancingInit     cmd -> ExceptT (Right <$> BalancingInit.balancingInit         cmd)
     TransactionBalancingTransfer cmd -> ExceptT (Right <$> BalancingTransfer.balancingTransfer cmd)
+    TransactionBalancing         cmd -> ExceptT (Right <$> Balancing.balancingPlonkup          cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

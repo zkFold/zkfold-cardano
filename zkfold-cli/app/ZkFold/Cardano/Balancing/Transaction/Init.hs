@@ -38,7 +38,7 @@ parkScript ::
     GYAddress ->
     GYTxIn PlutusV3 ->
     GYAddress ->
-    GYScript 'PlutusV3 ->
+    GYScript PlutusV3 ->
     Datum ->
     FilePath ->
     IO ()

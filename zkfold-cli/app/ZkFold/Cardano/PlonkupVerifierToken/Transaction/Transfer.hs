@@ -39,7 +39,7 @@ sendDatum ::
     GYPaymentSigningKey ->
     GYAddress ->
     GYTxIn PlutusV3 ->
-    GYScript 'PlutusV3 ->
+    GYScript PlutusV3 ->
     BuiltinByteString ->
     FilePath ->
     IO ()

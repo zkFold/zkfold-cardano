@@ -45,7 +45,7 @@ sendScript ::
     GYAddress ->
     GYTxIn PlutusV3 ->
     GYAddress ->
-    GYScript 'PlutusV3 ->
+    GYScript PlutusV3 ->
     FilePath ->
     IO ()
 sendScript nid providers skey changeAddr txIn sendTo validator outFile = do

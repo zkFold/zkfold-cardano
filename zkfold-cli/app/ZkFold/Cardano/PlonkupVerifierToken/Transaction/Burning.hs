@@ -48,8 +48,8 @@ burnTokens ::
     GYTxIn PlutusV3 ->
     GYTxOutRef ->
     GYAddress ->
-    GYScript 'PlutusV3 ->
-    GYScript 'PlutusV3 ->
+    GYScript PlutusV3 ->
+    GYScript PlutusV3 ->
     GYTxId ->
     GYTxId ->
     BuiltinData ->
