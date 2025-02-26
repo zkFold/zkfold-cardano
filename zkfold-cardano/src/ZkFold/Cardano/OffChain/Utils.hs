@@ -1,21 +1,21 @@
 module ZkFold.Cardano.OffChain.Utils where
 
-import           Cardano.Api          hiding (Lovelace)
-import           Cardano.Api.Ledger   (toCBOR)
-import           Cardano.Api.Shelley  (PlutusScript (..), fromPlutusData,
-                                       scriptDataToJsonDetailedSchema, shelleyPayAddrToPlutusPubKHash)
-import           Codec.CBOR.Write     (toStrictByteString)
-import           Control.Monad        (void)
-import           Data.Aeson.Types     as Aeson (Value (..))
-import           Data.Bifunctor       (first)
-import qualified Data.ByteString      as BS
-import qualified Data.Text            as T
-import qualified Data.Text.Encoding   as TE
-import           PlutusLedgerApi.V3   as V3
-import           PlutusTx             (CompiledCode)
-import           Prelude              hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import           Text.Printf          (printf)
-import           Text.Read            (readEither)
+import           Cardano.Api         hiding (Lovelace)
+import           Cardano.Api.Ledger  (toCBOR)
+import           Cardano.Api.Shelley (PlutusScript (..), fromPlutusData, scriptDataToJsonDetailedSchema,
+                                      shelleyPayAddrToPlutusPubKHash)
+import           Codec.CBOR.Write    (toStrictByteString)
+import           Control.Monad       (void)
+import           Data.Aeson.Types    as Aeson (Value (..))
+import           Data.Bifunctor      (first)
+import qualified Data.ByteString     as BS
+import qualified Data.Text           as T
+import qualified Data.Text.Encoding  as TE
+import           PlutusLedgerApi.V3  as V3
+import           PlutusTx            (CompiledCode)
+import           Prelude             hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import           Text.Printf         (printf)
+import           Text.Read           (readEither)
 
 -- | Write serialized script to a file.
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()

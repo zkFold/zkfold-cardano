@@ -9,7 +9,7 @@ import           Options.Applicative                                      (Parse
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
-import qualified ZkFold.Cardano.Balancing.Transaction.Balancing as Balancing
+import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Balancing
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
 import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,

@@ -18,8 +18,7 @@ import           GeniusYield.Types                     (GYAddress, GYNetworkId, 
                                                         signingKeyFromApi, txOutRefFromApi, validatorFromPlutus,
                                                         valueFromLovelace)
 import           PlutusTx.Builtins                     (BuiltinByteString)
-import           Prelude                               (Either (..), FilePath, IO, Maybe (..), toInteger,
-                                                        ($), (<>))
+import           Prelude                               (Either (..), FilePath, IO, Maybe (..), toInteger, ($), (<>))
 
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 
