@@ -33,6 +33,18 @@ cradle:
     - path: "app/ZkFold/Cardano/PlonkupVerifierTx/PlonkupVerifierTx.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
+    - path: "app/ZkFold/Cardano/Rollup/Transaction/Clear.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/ZkFold/Cardano/Rollup/Transaction/Init.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/ZkFold/Cardano/Rollup/Transaction/Next.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "app/ZkFold/Cardano/Rollup/Transaction/Update.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
     - path: "app/ZkFold/Cardano/Rollup/CardanoCli.hs"
       component: "zkfold-cli:exe:zkfold-cli"
 
@@ -43,7 +55,4 @@ cradle:
       component: "zkfold-cli:exe:zkfold-cli"
 
     - path: "app/ZkFold/Cardano/Rollup/ParseJson.hs"
-      component: "zkfold-cli:exe:zkfold-cli"
-
-    - path: "app/ZkFold/Cardano/Rollup/Rollup.hs"
       component: "zkfold-cli:exe:zkfold-cli"

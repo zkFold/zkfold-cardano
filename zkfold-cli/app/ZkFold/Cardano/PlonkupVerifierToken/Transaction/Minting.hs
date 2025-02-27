@@ -51,8 +51,8 @@ sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup red
     let w1 = User' skey Nothing changeAddr
         txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
         redeemer = redeemerFromPlutus' redeemer'
-        tokenName = coerce assetName
-        refScript = GYMintReference @PlutusV3 txOutRefSetup $ validatorToScript validator
+        tokenName = coerce @AssetName @GYTokenName assetName
+        refScript = GYMintReference @PlutusV3 txOutRefSetup validator
         tokens = valueMake $ Map.singleton (GYToken (mintingPolicyId validator) tokenName) 1
         outMin = GYTxOut sendTo tokens Nothing Nothing
 

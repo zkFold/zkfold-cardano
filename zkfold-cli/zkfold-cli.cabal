@@ -88,11 +88,11 @@ executable zkfold-cli
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
         ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx
-        ZkFold.Cardano.Rollup.CardanoCli
+        ZkFold.Cardano.Rollup.Transaction.Clear
+        ZkFold.Cardano.Rollup.Transaction.Init
+        ZkFold.Cardano.Rollup.Transaction.Next
+        ZkFold.Cardano.Rollup.Transaction.Update
         ZkFold.Cardano.Rollup.Data
-        ZkFold.Cardano.Rollup.Example
-        ZkFold.Cardano.Rollup.ParseJson
-        ZkFold.Cardano.Rollup.Rollup
     build-depends:
         aeson                          ,
         atlas-cardano                  ,
