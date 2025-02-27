@@ -1,4 +1,4 @@
-module ZkFold.Cardano.Rollup.Transaction.Init where
+module ZkFold.Cardano.Rollup.Transaction.Init (Transaction(..), rollupInit) where
 
 import           Cardano.Api                             (AddressAny, TxIn, prettyPrintJSON)
 import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
@@ -21,7 +21,7 @@ import           GeniusYield.Types.BuildScript
 import           GeniusYield.Types.Key                   (GYPaymentSigningKey, signingKeyFromApi)
 import           GeniusYield.Types.Redeemer              (unitRedeemer)
 import           GeniusYield.Types.Script                (GYAnyScript (..), GYScript, mintingPolicyId,
-                                                          validatorFromPlutus)
+                                                          validatorFromPlutus, mintingPolicyCurrencySymbol, validatorPlutusHash)
 import           GeniusYield.Types.TxIn                  (GYTxInWitness (..))
 import           GeniusYield.Types.TxOutRef              (txOutRefFromApi, txOutRefToPlutus)
 import           GeniusYield.Types.Value                 (tokenNameFromPlutus)
@@ -39,7 +39,7 @@ import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils           (credentialOf, currencySymbolOf, dataToJSON)
+import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.Rollup.Data              (datumHashEx1, minReq, rmax, rollupFee, threadLovelace,
@@ -48,6 +48,7 @@ import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, par
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..),
                                                           rollupCompiled)
 import           ZkFold.Cardano.UPLC.RollupData          (rollupDataCompiled)
+import PlutusLedgerApi.Data.V3 (Credential(..))
 
 data Transaction = Transaction
     { curPath         :: !FilePath
@@ -141,8 +142,9 @@ rollupInit (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile bobAddre
         dataUpdate = fmap (\s -> [dataToBlake s]) seeds
         update     = dataToBlake <$> dataUpdate
         iniState   = F iniState'
+        parkingSpot = validatorFromPlutus $ parkingSpotCompiled parkingTag
 
-    let bridgeTxOut = TxOut { txOutAddress         = Address (credentialOf $ parkingSpotCompiled parkingTag) Nothing
+    let bridgeTxOut = TxOut { txOutAddress         = Address (ScriptCredential $ validatorPlutusHash parkingSpot) Nothing
                             , txOutValue           = lovelaceValue minReq
                             , txOutDatum           = OutputDatumHash datumHashEx1
                             , txOutReferenceScript = Nothing
@@ -167,15 +169,15 @@ rollupInit (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile bobAddre
         addr        = addressToPlutus $ addressFromApi bobAddress
         nftOref     = fmapTxOutRef $ txOutRefToPlutus $ txOutRefFromApi txIn1
 
-    let threadCS    = currencySymbolOf $ nftPolicyCompiled nftOref
+    let nftPolicy   = validatorFromPlutus $ nftPolicyCompiled nftOref
+        threadCS    = mintingPolicyCurrencySymbol nftPolicy
         threadName  = TokenName (fromString "zkFold" :: BuiltinByteString)
         rollupSetup = RollupSetup
                       { rsLedgerRules  = ledgerRules
-                      , rsDataCurrency = currencySymbolOf rollupDataCompiled
+                      , rsDataCurrency = mintingPolicyCurrencySymbol $ validatorFromPlutus @PlutusV3 rollupDataCompiled
                       , rsThreadValue  = lovelaceValue threadLovelace <> singleton threadCS threadName 1
                       , rsFeeAddress   = addr
                       }
-
     coreCfg <- coreConfigIO pathCfg
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
@@ -184,9 +186,6 @@ rollupInit (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile bobAddre
         changeAddr' = addressFromApi changeAddr
         txIn1'      = GYTxIn (txOutRefFromApi txIn1) GYTxInWitnessKey
         txIn2'      = GYTxIn (txOutRefFromApi txIn2) GYTxInWitnessKey
-
-        nftPolicy   = validatorFromPlutus $ nftPolicyCompiled nftOref
-        parkingSpot = validatorFromPlutus $ parkingSpotCompiled parkingTag
         rollup      = validatorFromPlutus $ rollupCompiled rollupSetup
 
         state      = Datum $ toBuiltin $ toData iniState'

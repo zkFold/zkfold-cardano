@@ -1,4 +1,4 @@
-module ZkFold.Cardano.Balancing.Transaction.Balancing where
+module ZkFold.Cardano.Balancing.Transaction.Balancing (Transaction(..), balancingPlonkup) where
 
 import           Cardano.Api                             (AddressAny, TxIn)
 import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)

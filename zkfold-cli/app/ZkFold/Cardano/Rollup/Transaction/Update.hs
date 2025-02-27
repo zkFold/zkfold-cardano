@@ -1,27 +1,76 @@
-module ZkFold.Cardano.Rollup.Transaction.Update where
+module ZkFold.Cardano.Rollup.Transaction.Update (Transaction(..), rollupUpdate) where
 
-import           Cardano.Api                      (getScriptData)
-import           Cardano.Api.Shelley              (scriptDataFromJsonDetailedSchema, toPlutusData)
-import           Control.Monad                    (mapM_)
-import           Data.Aeson                       (decode)
-import qualified Data.ByteString                  as BS
-import qualified Data.ByteString.Lazy             as BL
-import           Data.Maybe                       (fromJust)
-import           PlutusLedgerApi.V3               (fromBuiltin, fromData)
-import           Prelude                          (Either (..), FilePath, IO, Int, Show (..), error, length, show, zip,
-                                                   ($), (.), (<$>))
-import           System.FilePath                  ((</>))
-import qualified System.IO                        as IO
-import           Text.Printf                      (printf)
+import           Cardano.Api                    (AddressAny, TxIn, getScriptData)
+import           Cardano.Api.Shelley            (scriptDataFromJsonDetailedSchema, toPlutusData)
+import           Cardano.CLI.Read               (SomeSigningWitness (..), readWitnessSigningData)
+import           Cardano.CLI.Types.Common       (WitnessSigningData)
+import           Data.Aeson                     (decode, encodeFile)
+import qualified Data.ByteString.Lazy           as BL
+import           Data.Maybe                     (fromJust)
+import           GeniusYield.GYConfig           (GYCoreConfig (cfgNetworkId), coreConfigIO, withCfgProviders)
+import           GeniusYield.Transaction.Common (minimumUTxO)
+import           GeniusYield.TxBuilder
+import           GeniusYield.Types
+import           PlutusLedgerApi.V3             (ToData (..), TokenName (..), fromData)
+import           Prelude                        (Either (..), FilePath, IO, Integer, Integral (..), Maybe (..),
+                                                 Num (fromInteger), Semigroup (..), error, (!!), ($), (.), (<$>))
+import           System.FilePath                ((</>))
 
-import           ZkFold.Cardano.OffChain.Utils    (byteStringAsHex, dataToCBOR)
-import           ZkFold.Cardano.OnChain.BLS12_381 (F (..))
-import           ZkFold.Cardano.OnChain.Utils     (dataToBlake)
-import           ZkFold.Cardano.UPLC.Rollup       (RollupInfo (..), RollupRedeemer (..))
-import           ZkFold.Cardano.UPLC.RollupData   (RollupDataRedeemer (..))
+import           ZkFold.Cardano.OnChain.Utils   (dataToBlake)
+import           ZkFold.Cardano.UPLC.Common     (parkingSpotCompiled)
+import           ZkFold.Cardano.UPLC.Rollup     (RollupInfo (..))
+import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..), rollupDataCompiled)
 
-rollupUpdate :: FilePath -> IO ()
-rollupUpdate path = do
+data Transaction = Transaction
+    { curPath         :: !FilePath
+    , pathCoreCfg     :: !FilePath
+    , txIn            :: !TxIn
+    , requiredSigners :: !WitnessSigningData
+    , changeAddresses :: !AddressAny
+    , outFile         :: !FilePath
+    , index           :: !Integer
+    }
+
+tokenUpdate ::
+    GYNetworkId ->
+    GYProviders ->
+    GYPaymentSigningKey ->
+    GYAddress ->
+    GYTxIn PlutusV3 ->
+    GYScript PlutusV3 ->
+    GYScript PlutusV3 ->
+    GYTokenName ->
+    GYRedeemer ->
+    FilePath ->
+    IO ()
+tokenUpdate nid providers skey changeAddr txIn rollupData parkingSpot tokenName redeemer outFile = do
+    let w1 = User' skey Nothing changeAddr
+
+        inlineDatum = Just (unitDatum, GYTxOutUseInlineDatum @PlutusV3)
+        script      = GYBuildPlutusScript $ GYBuildPlutusScriptInlined rollupData
+
+        parkingSpotAddr = addressFromValidator nid parkingSpot
+        token      = GYToken (mintingPolicyId rollupData) tokenName
+        outMin = GYTxOut parkingSpotAddr (valueSingleton token 1) inlineDatum Nothing
+
+    params <- gyGetProtocolParameters providers
+    let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
+
+    -- --tx-in-collateral $collateral \
+    pkh <- addressToPubKeyHashIO changeAddr
+    let skeleton = mustHaveInput txIn
+                <> mustHaveOutput (GYTxOut parkingSpotAddr calculateMin inlineDatum Nothing)
+                <> mustMint script redeemer tokenName 1
+                <> mustBeSignedBy pkh
+
+    txid <- runGYTxGameMonadIO nid providers $ asUser w1 $ do
+        txBody <- buildTxBody skeleton
+        signAndSubmitConfirmed txBody
+
+    encodeFile outFile txid
+
+rollupUpdate :: Transaction -> IO ()
+rollupUpdate (Transaction path pathCfg txIn sig changeAddr outFile index) = do
     let assets   = path </> "assets"
 
     rollupInfoE <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assets </> "rollupInfo.json")
@@ -31,17 +80,23 @@ rollupUpdate path = do
           Left _  -> error "JSON error: unreadable 'rollupInfo.json'"
 
     let rollupInfo = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
-    let RollupInfo _ dataUpdate nextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
+    let RollupInfo parkingTag dataUpdate _ _ = rollupInfo
 
-    let F nextState' = nextState
-    let dataUpdateIndexed = zip dataUpdate [1 :: Int ..]
+    coreCfg <- coreConfigIO pathCfg
+    (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
-    BS.writeFile (assets </> "datum.cbor") $ dataToCBOR nextState'
-    BS.writeFile (assets </> "redeemerRollup.cbor") $ dataToCBOR rollupRedeemer
+    let nid         = cfgNetworkId coreCfg
+        skey        = signingKeyFromApi sks
+        changeAddr' = addressFromApi changeAddr
+        txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
+        rollupData  = validatorFromPlutus rollupDataCompiled
+        parkingSpot = validatorFromPlutus $ parkingSpotCompiled parkingTag
+        tokenName'  = tokenNameFromPlutus $ TokenName $ dataToBlake $ dataUpdate !! fromInteger index
+        redeemer    = redeemerFromPlutus' $ toBuiltinData $ NewData $ dataUpdate !! fromInteger index
 
-    IO.writeFile (assets </> "newDataTokensAmount.txt") . show . length $ update
+    let tokenName = case tokenName' of
+            Just a  -> a
+            Nothing -> error "invalid token name"
 
-    mapM_ (\(dat, idx) -> BS.writeFile (assets </> printf "dataRedeemer-%02d.cbor" idx)
-                          . dataToCBOR . NewData $ dat) dataUpdateIndexed
-    mapM_ (\(dat, idx) -> IO.writeFile (assets </> printf "dataTokenName-%02d.txt" idx)
-                          . byteStringAsHex . fromBuiltin . dataToBlake $ dat) dataUpdateIndexed
+    withCfgProviders coreCfg "main" $ \providers -> do
+        tokenUpdate nid providers skey changeAddr' txIn' rollupData parkingSpot tokenName redeemer outFile

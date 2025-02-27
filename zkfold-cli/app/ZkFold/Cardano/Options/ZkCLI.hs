@@ -19,16 +19,18 @@ import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as Tok
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
 import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
+import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
 
 data ClientCommand
     = TransactionTokenInit     TokenInit.Transaction
     | TransactionTokenTransfer TokenTransfer.Transaction
     | TransactionTokenMinting  TokenMinting.Transaction
     | TransactionTokenBurning  TokenBurning.Transaction
-    | TransactionBalancingInit BalancingInit.Transaction
+    | TransactionBalancingInit     BalancingInit.Transaction
     | TransactionBalancingTransfer BalancingTransfer.Transaction
-    | TransactionBalancing Balancing.Transaction
-    | TransactionRollupInit RollupInit.Transaction
+    | TransactionBalancing         Balancing.Transaction
+    | TransactionRollupInit   RollupInit.Transaction
+    | TransactionRollupUpdate RollupUpdate.Transaction
 
 opts :: FilePath -> ParserInfo ClientCommand
 opts path =
@@ -58,6 +60,7 @@ pCmds path = do
             , fmap TransactionBalancingTransfer <$> pTransactionBalancingTransfer path
             , fmap TransactionBalancing         <$> pTransactionBalancing path
             , fmap TransactionRollupInit        <$> pTransactionRollupInit path
+            , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path
             ]
 
 pTransactionTokenInit :: FilePath -> Maybe (Parser TokenInit.Transaction)
@@ -169,6 +172,19 @@ pTransactionRollupInit path = do
             <*> pOutAddress
             <*> undefined
 
+pTransactionRollupUpdate :: FilePath -> Maybe (Parser RollupUpdate.Transaction)
+pTransactionRollupUpdate path = do
+    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        RollupUpdate.Transaction path
+            <$> pGYCoreConfig
+            <*> pTxInOnly
+            <*> pWitnessSigningData
+            <*> pChangeAddress
+            <*> pOutFile
+            <*> undefined
+
 data ClientCommandErrors
 
 {-
@@ -178,7 +194,7 @@ data ClientCommandErrors
     ("tx", "withdraw")       -> txWithdraw path
     --
     ("rollup", "clear")      -> rollupClear path
-    ("rollup", "update")     -> rollupUpdate path
+    ("rollup", "next")       -> rollupNext path
 -}
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
@@ -191,6 +207,7 @@ runClientCommand = \case
     TransactionBalancingTransfer cmd -> ExceptT (Right <$> BalancingTransfer.balancingTransfer cmd)
     TransactionBalancing         cmd -> ExceptT (Right <$> Balancing.balancingPlonkup          cmd)
     TransactionRollupInit        cmd -> ExceptT (Right <$> RollupInit.rollupInit               cmd)
+    TransactionRollupUpdate      cmd -> ExceptT (Right <$> RollupUpdate.rollupUpdate           cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined
