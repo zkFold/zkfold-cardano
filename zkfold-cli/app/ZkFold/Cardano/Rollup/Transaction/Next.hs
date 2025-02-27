@@ -8,23 +8,20 @@ import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.Maybe                                  (fromJust)
 import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
-import           PlutusLedgerApi.V3                          (Address (..), OutputDatum (..), TxOut (..),
-                                                              fromData)
-import           Prelude                                     (Either (..), FilePath, IO, Integer,
-                                                              Maybe (..), error, read,
-                                                              ($), (.), (<$>))
+import           PlutusLedgerApi.V3                          (Address (..), OutputDatum (..), TxOut (..), fromData)
+import           Prelude                                     (Either (..), FilePath, IO, Integer, Maybe (..), error,
+                                                              read, ($), (.), (<$>))
 import           System.FilePath                             ((</>))
 import qualified System.IO                                   as IO
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
-import           ZkFold.Cardano.Examples.IdentityCircuit     (IdentityCircuitContract (..),
-                                                              stateCheckVerificationBytes)
+import           ZkFold.Cardano.Examples.IdentityCircuit     (IdentityCircuitContract (..), stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils               (credentialOf, dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381            (toInput)
 import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.Rollup.Data                  (minReq, rollupFee, datumHashEx1, evolve)
+import           ZkFold.Cardano.Rollup.Data                  (datumHashEx1, evolve, minReq, rollupFee)
 import           ZkFold.Cardano.UPLC.Common                  (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup                  (RollupInfo (..), RollupRedeemer (..))
 

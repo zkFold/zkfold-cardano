@@ -52,7 +52,7 @@ data RollupRedeemer =
 -- makeIsDataIndexed ''RollupRedeemer [('UpdateRollup,0),('ForwardValidation,1),('CombineValue,2),('AdjustStake,3),('UpgradeScript,4)]
 makeIsDataIndexed ''RollupRedeemer [('UpdateRollup, 0)]
 
-data RollupInfo = RollupInfo 
+data RollupInfo = RollupInfo
     { riParkingTag :: Integer
     , riDataUpdate :: [[BuiltinByteString]]
     , riState      :: F
