@@ -5,7 +5,7 @@ import           Cardano.Api.Shelley                         (TxIn, scriptDataFr
 import           Cardano.CLI.Read                            (SomeSigningWitness (..), readWitnessSigningData)
 import           Cardano.CLI.Types.Common
 import           Control.Monad                               (Functor (..), Monad (..), mapM)
-import           Data.Aeson                                  (decode, encodeFile, decodeFileStrict)
+import           Data.Aeson                                  (decode, decodeFileStrict, encodeFile)
 import qualified Data.ByteString                             as BS
 import qualified Data.ByteString.Lazy                        as BL
 import           Data.List.NonEmpty                          (NonEmpty)
@@ -19,8 +19,7 @@ import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
 import           PlutusLedgerApi.V3                          (Address (..), BuiltinByteString, Datum (..),
                                                               OutputDatum (..), ToData (..), TokenName (..), TxOut (..),
                                                               fromData, toBuiltin, toData)
-import           Prelude                                     (Either (..), FilePath, IO, Integer,
-                                                              Maybe (..), error,
+import           Prelude                                     (Either (..), FilePath, IO, Integer, Maybe (..), error,
                                                               undefined, ($), (.), (<$>))
 import           System.FilePath                             ((</>))
 import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
