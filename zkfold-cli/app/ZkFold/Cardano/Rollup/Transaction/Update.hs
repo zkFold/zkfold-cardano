@@ -50,8 +50,8 @@ tokenUpdate nid providers skey changeAddr txIn rollupData parkingSpot tokenName 
         script      = GYBuildPlutusScript $ GYBuildPlutusScriptInlined rollupData
 
         parkingSpotAddr = addressFromValidator nid parkingSpot
-        token      = GYToken (mintingPolicyId rollupData) tokenName
-        outMin = GYTxOut parkingSpotAddr (valueSingleton token 1) inlineDatum Nothing
+        token           = GYToken (mintingPolicyId rollupData) tokenName
+        outMin          = GYTxOut parkingSpotAddr (valueSingleton token 1) inlineDatum Nothing
 
     params <- gyGetProtocolParameters providers
     let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin

@@ -60,10 +60,10 @@ burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr pl
     let w1 = User' skey Nothing changeAddr
 
         txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
-        setupRef = GYMintReference @PlutusV3 txOutRefSetup $ validatorToScript plonkupVerifierToken
+        setupRef = GYMintReference @PlutusV3 txOutRefSetup plonkupVerifierToken
 
         forwardingMintRef = txOutRefFromTuple (txidForward, 0)
-        forwardRef = GYBuildPlutusScriptReference @PlutusV3 forwardingMintRef (validatorToScript forwardingMint)
+        forwardRef = GYBuildPlutusScriptReference @PlutusV3 forwardingMintRef forwardingMint
 
         inlineDatum = Just $ datumFromPlutusData datum
         witness = GYTxInWitnessScript forwardRef inlineDatum unitRedeemer

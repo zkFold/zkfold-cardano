@@ -62,7 +62,7 @@ calculateBalancing nid providers skey changeAddr txIn1 txIn2 sendTo verifierTx v
     let w1 = User' skey Nothing changeAddr
 
         verifierTxRef = txOutRefFromTuple (txidTx, 0)
-        forwardRef = GYBuildPlutusScriptReference @PlutusV3 verifierTxRef (validatorToScript verifierTxScript)
+        forwardRef = GYBuildPlutusScriptReference @PlutusV3 verifierTxRef verifierTxScript
 
         inlineDatum = Just $ datumFromPlutusData datum
         witness = GYTxInWitnessScript forwardRef inlineDatum redeemer
@@ -100,20 +100,20 @@ balancingPlonkup (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile tx
         verifyTxAddr     = addressFromValidator nid verifierTxScript
         verifyTx         = txOutRefFromApi txIn2
         parkSpotAddr = addressFromValidator nid $ validatorFromPlutus @PlutusV3 $ parkingSpotCompiled 54
-        txIn1'        = GYTxIn (txOutRefFromApi txIn1) GYTxInWitnessKey
-        txIn2'        = GYTxIn (txOutRefFromApi txIn2) GYTxInWitnessKey
+        txIn1'       = GYTxIn (txOutRefFromApi txIn1) GYTxInWitnessKey
+        txIn2'       = GYTxIn (txOutRefFromApi txIn2) GYTxInWitnessKey
 
     let range   = Interval (LowerBound (NegInf:: Extended POSIXTime) True) (UpperBound PosInf True)
         rangeBD = toBuiltinData range
 
-    let addr1 = addressToPlutus changeAddr'
-    let val1 = Lovelace 10000000
+    let addr1  = addressToPlutus changeAddr'
+    let val1   = Lovelace 10000000
     let out1   = TxOut addr1 (lovelaceValue val1) NoOutputDatum Nothing
         txOuts = [out1]
 
     withCfgProviders coreCfg "main" $ \providers -> do
-        txin1 <- fmap utxoToTxInInfo . utxosToList <$> gyQueryUtxosAtAddress providers utxo1Addr' Nothing
-        txin2 <- fmap utxoToTxInInfo . utxosToList <$> gyQueryUtxosAtAddress providers verifyTxAddr Nothing
+        txin1  <- fmap utxoToTxInInfo . utxosToList <$> gyQueryUtxosAtAddress providers utxo1Addr' Nothing
+        txin2  <- fmap utxoToTxInInfo . utxosToList <$> gyQueryUtxosAtAddress providers verifyTxAddr Nothing
         txRefs <- fmap utxoToTxInInfo . utxosToList <$> gyQueryUtxosAtAddress providers parkSpotAddr Nothing
         let txIns = txin1 ++ txin2
 
@@ -132,7 +132,7 @@ balancingPlonkup (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile tx
 
         putStr "Generating proof...\n\n"
         let (_, _, proof) = stateCheckVerificationBytes x ps input
-        let datum = Datum $ toBuiltin $ toData ()
+        let datum    = Datum $ toBuiltin $ toData ()
             redeemer = redeemerFromPlutus' $ toBuiltinData proof
 
         calculateBalancing nid providers skey changeAddr' txIn1' txIn2' changeAddr' verifyTx verifierTxScript txidTx datum redeemer outFile
