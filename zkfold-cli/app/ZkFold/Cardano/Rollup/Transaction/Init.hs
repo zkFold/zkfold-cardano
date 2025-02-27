@@ -20,11 +20,12 @@ import           GeniusYield.Types.Address               (GYAddress, addressFrom
 import           GeniusYield.Types.BuildScript
 import           GeniusYield.Types.Key                   (GYPaymentSigningKey, signingKeyFromApi)
 import           GeniusYield.Types.Redeemer              (unitRedeemer)
-import           GeniusYield.Types.Script                (GYAnyScript (..), GYScript, mintingPolicyId,
-                                                          validatorFromPlutus, mintingPolicyCurrencySymbol, validatorPlutusHash)
+import           GeniusYield.Types.Script                (GYAnyScript (..), GYScript, mintingPolicyCurrencySymbol,
+                                                          mintingPolicyId, validatorFromPlutus, validatorPlutusHash)
 import           GeniusYield.Types.TxIn                  (GYTxInWitness (..))
 import           GeniusYield.Types.TxOutRef              (txOutRefFromApi, txOutRefToPlutus)
 import           GeniusYield.Types.Value                 (tokenNameFromPlutus)
+import           PlutusLedgerApi.Data.V3                 (Credential (..))
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import qualified PlutusLedgerApi.V2                      as V2
 import           PlutusLedgerApi.V3                      (Address (..), BuiltinByteString, Datum (..), OutputDatum (..),
@@ -48,7 +49,6 @@ import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, par
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..),
                                                           rollupCompiled)
 import           ZkFold.Cardano.UPLC.RollupData          (rollupDataCompiled)
-import PlutusLedgerApi.Data.V3 (Credential(..))
 
 data Transaction = Transaction
     { curPath         :: !FilePath
