@@ -26,7 +26,17 @@ echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"
 echo ""
 
-# cabal run zkfold-cli token burning ...
+cabal run zkfold-cli token burning \
+    --path-to-gycoreconfig $path \
+    --change-address "$(cat $keypath/someone.addr)" \
+    --out-address "$keypath/burning-transaction.tx" \
+    --tx-in $in1 \
+    --tx-in $in2 \
+    --tx-in $forwardingMintIn \
+    --tx-out "$(cat $keypath/zkfold-main.addr)" \
+    --tx-id "$keypath/forwardingMint.tx" \
+    --tx-id "$keypath/plonkupVerifierToken.tx" \
+    --signing-key-file "$keypath/someone.skey"
 
 echo ""
 echo "bob address:"

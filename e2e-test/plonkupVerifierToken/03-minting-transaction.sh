@@ -17,7 +17,14 @@ echo ""
 echo "alice minting tokens for bob."
 echo ""
 
-# cabal run zkfold-cli token minting ...
+cabal run zkfold-cli token minting \
+    --path-to-gycoreconfig $path \
+    --change-address "$(cat $keypath/someone.addr)" \
+    --out-address "$keypath/minting-transaction.tx" \
+    --tx-in $in1 \
+    --tx-out "$(cat $keypath/zkfold-main.addr)" \
+    --tx-id "$keypath/forwardingMint.txbody" \
+    --signing-key-file "$keypath/someone.skey"
 
 echo ""
 echo "bob address:"

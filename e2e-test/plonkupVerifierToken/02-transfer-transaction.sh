@@ -23,7 +23,12 @@ echo "charles address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/charles.addr) --testnet-magic $magic)"
 echo ""
 
-# cabal run zkfold-cli token transfer ...
+cabal run zkfold-cli token transfer \
+    --path-to-gycoreconfig $path \
+    --change-address "$(cat $keypath/someone.addr)" \
+    --out-address "$keypath/plonkupVerifierToken-transfer.tx" \
+    --tx-in $in1 \
+    --signing-key-file "$keypath/someone.skey"
 
 echo "forwardingMint address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/forwardingMint.addr) --testnet-magic $magic)"
