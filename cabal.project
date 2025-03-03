@@ -16,13 +16,13 @@ index-state:
 source-repository-package
   type: git
   location: https://github.com/zkFold/zkfold-base.git
-  tag: faff69bc1522612ce47ddf6b5e0ff790eec0ff07 
+  tag: 30c8ab3b50d910053fde1b1a0954a13624b4ca8d 
   subdir: symbolic-base
 
 source-repository-package
   type: git
   location: https://github.com/zkFold/zkfold-base.git
-  tag: faff69bc1522612ce47ddf6b5e0ff790eec0ff07 
+  tag: 30c8ab3b50d910053fde1b1a0954a13624b4ca8d 
   subdir: symbolic-cardano
 
 packages:
