@@ -1,16 +1,25 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DefaultSignatures    #-}
+{-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE PolyKinds            #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Main where
 
 import           Cardano.Api
 import           Cardano.Api.Shelley                         (PlutusScript (..))
 import           Control.Monad                               (void)
+import           Data.Aeson
+import qualified Data.ByteString.Base64.URL                  as B64
+import qualified Data.ByteString.Char8                       as C8
+import           Data.Proxy
 import           Data.String                                 (IsString (..))
 import           Flat.Types                                  ()
 import           GHC.Generics                                (Generic, Par1 (..), U1 (..), type (:*:) (..))
+import qualified GHC.Generics                                as G
 import           Options.Applicative
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
@@ -28,19 +37,20 @@ import           ZkFold.Base.Algebra.EllipticCurve.Class     (CyclicGroup (..))
 import           ZkFold.Base.Data.Vector                     (Vector)
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
-import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
+import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret (..))
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Cardano.UPLC.Wallet                  (WalletSetup (..), untypedWallet)
+import           ZkFold.Cardano.UPLC.Wallet                  (WalletRedeemer (..), WalletSetup (..), untypedWallet)
 import           ZkFold.Symbolic.Algorithms.RSA
-import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (zkLogin, zkLoginMock)
+import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (ZkLoginInput (..), zkLogin, zkLoginMock)
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
 import qualified ZkFold.Symbolic.Compiler                    as C
 import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..))
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..), true)
+import           ZkFold.Symbolic.Data.Class
 import           ZkFold.Symbolic.Data.Combinators
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement           (FieldElement)
@@ -48,22 +58,35 @@ import           ZkFold.Symbolic.Data.JWT                    (Certificate, Clien
                                                               TokenPayload (..), verifySignature)
 import           ZkFold.Symbolic.Data.UInt                   (UInt)
 import           ZkFold.Symbolic.Data.VarByteString
+import           ZkFold.Symbolic.Interpreter
 
-data UserData =
-    UserData
-        { tokenHeader  :: String
-        , tokenPayload :: String
-        , signature    :: String
-        , certificate  :: String
-        , amount       :: Natural
-        , recipient    :: String
-        , pi           :: String
-        , userId       :: String
-        , pubKeyHash   :: String
+data ValidationData =
+    ValidationData
+        { vTokenHeader  :: String
+        , vTokenPayload :: String
+        , vSignature    :: String
+        , vCertificate  :: String
+        , vAmount       :: Natural
+        , vRecipient    :: String
+        , vPi           :: String
+        , vUserId       :: String
+        , vPubKeyHash   :: String
+        , vOutputDir    :: FilePath
         }
 
-userData :: Parser UserData
-userData = UserData
+data CreationData =
+    CreationData
+        { cUserId     :: String
+        , cPubKeyHash :: String
+        , cOutputDir  :: FilePath
+        }
+
+data RunMode =
+      Create CreationData
+    | Validate ValidationData
+
+validationDataP :: Parser ValidationData
+validationDataP = ValidationData
     <$> strOption (long "header" <> metavar "BASE64URL" <> help "JWT header")
     <*> strOption (long "payload" <> metavar "BASE64URL" <> help "JWT payload")
     <*> strOption (long "signature" <> metavar "BASE64URL" <> help "JWT signature")
@@ -73,43 +96,86 @@ userData = UserData
     <*> strOption (long "input" <> metavar "BASE64URL" <> help "Wallet contract public input")
     <*> strOption (long "id" <> metavar "STR" <> help "User ID (email)")
     <*> strOption (long "pubkey" <> metavar "STR" <> help "Public key hash")
+    <*> strOption (long "output" <> metavar "STR" <> help "Output directory")
 
+creationDataP :: Parser CreationData
+creationDataP = CreationData
+    <$> strOption (long "id" <> metavar "STR" <> help "User ID (email)")
+    <*> strOption (long "pubkey" <> metavar "STR" <> help "Public key hash")
+    <*> strOption (long "output" <> metavar "STR" <> help "Output directory")
+
+
+runModeP :: Parser RunMode
+runModeP = (flag' () (long "create")   *> (Create <$> creationDataP))
+       <|> (flag' () (long "validate") *> (Validate <$> validationDataP))
 
 main :: IO ()
 main = do
-    currentDir <- getCurrentDirectory
-    let path = case takeFileName currentDir of
-          "rollup"   -> ".." </> ".."
-          "e2e-test" -> ".."
-          _          -> "."
+    let opts = info (runModeP <**> helper) (fullDesc <> progDesc "Produce a smart contract for the user")
 
-    createDirectoryIfMissing True $ path </> "test-data"
-    createDirectoryIfMissing True $ path </> "assets"
+    runMode <- execParser opts
 
-    let opts = info (userData <**> helper) (fullDesc <> progDesc "Produce a smart contract for the user")
+    case runMode of
+      Create (CreationData{..}) -> do
+          createDirectoryIfMissing True cOutputDir
+          savePlutus (cOutputDir </> "smartWallet.plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString cUserId) (fromString cPubKeyHash))
+      Validate valData -> do
+          createDirectoryIfMissing True $ vOutputDir valData
+          let proofBytes = zkLoginProofBytes valData
 
-    UserData{..} <- execParser opts
+          error "Not implemented yet"
 
-    savePlutus (path </> "assets" </> "smartWallet.plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString userId) (fromString pubKeyHash))
-
-type NGates = 2^16
-
-constUInt :: forall ctx . Symbolic ctx => UInt 32 'Auto ctx -> Bool ctx 
-constUInt _ = true
+type NGates = 256
 
 zkLoginSetupBytes :: SetupBytes
 zkLoginSetupBytes = mkSetup setupV
     where
         x = zero -- TODO: just to test compilation
 
-        ac = C.compile @Fr constUInt --zkLoginMock
+        ac = C.compile @Fr zkLoginMock
 
         (omega, k1, k2) = getParams (Number.value @NGates)
         (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
         plonkup = Plonkup omega k1 k2 ac h1 gs
         setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
 
+zkLoginRedeemer :: ValidationData -> ProofBytes -> WalletRedeemer
+zkLoginRedeemer = undefined
 
+zkLoginProofBytes :: ValidationData -> ProofBytes
+zkLoginProofBytes ValidationData{..} = mkProof proof
+    where
+        Just th  = decodeStrict . B64.decodeLenient . C8.pack $ vTokenHeader
+        Just tp  = decodeStrict . B64.decodeLenient . C8.pack $ vTokenPayload
+        ts       = fromConstant . B64.decodeLenient . C8.pack $ vSignature
+
+        clientSecret :: ClientSecret (Interpreter Fr)
+        clientSecret = ClientSecret th tp ts
+
+        Just cert = decodeStrict . B64.decodeLenient . C8.pack $ vCertificate
+
+        amount    = fromConstant vAmount
+        recipient = fromConstant vRecipient
+        pubi      = fromConstant vPi
+        userId    = fromConstant vUserId
+
+        input :: ZkLoginInput (Interpreter Fr)
+        input = ZkLoginInput clientSecret amount recipient cert pubi
+
+        x = zero -- TODO: just to test compilation
+        ps = PlonkupProverSecret $ pure zero
+
+        ac = C.compile @Fr zkLoginMock
+
+        witnessInputs   = runInterpreter $ arithmetize input Proxy
+
+        (omega, k1, k2) = getParams (Number.value @NGates)
+        (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
+        plonkup = Plonkup omega k1 k2 ac h1 gs
+        setupP  = setupProve @(PlonkupN _ _ NGates) @HaskellCore plonkup
+        setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
+        witness = (PlonkupWitnessInput undefined witnessInputs, ps)
+        (_, proof) = prove @(PlonkupN _ _ NGates) @HaskellCore setupP witness
 
 validator :: SetupBytes -> WalletSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 validator zkp ws =
