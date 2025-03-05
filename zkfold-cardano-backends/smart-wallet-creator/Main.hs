@@ -11,16 +11,19 @@ module Main where
 
 import           Cardano.Api
 import           Cardano.Api.Shelley                         (PlutusScript (..))
+import           Codec.Serialise                             as CBOR
 import           Control.Monad                               (void)
 import           Data.Aeson
 import qualified Data.ByteString.Base64.URL                  as B64
 import qualified Data.ByteString.Char8                       as C8
+import qualified Data.ByteString.Lazy as BL
 import           Data.Proxy
 import           Data.String                                 (IsString (..))
 import           Flat.Types                                  ()
 import           GHC.Generics                                (Generic, Par1 (..), U1 (..), type (:*:) (..))
 import qualified GHC.Generics                                as G
 import           Options.Applicative
+import           PlutusLedgerApi.Common                      as V3
 import           PlutusLedgerApi.V3                          as V3
 import           PlutusTx                                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.Prelude                            (BuiltinUnit)
@@ -41,9 +44,11 @@ import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecre
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
 import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Cardano.UPLC.Wallet                  (WalletRedeemer (..), WalletSetup (..), untypedWallet)
+import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes)
+import           ZkFold.Cardano.UPLC.Wallet                  (SpendingCreds (..), WalletRedeemer (..), WalletSetup (..),
+                                                              Web2Creds (..), untypedWallet)
 import           ZkFold.Symbolic.Algorithms.RSA
 import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (ZkLoginInput (..), zkLogin, zkLoginMock)
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
@@ -121,9 +126,42 @@ main = do
           savePlutus (cOutputDir </> "smartWallet.plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString cUserId) (fromString cPubKeyHash))
       Validate valData -> do
           createDirectoryIfMissing True $ vOutputDir valData
-          let proofBytes = zkLoginProofBytes valData
+--          let proofBytes = zkLoginProofBytes valData
+          let proofBytes = meaninglessProofBytes
+          let redeemer = zkLoginRedeemer valData proofBytes
+          let bytes = CBOR.serialise . toData . toBuiltinData $ redeemer
+          BL.writeFile (vOutputDir valData </> "proof.cbor") bytes
+           
 
-          error "Not implemented yet"
+meaninglessProofBytes =
+    ProofBytes {
+        cmA_bytes     = ""
+      , cmB_bytes     = ""
+      , cmC_bytes     = ""
+      , cmF_bytes     = ""
+      , cmH1_bytes    = ""
+      , cmH2_bytes    = ""
+      , cmZ1_bytes    = ""
+      , cmZ2_bytes    = ""
+      , cmQlow_bytes  = ""
+      , cmQmid_bytes  = ""
+      , cmQhigh_bytes = ""
+      , proof1_bytes  = ""
+      , proof2_bytes  = ""
+      , a_xi_int      = 0
+      , b_xi_int      = 0
+      , c_xi_int      = 0
+      , s1_xi_int     = 0
+      , s2_xi_int     = 0
+      , f_xi_int      = 0
+      , t_xi_int      = 0
+      , t_xi'_int     = 0
+      , z1_xi'_int    = 0
+      , z2_xi'_int    = 0
+      , h1_xi'_int    = 0
+      , h2_xi_int     = 0
+      , l1_xi         = toF 0
+    }
 
 type NGates = 256
 
@@ -140,11 +178,13 @@ zkLoginSetupBytes = mkSetup setupV
         setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
 
 zkLoginRedeemer :: ValidationData -> ProofBytes -> WalletRedeemer
-zkLoginRedeemer = undefined
+zkLoginRedeemer ValidationData{..} proofBytes =
+    WalletRedeemer "1741153669" (fromString vRecipient) proofBytes (SpendWithWeb2Token $ Web2Creds (fromString vUserId) "" (fromIntegral vAmount))
 
 zkLoginProofBytes :: ValidationData -> ProofBytes
-zkLoginProofBytes ValidationData{..} = mkProof proof
+zkLoginProofBytes ValidationData{..} = undefined -- mkProof proof
     where
+            {--
         Just th  = decodeStrict . B64.decodeLenient . C8.pack $ vTokenHeader
         Just tp  = decodeStrict . B64.decodeLenient . C8.pack $ vTokenPayload
         ts       = fromConstant . B64.decodeLenient . C8.pack $ vSignature
@@ -161,7 +201,6 @@ zkLoginProofBytes ValidationData{..} = mkProof proof
 
         input :: ZkLoginInput (Interpreter Fr)
         input = ZkLoginInput clientSecret amount recipient cert pubi
-
         x = zero -- TODO: just to test compilation
         ps = PlonkupProverSecret $ pure zero
 
@@ -176,6 +215,7 @@ zkLoginProofBytes ValidationData{..} = mkProof proof
         setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
         witness = (PlonkupWitnessInput undefined witnessInputs, ps)
         (_, proof) = prove @(PlonkupN _ _ NGates) @HaskellCore setupP witness
+--}
 
 validator :: SetupBytes -> WalletSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 validator zkp ws =

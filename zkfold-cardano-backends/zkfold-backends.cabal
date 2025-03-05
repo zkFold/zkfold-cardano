@@ -301,6 +301,7 @@ executable smart-wallet-creator
     plutus-tx-plugin        ^>=1.36,
     serialise                      ,
     text                           ,
+    QuickCheck                     ,
     symbolic-base                  ,
     symbolic-cardano               ,
     zkfold-cardano                 ,
