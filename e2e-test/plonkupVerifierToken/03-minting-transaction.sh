@@ -17,72 +17,15 @@ echo ""
 echo "alice minting tokens for bob."
 echo ""
 
-in=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $magic --out-file  /dev/stdout | jq -r 'keys[0]')
-collateral=$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $magic --out-file  /dev/stdout | jq -r 'keys[0]')
+cabal run zkfold-cli token minting \
+    --path-to-gycoreconfig $path \
+    --change-address "$(cat $keypath/someone.addr)" \
+    --out-address "$keypath/minting-transaction.tx" \
+    --tx-in $in1 \
+    --tx-out "$(cat $keypath/zkfold-main.addr)" \
+    --tx-id "$keypath/forwardingMint.txbody" \
+    --signing-key-file "$keypath/someone.skey"
 
-echo ""
-echo "alice address:"
-echo "$(cardano-cli query utxo --address $(cat $keypath/alice.addr) --testnet-magic $magic)"
-echo ""
-
-plonkupVerifierToken=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkupVerifierToken.tx")#0
-policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkupVerifierToken.plutus")
-
-#-------------------------- :tokenname and redeemer: ---------------------------
-
-cabal run plonkupVerifierToken-minting-transaction
-
-tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
-
-redeemerProof=$assets/redeemerPlonkupVerifierToken.cbor
-
-echo "PolicyID & TokenName:"
-echo "$policyid.$tokenname"
-
-#---------------------------------- :minting: ----------------------------------
-
-plonkupVerifierPolicyReqUtxo=$(cardano-cli conway transaction calculate-min-required-utxo \
-  --protocol-params-file $assets/protocol.json \
-  --tx-out "$(cat $keypath/bob.addr) + 1 $policyid.$tokenname" | sed 's/^[^ ]* //')
-
-cardano-cli conway transaction build \
-    --testnet-magic $magic \
-    --change-address "$(cat $keypath/alice.addr)" \
-    --tx-in-collateral $collateral \
-    --out-file "$keypath/minting-transaction.txbody" \
-    --tx-in $in \
-    --mint "1 $policyid.$tokenname" \
-    --mint-tx-in-reference $plonkupVerifierToken \
-    --mint-plutus-script-v3 \
-    --mint-reference-tx-in-redeemer-cbor-file $redeemerProof \
-    --policy-id $policyid \
-    --tx-out "$(cat $keypath/bob.addr) + $plonkupVerifierPolicyReqUtxo lovelace + 1 $policyid.$tokenname"
-
-cardano-cli conway transaction sign \
-    --testnet-magic $magic \
-    --tx-body-file "$keypath/minting-transaction.txbody" \
-    --signing-key-file "$keypath/alice.skey" \
-    --out-file "$keypath/minting-transaction.tx"
-
-cardano-cli conway transaction submit \
-    --testnet-magic $magic \
-    --tx-file "$keypath/minting-transaction.tx"
-
-#-------------------------------------------------------------------------------
-
-if [ $magic == $sanchomagic ]; then
-    pause=60
-else
-    pause=5
-fi
-
-echo ""
-echo "Pausing for $pause seconds..."
-echo ""
-sleep $pause
-
-echo ""
-echo "transaction id: $(cardano-cli conway transaction txid --tx-file "$keypath/minting-transaction.tx")"
 echo ""
 echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"

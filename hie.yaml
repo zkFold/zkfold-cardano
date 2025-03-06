@@ -6,51 +6,6 @@ cradle:
     - path: "zkfold-cardano/test"
       component: "zkfold-cardano:test:test"
 
-    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-init-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-transfer-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierTx/plonkVerifierTx-withdraw-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierTx-withdraw-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-init-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-transfer-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-transfer-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierToken/plonkVerifierToken-minting-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:plonkVerifierToken-minting-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierTx-balancing/balancing-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:balancing-init-transaction"
-
-    - path: "zkfold-cardano-backends/plonkVerifierTx-balancing/balancing-parse-input/Main.hs"
-      component: "zkfold-cardano-backends:exe:balancing-parse-input"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-init-transaction/Main.hs"
-      component: "zkfold-cardano-backends:exe:rollup-init-transaction"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-init-transaction/Rollup/Example.hs"
-      component: "zkfold-cardano-backends:exe:rollup-init-transaction"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-update-loop/Main.hs"
-      component: "zkfold-cardano-backends:exe:rollup-update-loop"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-update-loop/Rollup/Example.hs"
-      component: "zkfold-cardano-backends:exe:rollup-update-loop"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Main.hs"
-      component: "zkfold-cardano-backends:exe:rollup-clear-data"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Rollup/CardanoCli.hs"
-      component: "zkfold-cardano-backends:exe:rollup-clear-data"
-
-    - path: "zkfold-cardano-backends/rollup/rollup-clear-data/Rollup/ParseJson.hs"
-      component: "zkfold-cardano-backends:exe:rollup-clear-data"
-
     - path: "zkfold-cardano-scripts/src"
       component: "lib:zkfold-cardano-scripts"
 
@@ -62,6 +17,63 @@ cradle:
 
     - path: "zkfold-cardano-scripts/bench/bench-rollup/Main.hs"
       component: "zkfold-cardano-scripts:bench:bench-rollup"
+
+    - path: "zkfold-cli/app/Main.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Balancing.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Init.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Balancing/Transaction/Transfer.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Options/CardanoCLI.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Options/ZkCLI.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Burning.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Init.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Minting.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierToken/Transaction/Transfer.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/PlonkupVerifierTx/PlonkupVerifierTx.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Transaction/Clear.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Transaction/Init.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Transaction/Next.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Transaction/Update.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/CardanoCli.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Data.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/Example.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
+
+    - path: "zkfold-cli/app/ZkFold/Cardano/Rollup/ParseJson.hs"
+      component: "zkfold-cli:exe:zkfold-cli"
 
     - path: "zkfold-example/src"
       component: "lib:zkfold-example"

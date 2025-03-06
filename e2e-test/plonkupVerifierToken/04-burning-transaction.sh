@@ -26,64 +26,17 @@ echo "bob address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/bob.addr) --testnet-magic $magic)"
 echo ""
 
-plonkupVerifierToken=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkupVerifierToken.tx")#0
-forwardingMintReference=$(cardano-cli conway transaction txid --tx-file "$keypath/forwardingMint.tx")#0
-policyid=$(cardano-cli conway transaction policyid --script-file "$assets/plonkupVerifierToken.plutus")
-
-forwardingMintIn=$(cardano-cli conway transaction txid --tx-file "$keypath/plonkupVerifierToken-transfer.tx")#0
-
-#-------------------------- :tokenname and redeemer: ---------------------------
-
-cabal run plonkupVerifierToken-minting-transaction
-
-tokenname=$(head -n 1 "$assets/tokenname" | sed 's/^"//; s/"$//')
-
-redeemerUnit=$assets/unit.cbor
-redeemerDummy=$assets/dummy-redeemer.cbor
-
-#---------------------------------- :burning: ----------------------------------
-
-cardano-cli conway transaction build \
-    --testnet-magic $magic \
+cabal run zkfold-cli token burning \
+    --path-to-gycoreconfig $path \
+    --change-address "$(cat $keypath/someone.addr)" \
+    --out-address "$keypath/burning-transaction.tx" \
     --tx-in $in1 \
     --tx-in $in2 \
     --tx-in $forwardingMintIn \
-    --spending-tx-in-reference $forwardingMintReference \
-    --spending-plutus-script-v3 \
-    --spending-reference-tx-in-inline-datum-present \
-    --spending-reference-tx-in-redeemer-cbor-file $redeemerUnit \
-    --tx-in-collateral $collateral \
-    --tx-out "$(cat $keypath/bob.addr) + 10000000 lovelace" \
-    --change-address "$(cat $keypath/bob.addr)" \
-    --mint "-1 $policyid.$tokenname" \
-    --mint-tx-in-reference $plonkupVerifierToken \
-    --mint-plutus-script-v3 \
-    --mint-reference-tx-in-redeemer-cbor-file $redeemerDummy \
-    --policy-id $policyid \
-    --out-file "$keypath/burning-transaction.txbody"    
-    
-cardano-cli conway transaction sign \
-    --testnet-magic $magic \
-    --tx-body-file "$keypath/burning-transaction.txbody" \
-    --signing-key-file "$keypath/bob.skey" \
-    --out-file "$keypath/burning-transaction.tx"
-
-cardano-cli conway transaction submit \
-    --testnet-magic $magic \
-    --tx-file "$keypath/burning-transaction.tx"
-
-#-------------------------------------------------------------------------------
-
-if [ $magic == $sanchomagic ]; then
-    pause=60
-else
-    pause=5
-fi
-
-echo ""
-echo "Pausing for $pause seconds..."
-echo ""
-sleep $pause
+    --tx-out "$(cat $keypath/zkfold-main.addr)" \
+    --tx-id "$keypath/forwardingMint.tx" \
+    --tx-id "$keypath/plonkupVerifierToken.tx" \
+    --signing-key-file "$keypath/someone.skey"
 
 echo ""
 echo "bob address:"

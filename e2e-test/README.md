@@ -1,10 +1,8 @@
 # Cli scripts
 
-
 ## Docs
 
 We have a description of transactions in `docs`.
-
 
 ## Scripts
 
