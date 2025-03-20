@@ -62,13 +62,17 @@ makeIsDataIndexed ''WalletRedeemer [('WalletRedeemer, 0)]
 -- If the script purpose is Spending, it forwards the verification to the corresponding contract
 --
 wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
-wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) =
-    case (scriptInfo, maybeScriptHash) of
-      (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
-      (SpendingScript _ _, _)               -> False
-      _                                     -> case wrCreds of
-            SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
-            SpendWithWeb2Token w2c  -> zkpPasses w2c && outputsCorrect w2c
+wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) = 
+    case wrCreds of
+        SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
+        SpendWithWeb2Token w2c  -> zkpPasses w2c -- && outputsCorrect w2c
+
+--    case (scriptInfo, maybeScriptHash) of
+--      (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
+--      (SpendingScript _ _, _)               -> False
+--      _                                     -> case wrCreds of
+--            SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
+--            SpendWithWeb2Token w2c  -> zkpPasses w2c -- && outputsCorrect w2c
     where
         maybeScriptHash = do
             inp <- findOwnInput ctx
