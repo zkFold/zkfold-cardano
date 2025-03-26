@@ -14,12 +14,16 @@ import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
 import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
+import           PlutusTx.Trace                           as T
+import PlutusTx.Builtins.HasOpaque
 import           Prelude                                  (Show)
+import qualified Prelude                                  as P
+import Data.String (IsString (..))
 
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (fromInput, toF, toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingReward)
 
 data WalletSetup = WalletSetup
@@ -50,6 +54,7 @@ data WalletRedeemer = WalletRedeemer
     { wrTxDate      :: BuiltinByteString
     , wrTxRecipient :: BuiltinByteString
     , wrZkp         :: ProofBytes
+    , wrInput       :: InputBytes
     , wrCreds       :: SpendingCreds
     }
   deriving stock (Show, Generic)
@@ -57,15 +62,20 @@ data WalletRedeemer = WalletRedeemer
 makeLift ''WalletRedeemer
 makeIsDataIndexed ''WalletRedeemer [('WalletRedeemer, 0)]
 
+{-# INLINABLE (@+) #-}
+infixr 5 @+
+(@+) :: P.Show a => a -> BuiltinString -> BuiltinString
+s @+ bs = (stringToBuiltinString $ P.show s) `appendString` "\n\n" `appendString` bs
+
 {-# INLINABLE wallet #-}
 -- | This script verifies that a transaction was either signed with a signature or has a ZKP associated with it allowing to access the funds.
 -- If the script purpose is Spending, it forwards the verification to the corresponding contract
 --
 wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
-wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) = 
+wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) =
     case wrCreds of
         SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
-        SpendWithWeb2Token w2c  -> zkpPasses w2c -- && outputsCorrect w2c
+        SpendWithWeb2Token w2c  -> T.trace (decodeUtf8 $ proof1_bytes wrZkp) $ zkpPasses w2c -- && outputsCorrect w2c
 
 --    case (scriptInfo, maybeScriptHash) of
 --      (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
@@ -82,7 +92,7 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
               _                    -> Nothing
 
         compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl appendByteString "" [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
-        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck (compressedPI w2c) wrZkp
+        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck wrInput wrZkp
 
         outputsCorrect Web2Creds {..} = and
             [ length txInfoOutputs == 2                           -- only two outputs
@@ -96,6 +106,24 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
         getCredential (Address (PubKeyCredential pkey) _) = getPubKeyHash pkey
         getCredential (Address (ScriptCredential scr)  _) = getScriptHash scr
 
+walletNoCtx :: SetupBytes -> WalletSetup -> WalletRedeemer -> Bool
+walletNoCtx zkpCheck WalletSetup{..} WalletRedeemer{..}  =
+    case wrCreds of
+        SpendWithWeb2Token w2c -> zkpPasses w2c -- && outputsCorrect w2c
+        _                      -> False
+
+    where
+        compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl appendByteString "" [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
+        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck wrInput wrZkp
+
+{-# INLINABLE untypedWalletNoCtx #-}
+untypedWalletNoCtx :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
+untypedWalletNoCtx zkpCheck setup ctx' =
+  let
+    ctx      = unsafeFromBuiltinData ctx'
+    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+  in
+    check $ walletNoCtx zkpCheck setup redeemer
 
 {-# INLINABLE untypedWallet #-}
 untypedWallet :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
