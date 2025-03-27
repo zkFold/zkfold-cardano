@@ -9,10 +9,10 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
-import           PlutusTx                                 (CompiledCode, compile)
-import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Ord (..), check, ($),
-                                                           (&&), (.), (||), (<>), (==))
+import           PlutusTx                   (CompiledCode, compile)
+import qualified PlutusTx.Builtins.Internal as BI
+import           PlutusTx.Prelude           (Bool (..), BuiltinData, BuiltinUnit, Ord (..), check, ($), (&&), (.), (<>),
+                                             (==), (||))
 
 -- | Plutus script (minting policy) for posting signed messages on-chain.
 {-# INLINABLE untypedAsterizmMessage #-}
