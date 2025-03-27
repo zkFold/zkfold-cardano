@@ -18,10 +18,9 @@ import           Prelude                                     (undefined)
 
 import           ZkFold.Base.Algebra.Basic.Class
 import           ZkFold.Base.Algebra.Basic.Number            (KnownNat)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point)
-import           ZkFold.Base.Protocol.NonInteractiveProof    (CompatibleNonInteractiveProofs (..), CoreFunction,
+import           ZkFold.Base.Protocol.NonInteractiveProof    (CompatibleNonInteractiveProofs (..),
                                                               NonInteractiveProof (..))
-import           ZkFold.Base.Protocol.Plonkup                (Plonkup)
+import           ZkFold.Base.Protocol.Plonkup                (Plonkup, PlonkupPolyExtendedLength)
 import           ZkFold.Base.Protocol.Plonkup.Verifier.Setup (PlonkupVerifierSetup (..))
 import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OffChain.Transcript          ()
@@ -30,7 +29,7 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofB
 
 data PlonkupPlutus
 
-instance NonInteractiveProof PlonkupPlutus core where
+instance NonInteractiveProof PlonkupPlutus where
     type Transcript PlonkupPlutus  = BuiltinByteString
     type SetupProve PlonkupPlutus  = ()
     type SetupVerify PlonkupPlutus = SetupBytes
@@ -190,10 +189,11 @@ instance
         ( Representable p
         , Representable i
         , KnownNat n
+        , KnownNat (PlonkupPolyExtendedLength n)
         , Ord (Rep i)
-        , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2
-        , CoreFunction BLS12_381_G1_Point core
-        ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus core where
+        , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts pv) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2 pv
+--        , Bilinear BLS12_381_G1_Point core
+        ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof
