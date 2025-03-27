@@ -20,7 +20,7 @@ import           Prelude                                  (Show)
 import qualified Prelude                                  as P
 import Data.String (IsString (..))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (fromInput, toF, toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (InputBytes, ProofBytes (..), SetupBytes)
@@ -92,7 +92,7 @@ wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxIn
               _                    -> Nothing
 
         compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl appendByteString "" [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
-        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck wrInput wrZkp
+        zkpPasses w2c = verify @PlonkupPlutus zkpCheck wrInput wrZkp
 
         outputsCorrect Web2Creds {..} = and
             [ length txInfoOutputs == 2                           -- only two outputs
@@ -114,7 +114,7 @@ walletNoCtx zkpCheck WalletSetup{..} WalletRedeemer{..}  =
 
     where
         compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl appendByteString "" [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
-        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck wrInput wrZkp
+        zkpPasses w2c = verify @PlonkupPlutus zkpCheck wrInput wrZkp
 
 {-# INLINABLE untypedWalletNoCtx #-}
 untypedWalletNoCtx :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
