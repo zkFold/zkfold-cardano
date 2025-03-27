@@ -29,6 +29,7 @@ packages:
     zkfold-cardano
     zkfold-cardano-scripts
     zkfold-cli
+    zkfold-wallet-cli
     zkfold-example
 
 package cardano-crypto-praos

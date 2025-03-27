@@ -38,7 +38,7 @@ import           ZkFold.Base.Algebra.Basic.Number            (Natural, type (^))
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
 import           ZkFold.Base.Algebra.EllipticCurve.Class     (CyclicGroup (..))
 import           ZkFold.Base.Data.Vector                     (Vector)
-import           ZkFold.Base.Protocol.NonInteractiveProof as NP   (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof as NP   (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret (..))
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
@@ -197,15 +197,15 @@ zkLoginSetupBytes = mkSetup setupV
         (omega, k1, k2) = getParams (Number.value @NGates)
         (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
         plonkup = Plonkup omega k1 k2 ac h1 gs
-        setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
+        setupV  = setupVerify @(PlonkupN _ _ NGates) plonkup
 
 zkLoginRedeemer :: ValidationData -> ProofBytes -> InputBytes -> WalletRedeemer
 zkLoginRedeemer ValidationData{..} proofBytes inputBytes =
     WalletRedeemer "1741153669" (fromString vRecipient) proofBytes inputBytes (SpendWithWeb2Token $ Web2Creds (fromString vUserId) "" (fromIntegral vAmount))
 
 zkLoginProofBytes :: ValidationData -> (ProofBytes, InputBytes)
--- zkLoginProofBytes ValidationData{..} = trace (P.show $ NP.verify @(PlonkupN _ _ NGates) @HaskellCore setupV pInput proof) $ mkProof proof
-zkLoginProofBytes ValidationData{..} = trace (P.show $ NP.verify @PlonkupPlutus @HaskellCore zkLoginSetupBytes (mkInput pInput) (mkProof proof)) $ (mkProof proof, mkInput pInput)
+-- zkLoginProofBytes ValidationData{..} = trace (P.show $ NP.verify @(PlonkupN _ _ NGates) setupV pInput proof) $ mkProof proof
+zkLoginProofBytes ValidationData{..} = trace (P.show $ NP.verify @PlonkupPlutus zkLoginSetupBytes (mkInput pInput) (mkProof proof)) $ (mkProof proof, mkInput pInput)
 --zkLoginProofBytes ValidationData{..} = (mkProof proof, mkInput pInput)
     where
         Just th  = decodeStrict . B64.decodeLenient . C8.pack $ vTokenHeader
@@ -231,10 +231,10 @@ zkLoginProofBytes ValidationData{..} = trace (P.show $ NP.verify @PlonkupPlutus 
         (omega, k1, k2) = getParams (Number.value @NGates)
         (gs, h1) = getSecrectParams @NGates @BLS12_381_G1_Point @BLS12_381_G2_Point x
         plonkup = Plonkup omega k1 k2 ac h1 gs
-        setupP  = setupProve @(PlonkupN _ _ NGates) @HaskellCore plonkup
-        setupV  = setupVerify @(PlonkupN _ _ NGates) @HaskellCore plonkup
+        setupP  = setupProve @(PlonkupN _ _ NGates) plonkup
+        setupV  = setupVerify @(PlonkupN _ _ NGates) plonkup
         witness = (PlonkupWitnessInput uglyHardcodedPayloadInput (witnessInputs :*: U1), ps)
-        (pInput, proof) = prove @(PlonkupN _ _ NGates) @HaskellCore setupP witness
+        (pInput, proof) = prove @(PlonkupN _ _ NGates) setupP witness
 
 validator :: SetupBytes -> WalletSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 validator zkp ws =

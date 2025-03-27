@@ -15,7 +15,7 @@ import qualified PlutusTx.Builtins.Internal               as BI
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Ord (..), check, ($),
                                                            (&&), (.), (||))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
@@ -55,7 +55,7 @@ untypedPlonkupVerifierToken computation ctx =
       conditionBurning = n < 0
 
       -- Verifying the Plonkup `proof` for the `computation` on `input`
-      conditionVerifying = verify @PlonkupPlutus @HaskellCore computation input proof
+      conditionVerifying = verify @PlonkupPlutus computation input proof
 
 plonkupVerifierTokenCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 plonkupVerifierTokenCompiled computation =
