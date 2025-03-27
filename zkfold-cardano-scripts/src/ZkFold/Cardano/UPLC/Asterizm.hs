@@ -38,16 +38,17 @@ untypedAsterizmMessage ctx =
 
       -- Extract message from ScriptContext
       message = BI.unsafeDataAsB $ BI.head scriptContextRedeemer'
+
       -- Hash message
       hash    = BI.sha2_256 message
 
-      -- First signatory of the transaction
+      -- Extract signatory
       vk = BI.unsafeDataAsB $ BI.head $ BI.unsafeDataAsList $ BI.head $ tail4 $ tail4 $ BI.snd $ BI.unsafeDataAsConstr info
 
       -- Burning already minted tokens
       conditionBurning = n < 0
 
-      -- Verifying the Plonkup `proof` for the `computation` on `input`
+      -- Verifying message signature
       conditionVerifying = t == vk <> hash
 
 asterizmMessageCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
