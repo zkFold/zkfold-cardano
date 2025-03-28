@@ -31,7 +31,7 @@ untypedAsterizmMessage ctx =
 
       mints'             = BI.head $ BI.unsafeDataAsMap txInfoMint
       conditionCurrency  = BI.ifThenElse (BI.equalsData cs' $ BI.fst mints') True False
-      
+
       ms = BI.unsafeDataAsMap $ BI.snd mints'
       m' = BI.head ms
       conditionTokenName = BI.ifThenElse (BI.null $ BI.tail ms) True False
