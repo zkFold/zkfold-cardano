@@ -116,7 +116,7 @@ jobs:
         cabal build all --dry-run
 
     - name: Restore cached dependencies
-      uses: actions/cache/restore@v4.0.1
+      uses: actions/cache/restore@v4
       id: cache
       env:
         key: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-cabal-${{ matrix.cabal }}
@@ -149,7 +149,7 @@ jobs:
 
     # Cache dependencies already here, so that we do not have to rebuild them should the subsequent steps fail.
     - name: Save cached dependencies
-      uses: actions/cache/save@v4.0.1
+      uses: actions/cache/save@v4
       # If we had an exact cache hit, trying to save the cache would error because of key clash.
       if: steps.cache.outputs.cache-hit != 'true'
       with:
