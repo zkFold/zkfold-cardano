@@ -18,7 +18,7 @@ import           PlutusTx.Prelude           (Bool (..), BuiltinData, BuiltinUnit
 {-# INLINABLE untypedAsterizmMessage #-}
 untypedAsterizmMessage :: BuiltinData -> BuiltinUnit
 untypedAsterizmMessage ctx =
-  check $ eqCs && (conditionBurning || conditionVerifying)
+  check $ conditionCurrency && conditionTokenName && (conditionBurning || conditionVerifying)
   where
       scriptContextTxInfo'     = BI.snd $ BI.unsafeDataAsConstr ctx
       scriptContextRedeemer'   = BI.tail scriptContextTxInfo'
@@ -29,18 +29,18 @@ untypedAsterizmMessage ctx =
       txInfoMint = BI.head $ tail4 $ BI.snd $ BI.unsafeDataAsConstr info
       tail4      = BI.tail . BI.tail . BI.tail . BI.tail
 
-      mints' = BI.head $ BI.unsafeDataAsMap txInfoMint
-      eqCs   = BI.ifThenElse (BI.equalsData cs' $ BI.fst mints') True False
-      m'     = BI.head $ BI.unsafeDataAsMap $ BI.snd mints'
+      mints'             = BI.head $ BI.unsafeDataAsMap txInfoMint
+      conditionCurrency  = BI.ifThenElse (BI.equalsData cs' $ BI.fst mints') True False
+      
+      ms = BI.unsafeDataAsMap $ BI.snd mints'
+      m' = BI.head ms
+      conditionTokenName = BI.ifThenElse (BI.null $ BI.tail ms) True False
 
       t = BI.unsafeDataAsB $ BI.fst m'
       n = BI.unsafeDataAsI $ BI.snd m'
 
       -- Extract message from ScriptContext
       message = BI.unsafeDataAsB $ BI.head scriptContextRedeemer'
-
-      -- Hash message
-      hash    = BI.sha2_256 message
 
       -- Extract signatory
       vk = BI.unsafeDataAsB $ BI.head $ BI.unsafeDataAsList $ BI.head $ tail4 $ tail4 $ BI.snd $ BI.unsafeDataAsConstr info
@@ -49,7 +49,7 @@ untypedAsterizmMessage ctx =
       conditionBurning = n < 0
 
       -- Verifying message signature
-      conditionVerifying = t == vk <> hash
+      conditionVerifying = t == BI.blake2b_256 (vk <> message)
 
 asterizmMessageCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmMessageCompiled =
