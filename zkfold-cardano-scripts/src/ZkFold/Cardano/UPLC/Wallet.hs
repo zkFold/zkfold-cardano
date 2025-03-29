@@ -23,8 +23,8 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupByte
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingReward)
 
 data WalletSetup = WalletSetup
-  { wsPubKeyHash :: BuiltinByteString
-  , wsWeb2UserId :: BuiltinByteString
+  { wsPubKeyHash   :: BuiltinByteString
+  , wsPlonkupSetup :: SetupBytes
   } deriving stock (Show, Generic)
 
 makeLift ''WalletSetup
@@ -61,8 +61,8 @@ makeIsDataIndexed ''WalletRedeemer [('WalletRedeemer, 0)]
 -- | This script verifies that a transaction was either signed with a signature or has a ZKP associated with it allowing to access the funds.
 -- If the script purpose is Spending, it forwards the verification to the corresponding contract
 --
-wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
-wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) =
+wallet :: WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
+wallet WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) =
     case (scriptInfo, maybeScriptHash) of
       (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
       (SpendingScript _ _, _)               -> False
@@ -78,7 +78,7 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
               _                    -> Nothing
 
         compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl1 appendByteString [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
-        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck (compressedPI w2c) wrZkp
+        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore wsPlonkupSetup (compressedPI w2c) wrZkp
 
         outputsCorrect Web2Creds {..} = and
             [ length txInfoOutputs == 2                           -- only two outputs
@@ -92,12 +92,11 @@ wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..}
         getCredential (Address (PubKeyCredential pkey) _) = getPubKeyHash pkey
         getCredential (Address (ScriptCredential scr)  _) = getScriptHash scr
 
-
 {-# INLINABLE untypedWallet #-}
-untypedWallet :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
-untypedWallet zkpCheck setup ctx' =
+untypedWallet :: WalletSetup -> BuiltinData -> BuiltinUnit
+untypedWallet setup ctx' =
   let
     ctx      = unsafeFromBuiltinData ctx'
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
-    check $ wallet zkpCheck setup redeemer ctx
+    check $ wallet setup redeemer ctx
