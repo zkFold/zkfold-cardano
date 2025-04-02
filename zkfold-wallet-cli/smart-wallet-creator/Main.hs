@@ -185,7 +185,7 @@ uglyHardcodedPayloadInput = ((((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
                            :*: U1
 
 
-type NGates = 1024 
+type NGates = 256 
 
 zkLoginSetupBytes :: SetupBytes
 zkLoginSetupBytes = mkSetup setupV
