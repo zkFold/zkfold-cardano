@@ -72,10 +72,10 @@ s @+ bs = (stringToBuiltinString $ P.show s) `appendString` "\n\n" `appendString
 -- If the script purpose is Spending, it forwards the verification to the corresponding contract
 --
 wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
-wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) = True
---    case wrCreds of
---        SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
---        SpendWithWeb2Token w2c  -> T.trace (decodeUtf8 $ proof1_bytes wrZkp) $ zkpPasses w2c -- && outputsCorrect w2c
+wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) = 
+    case wrCreds of
+        SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
+        SpendWithWeb2Token w2c  -> zkpPasses w2c -- && outputsCorrect w2c
 
 --    case (scriptInfo, maybeScriptHash) of
 --      (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
