@@ -72,7 +72,7 @@ s @+ bs = (stringToBuiltinString $ P.show s) `appendString` "\n\n" `appendString
 -- If the script purpose is Spending, it forwards the verification to the corresponding contract
 --
 wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
-wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) = True 
+wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) = True
 --    case wrCreds of
 --        SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
 --        SpendWithWeb2Token w2c  -> zkpPasses w2c -- && outputsCorrect w2c
@@ -83,6 +83,7 @@ wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxIn
 --      _                                     -> case wrCreds of
 --            SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
 --            SpendWithWeb2Token w2c  -> zkpPasses w2c -- && outputsCorrect w2c
+{--
     where
         maybeScriptHash = do
             inp <- findOwnInput ctx
@@ -105,6 +106,7 @@ wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxIn
         getCredential :: Address -> BuiltinByteString
         getCredential (Address (PubKeyCredential pkey) _) = getPubKeyHash pkey
         getCredential (Address (ScriptCredential scr)  _) = getScriptHash scr
+--}
 
 {-# INLINABLE untypedWallet #-}
 untypedWallet :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit

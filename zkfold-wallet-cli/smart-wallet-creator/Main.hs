@@ -162,13 +162,15 @@ main = do
     case runMode of
       Create (CreationData{..}) -> do
           createDirectoryIfMissing True cOutputDir
-          savePlutus (cOutputDir </> "smartWallet.plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString cUserId) (fromString cPubKeyHash))
+          let uid = takeWhile (P./= '@') cUserId
+          savePlutus (cOutputDir </> "smartWallet" <> uid <> ".plutus") $ validator zkLoginSetupBytes (WalletSetup (fromString cUserId) (fromString cPubKeyHash))
       Validate valData -> do
           createDirectoryIfMissing True $ vOutputDir valData
           let (proofBytes, inputBytes) = zkLoginProofBytes valData
           let redeemer = zkLoginRedeemer valData proofBytes inputBytes
           let bytes = CBOR.serialise . toData . toBuiltinData $ redeemer
-          BL.writeFile (vOutputDir valData </> "proof.cbor") bytes
+          let uid = takeWhile (P./= '@') $ vUserId valData
+          BL.writeFile (vOutputDir valData </> "proof" <> uid <> ".cbor") bytes
 
 
 uglyHardcodedPayloadInput = ((((U1 :*: U1) :*: ((U1 :*: U1) :*: (U1 :*: U1)))
@@ -237,7 +239,6 @@ validator zkp ws =
     $$(PlutusTx.compile [|| untypedWallet ||])
     `unsafeApplyCode` liftCodeDef zkp
     `unsafeApplyCode` liftCodeDef ws
-
 
 -- | Write serialized script to a file.
 writePlutusScriptToFile :: IsPlutusScriptLanguage lang => FilePath -> PlutusScript lang -> IO ()
