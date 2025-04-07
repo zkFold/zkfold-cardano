@@ -48,7 +48,7 @@ import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
 import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes)
 import           ZkFold.Cardano.UPLC.Wallet                  (SpendingCreds (..), WalletRedeemer (..), WalletSetup (..),
-                                                              Web2Creds (..), untypedWallet, walletNoCtx)
+                                                              Web2Creds (..), untypedWallet)
 import           ZkFold.Symbolic.Algorithms.RSA
 import           ZkFold.Symbolic.Cardano.Contracts.ZkLogin   (PublicInput, zkLogin)
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
@@ -168,8 +168,6 @@ main = do
           let (proofBytes, inputBytes) = zkLoginProofBytes valData
           let redeemer = zkLoginRedeemer valData proofBytes inputBytes
           let bytes = CBOR.serialise . toData . toBuiltinData $ redeemer
---          print $ toData . toBuiltinData $ redeemer
---          print $ walletNoCtx zkLoginSetupBytes (WalletSetup (fromString $ vUserId valData) (fromString $ vPubKeyHash valData)) redeemer
           BL.writeFile (vOutputDir valData </> "proof.cbor") bytes
 
 
@@ -204,7 +202,6 @@ zkLoginRedeemer ValidationData{..} proofBytes inputBytes =
     WalletRedeemer "1741153669" (fromString vRecipient) proofBytes inputBytes (SpendWithWeb2Token $ Web2Creds (fromString vUserId) "" (fromIntegral vAmount))
 
 zkLoginProofBytes :: ValidationData -> (ProofBytes, InputBytes)
---zkLoginProofBytes ValidationData{..} = trace (P.show $ NP.verify @PlonkupPlutus zkLoginSetupBytes (mkInput pInput) (mkProof proof)) $ (mkProof proof, mkInput pInput)
 zkLoginProofBytes ValidationData{..} = (mkProof proof, mkInput pInput)
     where
         Just th  = decodeStrict . B64.decodeLenient . C8.pack $ vTokenHeader

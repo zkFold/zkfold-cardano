@@ -106,25 +106,6 @@ wallet zkpCheck ws@WalletSetup{..} wr@WalletRedeemer{..} ctx@(ScriptContext TxIn
         getCredential (Address (PubKeyCredential pkey) _) = getPubKeyHash pkey
         getCredential (Address (ScriptCredential scr)  _) = getScriptHash scr
 
-walletNoCtx :: SetupBytes -> WalletSetup -> WalletRedeemer -> Bool
-walletNoCtx zkpCheck WalletSetup{..} WalletRedeemer{..}  =
-    case wrCreds of
-        SpendWithWeb2Token w2c -> zkpPasses w2c -- && outputsCorrect w2c
-        _                      -> False
-
-    where
-        compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl appendByteString "" [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
-        zkpPasses w2c = verify @PlonkupPlutus zkpCheck wrInput wrZkp
-
-{-# INLINABLE untypedWalletNoCtx #-}
-untypedWalletNoCtx :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
-untypedWalletNoCtx zkpCheck setup ctx' =
-  let
-    ctx      = unsafeFromBuiltinData ctx'
-    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
-  in
-    check $ walletNoCtx zkpCheck setup redeemer
-
 {-# INLINABLE untypedWallet #-}
 untypedWallet :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
 untypedWallet zkpCheck setup ctx' =
