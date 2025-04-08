@@ -3,7 +3,9 @@
 module ZkFold.Cardano.OnChain.Plonkup.Data where
 
 import           GHC.Generics                       (Generic)
-import           PlutusTx                           (makeIsDataIndexed, makeLift)
+import           PlutusTx                           (makeLift)
+import           PlutusTx.Blueprint
+import qualified PlutusTx.Blueprint.TH
 import           PlutusTx.Builtins                  (BuiltinByteString, Integer)
 import           Prelude                            (Show)
 
@@ -27,9 +29,10 @@ data SetupBytes = SetupBytes {
   , cmS3_bytes :: BuiltinByteString
   , cmT1_bytes :: BuiltinByteString
 } deriving stock (Show, Generic)
+  deriving anyclass HasBlueprintDefinition
 
 makeLift ''SetupBytes
-makeIsDataIndexed ''SetupBytes [('SetupBytes,0)]
+PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''SetupBytes [('SetupBytes,0)]
 
 type InputBytes = F
 
@@ -61,6 +64,7 @@ data ProofBytes = ProofBytes {
   , h2_xi_int     :: Integer
   , l1_xi         :: F
 } deriving stock (Show, Generic)
+  deriving anyclass HasBlueprintDefinition
 
 makeLift ''ProofBytes
-makeIsDataIndexed ''ProofBytes [('ProofBytes,0)]
+PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''ProofBytes [('ProofBytes,0)]

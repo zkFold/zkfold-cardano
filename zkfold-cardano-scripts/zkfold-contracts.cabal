@@ -79,15 +79,19 @@ library
     ZkFold.Cardano.UPLC.RollupDeposit
     ZkFold.Cardano.UPLC.PlonkupVerifierTx
     ZkFold.Cardano.UPLC.Wallet
+    ZkFold.Cardano.UPLC.Wallet.Compile
   hs-source-dirs:   src
   build-depends:
     base                >=4.9 && <5,
+    bytestring                     ,
+    containers                     ,
     plutus-core             ^>=1.36,
     plutus-ledger-api       ^>=1.36,
     plutus-tx               ^>=1.36,
     plutus-tx-plugin        ^>=1.36,
     symbolic-base                  ,
     zkfold-cardano                 ,
+    zkfold-cardano-scripts-common  ,
 
 library zkfold-benchmark
   import:           lang
