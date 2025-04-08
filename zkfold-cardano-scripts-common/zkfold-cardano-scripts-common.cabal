@@ -6,6 +6,7 @@ author: Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
 maintainer: info@zkfold.io
 license: MIT
 build-type: Simple
+data-dir: data
 data-files:
   compiled-scripts/smart-wallet.blueprint
 
