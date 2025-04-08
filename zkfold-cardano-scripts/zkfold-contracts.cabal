@@ -157,3 +157,18 @@ benchmark bench-rollup
     zkfold-cardano                 ,
     zkfold-cardano-scripts         ,
     zkfold-example                 ,
+
+executable zkfold-cardano-scripts-compiler
+  import: lang
+  hs-source-dirs: app
+  main-is: Main.hs
+  ghc-options:
+    -O2
+    -threaded
+    -rtsopts
+    -with-rtsopts=-T
+
+  build-depends:
+    base,
+    filepath,
+    zkfold-cardano-scripts,
