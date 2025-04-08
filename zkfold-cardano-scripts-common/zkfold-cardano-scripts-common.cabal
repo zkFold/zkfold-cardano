@@ -59,15 +59,11 @@ library
     ZkFold.Cardano.UPLC.Wallet.CompiledScript
     ZkFold.Cardano.UPLC.Wallet.Types
 
-  other-modules:
-    Paths_zkfold_cardano_scripts_common
-
-  autogen-modules:
-    Paths_zkfold_cardano_scripts_common
-
   hs-source-dirs: src
   build-depends:
     base >=4.9 && <5,
+    bytestring,
+    file-embed,
     plutus-ledger-api ^>=1.36,
     plutus-tx ^>=1.36,
     zkfold-cardano,

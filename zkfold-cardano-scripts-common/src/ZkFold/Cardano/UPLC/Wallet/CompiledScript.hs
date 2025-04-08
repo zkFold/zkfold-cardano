@@ -1,9 +1,10 @@
 module ZkFold.Cardano.UPLC.Wallet.CompiledScript (
-  smartWalletBPFileName,
+  smartWalletBPFile,
 ) where
 
-import Paths_zkfold_cardano_scripts_common (getDataFileName)
+import Data.ByteString (ByteString)
+import Data.FileEmbed
 import Prelude
 
-smartWalletBPFileName :: IO FilePath
-smartWalletBPFileName = getDataFileName "compiled-scripts/smart-wallet.blueprint"
+smartWalletBPFile :: ByteString
+smartWalletBPFile = $(makeRelativeToProject "./data/compiled-scripts/smart-wallet.blueprint" >>= embedFile)
