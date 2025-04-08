@@ -56,7 +56,14 @@ library
   import: lang
   default-language: Haskell2010
   exposed-modules:
+    ZkFold.Cardano.UPLC.Wallet.CompiledScript
     ZkFold.Cardano.UPLC.Wallet.Types
+
+  other-modules:
+    Paths_zkfold_cardano_scripts_common
+
+  autogen-modules:
+    Paths_zkfold_cardano_scripts_common
 
   hs-source-dirs: src
   build-depends:
