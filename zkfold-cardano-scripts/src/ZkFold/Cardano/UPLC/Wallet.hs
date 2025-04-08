@@ -74,8 +74,8 @@ untypedCheckSig :: BuiltinData -> BuiltinData -> BuiltinUnit
 untypedCheckSig (unsafeFromBuiltinData -> symb) (unsafeFromBuiltinData -> ctx) = check $ checkSig symb ctx
 
 {-# INLINEABLE untypedWallet #-}
-untypedWallet :: ScriptHash -> BuiltinData -> BuiltinUnit
-untypedWallet scriptHash ctx' =
+untypedWallet :: BuiltinData -> BuiltinData -> BuiltinUnit
+untypedWallet (unsafeFromBuiltinData -> scriptHash) ctx' =
   let
     ctx = unsafeFromBuiltinData ctx'
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx

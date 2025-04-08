@@ -9,7 +9,7 @@ import Data.ByteString.Short (fromShort)
 import Data.Function ((&))
 import Data.Maybe (Maybe (..))
 import Data.Set qualified as Set
-import PlutusLedgerApi.Common (serialiseCompiledCode)
+import PlutusLedgerApi.V3
 import PlutusTx qualified
 import PlutusTx.Blueprint
 import PlutusTx.Prelude qualified as PlutusTx (BuiltinUnit)
@@ -26,13 +26,13 @@ smartWalletBP =
           { preambleTitle = "Smart Wallet"
           , preambleDescription = Just "Validators related to zkFold's Smart Wallet. Visit https://zkfold.io/ for more details"
           , preambleVersion = "0.1.0"
-          , preamblePlutusVersion = PlutusV3
+          , preamblePlutusVersion = commonPlutusVersion
           , preambleLicense = Just "MIT"
           }
     , contractValidators =
         Set.fromList
           [ MkValidatorBlueprint
-              { validatorTitle = "Web2 authentication minting policy"
+              { validatorTitle = "Smart wallet web2 authentication minting policy"
               , validatorRedeemer =
                   MkArgumentBlueprint
                     { argumentTitle = Just "Web2Auth"
@@ -56,12 +56,62 @@ smartWalletBP =
                   ]
               , validatorDescription = Nothing
               , validatorDatum = Nothing
-              , validatorCompiled = Just $ compiledValidator PlutusV3 web2AuthSerialisedScript
+              , validatorCompiled = Just $ compiledValidator commonPlutusVersion web2AuthSerialisedScript
+              }
+          , MkValidatorBlueprint
+              { validatorTitle = "Smart wallet spending validator"
+              , validatorRedeemer =
+                  MkArgumentBlueprint
+                    { argumentTitle = Just "Unit"
+                    , argumentSchema = definitionRef @()
+                    , argumentPurpose = Set.singleton Spend
+                    , argumentDescription = Nothing
+                    }
+              , validatorParameters =
+                  [ MkParameterBlueprint
+                      { parameterTitle = Just "ScriptHash"
+                      , parameterSchema = definitionRef @ScriptHash
+                      , parameterPurpose = Set.singleton Spend
+                      , parameterDescription = Nothing
+                      }
+                  ]
+              , validatorDescription = Nothing
+              , validatorDatum =
+                  Just $
+                    MkArgumentBlueprint
+                      { argumentTitle = Nothing
+                      , argumentSchema = definitionRef @PlutusTx.BuiltinData
+                      , argumentPurpose = Set.singleton Spend
+                      , argumentDescription = Nothing
+                      }
+              , validatorCompiled = Just $ compiledValidator commonPlutusVersion walletSerialisedScript
+              }
+          , MkValidatorBlueprint
+              { validatorTitle = "Smart wallet rewards script"
+              , validatorRedeemer =
+                  MkArgumentBlueprint
+                    { argumentTitle = Just "Signature"
+                    , argumentSchema = definitionRef @Signature
+                    , argumentPurpose = Set.singleton Withdraw
+                    , argumentDescription = Nothing
+                    }
+              , validatorParameters =
+                  [ MkParameterBlueprint
+                      { parameterTitle = Just "CurrencySymbol"
+                      , parameterSchema = definitionRef @CurrencySymbol
+                      , parameterPurpose = Set.singleton Withdraw
+                      , parameterDescription = Nothing
+                      }
+                  ]
+              , validatorDescription = Nothing
+              , validatorDatum = Nothing
+              , validatorCompiled = Just $ compiledValidator commonPlutusVersion checkSigSerialisedScript
               }
           ]
-    , contractDefinitions = deriveDefinitions @'[Web2Auth, SetupBytes, Web2Creds]
+    , contractDefinitions = deriveDefinitions @'[Web2Auth, SetupBytes, Web2Creds, (), ScriptHash, PlutusTx.BuiltinData, Signature, CurrencySymbol]
     }
  where
+  commonPlutusVersion = PlutusV3
 
 writeSmartWalletBP :: FilePath -> IO ()
 writeSmartWalletBP fp = writeBlueprint fp smartWalletBP
@@ -71,3 +121,15 @@ web2AuthSerialisedScript = serialiseCompiledCode web2AuthCompiledCode & fromShor
 
 web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 web2AuthCompiledCode = $$(PlutusTx.compile [||untypedWeb2Auth||])
+
+walletSerialisedScript :: ByteString
+walletSerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
+
+walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+walletCompiledCode = $$(PlutusTx.compile [||untypedWallet||])
+
+checkSigSerialisedScript :: ByteString
+checkSigSerialisedScript = serialiseCompiledCode checkSigCompiledCode & fromShort
+
+checkSigCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+checkSigCompiledCode = $$(PlutusTx.compile [||untypedCheckSig||])

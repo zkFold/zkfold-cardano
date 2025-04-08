@@ -1,8 +1,9 @@
 module Main (main) where
 
-import System.FilePath ((</>))
-import ZkFold.Cardano.UPLC.Wallet.Compile (writeSmartWalletBP)
-import Prelude
+import           Prelude
+import           System.FilePath                    ((</>))
+
+import           ZkFold.Cardano.UPLC.Wallet.Compile (writeSmartWalletBP)
 
 -- To be executed from root of zkfold-cardano repository.
 main :: IO ()
