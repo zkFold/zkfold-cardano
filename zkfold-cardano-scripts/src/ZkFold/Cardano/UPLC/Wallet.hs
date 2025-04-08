@@ -11,7 +11,7 @@ module ZkFold.Cardano.UPLC.Wallet where
 import           GHC.Generics                             (Generic)
 import           PlutusLedgerApi.V1.Value                 (valueOf)
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (makeIsDataIndexed, makeLift)
+import           PlutusTx                                 (makeIsDataIndexed)
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
 
@@ -26,7 +26,6 @@ newtype Web2Creds = Web2Creds
   { w2cEmail        :: BuiltinByteString
   } deriving stock (Show, Generic)
 
-makeLift ''Web2Creds
 makeIsDataIndexed ''Web2Creds [('Web2Creds,0)]
 
 data JWTParts = JWTParts
@@ -35,13 +34,11 @@ data JWTParts = JWTParts
     }
   deriving stock (Show, Generic)
 
-makeLift ''JWTParts
 makeIsDataIndexed ''JWTParts [('JWTParts,0)]
 
 data Web2Auth = Web2Auth JWTParts ProofBytes TokenName
   deriving stock (Show, Generic)
 
-makeLift ''Web2Auth
 makeIsDataIndexed ''Web2Auth [('Web2Auth, 0)]
 
 -- TODO: Account for rotation of public keys
@@ -50,29 +47,30 @@ makeIsDataIndexed ''Web2Auth [('Web2Auth, 0)]
 -- TODO: Do we need to split bytestrings further due to ledger rules?
 {-# INLINABLE web2Auth #-}
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
--- 
-web2Auth :: SetupBytes -> Web2Creds -> Web2Auth -> ScriptContext -> Bool
-web2Auth expModCircuit Web2Creds{..} (Web2Auth JWTParts {..} proof tn@(TokenName bs)) (ScriptContext TxInfo{..} _ (MintingScript symb)) =
+--
+web2Auth :: SetupBytes -> Web2Creds -> ScriptContext -> Bool
+web2Auth expModCircuit Web2Creds{..} (ScriptContext TxInfo{..} red (MintingScript symb)) =
   let
       publicInput = toInput (sha2_256 $ jwtPrefix <> w2cEmail <> jwtSuffix) * toInput bs
+      Web2Auth JWTParts {..} proof tn@(TokenName bs) = unsafeFromBuiltinData . getRedeemer $ red
   in
       -- Check that the user knows an RSA signature for a JWT containing the email
       verify @PlonkupPlutus @HaskellCore expModCircuit publicInput proof
       -- Check that we mint a token with the correct name
       && txInfoMint == singleton symb tn 1
-web2Auth _ _ _ _ = False
+web2Auth _ _ _ = False
 
 data Signature = Signature Integer Integer
   deriving stock (Show, Generic)
 
-makeLift ''Signature
 makeIsDataIndexed ''Signature [('Signature, 0)]
 
 {-# INLINABLE checkSig #-}
-checkSig :: CurrencySymbol -> Signature -> ScriptContext -> Bool
-checkSig symb (Signature i j) (ScriptContext TxInfo{..} _ _) =
+checkSig :: CurrencySymbol -> ScriptContext -> Bool
+checkSig symb (ScriptContext TxInfo{..} red _) =
     -- extract the value of the i-th output
     let v = txOutValue $ txInfoOutputs !! i
+        Signature i j = unsafeFromBuiltinData . getRedeemer $ red
     -- j-th pubKeyHash is equal to the tokenName of the currency symbol
     in valueOf v symb (TokenName $ getPubKeyHash $ txInfoSignatories !! j) > 0
 
@@ -83,22 +81,18 @@ wallet sh = forwardingReward (getScriptHash sh)
 -----------------------------------------------------------
 
 {-# INLINABLE untypedWeb2Auth #-}
-untypedWeb2Auth :: SetupBytes -> Web2Creds -> BuiltinData -> BuiltinUnit
-untypedWeb2Auth circuit creds ctx' =
+untypedWeb2Auth :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedWeb2Auth circuit' creds' ctx' =
   let
     ctx      = unsafeFromBuiltinData ctx'
-    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+    circuit :: SetupBytes = unsafeFromBuiltinData circuit'
+    creds :: Web2Creds = unsafeFromBuiltinData creds'
   in
-    check $ web2Auth circuit creds redeemer ctx
+    check $ web2Auth circuit creds ctx
 
 {-# INLINABLE untypedCheckSig #-}
-untypedCheckSig :: CurrencySymbol -> BuiltinData -> BuiltinUnit
-untypedCheckSig symb ctx' =
-  let
-    ctx      = unsafeFromBuiltinData ctx'
-    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
-  in
-    check $ checkSig symb redeemer ctx
+untypedCheckSig :: BuiltinData -> BuiltinData -> BuiltinUnit
+untypedCheckSig (unsafeFromBuiltinData -> symb) (unsafeFromBuiltinData -> ctx) = check $ checkSig symb ctx
 
 {-# INLINABLE untypedWallet #-}
 untypedWallet :: ScriptHash -> BuiltinData -> BuiltinUnit
