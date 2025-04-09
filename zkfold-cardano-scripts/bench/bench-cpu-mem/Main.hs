@@ -22,6 +22,7 @@ import           PlutusCore                               (DefaultFun, DefaultUn
 import           PlutusLedgerApi.V1.Value                 (lovelaceValue)
 import qualified PlutusLedgerApi.V2                       as V2
 import           PlutusLedgerApi.V3
+import           PlutusLedgerApi.V3.MintValue             (MintValue (..))
 import           PlutusTx                                 (CompiledCode, compile, getPlcNoAnn, liftCodeDef,
                                                            unsafeApplyCode)
 import           PlutusTx.Prelude                         (BuiltinUnit, check, ($), (.))
@@ -52,7 +53,7 @@ contextPlonkup redeemerProof = ScriptContext
     , txInfoReferenceInputs = []            :: [TxInInfo]
     , txInfoOutputs = []                    :: [V2.TxOut]
     , txInfoFee = V2.Lovelace 0
-    , txInfoMint = Value $ unsafeFromList [(dummyCurrencySymbol, unsafeFromList [(dummyTokenName, 1)])]
+    , txInfoMint = UnsafeMintValue $ unsafeFromList [(dummyCurrencySymbol, unsafeFromList [(dummyTokenName, 1)])]
     , txInfoTxCerts = []
     , txInfoWdrl = unsafeFromList []
     , txInfoValidRange = always
@@ -99,7 +100,7 @@ contextTx redeemerProof = ScriptContext
     , txInfoReferenceInputs = []            :: [TxInInfo]
     , txInfoOutputs = [ TxOut sampleAddress sampleChange NoOutputDatum Nothing ]
     , txInfoFee = V2.Lovelace 0             :: V2.Lovelace
-    , txInfoMint = mempty                   :: V2.Value
+    , txInfoMint = emptyMintValue           :: MintValue
     , txInfoTxCerts = []                    :: [TxCert]
     , txInfoWdrl = unsafeFromList []        :: Map V2.Credential V2.Lovelace
     , txInfoValidRange = always             :: V2.POSIXTimeRange

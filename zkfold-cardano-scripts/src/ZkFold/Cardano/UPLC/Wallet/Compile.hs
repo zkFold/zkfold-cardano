@@ -2,20 +2,25 @@ module ZkFold.Cardano.UPLC.Wallet.Compile (
   writeSmartWalletBP,
   web2AuthSerialisedScript,
   web2AuthCompiledCode,
+  walletSerialisedScript,
+  walletCompiledCode,
+  checkSigSerialisedScript,
+  checkSigCompiledCode,
 ) where
 
-import Data.ByteString (ByteString)
-import Data.ByteString.Short (fromShort)
-import Data.Function ((&))
-import Data.Maybe (Maybe (..))
-import Data.Set qualified as Set
-import PlutusLedgerApi.V3
-import PlutusTx qualified
-import PlutusTx.Blueprint
-import PlutusTx.Prelude qualified as PlutusTx (BuiltinUnit)
-import ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
-import ZkFold.Cardano.UPLC.Wallet
-import Prelude (FilePath, IO, ($))
+import           Data.ByteString                     (ByteString)
+import           Data.ByteString.Short               (fromShort)
+import           Data.Function                       ((&))
+import           Data.Maybe                          (Maybe (..))
+import qualified Data.Set                            as Set
+import           PlutusLedgerApi.V3
+import qualified PlutusTx
+import           PlutusTx.Blueprint
+import qualified PlutusTx.Prelude                    as PlutusTx (BuiltinUnit)
+import           Prelude                             (FilePath, IO, ($))
+
+import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
+import           ZkFold.Cardano.UPLC.Wallet
 
 smartWalletBP :: ContractBlueprint
 smartWalletBP =
@@ -32,7 +37,7 @@ smartWalletBP =
     , contractValidators =
         Set.fromList
           [ MkValidatorBlueprint
-              { validatorTitle = "Smart wallet web2 authentication minting policy"
+              { validatorTitle = "web2Auth"
               , validatorRedeemer =
                   MkArgumentBlueprint
                     { argumentTitle = Just "Web2Auth"
@@ -54,12 +59,12 @@ smartWalletBP =
                       , parameterDescription = Nothing
                       }
                   ]
-              , validatorDescription = Nothing
+              , validatorDescription = Just "Smart wallet web2 authentication minting policy"
               , validatorDatum = Nothing
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion web2AuthSerialisedScript
               }
           , MkValidatorBlueprint
-              { validatorTitle = "Smart wallet spending validator"
+              { validatorTitle = "wallet"
               , validatorRedeemer =
                   MkArgumentBlueprint
                     { argumentTitle = Just "Unit"
@@ -75,7 +80,7 @@ smartWalletBP =
                       , parameterDescription = Nothing
                       }
                   ]
-              , validatorDescription = Nothing
+              , validatorDescription = Just "Smart wallet spending validator"
               , validatorDatum =
                   Just $
                     MkArgumentBlueprint
@@ -87,7 +92,7 @@ smartWalletBP =
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion walletSerialisedScript
               }
           , MkValidatorBlueprint
-              { validatorTitle = "Smart wallet rewards script"
+              { validatorTitle = "checkSig"
               , validatorRedeemer =
                   MkArgumentBlueprint
                     { argumentTitle = Just "Signature"
@@ -103,7 +108,7 @@ smartWalletBP =
                       , parameterDescription = Nothing
                       }
                   ]
-              , validatorDescription = Nothing
+              , validatorDescription = Just "Smart wallet rewards script"
               , validatorDatum = Nothing
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion checkSigSerialisedScript
               }

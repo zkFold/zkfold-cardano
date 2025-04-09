@@ -10,7 +10,7 @@ module ZkFold.Cardano.UPLC.RollupData where
 
 import           GHC.Generics                 (Generic)
 import           PlutusLedgerApi.V3           (Redeemer (..), ScriptContext (..), TokenName (..), TxInfo (..),
-                                               UnsafeFromData (..), Value (..))
+                                               UnsafeFromData (..), mintValueToMap)
 import           PlutusLedgerApi.V3.Contexts  (ownCurrencySymbol)
 import           PlutusTx                     (CompiledCode, compile, makeIsDataIndexed)
 import           PlutusTx.AssocMap            (lookup, toList)
@@ -36,7 +36,7 @@ rollupData (NewData update) ctx =
     -- Get the current rollup output
     symbol = ownCurrencySymbol ctx
 
-    minted = map (unTokenName . fst) $ toList $ case lookup symbol $ getValue $ txInfoMint $ scriptContextTxInfo ctx of
+    minted = map (unTokenName . fst) $ toList $ case lookup symbol $ mintValueToMap $ txInfoMint $ scriptContextTxInfo ctx of
       Just v  -> v
       Nothing -> traceError "rollupData: no minted value"
   in
@@ -47,7 +47,7 @@ rollupData OldData ctx =
     -- Get the current rollup output
     symbol = ownCurrencySymbol ctx
 
-    burned = toList $ case lookup symbol $ getValue $ txInfoMint $ scriptContextTxInfo ctx of
+    burned = toList $ case lookup symbol $ mintValueToMap $ txInfoMint $ scriptContextTxInfo ctx of
       Just v  -> v
       Nothing -> traceError "rollupData: no burned value"
   in

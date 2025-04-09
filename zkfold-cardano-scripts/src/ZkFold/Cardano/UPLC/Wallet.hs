@@ -40,8 +40,10 @@ web2Auth expModCircuit Web2Creds {..} (ScriptContext TxInfo {..} red (MintingScr
     -- Check that the user knows an RSA signature for a JWT containing the email
     verify @PlonkupPlutus @HaskellCore expModCircuit publicInput proof
       -- Check that we mint a token with the correct name
-      && txInfoMint
+      && mintValueMinted txInfoMint  -- Apparently, plinth does not provide convenient (& performant) way to compare 'MintValue' with 'Value'.
       == singleton symb tn 1
+      && mintValueBurned txInfoMint
+      == mempty
 web2Auth _ _ _ = False
 
 {-# INLINEABLE checkSig #-}

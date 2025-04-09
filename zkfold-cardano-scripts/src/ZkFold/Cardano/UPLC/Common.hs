@@ -4,9 +4,10 @@ module ZkFold.Cardano.UPLC.Common where
 
 import           PlutusLedgerApi.V1.Value (flattenValue)
 import           PlutusLedgerApi.V3       (BuiltinData, ScriptContext (..), TxInInfo (..), TxInfo (..), TxOutRef,
-                                           UnsafeFromData (..))
+                                           UnsafeFromData (..), emptyMintValue, mintValueBurned, mintValueMinted)
 import           PlutusTx                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, Integer, any, check, ($), (&&), (==))
+import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, Integer, Monoid (mempty), any, check, ($), (&&),
+                                           (==))
 
 ---------------------------- :nftPolicy: ----------------------------
 
@@ -21,9 +22,11 @@ nftPolicy oref ctx = hasUTxO && checkMintedAmount
     hasUTxO = any (\i -> txInInfoOutRef i == oref) $ txInfoInputs info
 
     checkMintedAmount :: Bool
-    checkMintedAmount = case flattenValue (txInfoMint info) of
+    checkMintedAmount = mintValueBurned txInfoMint' == mempty && case flattenValue (mintValueMinted txInfoMint') of
         [(_, _, amt)] -> amt == 1
         _             -> False
+      where
+        txInfoMint' = txInfoMint info
 
 {-# INLINABLE untypedNftPolicy #-}
 untypedNftPolicy :: TxOutRef -> BuiltinData -> BuiltinUnit
