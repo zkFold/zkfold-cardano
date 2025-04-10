@@ -1,7 +1,6 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
-
 module ZkFold.Cardano.OnChain.Plonkup.Data where
 
+import           Data.Aeson                         (FromJSON, ToJSON)
 import           GHC.Generics                       (Generic)
 import           PlutusTx                           (makeLift)
 import           PlutusTx.Blueprint
@@ -10,6 +9,7 @@ import           PlutusTx.Builtins                  (BuiltinByteString, Integer)
 import           Prelude                            (Show)
 
 import           ZkFold.Cardano.OnChain.BLS12_381.F (F)
+import           ZkFold.Cardano.OnChain.Orphans     ()
 
 data SetupBytes = SetupBytes {
     n          :: Integer
@@ -64,7 +64,7 @@ data ProofBytes = ProofBytes {
   , h2_xi_int     :: Integer
   , l1_xi         :: F
 } deriving stock (Show, Generic)
-  deriving anyclass HasBlueprintDefinition
+  deriving anyclass (FromJSON, ToJSON, HasBlueprintDefinition)
 
 makeLift ''ProofBytes
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''ProofBytes [('ProofBytes,0)]
