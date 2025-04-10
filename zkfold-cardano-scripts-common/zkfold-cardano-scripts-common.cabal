@@ -1,0 +1,69 @@
+cabal-version: 3.0
+name: zkfold-cardano-scripts-common
+version: 0.1.0.0
+category: Testing, Cryptography, Math, Symbolic Computation
+author: Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
+maintainer: info@zkfold.io
+license: MIT
+build-type: Simple
+data-dir: data
+data-files:
+  compiled-scripts/smart-wallet.blueprint
+
+common lang
+  default-language: Haskell2010
+  default-extensions:
+    AllowAmbiguousTypes
+    DataKinds
+    DeriveAnyClass
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    FlexibleContexts
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    InstanceSigs
+    LambdaCase
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NoImplicitPrelude
+    NumericUnderscores
+    OverloadedStrings
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    TemplateHaskell
+    TypeApplications
+    ViewPatterns
+
+  ghc-options:
+    -Wunused-packages
+    -Wall
+    -Wnoncanonical-monad-instances
+    -Wincomplete-uni-patterns
+    -Wincomplete-record-updates
+    -Wredundant-constraints
+    -Widentities
+    -Wmissing-deriving-strategies
+
+library
+  import: lang
+  default-language: Haskell2010
+  exposed-modules:
+    ZkFold.Cardano.UPLC.Wallet.CompiledScript
+    ZkFold.Cardano.UPLC.Wallet.Types
+
+  hs-source-dirs: src
+  build-depends:
+    base >=4.9 && <5,
+    bytestring,
+    file-embed,
+    plutus-ledger-api ^>=1.37,
+    plutus-tx ^>=1.37,
+    zkfold-cardano,

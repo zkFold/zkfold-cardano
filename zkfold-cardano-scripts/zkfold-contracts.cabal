@@ -79,15 +79,19 @@ library
     ZkFold.Cardano.UPLC.RollupDeposit
     ZkFold.Cardano.UPLC.PlonkupVerifierTx
     ZkFold.Cardano.UPLC.Wallet
+    ZkFold.Cardano.UPLC.Wallet.Compile
   hs-source-dirs:   src
   build-depends:
     base                >=4.9 && <5,
-    plutus-core             ^>=1.36,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
+    bytestring                     ,
+    containers                     ,
+    plutus-core             ^>=1.37,
+    plutus-ledger-api       ^>=1.37,
+    plutus-tx               ^>=1.37,
+    plutus-tx-plugin        ^>=1.37,
     symbolic-base                  ,
     zkfold-cardano                 ,
+    zkfold-cardano-scripts-common  ,
 
 library zkfold-benchmark
   import:           lang
@@ -100,10 +104,10 @@ library zkfold-benchmark
     base                >=4.9 && <5,
     bytestring                     ,
     flat                           ,
-    plutus-core             ^>=1.36,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
+    plutus-core             ^>=1.37,
+    plutus-ledger-api       ^>=1.37,
+    plutus-tx               ^>=1.37,
+    plutus-tx-plugin        ^>=1.37,
 
 benchmark bench-cpu-mem
   import:           lang
@@ -118,10 +122,10 @@ benchmark bench-cpu-mem
     bytestring                     ,
     directory                      ,
     flat                           ,
-    plutus-core             ^>=1.36,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
+    plutus-core             ^>=1.37,
+    plutus-ledger-api       ^>=1.37,
+    plutus-tx               ^>=1.37,
+    plutus-tx-plugin        ^>=1.37,
     QuickCheck                     ,
     symbolic-base                  ,
     zkfold-benchmark               ,
@@ -143,13 +147,28 @@ benchmark bench-rollup
     bytestring                     ,
     directory                      ,
     filepath                       ,
-    plutus-core             ^>=1.36,
-    plutus-ledger-api       ^>=1.36,
-    plutus-tx               ^>=1.36,
-    plutus-tx-plugin        ^>=1.36,
+    plutus-core             ^>=1.37,
+    plutus-ledger-api       ^>=1.37,
+    plutus-tx               ^>=1.37,
+    plutus-tx-plugin        ^>=1.37,
     QuickCheck                     ,
     symbolic-base                  ,
     zkfold-benchmark               ,
     zkfold-cardano                 ,
     zkfold-cardano-scripts         ,
     zkfold-example                 ,
+
+executable zkfold-cardano-scripts-compiler
+  import: lang
+  hs-source-dirs: app
+  main-is: Main.hs
+  ghc-options:
+    -O2
+    -threaded
+    -rtsopts
+    -with-rtsopts=-T
+
+  build-depends:
+    base,
+    filepath,
+    zkfold-cardano-scripts,
