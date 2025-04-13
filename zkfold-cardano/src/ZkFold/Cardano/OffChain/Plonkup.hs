@@ -22,9 +22,9 @@ import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN p i n = Plonkup p i n Par1 BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString
+type PlonkupN i n = Plonkup i n Par1 BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec (ScalarFieldOf BLS12_381_G1_Point))
 
-mkSetup :: forall p i n . KnownNat n => SetupVerify (PlonkupN p i n) -> SetupBytes
+mkSetup :: forall i n . KnownNat n => SetupVerify (PlonkupN i n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
@@ -46,11 +46,11 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmT1_bytes = convertG1 cmT1
     }
 
-mkInput :: Input (PlonkupN p i n) -> InputBytes
+mkInput :: Input (PlonkupN i n) -> InputBytes
 mkInput (PlonkupInput input) = F . convertZp $ unPar1 input
 
-mkProof :: Proof (PlonkupN p i n) -> ProofBytes
-mkProof PlonkupProof {..} = ProofBytes
+mkProof :: SetupBytes -> Proof (PlonkupN i n) -> ProofBytes
+mkProof SetupBytes {..} PlonkupProof {..} = ProofBytes
   { cmA_bytes     = convertG1 cmA
   , cmB_bytes     = convertG1 cmB
   , cmC_bytes     = convertG1 cmC
