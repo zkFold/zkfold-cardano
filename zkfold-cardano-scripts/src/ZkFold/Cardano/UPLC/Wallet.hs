@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
@@ -29,7 +30,6 @@ import           ZkFold.Cardano.UPLC.Wallet.Types
 -- TODO: Check the suffix length (must be a predefined size)
 -- TODO: Do we need to split bytestrings further due to ledger rules?
 {-# INLINEABLE web2Auth #-}
-
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth :: SetupBytes -> Web2Creds -> ScriptContext -> Bool
 web2Auth expModCircuit Web2Creds {..} (ScriptContext TxInfo {..} red (MintingScript symb)) =
