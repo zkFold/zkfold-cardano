@@ -1,103 +1,85 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-module ZkFold.Cardano.UPLC.Wallet where
+module ZkFold.Cardano.UPLC.Wallet (
+  module ZkFold.Cardano.UPLC.Wallet.Types,
+  untypedWeb2Auth,
+  untypedCheckSig,
+  untypedWallet,
+) where
 
-import           GHC.Generics                             (Generic)
-import           PlutusLedgerApi.V1.Value                 (lovelaceValue)
+import           PlutusLedgerApi.V1.Value                 (valueOf)
 import           PlutusLedgerApi.V3
-import           PlutusLedgerApi.V3.Contexts              (findOwnInput)
-import           PlutusTx                                 (makeIsDataIndexed, makeLift)
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
-import           Prelude                                  (Show, foldl1)
 
+import           ZkFold.Base.Algebra.Basic.Class          (MultiplicativeSemigroup (..))
 import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (fromInput, toF, toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (SetupBytes)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingReward)
+import           ZkFold.Cardano.UPLC.Wallet.Types
 
-data WalletSetup = WalletSetup
-  { wsPubKeyHash :: BuiltinByteString
-  , wsWeb2UserId :: BuiltinByteString
-  } deriving stock (Show, Generic)
-
-makeLift ''WalletSetup
-makeIsDataIndexed ''WalletSetup [('WalletSetup,0)]
-
-data Web2Creds = Web2Creds
-    { wUserId    :: BuiltinByteString
-    , wTokenHash :: BuiltinByteString
-    , wAmount    :: Integer
-    }
-  deriving stock (Show, Generic)
-
-makeLift ''Web2Creds
-makeIsDataIndexed ''Web2Creds [('Web2Creds,0)]
-
-data SpendingCreds = SpendWithSignature BuiltinByteString | SpendWithWeb2Token Web2Creds
-  deriving stock (Show, Generic)
-
-makeLift ''SpendingCreds
-makeIsDataIndexed ''SpendingCreds [('SpendWithSignature,0),('SpendWithWeb2Token,1)]
-
-data WalletRedeemer = WalletRedeemer
-    { wrTxDate      :: BuiltinByteString
-    , wrTxRecipient :: BuiltinByteString
-    , wrZkp         :: ProofBytes
-    , wrCreds       :: SpendingCreds
-    }
-  deriving stock (Show, Generic)
-
-makeLift ''WalletRedeemer
-makeIsDataIndexed ''WalletRedeemer [('WalletRedeemer, 0)]
-
-{-# INLINABLE wallet #-}
--- | This script verifies that a transaction was either signed with a signature or has a ZKP associated with it allowing to access the funds.
--- If the script purpose is Spending, it forwards the verification to the corresponding contract
---
-wallet :: SetupBytes -> WalletSetup -> WalletRedeemer -> ScriptContext -> Bool
-wallet zkpCheck WalletSetup{..} WalletRedeemer{..} ctx@(ScriptContext TxInfo{..} _ scriptInfo) =
-    case (scriptInfo, maybeScriptHash) of
-      (SpendingScript _ _, Just scriptHash) -> forwardingReward scriptHash () ctx
-      (SpendingScript _ _, _)               -> False
-      _                                     -> case wrCreds of
-            SpendWithSignature sign -> any (== sign) $ getPubKeyHash <$> txInfoSignatories -- pubKayHash is present in the signatories list
-            SpendWithWeb2Token w2c  -> zkpPasses w2c && outputsCorrect w2c
-    where
-        maybeScriptHash = do
-            inp <- findOwnInput ctx
-            let addrCreds = addressCredential . txOutAddress . txInInfoResolved $ inp
-            case addrCreds of
-              ScriptCredential scr -> pure $ getScriptHash scr
-              _                    -> Nothing
-
-        compressedPI Web2Creds{..} = toInput . blake2b_224 $ foldl1 appendByteString [wUserId, wTokenHash, fromInput . toF $ wAmount, wrTxRecipient]
-        zkpPasses w2c = verify @PlonkupPlutus @HaskellCore zkpCheck (compressedPI w2c) wrZkp
-
-        outputsCorrect Web2Creds {..} = and
-            [ length txInfoOutputs == 2                           -- only two outputs
-            , all ((== NoOutputDatum) . txOutDatum) txInfoOutputs -- datums are empty
-            , lovelaceValue (Lovelace wAmount) == txOutValue (head txInfoOutputs)  -- the amount is correct
-            , wrTxRecipient == (getCredential . txOutAddress) (head txInfoOutputs) -- the recipient's address is correct
-            , wsPubKeyHash == (getCredential . txOutAddress) (txInfoOutputs !! 1)  -- the wallet's change address is correct
-            ]
-
-        getCredential :: Address -> BuiltinByteString
-        getCredential (Address (PubKeyCredential pkey) _) = getPubKeyHash pkey
-        getCredential (Address (ScriptCredential scr)  _) = getScriptHash scr
-
-
-{-# INLINABLE untypedWallet #-}
-untypedWallet :: SetupBytes -> WalletSetup -> BuiltinData -> BuiltinUnit
-untypedWallet zkpCheck setup ctx' =
+-- TODO: Account for rotation of public keys
+-- TODO: Check the client Id
+-- TODO: Check the suffix length (must be a predefined size)
+-- TODO: Do we need to split bytestrings further due to ledger rules?
+{-# INLINEABLE web2Auth #-}
+-- | Mints tokens paramterized by the user's email and a public key selected by the user.
+web2Auth :: SetupBytes -> Web2Creds -> ScriptContext -> Bool
+web2Auth expModCircuit Web2Creds {..} (ScriptContext TxInfo {..} red (MintingScript symb)) =
   let
-    ctx      = unsafeFromBuiltinData ctx'
+    publicInput = toInput (sha2_256 $ jwtPrefix <> w2cEmail <> jwtSuffix) * toInput bs
+    Web2Auth JWTParts {..} proof tn@(TokenName bs) = unsafeFromBuiltinData . getRedeemer $ red
+   in
+    -- Check that the user knows an RSA signature for a JWT containing the email
+    verify @PlonkupPlutus @HaskellCore expModCircuit publicInput proof
+      -- Check that we mint a token with the correct name
+      && mintValueMinted txInfoMint  -- Apparently, plinth does not provide convenient (& performant) way to compare 'MintValue' with 'Value'.
+      == singleton symb tn 1
+      && mintValueBurned txInfoMint
+      == mempty
+web2Auth _ _ _ = False
+
+{-# INLINEABLE checkSig #-}
+checkSig :: CurrencySymbol -> ScriptContext -> Bool
+checkSig symb (ScriptContext TxInfo {..} red _) =
+  -- extract the value of the i-th output
+  let v = txOutValue $ txInfoOutputs !! i
+      Signature i j = unsafeFromBuiltinData . getRedeemer $ red
+   in -- j-th pubKeyHash is equal to the tokenName of the currency symbol
+      valueOf v symb (TokenName $ getPubKeyHash $ txInfoSignatories !! j) > 0
+
+{-# INLINEABLE wallet #-}
+wallet :: ScriptHash -> () -> ScriptContext -> Bool
+wallet sh = forwardingReward (getScriptHash sh)
+
+-----------------------------------------------------------
+
+{-# INLINEABLE untypedWeb2Auth #-}
+untypedWeb2Auth :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
+untypedWeb2Auth circuit' creds' ctx' =
+  let
+    ctx = unsafeFromBuiltinData ctx'
+    circuit :: SetupBytes = unsafeFromBuiltinData circuit'
+    creds :: Web2Creds = unsafeFromBuiltinData creds'
+   in
+    check $ web2Auth circuit creds ctx
+
+{-# INLINEABLE untypedCheckSig #-}
+untypedCheckSig :: BuiltinData -> BuiltinData -> BuiltinUnit
+untypedCheckSig (unsafeFromBuiltinData -> symb) (unsafeFromBuiltinData -> ctx) = check $ checkSig symb ctx
+
+{-# INLINEABLE untypedWallet #-}
+untypedWallet :: BuiltinData -> BuiltinData -> BuiltinUnit
+untypedWallet (unsafeFromBuiltinData -> scriptHash) ctx' =
+  let
+    ctx = unsafeFromBuiltinData ctx'
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
-  in
-    check $ wallet zkpCheck setup redeemer ctx
+   in
+    check $ wallet scriptHash redeemer ctx

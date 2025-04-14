@@ -120,7 +120,7 @@ contextRollup proof n = ScriptContext
         , sampleBridgeTxOut
         ]
     , txInfoFee = sampleFee
-    , txInfoMint = mempty
+    , txInfoMint = emptyMintValue
     , txInfoTxCerts = []
     , txInfoWdrl = unsafeFromList []
     , txInfoValidRange = always

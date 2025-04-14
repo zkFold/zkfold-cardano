@@ -1,6 +1,6 @@
 module ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx where
 
-import           Cardano.Api                           (SerialiseAsRawBytes (..), policyId, prettyPrintJSON)
+import           Cardano.Api                           (SerialiseAsRawBytes (..), parsePolicyId, prettyPrintJSON)
 import           Cardano.Api.Ledger                    (toCBOR)
 import           Codec.CBOR.Write                      (toStrictByteString)
 import           Data.Aeson                            (decode, encode)
@@ -43,7 +43,7 @@ txInit path = do
 
 txTransfer :: FilePath -> [String] -> IO ()
 txTransfer path args = do
-    let policyidE = parse policyId "" (head args)
+    let policyidE = parse parsePolicyId "" (head args)
 
     let policyid = case policyidE of
             Right a  -> a
