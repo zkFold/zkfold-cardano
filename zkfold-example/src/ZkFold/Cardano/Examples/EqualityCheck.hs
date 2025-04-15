@@ -7,7 +7,7 @@ import qualified Prelude                                     as Haskell
 
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..))
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
-import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
 import           ZkFold.Base.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
@@ -16,7 +16,7 @@ import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput,
 import           ZkFold.Cardano.OnChain.Plonkup              (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes, SetupBytes)
 import           ZkFold.Symbolic.Class                       (Symbolic (..))
-import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compile)
+import           ZkFold.Symbolic.Compiler                    (ArithmeticCircuit (..), compileWith)
 import           ZkFold.Symbolic.Data.Bool                   (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                     (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement           (FieldElement)
@@ -33,20 +33,20 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let ac = compile @Fr (equalityCheckContract @Fr @(ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1)) targetValue) :: ArithmeticCircuit Fr (U1 :*: U1) (Par1 :*: U1) Par1
+    let ac = compileWith @Fr id (\(Par1 i) -> (U1 :*: U1, Par1 i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
 
         (omega, k1, k2) = getParams 32
-        witnessInputs   = Par1 targetValue :*: U1
+        witnessInputs   = Par1 targetValue
         (gs, h1) = getSecrectParams x
-        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN (U1 :*: U1) (Par1 :*: U1) 32
-        setupP  = setupProve @_ @HaskellCore plonkup
-        setupV  = setupVerify @_ @HaskellCore plonkup
-        witness = (PlonkupWitnessInput @_ @(Par1 :*: U1) @_ (U1 :*: U1) witnessInputs, ps)
-        (input, proof) = prove @(PlonkupN (U1 :*: U1) (Par1 :*: U1) 32) @HaskellCore setupP witness
+        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 32 Par1
+        setupP  = setupProve plonkup
+        setupV  = setupVerify plonkup
+        witness = (PlonkupWitnessInput witnessInputs, ps)
+        (input, proof) = prove @(PlonkupN Par1 32 Par1) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
 testEqualityCheckContract :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> Haskell.Bool
 testEqualityCheckContract x ps targetValue =
     let (s, i, p) = equalityCheckVerificationBytes x ps targetValue
-    in verify @PlonkupPlutus @HaskellCore s i p
+    in verify @PlonkupPlutus s i p

@@ -2,13 +2,14 @@
 
 module ZkFold.Cardano.OffChain.Plonkup where
 
-import           GHC.Generics                                      (Par1 (..))
+import           Data.Foldable                                     (toList, Foldable)
 import           PlutusTx.Builtins                                 (BuiltinByteString)
 import           PlutusTx.Prelude                                  (($), (.))
-import           Prelude                                           (fromIntegral)
+import           Prelude                                           (fromIntegral, map)
 
 import           ZkFold.Base.Algebra.Basic.Number                  (KnownNat, value)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1_Point, BLS12_381_G2_Point)
+import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
+import           ZkFold.Base.Algebra.Polynomials.Univariate        (PolyVec)
 import           ZkFold.Base.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
 import           ZkFold.Base.Protocol.Plonkup                      (Plonkup)
 import           ZkFold.Base.Protocol.Plonkup.Input                (PlonkupInput (..))
@@ -22,9 +23,9 @@ import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN i n = Plonkup i n Par1 BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec (ScalarFieldOf BLS12_381_G1_Point))
+type PlonkupN i n l = Plonkup i n l BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
 
-mkSetup :: forall i n . KnownNat n => SetupVerify (PlonkupN i n) -> SetupBytes
+mkSetup :: forall i n l . KnownNat n => SetupVerify (PlonkupN i n l) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
@@ -46,11 +47,11 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmT1_bytes = convertG1 cmT1
     }
 
-mkInput :: Input (PlonkupN i n) -> InputBytes
-mkInput (PlonkupInput input) = F . convertZp $ unPar1 input
+mkInput :: Foldable l => Input (PlonkupN i n l) -> InputBytes
+mkInput (PlonkupInput input) = map (F . convertZp) $ toList input
 
-mkProof :: SetupBytes -> Proof (PlonkupN i n) -> ProofBytes
-mkProof SetupBytes {..} PlonkupProof {..} = ProofBytes
+mkProof :: Proof (PlonkupN i n l) -> ProofBytes
+mkProof PlonkupProof {..} = ProofBytes
   { cmA_bytes     = convertG1 cmA
   , cmB_bytes     = convertG1 cmB
   , cmC_bytes     = convertG1 cmC
@@ -76,5 +77,5 @@ mkProof SetupBytes {..} PlonkupProof {..} = ProofBytes
   , z2_xi'_int    = convertZp z2_xi'
   , h1_xi'_int    = convertZp h1_xi'
   , h2_xi_int     = convertZp h2_xi
-  , l1_xi         = F $ convertZp l1_xi
+  , l_xi          = map (F . convertZp) l_xi
   }

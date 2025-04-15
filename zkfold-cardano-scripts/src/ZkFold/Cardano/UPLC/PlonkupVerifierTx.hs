@@ -16,7 +16,7 @@ import qualified PlutusTx.Builtins.Internal               as BI
 import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, filter,
                                                            isNothing, traceError, ($), (.))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
@@ -29,7 +29,7 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupByte
 untypedPlonkupVerifierTx :: SetupBytes -> BuiltinData -> BuiltinUnit
 untypedPlonkupVerifierTx contract ctx =
     -- Verifying the Plonkup `proof` for the `contract` on the transaction data encoded as `input`
-    check $ verify @PlonkupPlutus @HaskellCore contract input proof
+    check $ verify @PlonkupPlutus contract [input] proof
     where
       -- Extracting transaction data
       ins    = BI.head infoFields                -- txInfoInputs
