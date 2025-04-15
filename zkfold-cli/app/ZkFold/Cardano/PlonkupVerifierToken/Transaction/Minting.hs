@@ -14,8 +14,8 @@ import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           PlutusLedgerApi.V3                       (ToData (..), fromBuiltin)
 import           PlutusTx.Builtins                        (BuiltinData)
-import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), toInteger, ($), (.),
-                                                           (<$>), (<>), head)
+import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), head, toInteger, ($),
+                                                           (.), (<$>), (<>))
 import           System.FilePath                          ((</>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)

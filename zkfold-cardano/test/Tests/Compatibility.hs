@@ -8,7 +8,8 @@ import           Test.Hspec                               (describe, hspec, it)
 import           Test.QuickCheck                          (Testable (property))
 import           Test.QuickCheck.Arbitrary
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs, NonInteractiveProof (..), nipCompatibility)
+import           ZkFold.Base.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs, NonInteractiveProof (..),
+                                                           nipCompatibility)
 import           ZkFold.Cardano.OffChain.Plonkup          (PlonkupN)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 

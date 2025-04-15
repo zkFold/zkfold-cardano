@@ -2,7 +2,7 @@
 
 module ZkFold.Cardano.OffChain.Plonkup where
 
-import           Data.Foldable                                     (toList, Foldable)
+import           Data.Foldable                                     (Foldable, toList)
 import           PlutusTx.Builtins                                 (BuiltinByteString)
 import           PlutusTx.Prelude                                  (($), (.))
 import           Prelude                                           (fromIntegral, map)
