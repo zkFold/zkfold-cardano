@@ -5,7 +5,7 @@ module ZkFold.Cardano.OffChain.Plonkup where
 import           GHC.Generics                                      (Par1 (..))
 import           PlutusTx.Builtins                                 (BuiltinByteString)
 import           PlutusTx.Prelude                                  (($), (.))
-import           Prelude                                           (fromIntegral)
+import           Prelude                                           (fromIntegral, head)
 
 import           ZkFold.Base.Algebra.Basic.Number                  (KnownNat, value)
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
@@ -23,9 +23,9 @@ import           ZkFold.Prelude                                    (log2ceiling)
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN p i n = Plonkup p i n Par1 BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
+type PlonkupN i n = Plonkup i n Par1 BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
 
-mkSetup :: forall p i n . KnownNat n => SetupVerify (PlonkupN p i n) -> SetupBytes
+mkSetup :: forall i n . KnownNat n => SetupVerify (PlonkupN i n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
@@ -47,10 +47,10 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmT1_bytes = convertG1 cmT1
     }
 
-mkInput :: Input (PlonkupN p i n) -> InputBytes
+mkInput :: Input (PlonkupN i n) -> InputBytes
 mkInput (PlonkupInput input) = F . convertZp $ unPar1 input
 
-mkProof :: Proof (PlonkupN p i n) -> ProofBytes
+mkProof :: Proof (PlonkupN i n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes
   { cmA_bytes     = convertG1 cmA
   , cmB_bytes     = convertG1 cmB
@@ -77,5 +77,5 @@ mkProof PlonkupProof {..} = ProofBytes
   , z2_xi'_int    = convertZp z2_xi'
   , h1_xi'_int    = convertZp h1_xi'
   , h2_xi_int     = convertZp h2_xi
-  , l1_xi         = F $ convertZp l1_xi
+  , l1_xi         = F $ convertZp $ head l_xi
   }

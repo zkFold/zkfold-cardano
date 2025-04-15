@@ -5,7 +5,7 @@ module ZkFold.Cardano.OnChain.Plonkup where
 
 import           Data.Functor.Rep                            (Rep, Representable)
 import           GHC.Base                                    (Ord)
-import           GHC.Generics                                (Par1, U1)
+import           GHC.Generics                                (Par1)
 import           PlutusTx.Builtins                           (BuiltinByteString, ByteOrder (..), blake2b_224,
                                                               bls12_381_G1_compressed_generator,
                                                               bls12_381_G1_uncompress,
@@ -186,14 +186,12 @@ instance NonInteractiveProof PlonkupPlutus where
         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one)
 
 instance
-        ( Representable p
-        , Representable i
+        ( Representable i
         , KnownNat n
         , KnownNat (PlonkupPolyExtendedLength n)
         , Ord (Rep i)
-        , SetupVerify (Plonkup U1 i n Par1 c1 c2 ts pv) ~ PlonkupVerifierSetup U1 i n Par1 c1 c2 pv
---        , Bilinear BLS12_381_G1_Point core
-        ) => CompatibleNonInteractiveProofs (PlonkupN p i n) PlonkupPlutus where
+        , SetupVerify (Plonkup i n Par1 c1 c2 ts pv) ~ PlonkupVerifierSetup i n Par1 c1 c2 pv
+        ) => CompatibleNonInteractiveProofs (PlonkupN i n) PlonkupPlutus where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof
