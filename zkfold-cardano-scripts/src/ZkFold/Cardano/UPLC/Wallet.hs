@@ -18,7 +18,7 @@ import           PlutusLedgerApi.V3
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 
 import           ZkFold.Base.Algebra.Basic.Class          (MultiplicativeSemigroup (..))
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (SetupBytes)
@@ -38,7 +38,7 @@ web2Auth expModCircuit Web2Creds {..} (ScriptContext TxInfo {..} red (MintingScr
     Web2Auth JWTParts {..} proof tn@(TokenName bs) = unsafeFromBuiltinData . getRedeemer $ red
    in
     -- Check that the user knows an RSA signature for a JWT containing the email
-    verify @PlonkupPlutus @HaskellCore expModCircuit publicInput proof
+    verify @PlonkupPlutus expModCircuit [publicInput] proof
       -- Check that we mint a token with the correct name
       && mintValueMinted txInfoMint  -- Apparently, plinth does not provide convenient (& performant) way to compare 'MintValue' with 'Value'.
       == singleton symb tn 1

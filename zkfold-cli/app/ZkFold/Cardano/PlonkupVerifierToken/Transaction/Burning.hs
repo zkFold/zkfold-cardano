@@ -16,7 +16,8 @@ import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           PlutusLedgerApi.V3                       (ToData (..), fromBuiltin)
 import           PlutusTx.Builtins                        (BuiltinByteString, BuiltinData)
-import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), ($), (.), (<$>), (<>))
+import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), head, ($), (.), (<$>),
+                                                           (<>))
 import           System.FilePath                          ((</>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
@@ -92,8 +93,8 @@ tokenBurning (Transaction path pathCfg txIn1 txIn2 forwardingMintIn sig changeAd
     EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
     let (setup, input, _) = equalityCheckVerificationBytes x ps targetValue
-        assetName = AssetName $ fromBuiltin $ F.fromInput input
-        redeemer  = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
+        assetName = AssetName $ fromBuiltin $ F.fromInput $ head input
+        redeemer  = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 [F.F 0]
 
     coreCfg <- coreConfigIO pathCfg
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig

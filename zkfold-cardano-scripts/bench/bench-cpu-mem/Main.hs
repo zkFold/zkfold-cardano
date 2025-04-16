@@ -36,7 +36,7 @@ import           Text.Printf                              (hPrintf)
 import qualified UntypedPlutusCore                        as UPLC
 import           UntypedPlutusCore                        (UnrestrictedProgram (..))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (HaskellCore, NonInteractiveProof (..))
+import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
@@ -77,7 +77,7 @@ dummyTokenName :: TokenName
 dummyTokenName = TokenName $ toBuiltin (fromString "34ad74db78700c335968ca0898f2953adba88f368efa0541b98897e2668090bd" :: BS.ByteString)
 
 dummyRedeemer :: ProofBytes
-dummyRedeemer = ProofBytes e e e e e e e e e e e e e 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0)
+dummyRedeemer = ProofBytes e e e e e e e e e e e e e 0 0 0 0 0 0 0 0 0 0 0 0 [F.F 0]
   where e = ""
 
 dummyCredential :: Credential
@@ -154,9 +154,9 @@ saveFlat2 input proof filePath code =
 untypedPlonkupVerifier :: SetupBytes -> BuiltinData -> BuiltinData -> BuiltinUnit
 untypedPlonkupVerifier computation input' proof' =
     check
-    ( verify @PlonkupPlutus @HaskellCore
+    ( verify @PlonkupPlutus
         computation
-        (unsafeFromBuiltinData input')
+        [unsafeFromBuiltinData input']
         (unsafeFromBuiltinData proof')
     )
 

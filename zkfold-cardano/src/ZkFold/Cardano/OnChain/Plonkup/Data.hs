@@ -34,7 +34,7 @@ data SetupBytes = SetupBytes {
 makeLift ''SetupBytes
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''SetupBytes [('SetupBytes,0)]
 
-type InputBytes = F
+type InputBytes = [F]
 
 data ProofBytes = ProofBytes {
     cmA_bytes     :: BuiltinByteString
@@ -62,7 +62,7 @@ data ProofBytes = ProofBytes {
   , z2_xi'_int    :: Integer
   , h1_xi'_int    :: Integer
   , h2_xi_int     :: Integer
-  , l1_xi         :: F
+  , l_xi          :: [F]
 } deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON, HasBlueprintDefinition)
 
