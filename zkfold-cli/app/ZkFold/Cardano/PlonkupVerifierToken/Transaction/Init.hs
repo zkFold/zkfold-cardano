@@ -1,36 +1,23 @@
 module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init (Transaction(..), tokenInit) where
 
--- import           Cardano.Api                              (AddressAny, TxIn)
--- import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
--- import           Cardano.CLI.Types.Common                 (WitnessSigningData)
-import           Data.Aeson                               (encode)  --, encodeFile)
+import           Data.Aeson                               (encode)
 import qualified Data.ByteString.Lazy                     as BL
--- import           Data.Either                              (Either (..))
 import           GeniusYield.GYConfig                     (GYCoreConfig (..), withCfgProviders)
--- import           GeniusYield.Transaction.Common           (minimumUTxO)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
--- import           GeniusYield.Types                        (GYAddress, GYAnyScript (..), GYNetworkId,
---                                                           GYPaymentSigningKey, GYProviders, GYScript, GYTxIn (..),
---                                                           GYTxInWitness (..), GYTxOut (..), PlutusVersion (..),
---                                                           gyGetProtocolParameters, valueFromLovelace)
--- import           GeniusYield.Types.Address                (addressFromApi)
--- import           GeniusYield.Types.Key                    (signingKeyFromApi)
--- import           GeniusYield.Types.Script                 (validatorFromPlutus)
--- import           GeniusYield.Types.TxOutRef               (txOutRefFromApi)
--- import           Prelude                                  (FilePath, IO, Maybe (..), mconcat, toInteger, zipWith,
---                                                            ($), (<$>), (<>), (.))
 import           Prelude
 import           System.FilePath                          ((</>))
+import qualified System.IO                                as IO
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils            (currencySymbolOf)
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
+                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
-import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
-                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
 
 data Transaction = Transaction
     { curPath        :: !FilePath
@@ -46,6 +33,8 @@ data Transaction = Transaction
 sendScripts ::
     GYNetworkId ->
     GYProviders ->
+    FilePath ->
+    -- ^ Path to 'assets' directory.
     GYPaymentSigningKey ->
     -- ^ Signing key for wallet funding this Tx.
     GYAddress ->
@@ -55,9 +44,9 @@ sendScripts ::
     [GYScript PlutusV3] ->
     -- ^ Validators.
     FilePath ->
-    -- ^ Path to output file.
+    -- ^ Relative path to output file.
     IO ()
-sendScripts nid providers skey changeAddr sendTo validators outFile = do
+sendScripts nid providers assetsPath skey changeAddr sendTo validators outFile = do
     let w1          = User' skey Nothing changeAddr
         validators' = Just . GYPlutusScript <$> validators
 
@@ -74,7 +63,7 @@ sendScripts nid providers skey changeAddr sendTo validators outFile = do
                                txid   <- signAndSubmitConfirmed txbody
                                return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-    wrapUpSubmittedTx outFile tx
+    wrapUpSubmittedTx (assetsPath </> outFile) tx
 
 tokenInit :: Transaction -> IO ()
 tokenInit (Transaction path coreCfg' tag sig changeAddr sendTo outFile) = do
@@ -90,14 +79,19 @@ tokenInit (Transaction path coreCfg' tag sig changeAddr sendTo outFile) = do
     coreCfg <- fromCoreConfigAltIO coreCfg'
     skey    <- fromSigningKeyAltIO sig
 
-    let nid = cfgNetworkId coreCfg
+    let nid        = cfgNetworkId coreCfg
+        assetsPath = path </> "assets"
 
     let plutusValidators = [plonkupVerifierTokenCompiled setup, forwardingMintCompiled tag]
+        policyId         = show $ currencySymbolOf $ head plutusValidators
         validators       = validatorFromPlutus @PlutusV3 <$> plutusValidators
+
+    IO.writeFile (assetsPath </> "plonkupVerifierTokenPolicyId.txt") policyId
 
     withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendScripts
                                                             nid
                                                             providers
+                                                            assetsPath
                                                             skey
                                                             changeAddr
                                                             sendTo

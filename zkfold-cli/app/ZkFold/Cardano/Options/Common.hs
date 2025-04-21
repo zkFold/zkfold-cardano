@@ -7,11 +7,14 @@ import           Control.Monad                       (when)
 import qualified Data.ByteString.Char8               as BS
 import           Data.Aeson                          (decodeFileStrict, encodeFile)
 import           Data.Maybe                          (fromJust, isJust)
+import           Data.String                         (fromString)
 import           GeniusYield.GYConfig                as GY
 import           GeniusYield.Types                   as GY
 import           Options.Applicative                 (Parser)
 import qualified Options.Applicative                 as Opt
 import           Prelude
+import           System.FilePath                     ((</>))
+import qualified System.IO                           as IO
 
 
 --------------------------- :Defaults: ---------------------------
@@ -26,6 +29,10 @@ defaultForwardingMintTag = 43
 data CoreConfigAlt = CoreConfigUseGY (Maybe GYCoreConfig)
                    | CoreConfigUseFile FilePath
                    deriving stock Show
+
+-- | Sum type for 'GYMintingPolicyId' input alternatives
+data PolicyIdAlt = PolicyIdUseGY GYMintingPolicyId
+                 | PolicyIdUseFile FilePath
 
 -- | Sum type for 'GYPaymentSigningKey' input alternatives
 data SigningKeyAlt = SigningKeyUseGY GYPaymentSigningKey
@@ -42,6 +49,11 @@ fromCoreConfigAltIO cfg = case cfg of
   CoreConfigUseGY (Just gycfg) -> pure gycfg
   CoreConfigUseGY Nothing      -> throwIO $ userError "No core config specified."
   CoreConfigUseFile cfgfile    -> GY.coreConfigIO cfgfile
+
+fromPolicyIdAltIO :: FilePath -> PolicyIdAlt -> IO GYMintingPolicyId
+fromPolicyIdAltIO path pid = case pid of
+  PolicyIdUseGY gypid    -> pure gypid
+  PolicyIdUseFile gyfile -> fromString <$> IO.readFile (path </> gyfile)
 
 fromSigningKeyAltIO :: SigningKeyAlt -> IO GYPaymentSigningKey
 fromSigningKeyAltIO sig = case sig of
@@ -141,23 +153,32 @@ pFMTag = Opt.option Opt.auto
       <> Opt.help "Tag (integer) discerning 'forwarding-mint' script."
   )
 
------ :parsing GYTxId: -----
+pReward :: Parser GYValue
+pReward = GY.valueFromLovelace <$> Opt.option Opt.auto
+  ( Opt.long "lovelace-reward"
+      <> Opt.metavar "INTEGER"
+      <> Opt.help "Reward lovelace value."
+  )
 
-pTxId :: Parser GYTxId
-pTxId = Opt.option (Opt.eitherReader GY.txIdFromHexE)
-    ( Opt.long "tx-id"
-        <> Opt.metavar "HEX"
-        <> Opt.help "Hex-encoded TxId."
-    )
+----- :parsing PolicyId: -----
 
-pTxIdFile :: Parser FilePath
-pTxIdFile = parseFilePath "tx-id-file" "Tx id address."
+pPolicyId :: Parser GYMintingPolicyId
+pPolicyId = fromString <$> Opt.strOption
+  ( Opt.long "policy-id"
+      <> Opt.metavar "HEX"
+      <> Opt.help "Hex-encoded policy id."
+  )
 
-pTxIdAlt :: Parser TxIdAlt
-pTxIdAlt = Opt.asum
-  [ TxIdUseGY <$> pTxId
-  , TxIdUseFile <$> pTxIdFile
-  ]
+pPolicyIdFile :: Parser FilePath
+pPolicyIdFile = parseFilePath "policy-id-file" "Policy ID file."
+
+pPolicyIdAlt :: Parser PolicyIdAlt
+pPolicyIdAlt = fmap (maybe defaultPolicyId id) . Opt.optional $ Opt.asum
+    [ PolicyIdUseGY <$> pPolicyId
+    , PolicyIdUseFile <$> pPolicyIdFile
+    ]
+  where
+    defaultPolicyId = PolicyIdUseFile "plonkupVerifierTokenPolicyId.txt"
 
 ----- :parsing GYPaymentSigningKey: -----
 
@@ -178,4 +199,22 @@ pSigningKeyAlt :: Parser SigningKeyAlt
 pSigningKeyAlt = Opt.asum
   [ SigningKeyUseGY <$> pSigningKey
   , SigningKeyUseFile <$> pSigningKeyFile
+  ]
+
+----- :parsing GYTxId: -----
+
+pTxId :: Parser GYTxId
+pTxId = Opt.option (Opt.eitherReader GY.txIdFromHexE)
+    ( Opt.long "tx-id"
+        <> Opt.metavar "HEX"
+        <> Opt.help "Hex-encoded TxId."
+    )
+
+pTxIdFile :: Parser FilePath
+pTxIdFile = parseFilePath "tx-id-file" "Tx id address."
+
+pTxIdAlt :: Parser TxIdAlt
+pTxIdAlt = Opt.asum
+  [ TxIdUseGY <$> pTxId
+  , TxIdUseFile <$> pTxIdFile
   ]

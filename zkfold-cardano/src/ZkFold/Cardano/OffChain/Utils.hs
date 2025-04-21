@@ -36,6 +36,11 @@ credentialOf :: CompiledCode a -> V3.Credential
 credentialOf = ScriptCredential . V3.ScriptHash . toBuiltin . serialiseToRawBytes . hashScript
                . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
 
+-- | Currency symbol of compiled minting script
+currencySymbolOf :: CompiledCode a -> V3.CurrencySymbol
+currencySymbolOf = CurrencySymbol . toBuiltin . serialiseToRawBytes . hashScript
+                   . PlutusScript plutusScriptVersion . PlutusScriptSerialised @PlutusScriptV3 . serialiseCompiledCode
+
 -- | Parse address in era
 parseAddress :: String -> Either String V3.Address
 parseAddress addressStr = do

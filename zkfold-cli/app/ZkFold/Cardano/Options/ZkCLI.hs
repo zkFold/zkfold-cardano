@@ -14,7 +14,7 @@ import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Bal
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
 import           ZkFold.Cardano.Options.Common                            (pChangeAddress, pChangeAddress', pFMTag, pGYCoreConfig', pGYCoreConfig, pOutAddress, pOutAddress',
-                                                                           pOutFile, pTxIdAlt, pTxIdFile, pTxInOnly, pSigningKeyAlt)
+                                                                           pOutFile, pPolicyIdAlt, pReward, pTxIdAlt, pTxIdFile, pTxInOnly, pSigningKeyAlt)
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
@@ -56,7 +56,7 @@ pCmds path mcfg = do
     asum $
         catMaybes
             [ fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
-            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer mcfg
+            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer path mcfg
             , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
             , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
             , fmap TransactionBalancingInit     <$> pTransactionBalancingInit
@@ -80,16 +80,18 @@ pTransactionTokenInit path mcfg = do
             <*> pOutAddress'
             <*> pOutFile
 
-pTransactionTokenTransfer :: Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
-pTransactionTokenTransfer mcfg = do
+pTransactionTokenTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
+pTransactionTokenTransfer path mcfg = do
     pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        TokenTransfer.Transaction
+        TokenTransfer.Transaction path
             <$> pGYCoreConfig' mcfg
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
+            <*> pFMTag
+            <*> pPolicyIdAlt
+            <*> pReward
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
             <*> pOutFile
 
 pTransactionTokenMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenMinting.Transaction)
