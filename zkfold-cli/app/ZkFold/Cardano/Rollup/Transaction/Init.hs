@@ -25,7 +25,6 @@ import           GeniusYield.Types.Script                (GYAnyScript (..), GYSc
 import           GeniusYield.Types.TxIn                  (GYTxInWitness (..))
 import           GeniusYield.Types.TxOutRef              (txOutRefFromApi, txOutRefToPlutus)
 import           GeniusYield.Types.Value                 (tokenNameFromPlutus)
-import           PlutusLedgerApi.Data.V3                 (Credential (..))
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import qualified PlutusLedgerApi.V2                      as V2
 import           PlutusLedgerApi.V3                      (Address (..), BuiltinByteString, Datum (..), OutputDatum (..),
