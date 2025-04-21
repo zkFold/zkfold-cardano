@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
 import           Cardano.Api                                              (Doc, ExceptT (..))
-import           Cardano.CLI.EraBased.Common.Option                      (pWitnessSigningData)
+import           Cardano.CLI.EraBased.Common.Option                       (pWitnessSigningData)
 import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
 import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
