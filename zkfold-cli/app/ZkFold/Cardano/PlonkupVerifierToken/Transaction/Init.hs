@@ -3,34 +3,21 @@ module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init (Transaction(..), to
 -- import           Cardano.Api                              (AddressAny, TxIn)
 -- import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
 -- import           Cardano.CLI.Types.Common                 (WitnessSigningData)
-import           Data.Aeson                               (encode)  --, encodeFile)
+import           Data.Aeson                               (encode)
 import qualified Data.ByteString.Lazy                     as BL
--- import           Data.Either                              (Either (..))
 import           GeniusYield.GYConfig                     (GYCoreConfig (..), withCfgProviders)
--- import           GeniusYield.Transaction.Common           (minimumUTxO)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
--- import           GeniusYield.Types                        (GYAddress, GYAnyScript (..), GYNetworkId,
---                                                           GYPaymentSigningKey, GYProviders, GYScript, GYTxIn (..),
---                                                           GYTxInWitness (..), GYTxOut (..), PlutusVersion (..),
---                                                           gyGetProtocolParameters, valueFromLovelace)
--- import           GeniusYield.Types.Address                (addressFromApi)
--- import           GeniusYield.Types.Key                    (signingKeyFromApi)
--- import           GeniusYield.Types.Script                 (validatorFromPlutus)
--- import           GeniusYield.Types.TxOutRef               (txOutRefFromApi)
--- import           Prelude                                  (FilePath, IO, Maybe (..), mconcat, toInteger, zipWith,
---                                                            ($), (<$>), (<>), (.))
 import           Prelude
 import           System.FilePath                          ((</>))
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
-import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
-import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
-
 import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
                                                            fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
 data Transaction = Transaction
     { curPath        :: !FilePath

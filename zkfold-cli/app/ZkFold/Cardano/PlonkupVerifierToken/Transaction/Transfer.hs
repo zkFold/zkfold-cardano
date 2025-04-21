@@ -20,8 +20,8 @@ import           GeniusYield.Types                     (GYAddress, GYNetworkId, 
 import           PlutusTx.Builtins                     (BuiltinByteString)
 import           Prelude                               (Either (..), FilePath, IO, Maybe (..), toInteger, ($), (<>))
 
-import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, fromCoreConfigAltIO)
+import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 
 
 data Transaction = Transaction

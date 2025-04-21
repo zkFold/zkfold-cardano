@@ -13,8 +13,10 @@ import           Prelude
 import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Balancing
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
-import           ZkFold.Cardano.Options.Common                            (pChangeAddress, pChangeAddress', pFMTag, pGYCoreConfig', pGYCoreConfig, pOutAddress, pOutAddress',
-                                                                           pOutFile, pTxIdAlt, pTxIdFile, pTxInOnly, pSigningKeyAlt)
+import           ZkFold.Cardano.Options.Common                            (pChangeAddress, pChangeAddress', pFMTag,
+                                                                           pGYCoreConfig, pGYCoreConfig', pOutAddress,
+                                                                           pOutAddress', pOutFile, pSigningKeyAlt,
+                                                                           pTxIdAlt, pTxIdFile, pTxInOnly)
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting

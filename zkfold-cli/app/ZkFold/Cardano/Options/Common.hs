@@ -4,8 +4,8 @@ import           Cardano.Api                         (AddressAny, TxIn, parseAdd
 import           Cardano.CLI.EraBased.Options.Common (parseFilePath, parseTxIn, readerFromParsecParser)
 import           Control.Exception                   (throwIO)
 import           Control.Monad                       (when)
-import qualified Data.ByteString.Char8               as BS
 import           Data.Aeson                          (decodeFileStrict, encodeFile)
+import qualified Data.ByteString.Char8               as BS
 import           Data.Maybe                          (fromJust, isJust)
 import           GeniusYield.GYConfig                as GY
 import           GeniusYield.Types                   as GY
@@ -63,7 +63,7 @@ data SubmittedTx = SubmittedTx
 wrapUpSubmittedTx :: FilePath -> SubmittedTx -> IO ()
 wrapUpSubmittedTx outFile SubmittedTx{..} = do
   putStr "\n"
-  
+
   when (isJust stTxFee) $
     putStr $ "Estimated transaction fee: " ++ (show $ fromJust stTxFee) ++ " Lovelace\n"
 
@@ -136,7 +136,7 @@ pOutFile = parseFilePath "tx-out-file" "Tx out address."
 pFMTag :: Parser Integer
 pFMTag = Opt.option Opt.auto
   ( Opt.long "forwarding-mint-tag"
-      <> Opt.value defaultForwardingMintTag 
+      <> Opt.value defaultForwardingMintTag
       <> Opt.metavar "INTEGER"
       <> Opt.help "Tag (integer) discerning 'forwarding-mint' script."
   )
