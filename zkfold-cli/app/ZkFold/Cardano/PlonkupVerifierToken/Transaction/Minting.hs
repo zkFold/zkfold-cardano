@@ -2,7 +2,7 @@ module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting (tokenMinting, Tr
 
 import           Cardano.Api                              (AddressAny, AssetName (..), TxIn)
 import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common                 (WitnessSigningData)
+import           Cardano.CLI.Type.Common                 (WitnessSigningData)
 import           Data.Aeson                               (decode, decodeFileStrict, encodeFile)
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Coerce                              (coerce)

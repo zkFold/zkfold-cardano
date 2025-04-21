@@ -1,9 +1,9 @@
 module ZkFold.Cardano.Options.CardanoCLI where
 
-import           Cardano.Api                         (AddressAny, TxIn, parseAddressAny)
-import           Cardano.CLI.EraBased.Options.Common (parseFilePath, parseTxIn, readerFromParsecParser)
-import           Options.Applicative                 (Parser)
-import qualified Options.Applicative                 as Opt
+import           Cardano.Api                        (AddressAny, TxIn, parseAddressAny)
+import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn, readerFromParsecParser)
+import           Options.Applicative                (Parser)
+import qualified Options.Applicative                as Opt
 import           Prelude
 
 pChangeAddress :: Parser AddressAny

@@ -1,8 +1,8 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
 import           Cardano.Api                                              (Doc, ExceptT (..))
-import           Cardano.CLI.EraBased.Options.Common                      (pWitnessSigningData)
-import           Cardano.CLI.Parser                                       (subParser)
+import           Cardano.CLI.EraBased.Common.Option                      (pWitnessSigningData)
+import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
 import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
                                                                            (<**>))
@@ -222,3 +222,7 @@ runClientCommand = \case
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined
+
+subParser :: String -> Opt.ParserInfo a -> Opt.Parser a
+subParser cmdName pInfo =
+  Opt.hsubparser $ commandWithMetavar cmdName pInfo

@@ -3,7 +3,7 @@ module ZkFold.Cardano.Rollup.Transaction.Update (Transaction(..), rollupUpdate) 
 import           Cardano.Api                    (AddressAny, TxIn, getScriptData)
 import           Cardano.Api.Shelley            (scriptDataFromJsonDetailedSchema, toPlutusData)
 import           Cardano.CLI.Read               (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common       (WitnessSigningData)
+import           Cardano.CLI.Type.Common       (WitnessSigningData)
 import           Data.Aeson                     (decode, encodeFile)
 import qualified Data.ByteString.Lazy           as BL
 import           Data.Maybe                     (fromJust)

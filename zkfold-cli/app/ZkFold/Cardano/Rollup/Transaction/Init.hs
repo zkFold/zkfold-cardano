@@ -2,7 +2,7 @@ module ZkFold.Cardano.Rollup.Transaction.Init (Transaction(..), rollupInit) wher
 
 import           Cardano.Api                             (AddressAny, TxIn, prettyPrintJSON)
 import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common                (WitnessSigningData)
+import           Cardano.CLI.Type.Common                (WitnessSigningData)
 import           Control.Monad                           (Functor (..), mapM)
 import           Data.Aeson                              (encode, encodeFile)
 import qualified Data.ByteString                         as BS
@@ -144,7 +144,7 @@ rollupInit (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile bobAddre
         iniState   = F iniState'
         parkingSpot = validatorFromPlutus $ parkingSpotCompiled parkingTag
 
-    let bridgeTxOut = TxOut { txOutAddress         = Address (ScriptCredential $ validatorPlutusHash parkingSpot) Nothing
+    let bridgeTxOut = TxOut { txOutAddress         = Address (V3.ScriptCredential $ validatorPlutusHash parkingSpot) Nothing
                             , txOutValue           = lovelaceValue minReq
                             , txOutDatum           = OutputDatumHash datumHashEx1
                             , txOutReferenceScript = Nothing
