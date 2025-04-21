@@ -81,7 +81,7 @@ executable zkfold-cli
         ZkFold.Cardano.Balancing.Transaction.Balancing
         ZkFold.Cardano.Balancing.Transaction.Init
         ZkFold.Cardano.Balancing.Transaction.Transfer
-        ZkFold.Cardano.Options.CardanoCLI
+        ZkFold.Cardano.Options.Common
         ZkFold.Cardano.Options.ZkCLI
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init

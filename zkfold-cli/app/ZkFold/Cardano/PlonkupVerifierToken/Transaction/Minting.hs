@@ -8,7 +8,7 @@ import qualified Data.ByteString.Lazy                     as BL
 import           Data.Coerce                              (coerce)
 import qualified Data.Map.Strict                          as Map
 import           Data.Maybe                               (fromJust)
-import           GeniusYield.GYConfig                     (GYCoreConfig (..), coreConfigIO, withCfgProviders)
+import           GeniusYield.GYConfig                     (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.Transaction.Common           (minimumUTxO)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
@@ -21,10 +21,11 @@ import           System.FilePath                          ((</>))
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, fromCoreConfigAltIO)
 
 data Transaction = Transaction
     { curPath         :: !FilePath
-    , pathCoreCfg     :: !FilePath
+    , coreCfgAlt      :: !CoreConfigAlt
     , txIn            :: !TxIn
     , requiredSigners :: !WitnessSigningData
     , changeAddresses :: !AddressAny
@@ -73,7 +74,7 @@ sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup red
     encodeFile outFile txid
 
 tokenMinting :: Transaction -> IO ()
-tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txidSetupFile outFile) = do
+tokenMinting (Transaction path coreCfg' txIn sig changeAddr outAddress txidSetupFile outFile) = do
     let testData = path </> "test-data"
     EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
@@ -81,7 +82,7 @@ tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txidSetupF
         assetName = AssetName $ fromBuiltin $ F.fromInput $ head input
         redeemer  = toBuiltinData proof
 
-    coreCfg <- coreConfigIO pathCfg
+    coreCfg <- fromCoreConfigAltIO coreCfg'
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
     (Just txId) <- decodeFileStrict txidSetupFile
 

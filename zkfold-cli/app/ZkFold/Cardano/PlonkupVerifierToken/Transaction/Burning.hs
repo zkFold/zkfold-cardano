@@ -7,11 +7,11 @@ import           Cardano.CLI.Types.Common                 (WitnessSigningData)
 import           Codec.CBOR.Write                         (toLazyByteString)
 import qualified Codec.Serialise                          as Codec
 import           Control.Monad                            (void)
-import           Data.Aeson                               (decode, decodeFileStrict)
+import           Data.Aeson                               (decode)  --, decodeFileStrict)
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Coerce                              (coerce)
 import           Data.Maybe                               (fromJust)
-import           GeniusYield.GYConfig                     (GYCoreConfig (..), coreConfigIO, withCfgProviders)
+import           GeniusYield.GYConfig                     (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           PlutusLedgerApi.V3                       (ToData (..), fromBuiltin)
@@ -26,17 +26,19 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes (..))
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, TxIdAlt, fromCoreConfigAltIO, fromTxIdAltIO)
+
 data Transaction = Transaction
     { curPath          :: !FilePath
-    , pathCoreCfg      :: !FilePath
+    , coreCfgAlt       :: !CoreConfigAlt
     , txIn1            :: !TxIn
     , txIn2            :: !TxIn
     , forwardingMintIn :: !TxIn
     , requiredSigners  :: !WitnessSigningData
     , changeAddresses  :: !AddressAny
     , outAddress       :: !AddressAny
-    , txidSetupFile    :: !FilePath
-    , txidForwardFile  :: !FilePath
+    , txidSetupAlt     :: !TxIdAlt
+    , txidForwardAlt   :: !TxIdAlt
     }
 
 -- | burining tokens to the reward.
@@ -63,7 +65,7 @@ burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr pl
         txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
         setupRef = GYMintReference @PlutusV3 txOutRefSetup plonkupVerifierToken
 
-        forwardingMintRef = txOutRefFromTuple (txidForward, 0)
+        forwardingMintRef = txOutRefFromTuple (txidForward, 1)
         forwardRef = GYBuildPlutusScriptReference @PlutusV3 forwardingMintRef forwardingMint
 
         inlineDatum = Just $ datumFromPlutusData datum
@@ -88,7 +90,7 @@ burnTokens nid providers skey changeAddr txIn1 txIn2 forwardingMintIn ownAddr pl
         signAndSubmitConfirmed txBody
 
 tokenBurning :: Transaction -> IO ()
-tokenBurning (Transaction path pathCfg txIn1 txIn2 forwardingMintIn sig changeAddr outAddress txidSetupFile txidForwardFile) = do
+tokenBurning (Transaction path coreCfg' txIn1 txIn2 forwardingMintIn sig changeAddr outAddress txidSetupAlt txidForwardAlt) = do
     let testData = path </> "test-data"
     EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
@@ -96,10 +98,14 @@ tokenBurning (Transaction path pathCfg txIn1 txIn2 forwardingMintIn sig changeAd
         assetName = AssetName $ fromBuiltin $ F.fromInput $ head input
         redeemer  = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 [F.F 0]
 
-    coreCfg <- coreConfigIO pathCfg
+    coreCfg <- fromCoreConfigAltIO coreCfg'
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
-    (Just txidSetup)   <- decodeFileStrict txidSetupFile
-    (Just txidForward) <- decodeFileStrict txidForwardFile
+
+    txidSetup   <- fromTxIdAltIO txidSetupAlt
+    txidForward <- fromTxIdAltIO txidForwardAlt
+
+    -- (Just txidSetup)   <- decodeFileStrict txidSetupFile
+    -- (Just txidForward) <- decodeFileStrict txidForwardFile
 
     let fmLabel           = 0
         nid               = cfgNetworkId coreCfg

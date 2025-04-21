@@ -4,6 +4,7 @@ import           Cardano.Api                                              (Doc, 
 import           Cardano.CLI.EraBased.Options.Common                      (pWitnessSigningData)
 import           Cardano.CLI.Parser                                       (subParser)
 import           Data.Maybe                                               (catMaybes)
+import           GeniusYield.GYConfig                                     (GYCoreConfig)
 import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
                                                                            (<**>))
 import qualified Options.Applicative                                      as Opt
@@ -12,8 +13,8 @@ import           Prelude
 import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Balancing
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
-import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
-                                                                           pOutFile, pTxIdFile, pTxInOnly)
+import           ZkFold.Cardano.Options.Common                            (pChangeAddress, pChangeAddress', pFMTag, pGYCoreConfig', pGYCoreConfig, pOutAddress, pOutAddress',
+                                                                           pOutFile, pTxIdAlt, pTxIdFile, pTxInOnly, pSigningKeyAlt)
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
@@ -34,9 +35,9 @@ data ClientCommand
     | TransactionRollupUpdate RollupUpdate.Transaction
     | TransactionRollupNext   RollupNext.Transaction
 
-opts :: FilePath -> ParserInfo ClientCommand
-opts path =
-    Opt.info (pCmds path <**> Opt.helper) $
+opts :: FilePath -> Maybe GYCoreConfig -> ParserInfo ClientCommand
+opts path mcfg =
+    Opt.info (pCmds path mcfg <**> Opt.helper) $
         mconcat
             [ Opt.fullDesc
             , Opt.header $
@@ -50,14 +51,14 @@ opts path =
 pref :: ParserPrefs
 pref = Opt.prefs $ mconcat [] -- no help
 
-pCmds :: FilePath -> Parser ClientCommand
-pCmds path = do
+pCmds :: FilePath -> Maybe GYCoreConfig -> Parser ClientCommand
+pCmds path mcfg = do
     asum $
         catMaybes
-            [ fmap TransactionTokenInit         <$> pTransactionTokenInit path
-            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer
-            , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path
-            , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path
+            [ fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
+            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer mcfg
+            , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
+            , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
             , fmap TransactionBalancingInit     <$> pTransactionBalancingInit
             , fmap TransactionBalancingTransfer <$> pTransactionBalancingTransfer path
             , fmap TransactionBalancing         <$> pTransactionBalancing path
@@ -66,60 +67,60 @@ pCmds path = do
             , fmap TransactionRollupNext        <$> pTransactionRollupNext path
             ]
 
-pTransactionTokenInit :: FilePath -> Maybe (Parser TokenInit.Transaction)
-pTransactionTokenInit path = do
+pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
+pTransactionTokenInit path mcfg = do
     pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenInit.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutAddress
+            <$> pGYCoreConfig' mcfg
+            <*> pFMTag
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pOutAddress'
             <*> pOutFile
 
-pTransactionTokenTransfer :: Maybe (Parser TokenTransfer.Transaction)
-pTransactionTokenTransfer = do
+pTransactionTokenTransfer :: Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
+pTransactionTokenTransfer mcfg = do
     pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenTransfer.Transaction
-            <$> pGYCoreConfig
+            <$> pGYCoreConfig' mcfg
             <*> pTxInOnly
             <*> pWitnessSigningData
             <*> pChangeAddress
             <*> pOutFile
 
-pTransactionTokenMinting :: FilePath -> Maybe (Parser TokenMinting.Transaction)
-pTransactionTokenMinting path = do
+pTransactionTokenMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenMinting.Transaction)
+pTransactionTokenMinting path mcfg = do
     pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenMinting.Transaction path
-            <$> pGYCoreConfig
+            <$> pGYCoreConfig' mcfg
             <*> pTxInOnly
             <*> pWitnessSigningData
             <*> pChangeAddress
             <*> pOutAddress
-            <*> pTxIdFile
+            <*> pTxIdFile  --ToDo: pxTxIdAlt
             <*> pOutFile
 
-pTransactionTokenBurning :: FilePath -> Maybe (Parser TokenBurning.Transaction)
-pTransactionTokenBurning path = do
+pTransactionTokenBurning :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenBurning.Transaction)
+pTransactionTokenBurning path mcfg = do
     pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenBurning.Transaction path
-            <$> pGYCoreConfig
+            <$> pGYCoreConfig' mcfg
             <*> pTxInOnly
             <*> pTxInOnly
             <*> pTxInOnly
             <*> pWitnessSigningData
             <*> pChangeAddress
             <*> pOutAddress
-            <*> pTxIdFile
-            <*> pTxIdFile
+            <*> pTxIdAlt
+            <*> pTxIdAlt
 
 pTransactionBalancingInit :: Maybe (Parser BalancingInit.Transaction)
 pTransactionBalancingInit = do

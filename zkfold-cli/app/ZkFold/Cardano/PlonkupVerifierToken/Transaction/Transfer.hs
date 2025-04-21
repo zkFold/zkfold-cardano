@@ -7,7 +7,7 @@ import           Cardano.CLI.Types.Common              (WitnessSigningData)
 import           Codec.CBOR.Write                      (toLazyByteString)
 import qualified Codec.Serialise                       as Codec
 import           Data.Aeson                            (encodeFile)
-import           GeniusYield.GYConfig                  (GYCoreConfig (..), coreConfigIO, withCfgProviders)
+import           GeniusYield.GYConfig                  (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.Transaction.Common        (minimumUTxO)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types                     (GYAddress, GYNetworkId, GYPaymentSigningKey, GYProviders,
@@ -21,15 +21,16 @@ import           PlutusTx.Builtins                     (BuiltinByteString)
 import           Prelude                               (Either (..), FilePath, IO, Maybe (..), toInteger, ($), (<>))
 
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
+import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, fromCoreConfigAltIO)
+
 
 data Transaction = Transaction
-    { pathCoreCfg     :: !FilePath
+    { coreCfgAlt      :: !CoreConfigAlt
     , txIn            :: !TxIn
     , requiredSigners :: !WitnessSigningData
     , changeAddresses :: !AddressAny
     , outFile         :: !FilePath
     }
-
 
 -- | Sending a datum script to the network.
 sendDatum ::
@@ -63,8 +64,8 @@ sendDatum nid providers skey changeAddr txIn validator datum outFile = do
     encodeFile outFile txid
 
 tokenTransfer :: Transaction -> IO ()
-tokenTransfer (Transaction pathCfg txIn sig changeAddr outFile) = do
-    coreCfg <- coreConfigIO pathCfg
+tokenTransfer (Transaction coreCfg' txIn sig changeAddr outFile) = do
+    coreCfg <- fromCoreConfigAltIO coreCfg'
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
 
     let nid            = cfgNetworkId coreCfg

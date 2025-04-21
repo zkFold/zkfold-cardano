@@ -4,10 +4,14 @@ import           Cardano.Api                     (docToText)
 import           Cardano.CLI.TopHandler          (toplevelExceptionHandler)
 import qualified Cardano.Crypto.Init             as Crypto
 import           Control.Monad.Trans.Except.Exit (orDie)
+-- import           Data.Maybe                      (maybe)
 import qualified GHC.IO.Encoding                 as GHC
+import           GeniusYield.GYConfig           (coreConfigIO)
 import qualified Options.Applicative             as Opt
-import           Prelude                         (Bool (..), IO, Monad (..), ($), (.))
+--import           Prelude                         (Bool (..), IO, Monad (..), ($), (.), (<$>), pure, Maybe (..))
+import           Prelude
 import           System.Directory                (createDirectoryIfMissing, getCurrentDirectory)
+import           System.Environment              (lookupEnv)
 import           System.FilePath                 (takeFileName, (</>))
 
 import           ZkFold.Cardano.Options.ZkCLI    (opts, pref, renderClientCommandError, runClientCommand)
@@ -17,6 +21,9 @@ main = toplevelExceptionHandler $ do
   Crypto.cryptoInit
 
   GHC.mkTextEncoding "UTF-8" >>= GHC.setLocaleEncoding
+
+  coreCfgEnv <- lookupEnv "CORE_CONFIG_PATH"
+  mCoreCfg   <- maybe (pure Nothing) (\path -> Just <$> coreConfigIO path) coreCfgEnv
 
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
@@ -28,6 +35,6 @@ main = toplevelExceptionHandler $ do
   createDirectoryIfMissing True testData
   createDirectoryIfMissing True assets
 
-  co <- Opt.customExecParser pref (opts path)
+  co <- Opt.customExecParser pref (opts path mCoreCfg)
 
   orDie (docToText . renderClientCommandError) $ runClientCommand co
