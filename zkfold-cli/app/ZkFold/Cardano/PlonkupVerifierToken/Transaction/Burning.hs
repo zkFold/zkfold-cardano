@@ -7,7 +7,7 @@ import           Cardano.CLI.Types.Common                 (WitnessSigningData)
 import           Codec.CBOR.Write                         (toLazyByteString)
 import qualified Codec.Serialise                          as Codec
 import           Control.Monad                            (void)
-import           Data.Aeson                               (decode)  --, decodeFileStrict)
+import           Data.Aeson                               (decode)
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Coerce                              (coerce)
 import           Data.Maybe                               (fromJust)
@@ -23,10 +23,9 @@ import           System.FilePath                          ((</>))
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes (..))
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, TxIdAlt, fromCoreConfigAltIO, fromTxIdAltIO)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
-
-import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, TxIdAlt, fromCoreConfigAltIO, fromTxIdAltIO)
 
 data Transaction = Transaction
     { curPath          :: !FilePath

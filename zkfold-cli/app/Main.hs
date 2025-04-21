@@ -4,11 +4,9 @@ import           Cardano.Api                     (docToText)
 import           Cardano.CLI.TopHandler          (toplevelExceptionHandler)
 import qualified Cardano.Crypto.Init             as Crypto
 import           Control.Monad.Trans.Except.Exit (orDie)
--- import           Data.Maybe                      (maybe)
+import           GeniusYield.GYConfig            (coreConfigIO)
 import qualified GHC.IO.Encoding                 as GHC
-import           GeniusYield.GYConfig           (coreConfigIO)
 import qualified Options.Applicative             as Opt
---import           Prelude                         (Bool (..), IO, Monad (..), ($), (.), (<$>), pure, Maybe (..))
 import           Prelude
 import           System.Directory                (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment              (lookupEnv)

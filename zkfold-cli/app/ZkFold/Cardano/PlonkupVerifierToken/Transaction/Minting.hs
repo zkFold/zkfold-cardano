@@ -20,8 +20,8 @@ import           System.FilePath                          ((</>))
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
-import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, fromCoreConfigAltIO)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
 data Transaction = Transaction
     { curPath         :: !FilePath

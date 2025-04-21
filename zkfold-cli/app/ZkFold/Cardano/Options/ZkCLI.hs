@@ -23,6 +23,7 @@ import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as Rol
 import qualified ZkFold.Cardano.Rollup.Transaction.Next                   as RollupNext
 import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
 
+
 data ClientCommand
     = TransactionTokenInit     TokenInit.Transaction
     | TransactionTokenTransfer TokenTransfer.Transaction

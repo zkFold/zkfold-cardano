@@ -8,10 +8,11 @@ import           GeniusYield.Types
 import           Prelude
 import           System.FilePath                       ((</>))
 
-import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, PolicyIdAlt, SigningKeyAlt, SubmittedTx (..),
                                                         fromCoreConfigAltIO, fromPolicyIdAltIO, fromSigningKeyAltIO,
                                                         wrapUpSubmittedTx)
+import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
+
 
 data Transaction = Transaction
     { curPath        :: !FilePath
