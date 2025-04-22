@@ -2,7 +2,7 @@ module ZkFold.Cardano.Balancing.Transaction.Balancing (Transaction(..), balancin
 
 import           Cardano.Api                             (AddressAny, TxIn)
 import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common                (WitnessSigningData)
+import           Cardano.CLI.Type.Common                 (WitnessSigningData)
 import           Data.Aeson                              (decode, decodeFileStrict, encodeFile)
 import qualified Data.ByteString.Lazy                    as BL
 import           Data.Maybe                              (fromJust)

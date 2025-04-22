@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Options.Common where
 
 import           Cardano.Api                         (AddressAny, TxIn, parseAddressAny)
-import           Cardano.CLI.EraBased.Options.Common (parseFilePath, parseTxIn, readerFromParsecParser)
+import           Cardano.CLI.EraBased.Common.Option  (parseFilePath, parseTxIn, readerFromParsecParser)
 import           Control.Exception                   (throwIO)
 import           Control.Monad                       (when)
 import           Data.Aeson                          (decodeFileStrict, encodeFile)

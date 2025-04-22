@@ -3,7 +3,7 @@ module ZkFold.Cardano.Rollup.Transaction.Next (Transaction(..), rollupNext) wher
 import           Cardano.Api                                 (AddressAny, getScriptData, prettyPrintJSON)
 import           Cardano.Api.Shelley                         (TxIn, scriptDataFromJsonDetailedSchema, toPlutusData)
 import           Cardano.CLI.Read                            (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common
+import           Cardano.CLI.Type.Common
 import           Control.Monad                               (Functor (..), Monad (..), mapM)
 import           Data.Aeson                                  (decode, decodeFileStrict, encodeFile)
 import qualified Data.ByteString                             as BS

@@ -66,7 +66,6 @@ sendMintTokens nid providers skey changeAddr sendTo validator txidSetup redeemer
               <> mustMint refScript redeemer tokenName 1
               <> mustBeSignedBy pkh
 
-
   tx <- runGYTxGameMonadIO nid
                            providers $
                            asUser w1 $ do
