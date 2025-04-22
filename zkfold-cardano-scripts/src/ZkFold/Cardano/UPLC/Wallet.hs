@@ -13,17 +13,17 @@ module ZkFold.Cardano.UPLC.Wallet (
   untypedWallet,
 ) where
 
-import           PlutusLedgerApi.V1.Value                 (valueOf)
+import           PlutusLedgerApi.V1.Value              (valueOf)
 import           PlutusLedgerApi.V3
-import           PlutusTx.Prelude                         hiding (toList, (*), (+))
+import           PlutusTx.Prelude                      hiding (toList, (*), (+))
 
-import           ZkFold.Base.Algebra.Basic.Class          (MultiplicativeSemigroup (..))
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (SetupBytes)
-import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingReward)
+import           ZkFold.Algebra.Class                  (MultiplicativeSemigroup (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.F    (toInput)
+import           ZkFold.Cardano.OnChain.Plonkup        (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data   (SetupBytes)
+import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingReward)
 import           ZkFold.Cardano.UPLC.Wallet.Types
+import           ZkFold.Protocol.NonInteractiveProof   (NonInteractiveProof (..))
 
 -- TODO: Account for rotation of public keys
 -- TODO: Check the client Id

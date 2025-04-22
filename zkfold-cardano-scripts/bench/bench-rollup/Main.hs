@@ -1,32 +1,32 @@
 module Main where
 
-import           Bench.Statistics                            (getCostsCek)
-import           Bench.Utils                                 (intToByteString32, printCSVWithHeaders, writeCSV)
-import           Data.Aeson                                  (encode)
-import qualified Data.ByteString.Lazy                        as BL
-import           Data.String                                 (IsString (fromString))
-import           GHC.ByteOrder                               (ByteOrder (..))
-import           PlutusCore                                  (DefaultFun, DefaultUni)
-import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
-import qualified PlutusLedgerApi.V2                          as V2
+import           Bench.Statistics                        (getCostsCek)
+import           Bench.Utils                             (intToByteString32, printCSVWithHeaders, writeCSV)
+import           Data.Aeson                              (encode)
+import qualified Data.ByteString.Lazy                    as BL
+import           Data.String                             (IsString (fromString))
+import           GHC.ByteOrder                           (ByteOrder (..))
+import           PlutusCore                              (DefaultFun, DefaultUni)
+import           PlutusLedgerApi.V1.Value                (lovelaceValue)
+import qualified PlutusLedgerApi.V2                      as V2
 import           PlutusLedgerApi.V3
-import           PlutusTx                                    (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Builtins                           (byteStringToInteger, mkI)
-import           PlutusTx.Prelude                            (($), (.))
-import           Prelude                                     hiding (Bool, Eq (..), Fractional (..), length, ($), (.))
-import           System.Directory                            (createDirectoryIfMissing, getCurrentDirectory)
-import           System.FilePath                             (takeFileName, (</>))
-import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
-import           Test.QuickCheck.Gen                         (generate)
-import qualified UntypedPlutusCore                           as UPLC
+import           PlutusTx                                (getPlcNoAnn, liftCodeDef, unsafeApplyCode)
+import           PlutusTx.Builtins                       (byteStringToInteger, mkI)
+import           PlutusTx.Prelude                        (($), (.))
+import           Prelude                                 hiding (Bool, Eq (..), Fractional (..), length, ($), (.))
+import           System.Directory                        (createDirectoryIfMissing, getCurrentDirectory)
+import           System.FilePath                         (takeFileName, (</>))
+import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
+import           Test.QuickCheck.Gen                     (generate)
+import qualified UntypedPlutusCore                       as UPLC
 
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
-import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381  (BLS12_381_G1_Point, Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit
-import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
-import           ZkFold.Cardano.OnChain.Plonkup.Data         (ProofBytes (..), SetupBytes (..))
-import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
+import           ZkFold.Cardano.OnChain.BLS12_381.F      (toF)
+import           ZkFold.Cardano.OnChain.Plonkup.Data     (ProofBytes (..), SetupBytes (..))
+import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup
+import           ZkFold.Protocol.Plonkup.Prover.Secret   (PlonkupProverSecret)
 
 
 --------------- SETUP  ----------------

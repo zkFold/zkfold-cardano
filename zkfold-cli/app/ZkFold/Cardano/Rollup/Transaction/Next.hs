@@ -1,40 +1,40 @@
 module ZkFold.Cardano.Rollup.Transaction.Next (Transaction(..), rollupNext) where
 
-import           Cardano.Api                                 (AddressAny, getScriptData, prettyPrintJSON)
-import           Cardano.Api.Shelley                         (TxIn, scriptDataFromJsonDetailedSchema, toPlutusData)
-import           Cardano.CLI.Read                            (SomeSigningWitness (..), readWitnessSigningData)
+import           Cardano.Api                             (AddressAny, getScriptData, prettyPrintJSON)
+import           Cardano.Api.Shelley                     (TxIn, scriptDataFromJsonDetailedSchema, toPlutusData)
+import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
 import           Cardano.CLI.Type.Common
-import           Control.Monad                               (Functor (..), Monad (..), mapM)
-import           Data.Aeson                                  (decode, decodeFileStrict, encodeFile)
-import qualified Data.ByteString                             as BS
-import qualified Data.ByteString.Lazy                        as BL
-import           Data.List.NonEmpty                          (NonEmpty)
-import           Data.Maybe                                  (fromJust)
-import           Data.Semigroup                              (Semigroup (..))
-import           Data.String                                 (IsString (..))
+import           Control.Monad                           (Functor (..), Monad (..), mapM)
+import           Data.Aeson                              (decode, decodeFileStrict, encodeFile)
+import qualified Data.ByteString                         as BS
+import qualified Data.ByteString.Lazy                    as BL
+import           Data.List.NonEmpty                      (NonEmpty)
+import           Data.Maybe                              (fromJust)
+import           Data.Semigroup                          (Semigroup (..))
+import           Data.String                             (IsString (..))
 import           GeniusYield.GYConfig
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusLedgerApi.V1.Value                    (lovelaceValue)
-import           PlutusLedgerApi.V3                          (Address (..), BuiltinByteString, Datum (..),
-                                                              OutputDatum (..), ToData (..), TokenName (..), TxOut (..),
-                                                              fromData, toBuiltin, toData)
-import           Prelude                                     (Either (..), FilePath, IO, Integer, Maybe (..), error,
-                                                              undefined, ($), (.), (<$>))
-import           System.FilePath                             ((</>))
-import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
-import           Test.QuickCheck.Gen                         (generate)
+import           PlutusLedgerApi.V1.Value                (lovelaceValue)
+import           PlutusLedgerApi.V3                      (Address (..), BuiltinByteString, Datum (..), OutputDatum (..),
+                                                          ToData (..), TokenName (..), TxOut (..), fromData, toBuiltin,
+                                                          toData)
+import           Prelude                                 (Either (..), FilePath, IO, Integer, Maybe (..), error,
+                                                          undefined, ($), (.), (<$>))
+import           System.FilePath                         ((</>))
+import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
+import           Test.QuickCheck.Gen                     (generate)
 
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (Fr)
-import           ZkFold.Cardano.Examples.IdentityCircuit     (IdentityCircuitContract (..), stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils               (credentialOf, dataToJSON)
-import           ZkFold.Cardano.OnChain.BLS12_381            (toInput)
-import           ZkFold.Cardano.OnChain.BLS12_381.F          (F (..))
-import           ZkFold.Cardano.OnChain.Utils                (dataToBlake)
-import           ZkFold.Cardano.Rollup.Data                  (datumHashEx1, evolve, minReq, rollupFee)
-import           ZkFold.Cardano.UPLC.Common                  (parkingSpotCompiled)
-import           ZkFold.Cardano.UPLC.Rollup                  (RollupInfo (..), RollupRedeemer (..), rollupCompiled)
-import           ZkFold.Cardano.UPLC.RollupData              (rollupDataCompiled)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381  (Fr)
+import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..), stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils           (credentialOf, dataToJSON)
+import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381.F      (F (..))
+import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
+import           ZkFold.Cardano.Rollup.Data              (datumHashEx1, evolve, minReq, rollupFee)
+import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
+import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), rollupCompiled)
+import           ZkFold.Cardano.UPLC.RollupData          (rollupDataCompiled)
 
 data Transaction = Transaction
     { curPath          :: !FilePath
