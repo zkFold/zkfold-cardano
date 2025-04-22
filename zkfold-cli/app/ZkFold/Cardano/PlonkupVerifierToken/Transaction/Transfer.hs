@@ -3,7 +3,7 @@ module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer (tokenTransfer, 
 import           Cardano.Api                           (AddressAny, SerialiseAsRawBytes (..), TxIn)
 import           Cardano.Api.Ledger                    (toCBOR)
 import           Cardano.CLI.Read                      (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common              (WitnessSigningData)
+import           Cardano.CLI.Type.Common               (WitnessSigningData)
 import           Codec.CBOR.Write                      (toLazyByteString)
 import qualified Codec.Serialise                       as Codec
 import           Data.Aeson                            (encodeFile)

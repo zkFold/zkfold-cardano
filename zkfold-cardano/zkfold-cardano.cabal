@@ -53,25 +53,8 @@ common lang
     -- -Wunused-packages
     -Wmissing-deriving-strategies
 
-common lang-extra
-  ghc-options:
-    -fobject-code
-    -fno-specialise
-    -fno-spec-constr
-    -fno-ignore-interface-pragmas
-    -fno-omit-interface-pragmas
-    -fno-strictness
-    -fno-unbox-strict-fields 
-    -fno-unbox-small-strict-fields
-    -fno-full-laziness
-    -fexpose-all-unfoldings
-    -- Comment the following line to enable PlutusTx error messages
-    -- By default, we defer the errors as they mess with the HLS
-    -fplugin-opt PlutusTx.Plugin:defer-errors
-
 library
   import:           lang
-  import:           lang-extra
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.OffChain.BLS12_381
@@ -96,8 +79,8 @@ library
     cardano-api                    ,
     cborg                          ,
     parsec                         ,
-    plutus-ledger-api       ^>=1.37,
-    plutus-tx               ^>=1.37,
+    plutus-ledger-api       ^>=1.43,
+    plutus-tx               ^>=1.43,
     symbolic-base                  ,
     text                           ,
 
@@ -112,7 +95,7 @@ test-suite test
   build-depends:
     aeson                          ,
     base              >= 4.9 && < 5,
-    base-orphans          ^>= 0.9.3,
+    base-orphans                   ,
     base16-bytestring              ,
     bytestring                     ,
     containers                     ,
@@ -128,8 +111,8 @@ test-suite test
     hedgehog                       ,
     hedgehog-extras                ,
     hspec                          ,
-    plutus-ledger-api       ^>=1.37,
-    plutus-tx               ^>=1.37,
+    plutus-ledger-api              ,
+    plutus-tx                      ,
     tasty                          ,
     tasty-expected-failure         ,
     tasty-hunit                    ,

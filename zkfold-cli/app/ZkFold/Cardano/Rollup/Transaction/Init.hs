@@ -2,7 +2,7 @@ module ZkFold.Cardano.Rollup.Transaction.Init (Transaction(..), rollupInit) wher
 
 import           Cardano.Api                             (AddressAny, TxIn, prettyPrintJSON)
 import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common                (WitnessSigningData)
+import           Cardano.CLI.Type.Common                 (WitnessSigningData)
 import           Control.Monad                           (Functor (..), mapM)
 import           Data.Aeson                              (encode, encodeFile)
 import qualified Data.ByteString                         as BS
@@ -25,7 +25,6 @@ import           GeniusYield.Types.Script                (GYAnyScript (..), GYSc
 import           GeniusYield.Types.TxIn                  (GYTxInWitness (..))
 import           GeniusYield.Types.TxOutRef              (txOutRefFromApi, txOutRefToPlutus)
 import           GeniusYield.Types.Value                 (tokenNameFromPlutus)
-import           PlutusLedgerApi.Data.V3                 (Credential (..))
 import           PlutusLedgerApi.V1.Value                (lovelaceValue)
 import qualified PlutusLedgerApi.V2                      as V2
 import           PlutusLedgerApi.V3                      (Address (..), BuiltinByteString, Datum (..), OutputDatum (..),
@@ -144,7 +143,7 @@ rollupInit (Transaction path pathCfg txIn1 txIn2 sig changeAddr outFile bobAddre
         iniState   = F iniState'
         parkingSpot = validatorFromPlutus $ parkingSpotCompiled parkingTag
 
-    let bridgeTxOut = TxOut { txOutAddress         = Address (ScriptCredential $ validatorPlutusHash parkingSpot) Nothing
+    let bridgeTxOut = TxOut { txOutAddress         = Address (V3.ScriptCredential $ validatorPlutusHash parkingSpot) Nothing
                             , txOutValue           = lovelaceValue minReq
                             , txOutDatum           = OutputDatumHash datumHashEx1
                             , txOutReferenceScript = Nothing

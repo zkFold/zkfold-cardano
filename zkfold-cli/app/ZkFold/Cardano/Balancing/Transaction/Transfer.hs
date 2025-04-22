@@ -2,7 +2,7 @@ module ZkFold.Cardano.Balancing.Transaction.Transfer (balancingTransfer, Transac
 
 import           Cardano.Api
 import           Cardano.CLI.Read                        (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Types.Common                (WitnessSigningData)
+import           Cardano.CLI.Type.Common                 (WitnessSigningData)
 import           Data.Aeson                              (encode, encodeFile)
 import qualified Data.ByteString.Lazy                    as BL
 import           GeniusYield.GYConfig                    (GYCoreConfig (..), coreConfigIO, withCfgProviders)
