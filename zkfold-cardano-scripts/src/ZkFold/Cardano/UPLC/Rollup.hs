@@ -9,22 +9,22 @@
 
 module ZkFold.Cardano.UPLC.Rollup where
 
-import           GHC.ByteOrder                            (ByteOrder (..))
-import           GHC.Generics                             (Generic)
+import           GHC.ByteOrder                       (ByteOrder (..))
+import           GHC.Generics                        (Generic)
 import           PlutusLedgerApi.V3
-import           PlutusTx                                 (CompiledCode, compile, liftCodeDef, makeIsDataIndexed,
-                                                           makeLift, unsafeApplyCode)
-import           PlutusTx.AssocMap                        (lookup, toList)
-import           PlutusTx.Builtins                        (mkI, unsafeDataAsI)
-import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         hiding (toList, (*), (+))
-import           Prelude                                  (Show)
+import           PlutusTx                            (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
+                                                      unsafeApplyCode)
+import           PlutusTx.AssocMap                   (lookup, toList)
+import           PlutusTx.Builtins                   (mkI, unsafeDataAsI)
+import qualified PlutusTx.Builtins.Internal          as BI
+import           PlutusTx.Prelude                    hiding (toList, (*), (+))
+import           Prelude                             (Show)
 
+import           ZkFold.Cardano.OnChain.BLS12_381.F  (F (..), toF)
+import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Utils        (dataToBlake)
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (F (..), toF)
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.OnChain.Utils             (dataToBlake)
 
 data RollupSetup = RollupSetup
   { rsLedgerRules  :: SetupBytes

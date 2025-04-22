@@ -9,17 +9,17 @@
 
 module ZkFold.Cardano.UPLC.PlonkupVerifierTx where
 
-import           PlutusLedgerApi.V3                       (ToData (..), TxInInfo (..), TxOut (..))
-import           PlutusTx                                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode,
-                                                           unsafeFromBuiltinData)
-import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (BuiltinData, BuiltinUnit, blake2b_224, check, filter,
-                                                           isNothing, traceError, ($), (.))
+import           PlutusLedgerApi.V3                  (ToData (..), TxInInfo (..), TxOut (..))
+import           PlutusTx                            (CompiledCode, compile, liftCodeDef, unsafeApplyCode,
+                                                      unsafeFromBuiltinData)
+import qualified PlutusTx.Builtins.Internal          as BI
+import           PlutusTx.Prelude                    (BuiltinData, BuiltinUnit, blake2b_224, check, filter, isNothing,
+                                                      traceError, ($), (.))
 
+import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
+import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 
 -- | Plutus script for verifying a ZkFold Symbolic smart contract on the current transaction.
 --

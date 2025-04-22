@@ -1,12 +1,12 @@
 module ZkFold.Cardano.OffChain.BLS12_381 where
 
-import           GHC.Natural                                 (naturalToInteger)
-import           PlutusTx.Builtins                           (BuiltinByteString, Integer, toBuiltin)
-import           PlutusTx.Prelude                            ((.))
+import           GHC.Natural                            (naturalToInteger)
+import           PlutusTx.Builtins                      (BuiltinByteString, Integer, toBuiltin)
+import           PlutusTx.Prelude                       ((.))
 
-import           ZkFold.Algebra.Field             (Zp, fromZp)
 import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point)
 import           ZkFold.Algebra.EllipticCurve.Class     (compress)
+import           ZkFold.Algebra.Field                   (Zp, fromZp)
 import           ZkFold.Data.ByteString                 (toByteString)
 
 convertZp :: Zp p -> Integer

@@ -3,15 +3,15 @@
 module Tests.Compatibility (specCompatibility) where
 
 import           GHC.Generics
-import           Prelude                                  hiding (Eq (..), Fractional (..), Num (..), length)
-import           Test.Hspec                               (describe, hspec, it)
-import           Test.QuickCheck                          (Testable (property))
+import           Prelude                             hiding (Eq (..), Fractional (..), Num (..), length)
+import           Test.Hspec                          (describe, hspec, it)
+import           Test.QuickCheck                     (Testable (property))
 import           Test.QuickCheck.Arbitrary
 
+import           ZkFold.Cardano.OffChain.Plonkup     (PlonkupN)
+import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs, NonInteractiveProof (..),
-                                                           nipCompatibility)
-import           ZkFold.Cardano.OffChain.Plonkup          (PlonkupN)
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
+                                                      nipCompatibility)
 
 propCompatibility :: forall a b . CompatibleNonInteractiveProofs a b =>
     (a, Witness a) -> Bool

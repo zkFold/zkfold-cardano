@@ -9,16 +9,16 @@
 
 module ZkFold.Cardano.UPLC.PlonkupVerifierToken where
 
-import           PlutusTx                                 (CompiledCode, UnsafeFromData (..), compile, liftCodeDef,
-                                                           unsafeApplyCode)
-import qualified PlutusTx.Builtins.Internal               as BI
-import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Ord (..), check, ($),
-                                                           (&&), (.), (||))
+import           PlutusTx                            (CompiledCode, UnsafeFromData (..), compile, liftCodeDef,
+                                                      unsafeApplyCode)
+import qualified PlutusTx.Builtins.Internal          as BI
+import           PlutusTx.Prelude                    (Bool (..), BuiltinData, BuiltinUnit, Ord (..), check, ($), (&&),
+                                                      (.), (||))
 
+import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
+import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
-import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)
 
 -- | Plutus script (minting policy) for verifying computations on-chain.
 --
