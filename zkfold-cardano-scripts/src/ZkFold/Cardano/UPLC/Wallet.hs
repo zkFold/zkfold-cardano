@@ -51,7 +51,7 @@ checkSig :: CurrencySymbol -> ScriptContext -> Bool
 checkSig symb (ScriptContext TxInfo {..} red si) =
   case si of
     CertifyingScript _ _ -> True
-    SpendingScript _ _ ->
+    RewardingScript _ ->
       -- extract the value of the i-th output
       let v = txOutValue $ txInfoOutputs !! i
           Signature i j = unsafeFromBuiltinData . getRedeemer $ red
