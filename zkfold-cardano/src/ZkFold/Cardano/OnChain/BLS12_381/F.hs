@@ -31,7 +31,7 @@ toF = F . (`modulo` bls12_381_field_prime)
 -- | convert hash into Zp BLS12_381_Scalar
 {-# INLINABLE toInput #-}
 toInput :: BuiltinByteString -> F
-toInput = F . byteStringToInteger BigEndian
+toInput = toF . byteStringToInteger BigEndian
 
 -- | convert Zp BLS12_381_Scalar into hash
 {-# INLINABLE fromInput #-}
