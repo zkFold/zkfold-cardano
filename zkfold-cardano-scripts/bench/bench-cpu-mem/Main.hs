@@ -36,7 +36,7 @@ import           Text.Printf                              (hPrintf)
 import qualified UntypedPlutusCore                        as UPLC
 import           UntypedPlutusCore                        (UnrestrictedProgram (..))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.Examples.EqualityCheck    (equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils            (savePlutus)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F

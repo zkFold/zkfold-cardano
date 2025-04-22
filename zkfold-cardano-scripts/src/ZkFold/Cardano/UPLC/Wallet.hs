@@ -17,8 +17,8 @@ import           PlutusLedgerApi.V1.Value                 (valueOf)
 import           PlutusLedgerApi.V3
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 
-import           ZkFold.Base.Algebra.Basic.Class          (MultiplicativeSemigroup (..))
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Algebra.Class          (MultiplicativeSemigroup (..))
+import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (SetupBytes)

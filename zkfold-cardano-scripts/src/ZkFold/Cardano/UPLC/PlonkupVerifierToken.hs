@@ -15,7 +15,7 @@ import qualified PlutusTx.Builtins.Internal               as BI
 import           PlutusTx.Prelude                         (Bool (..), BuiltinData, BuiltinUnit, Ord (..), check, ($),
                                                            (&&), (.), (||))
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)

@@ -20,7 +20,7 @@ import qualified PlutusTx.Builtins.Internal               as BI
 import           PlutusTx.Prelude                         hiding (toList, (*), (+))
 import           Prelude                                  (Show)
 
-import           ZkFold.Base.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F       (F (..), toF)
 import           ZkFold.Cardano.OnChain.Plonkup           (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes, SetupBytes)

@@ -20,8 +20,8 @@ import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
 import           Test.QuickCheck.Gen                         (generate)
 import qualified UntypedPlutusCore                           as UPLC
 
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
-import           ZkFold.Base.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
+import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
 import           ZkFold.Cardano.Examples.IdentityCircuit
 import           ZkFold.Cardano.OnChain.BLS12_381.F          (toF)
 import           ZkFold.Cardano.OnChain.Plonkup.Data         (ProofBytes (..), SetupBytes (..))

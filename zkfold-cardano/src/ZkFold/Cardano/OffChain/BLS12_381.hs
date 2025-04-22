@@ -4,10 +4,10 @@ import           GHC.Natural                                 (naturalToInteger)
 import           PlutusTx.Builtins                           (BuiltinByteString, Integer, toBuiltin)
 import           PlutusTx.Prelude                            ((.))
 
-import           ZkFold.Base.Algebra.Basic.Field             (Zp, fromZp)
-import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point)
-import           ZkFold.Base.Algebra.EllipticCurve.Class     (compress)
-import           ZkFold.Base.Data.ByteString                 (toByteString)
+import           ZkFold.Algebra.Field             (Zp, fromZp)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point)
+import           ZkFold.Algebra.EllipticCurve.Class     (compress)
+import           ZkFold.Data.ByteString                 (toByteString)
 
 convertZp :: Zp p -> Integer
 convertZp = naturalToInteger . fromZp
