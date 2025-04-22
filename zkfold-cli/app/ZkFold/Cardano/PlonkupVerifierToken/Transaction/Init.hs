@@ -33,8 +33,6 @@ data Transaction = Transaction
 sendScripts ::
     GYNetworkId ->
     GYProviders ->
-    FilePath ->
-    -- ^ Path to 'assets' directory.
     GYPaymentSigningKey ->
     -- ^ Signing key for wallet funding this Tx.
     GYAddress ->
@@ -46,7 +44,7 @@ sendScripts ::
     FilePath ->
     -- ^ Relative path to output file.
     IO ()
-sendScripts nid providers assetsPath skey changeAddr sendTo validators outFile = do
+sendScripts nid providers skey changeAddr sendTo validators outFile = do
     let w1          = User' skey Nothing changeAddr
         validators' = Just . GYPlutusScript <$> validators
 
@@ -63,7 +61,7 @@ sendScripts nid providers assetsPath skey changeAddr sendTo validators outFile =
                                txid   <- signAndSubmitConfirmed txbody
                                return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-    wrapUpSubmittedTx (assetsPath </> outFile) tx
+    wrapUpSubmittedTx outFile tx
 
 tokenInit :: Transaction -> IO ()
 tokenInit (Transaction path coreCfg' tag sig changeAddr sendTo outFile) = do
@@ -91,9 +89,8 @@ tokenInit (Transaction path coreCfg' tag sig changeAddr sendTo outFile) = do
     withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendScripts
                                                             nid
                                                             providers
-                                                            assetsPath
                                                             skey
                                                             changeAddr
                                                             sendTo
                                                             validators
-                                                            outFile
+                                                            (assetsPath </> outFile)

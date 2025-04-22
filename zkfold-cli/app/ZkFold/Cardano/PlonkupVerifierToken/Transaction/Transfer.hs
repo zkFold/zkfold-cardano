@@ -29,8 +29,6 @@ data Transaction = Transaction
 sendDatum ::
     GYNetworkId ->
     GYProviders ->
-    FilePath ->
-    -- ^ Path to 'assets' directory.
     GYPaymentSigningKey ->
     -- ^ Signing key for wallet funding this Tx.
     GYAddress ->
@@ -44,7 +42,7 @@ sendDatum ::
     FilePath ->
     -- ^ Path to output file.
     IO ()
-sendDatum nid providers assetsPath skey changeAddr reward fmValidator policyid outFile = do
+sendDatum nid providers  skey changeAddr reward fmValidator policyid outFile = do
     let w1 = User' skey Nothing changeAddr
 
     let cs = mintingPolicyIdToCurrencySymbol policyid
@@ -69,7 +67,7 @@ sendDatum nid providers assetsPath skey changeAddr reward fmValidator policyid o
                                    txid   <- signAndSubmitConfirmed txbody
                                    return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-        wrapUpSubmittedTx (assetsPath </> outFile) tx
+        wrapUpSubmittedTx outFile tx
 
       else throwIO $ userError "Reward must be at least minimumUTxO lovelace."
 
@@ -87,11 +85,9 @@ tokenTransfer (Transaction path coreCfg' tag pid reward sig changeAddr outFile) 
     withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendDatum
                                                             nid
                                                             providers
-                                                            assetsPath
                                                             skey
                                                             changeAddr
                                                             reward
                                                             forwardingMint
                                                             policyid
-                                                            outFile
-
+                                                            (assetsPath </> outFile)

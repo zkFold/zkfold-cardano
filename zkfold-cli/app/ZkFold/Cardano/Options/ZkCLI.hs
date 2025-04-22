@@ -102,11 +102,10 @@ pTransactionTokenMinting path mcfg = do
     pCmd = do
         TokenMinting.Transaction path
             <$> pGYCoreConfig' mcfg
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutAddress
-            <*> pTxIdFile  --ToDo: pxTxIdAlt
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pOutAddress'
+            <*> pTxIdAlt
             <*> pOutFile
 
 pTransactionTokenBurning :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenBurning.Transaction)
