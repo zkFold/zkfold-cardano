@@ -52,8 +52,8 @@ web2Auth _ _ _ = False
 {-# INLINEABLE checkSig #-}
 checkSig :: CurrencySymbol -> ScriptContext -> Bool
 checkSig symb (ScriptContext TxInfo {..} red _) =
-  -- extract the value of the i-th reference input
-  let v = txOutValue $ txInInfoResolved $ txInfoReferenceInputs !! i
+  -- extract the value of the i-th output
+  let v = txOutValue $ txInfoOutputs !! i
       Signature i j = unsafeFromBuiltinData . getRedeemer $ red
    in -- j-th pubKeyHash is equal to the tokenName of the currency symbol
       valueOf v symb (TokenName $ getPubKeyHash $ txInfoSignatories !! j) > 0
