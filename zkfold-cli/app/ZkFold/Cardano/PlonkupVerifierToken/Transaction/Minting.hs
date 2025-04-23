@@ -11,6 +11,7 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3                       (fromBuiltin)
 import           Prelude
 import           System.FilePath                          ((</>))
+import qualified System.IO                                as IO
 
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
@@ -32,11 +33,12 @@ data Transaction = Transaction
 sendMintTokens ::
     GYNetworkId ->
     GYProviders ->
+    FilePath ->
+    -- ^ Path to 'assets' directory.
     GYPaymentSigningKey ->
     -- ^ Signing key for wallet funding this Tx.
     GYAddress ->
     -- ^ Change address for wallet funding this Tx.
-    -- GYTxIn PlutusV3 ->
     GYAddress ->
     -- ^ Beneficiary receiving token.
     GYScript PlutusV3 ->
@@ -50,7 +52,7 @@ sendMintTokens ::
     FilePath ->
     -- ^ Path to output file.
     IO ()
-sendMintTokens nid providers skey changeAddr sendTo validator txidSetup redeemer token outFile = do
+sendMintTokens nid providers assetsPath skey changeAddr sendTo validator txidSetup redeemer token outFile = do
   let w1 = User' skey Nothing changeAddr
 
   let txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
@@ -73,7 +75,12 @@ sendMintTokens nid providers skey changeAddr sendTo validator txidSetup redeemer
                              txid   <- signAndSubmitConfirmed txbody
                              return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-  wrapUpSubmittedTx outFile tx
+  let (pidStg, tnStg) = asTuple token
+  putStrLn $ "Policy ID: " ++ pidStg
+  putStrLn $ "Token Name: " ++ tnStg
+  IO.writeFile (assetsPath </> "lastMintedToken.txt") $ "\"" ++ pidStg ++ "." ++ tnStg ++ "\""
+
+  wrapUpSubmittedTx (assetsPath </> outFile) tx
 
 tokenMinting :: Transaction -> IO ()
 tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile) = do
@@ -82,7 +89,7 @@ tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile
       
   coreCfg   <- fromCoreConfigAltIO coreCfg'
   skey      <- fromSigningKeyAltIO sig
-  txidSetup <- fromTxIdAltIO txidSetup'
+  txidSetup <- fromTxIdAltIO assetsPath txidSetup'
 
   let nid = cfgNetworkId coreCfg
 
@@ -93,16 +100,12 @@ tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile
       policyId              = mintingPolicyId plonkupTokenValidator
       assetName             = AssetName $ fromBuiltin $ F.fromInput $ head input
       token                 = GYToken policyId (coerce assetName)
-      
-      token'                = asTuple token
       redeemer              = redeemerFromPlutusData proof
-
-  putStrLn $ "Policy ID: " ++ fst token'
-  putStrLn $ "Token Name: " ++ snd token'
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendMintTokens
                                                           nid
                                                           providers
+                                                          assetsPath
                                                           skey
                                                           changeAddr
                                                           sendTo
@@ -110,7 +113,7 @@ tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile
                                                           txidSetup
                                                           redeemer
                                                           token
-                                                          (assetsPath </> outFile)
+                                                          outFile
 
 
 ------- :Helpers: -------

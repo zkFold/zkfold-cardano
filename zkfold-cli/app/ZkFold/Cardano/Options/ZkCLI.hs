@@ -14,7 +14,7 @@ import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Bal
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
 import           ZkFold.Cardano.Options.Common                            (pChangeAddress, pChangeAddress', pFMTag, pGYCoreConfig', pGYCoreConfig, pOutAddress, pOutAddress',
-                                                                           pOutFile, pPolicyIdAlt, pReward, pTxIdAlt, pTxIdFile, pTxInOnly, pSigningKeyAlt)
+                                                                           pOutFile, pPolicyIdAlt, pReward, pTokenAlt, pTxIdAlt, pTxIdFile, pTxInOnly, pSigningKeyAlt)
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
@@ -97,7 +97,7 @@ pTransactionTokenTransfer path mcfg = do
 
 pTransactionTokenMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenMinting.Transaction)
 pTransactionTokenMinting path mcfg = do
-    pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "token-mint" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenMinting.Transaction path
@@ -110,23 +110,21 @@ pTransactionTokenMinting path mcfg = do
 
 pTransactionTokenBurning :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenBurning.Transaction)
 pTransactionTokenBurning path mcfg = do
-    pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "token-burn" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenBurning.Transaction path
             <$> pGYCoreConfig' mcfg
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutAddress
+            <*> pFMTag
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pTokenAlt
             <*> pTxIdAlt
-            <*> pTxIdAlt
+            <*> pOutFile
 
 pTransactionBalancingInit :: Maybe (Parser BalancingInit.Transaction)
 pTransactionBalancingInit = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "balancing-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         BalancingInit.Transaction
@@ -138,7 +136,7 @@ pTransactionBalancingInit = do
 
 pTransactionBalancingTransfer :: FilePath -> Maybe (Parser BalancingTransfer.Transaction)
 pTransactionBalancingTransfer path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "balancing-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         BalancingTransfer.Transaction path
@@ -150,7 +148,7 @@ pTransactionBalancingTransfer path = do
 
 pTransactionBalancing :: FilePath -> Maybe (Parser Balancing.Transaction)
 pTransactionBalancing path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "balancing-something" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         Balancing.Transaction path
@@ -165,7 +163,7 @@ pTransactionBalancing path = do
 
 pTransactionRollupInit :: FilePath -> Maybe (Parser RollupInit.Transaction)
 pTransactionRollupInit path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "rollup-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupInit.Transaction path
@@ -180,7 +178,7 @@ pTransactionRollupInit path = do
 
 pTransactionRollupUpdate :: FilePath -> Maybe (Parser RollupUpdate.Transaction)
 pTransactionRollupUpdate path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "rollup-update" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupUpdate.Transaction path
@@ -193,7 +191,7 @@ pTransactionRollupUpdate path = do
 
 pTransactionRollupNext :: FilePath -> Maybe (Parser RollupNext.Transaction)
 pTransactionRollupNext path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "rollup-next" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupNext.Transaction path

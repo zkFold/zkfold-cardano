@@ -42,7 +42,7 @@ sendDatum ::
     FilePath ->
     -- ^ Path to output file.
     IO ()
-sendDatum nid providers  skey changeAddr reward fmValidator policyid outFile = do
+sendDatum nid providers skey changeAddr reward fmValidator policyid outFile = do
     let w1 = User' skey Nothing changeAddr
 
     let cs = mintingPolicyIdToCurrencySymbol policyid

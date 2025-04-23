@@ -21,7 +21,7 @@ import qualified System.IO                           as IO
 
 -- | Default tag (arbitrary integer) for 'ForwardingMint' script.
 defaultForwardingMintTag :: Integer
-defaultForwardingMintTag = 43
+defaultForwardingMintTag = 2927
 
 ------------------------- :Alternatives: -------------------------
 
@@ -33,11 +33,17 @@ data CoreConfigAlt = CoreConfigUseGY (Maybe GYCoreConfig)
 -- | Sum type for 'GYMintingPolicyId' input alternatives
 data PolicyIdAlt = PolicyIdUseGY GYMintingPolicyId
                  | PolicyIdUseFile FilePath
+                 deriving stock Show
 
 -- | Sum type for 'GYPaymentSigningKey' input alternatives
 data SigningKeyAlt = SigningKeyUseGY GYPaymentSigningKey
                    | SigningKeyUseFile FilePath
                    deriving stock Show
+
+-- | Sum type for 'GYAssetClass' input alternatives
+data TokenAlt = TokenUseGY GYAssetClass
+              | TokenUseFile FilePath
+              deriving stock Show
 
 -- | Sum type for 'TxId' input alternatives
 data TxIdAlt = TxIdUseGY GYTxId
@@ -60,10 +66,15 @@ fromSigningKeyAltIO sig = case sig of
   SigningKeyUseGY skey    -> pure skey
   SigningKeyUseFile sfile -> GY.readPaymentSigningKey sfile
 
-fromTxIdAltIO :: TxIdAlt -> IO GYTxId
-fromTxIdAltIO tid = case tid of
+fromTokenAltIO :: FilePath -> TokenAlt -> IO GYAssetClass
+fromTokenAltIO path tok = case tok of
+  TokenUseGY gytoken  -> pure gytoken
+  TokenUseFile gyfile -> decodeFileStrict (path </> gyfile) >>= pure . fromJust
+
+fromTxIdAltIO :: FilePath -> TxIdAlt -> IO GYTxId
+fromTxIdAltIO path tid = case tid of
   TxIdUseGY txId     -> pure txId
-  TxIdUseFile txFile -> decodeFileStrict txFile >>= pure . fromJust
+  TxIdUseFile txFile -> decodeFileStrict (path </> txFile) >>= pure . fromJust
 
 ----------------------------- :Tx: -------------------------------
 
@@ -142,8 +153,17 @@ pTxInOnly =
             <> Opt.help "TxId#TxIx"
         )
 
+pTxOref :: Parser GYTxOutRef
+pTxOref =
+    Opt.option
+        (txOutRefFromApi <$> readerFromParsecParser parseTxIn)
+        ( Opt.long "tx-in"
+            <> Opt.metavar "TX-IN"
+            <> Opt.help "TxId#TxIx"
+        )
+
 pOutFile :: Parser FilePath
-pOutFile = parseFilePath "tx-out-file" "Tx out address."
+pOutFile = parseFilePath "tx-out-file" "Path (relative to 'assets/') for Tx id file."
 
 pFMTag :: Parser Integer
 pFMTag = Opt.option Opt.auto
@@ -170,7 +190,7 @@ pPolicyId = fromString <$> Opt.strOption
   )
 
 pPolicyIdFile :: Parser FilePath
-pPolicyIdFile = parseFilePath "policy-id-file" "Policy ID file."
+pPolicyIdFile = parseFilePath "policy-id-file" "Path (relative to 'assets/') for Policy ID file."
 
 pPolicyIdAlt :: Parser PolicyIdAlt
 pPolicyIdAlt = fmap (maybe defaultPolicyId id) . Opt.optional $ Opt.asum
@@ -201,6 +221,26 @@ pSigningKeyAlt = Opt.asum
   , SigningKeyUseFile <$> pSigningKeyFile
   ]
 
+----- :parsing Token: -----
+
+pToken :: Parser GYAssetClass
+pToken = fromString <$> Opt.strOption
+  ( Opt.long "burn-token"
+      <> Opt.metavar "POLICYID.TOKENNAME"
+      <> Opt.help "Token to burn."
+  )
+
+pTokenFile :: Parser FilePath
+pTokenFile = parseFilePath "burn-token-file" "Path (relative to 'assets/') for token-to-burn file."
+
+pTokenAlt :: Parser TokenAlt
+pTokenAlt = fmap (maybe defaultToken id) . Opt.optional $ Opt.asum
+    [ TokenUseGY <$> pToken
+    , TokenUseFile <$> pTokenFile
+    ]
+  where
+    defaultToken = TokenUseFile "lastMintedToken.txt"
+
 ----- :parsing GYTxId: -----
 
 pTxId :: Parser GYTxId
@@ -211,7 +251,7 @@ pTxId = Opt.option (Opt.eitherReader GY.txIdFromHexE)
     )
 
 pTxIdFile :: Parser FilePath
-pTxIdFile = parseFilePath "tx-id-file" "Tx id address."
+pTxIdFile = parseFilePath "tx-id-file" "Path (relative to 'assets/') for Tx id file."
 
 pTxIdAlt :: Parser TxIdAlt
 pTxIdAlt = Opt.asum
