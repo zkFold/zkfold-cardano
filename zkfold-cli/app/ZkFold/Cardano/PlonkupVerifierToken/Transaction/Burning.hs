@@ -14,8 +14,9 @@ import           System.FilePath                          ((</>))
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes (..))
-import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..), TokenAlt, TxIdAlt,
-                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTokenAltIO, fromTxIdAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..), TokenAlt,
+                                                           TxIdAlt, fromCoreConfigAltIO, fromSigningKeyAltIO,
+                                                           fromTokenAltIO, fromTxIdAltIO, wrapUpSubmittedTx)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 

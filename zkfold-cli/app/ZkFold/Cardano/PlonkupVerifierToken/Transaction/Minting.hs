@@ -16,7 +16,8 @@ import qualified System.IO                                as IO
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..), TxIdAlt,
-                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTxIdAltIO, wrapUpSubmittedTx)
+                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTxIdAltIO,
+                                                           wrapUpSubmittedTx)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
 data Transaction = Transaction
@@ -86,7 +87,7 @@ tokenMinting :: Transaction -> IO ()
 tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile) = do
   let assetsPath = path </> "assets"
       testData   = path </> "test-data"
-      
+
   coreCfg   <- fromCoreConfigAltIO coreCfg'
   skey      <- fromSigningKeyAltIO sig
   txidSetup <- fromTxIdAltIO assetsPath txidSetup'

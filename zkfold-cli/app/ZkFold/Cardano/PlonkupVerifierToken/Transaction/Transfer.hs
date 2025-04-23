@@ -49,7 +49,7 @@ sendDatum nid providers skey changeAddr reward fmValidator policyid outFile = do
         inlineDatum = Just (datumFromPlutusData cs, GYTxOutUseInlineDatum @PlutusV3)
 
     let forwardingMintAddr = addressFromValidator nid fmValidator
-    
+
     params <- gyGetProtocolParameters providers
     let outMin          = GYTxOut forwardingMintAddr (valueFromLovelace 0) inlineDatum Nothing
         minUtxoLovelace = toInteger $ minimumUTxO params outMin
@@ -78,7 +78,7 @@ tokenTransfer (Transaction path coreCfg' tag pid reward sig changeAddr outFile) 
     coreCfg  <- fromCoreConfigAltIO coreCfg'
     policyid <- fromPolicyIdAltIO assetsPath pid
     skey     <- fromSigningKeyAltIO sig
-    
+
     let nid            = cfgNetworkId coreCfg
         forwardingMint = validatorFromPlutus $ forwardingMintCompiled tag
 
