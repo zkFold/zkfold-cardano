@@ -52,3 +52,7 @@ $ cabal update
 $ cabal build
 ```
 
+
+## Compiling the scripts
+
+Execute `cabal run zkfold-cardano-scripts-compiler` from root of this repository.

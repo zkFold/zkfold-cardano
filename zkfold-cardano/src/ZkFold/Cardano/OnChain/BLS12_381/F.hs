@@ -2,17 +2,17 @@
 
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
-import           Data.Aeson                      (FromJSON, ToJSON)
-import           GHC.Generics                    (Generic)
-import           GHC.Natural                     (Natural, naturalToInteger)
-import           PlutusTx                        (makeLift)
+import           Data.Aeson            (FromJSON, ToJSON)
+import           GHC.Generics          (Generic)
+import           GHC.Natural           (Natural, naturalToInteger)
+import           PlutusTx              (makeLift)
 import           PlutusTx.Blueprint
 import qualified PlutusTx.Blueprint.TH
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude
-import qualified Prelude                         as Haskell
+import qualified Prelude               as Haskell
 
-import qualified ZkFold.Base.Algebra.Basic.Class as ZkFold
+import qualified ZkFold.Algebra.Class  as ZkFold
 
 bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
@@ -31,7 +31,7 @@ toF = F . (`modulo` bls12_381_field_prime)
 -- | convert hash into Zp BLS12_381_Scalar
 {-# INLINABLE toInput #-}
 toInput :: BuiltinByteString -> F
-toInput = F . byteStringToInteger BigEndian
+toInput = toF . byteStringToInteger BigEndian
 
 -- | convert Zp BLS12_381_Scalar into hash
 {-# INLINABLE fromInput #-}

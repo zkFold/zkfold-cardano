@@ -3,26 +3,25 @@
 
 module ZkFold.Cardano.OnChain.Plonkup where
 
-import           Data.Foldable                               (Foldable)
-import           Data.Functor.Rep                            (Rep, Representable)
-import           GHC.Base                                    (Ord)
-import           PlutusTx.Builtins                           (BuiltinByteString, ByteOrder (..), blake2b_224,
-                                                              bls12_381_G1_compressed_generator,
-                                                              bls12_381_G1_uncompress,
-                                                              bls12_381_G2_compressed_generator,
-                                                              bls12_381_G2_uncompress, bls12_381_finalVerify,
-                                                              bls12_381_millerLoop, byteStringToInteger, consByteString,
-                                                              emptyByteString, integerToByteString, subtractInteger)
-import           PlutusTx.Prelude                            (Bool (..), ($), (&&), (.), (<>), (==), head, (!!), length)
-import           Prelude                                     (undefined)
+import           Data.Foldable                       (Foldable)
+import           Data.Functor.Rep                    (Rep, Representable)
 
-import           ZkFold.Base.Algebra.Basic.Class
-import           ZkFold.Base.Algebra.Basic.Number            (KnownNat, type (+), type (*))
-import           ZkFold.Base.Protocol.NonInteractiveProof    (CompatibleNonInteractiveProofs (..), NonInteractiveProof (..))
-import           ZkFold.Cardano.OffChain.Plonkup             (PlonkupN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.OffChain.Transcript          ()
-import           ZkFold.Cardano.OnChain.BLS12_381            (F (..), mul, powTwo)
-import           ZkFold.Cardano.OnChain.Plonkup.Data         (InputBytes, ProofBytes (..), SetupBytes (..))
+import           PlutusTx.Builtins                   (BuiltinByteString, ByteOrder (..), blake2b_224,
+                                                      bls12_381_G1_compressed_generator, bls12_381_G1_uncompress,
+                                                      bls12_381_G2_compressed_generator, bls12_381_G2_uncompress,
+                                                      bls12_381_finalVerify, bls12_381_millerLoop, byteStringToInteger,
+                                                      consByteString, emptyByteString, integerToByteString,
+                                                      subtractInteger)
+import           PlutusTx.Prelude                    (Bool (..), head, length, (!!), ($), (&&), (.), (<>), (==))
+import           Prelude                             (undefined, Ord)
+
+import           ZkFold.Algebra.Class
+import           ZkFold.Algebra.Number               (KnownNat, type (*), type (+))
+import           ZkFold.Cardano.OffChain.Plonkup     (PlonkupN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OffChain.Transcript  ()
+import           ZkFold.Cardano.OnChain.BLS12_381    (F (..), mul, powTwo)
+import           ZkFold.Cardano.OnChain.Plonkup.Data (InputBytes, ProofBytes (..), SetupBytes (..))
+import           ZkFold.Protocol.NonInteractiveProof (CompatibleNonInteractiveProofs (..), NonInteractiveProof (..))
 
 data PlonkupPlutus
 
@@ -47,7 +46,7 @@ instance NonInteractiveProof PlonkupPlutus where
     verify :: SetupVerify PlonkupPlutus -> Input PlonkupPlutus -> Proof PlonkupPlutus -> Bool
     verify SetupBytes{..} pi ProofBytes{..} =
         let l = length pi
-            
+
             g0 = bls12_381_G1_uncompress bls12_381_G1_compressed_generator
             h0 = bls12_381_G2_uncompress bls12_381_G2_compressed_generator
 
@@ -135,7 +134,7 @@ instance NonInteractiveProof PlonkupPlutus where
 
             zhX_xi = xi_n - one
 
-            omegas i = 
+            omegas i =
                 if i == 1
                     then omega
                     else omegas (i `subtractInteger` 1) * omega
@@ -143,7 +142,7 @@ instance NonInteractiveProof PlonkupPlutus where
             lagrange1_xi = omega * zhX_xi * head l_xi
 
             -- public inputs
-            pi_xi i = 
+            pi_xi i =
                 if i == 0
                     then F 0
                     else pi_xi (i `subtractInteger` 1) + (pi !! (i `subtractInteger` 1)) * (l_xi !! (i `subtractInteger` 1)) * omegas i
