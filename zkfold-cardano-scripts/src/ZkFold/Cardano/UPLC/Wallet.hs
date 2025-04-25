@@ -121,7 +121,7 @@ wallet ::
   -- | Script context.
   BuiltinData ->
   BuiltinUnit
-wallet (unsafeFromBuiltinData -> cs :: CurrencySymbol) (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
+wallet cs (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
   check
     $ if red == 0
       then
@@ -134,7 +134,7 @@ wallet (unsafeFromBuiltinData -> cs :: CurrencySymbol) (unsafeFromBuiltinData ->
                 & BI.tail
                 & BI.head
                 & unsafeFromBuiltinData
-         in AssocMap.member (toBuiltinData cs) txInfoMint
+         in AssocMap.member cs txInfoMint
       -- We require the withdrawal script.
       else
         (red == 1)
