@@ -2,12 +2,13 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module ZkFold.Cardano.UPLC.Wallet (
   module ZkFold.Cardano.UPLC.Wallet.Types,
-  untypedWeb2Auth,
+  web2Auth,
   untypedCheckSig,
   wallet,
 ) where
@@ -33,21 +34,49 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 {-# INLINEABLE web2Auth #-}
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
-web2Auth :: SetupBytes -> Web2Creds -> ScriptContext -> Bool
-web2Auth expModCircuit Web2Creds {..} (ScriptContext TxInfo {..} red (MintingScript symb)) =
-  let
-    publicInput = toInput (sha2_256 $ jwtPrefix <> w2cEmail <> jwtSuffix) * toInput bs
-    Web2Auth JWTParts {..} proof tn@(TokenName bs) = unsafeFromBuiltinData . getRedeemer $ red
-   in
-    -- Check that the user knows an RSA signature for a JWT containing the email
-    verify @PlonkupPlutus expModCircuit [publicInput] proof
-      -- Check that we mint a token with the correct name
-      && mintValueMinted txInfoMint -- Apparently, plinth does not provide convenient (& performant) way to compare 'MintValue' with 'Value'.
-      == singleton symb tn 1
-      && mintValueBurned txInfoMint
-      == mempty
-      && elem (PubKeyHash bs) txInfoSignatories
-web2Auth _ _ _ = False
+web2Auth ::
+  -- | 'SetupBytes'.
+  BuiltinData ->
+  -- | 'Web2Creds'.
+  BuiltinData ->
+  -- | 'ScriptContext'.
+  BuiltinData ->
+  BuiltinUnit
+web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBuiltinData -> Web2Creds {..}) sc =
+  check
+    $ let
+        publicInput = toInput (sha2_256 $ jwtPrefix <> w2cEmail <> jwtSuffix) * toInput bs
+       in
+        -- Check that the user knows an RSA signature for a JWT containing the email
+        verify @PlonkupPlutus expModCircuit [publicInput] proof
+          -- Check that we mint a token with the correct name
+          && AssocMap.lookup (toBuiltinData symb) txInfoMint
+          == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
+          && elem (PubKeyHash bs) txInfoSignatories
+ where
+  txInfoL = BI.unsafeDataAsConstr sc & BI.snd
+  txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
+  redL = txInfoL & BI.tail
+  Web2Auth JWTParts {..} proof tn@(TokenName bs) = redL & BI.head & unsafeFromBuiltinData
+  (MintingScript symb) = redL & BI.tail & BI.head & unsafeFromBuiltinData
+  txInfoMintL =
+    txInfo
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.tail
+  txInfoMint :: Map BuiltinData BuiltinData =
+    txInfoMintL
+      & BI.head
+      & unsafeFromBuiltinData
+  txInfoSignatories :: [PubKeyHash] =
+    txInfoMintL
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.head
+      & unsafeFromBuiltinData
 
 {-# INLINEABLE checkSig #-}
 checkSig :: CurrencySymbol -> ScriptContext -> Bool
@@ -103,16 +132,6 @@ wallet (unsafeFromBuiltinData -> cs :: CurrencySymbol) (unsafeFromBuiltinData ->
   red :: Integer = txInfoL & BI.tail & BI.head & unsafeFromBuiltinData
 
 -----------------------------------------------------------
-
-{-# INLINEABLE untypedWeb2Auth #-}
-untypedWeb2Auth :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinUnit
-untypedWeb2Auth circuit' creds' ctx' =
-  let
-    ctx = unsafeFromBuiltinData ctx'
-    circuit :: SetupBytes = unsafeFromBuiltinData circuit'
-    creds :: Web2Creds = unsafeFromBuiltinData creds'
-   in
-    check $ web2Auth circuit creds ctx
 
 {-# INLINEABLE untypedCheckSig #-}
 untypedCheckSig :: BuiltinData -> BuiltinData -> BuiltinUnit

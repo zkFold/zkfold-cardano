@@ -125,7 +125,7 @@ web2AuthSerialisedScript :: ByteString
 web2AuthSerialisedScript = serialiseCompiledCode web2AuthCompiledCode & fromShort
 
 web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
-web2AuthCompiledCode = $$(PlutusTx.compile [||untypedWeb2Auth||])
+web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 
 walletSerialisedScript :: ByteString
 walletSerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
