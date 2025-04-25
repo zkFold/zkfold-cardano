@@ -1,15 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module ZkFold.Cardano.UPLC.Wallet (
   module ZkFold.Cardano.UPLC.Wallet.Types,
   web2Auth,
-  untypedCheckSig,
+  checkSig,
   wallet,
 ) where
 
@@ -79,13 +79,38 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
       & unsafeFromBuiltinData
 
 {-# INLINEABLE checkSig #-}
-checkSig :: CurrencySymbol -> ScriptContext -> Bool
-checkSig symb (ScriptContext TxInfo {..} red _) =
-  -- extract the value of the i-th output
-  let v = txOutValue $ txInfoOutputs !! i
-      Signature i j = unsafeFromBuiltinData . getRedeemer $ red
-   in -- j-th pubKeyHash is equal to the tokenName of the currency symbol
-      valueOf v symb (TokenName $ getPubKeyHash $ txInfoSignatories !! j) > 0
+checkSig ::
+  -- | 'CurrencySymbol'.
+  BuiltinData ->
+  -- | 'ScriptContext'.
+  BuiltinData ->
+  BuiltinUnit
+checkSig (unsafeFromBuiltinData -> (symb :: CurrencySymbol)) sc =
+  check
+    $
+    -- extract the value of the i-th output
+    let v = txOutValue $ txInfoOutputs !! i
+     in -- j-th pubKeyHash is equal to the tokenName of the currency symbol
+        valueOf v symb (TokenName $ getPubKeyHash $ txInfoSignatories !! j) > 0
+ where
+  txInfoL = BI.unsafeDataAsConstr sc & BI.snd
+  txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
+  Signature i j = txInfoL & BI.tail & BI.head & unsafeFromBuiltinData
+  txInfoOutputsL =
+    txInfo
+      & BI.tail
+      & BI.tail
+  txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
+  txInfoSignatories :: [PubKeyHash] =
+    txInfoOutputsL
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.tail
+      & BI.head
+      & unsafeFromBuiltinData
 
 {-# INLINEABLE wallet #-}
 wallet ::
@@ -130,9 +155,3 @@ wallet (unsafeFromBuiltinData -> cs :: CurrencySymbol) (unsafeFromBuiltinData ->
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
   -- Note that 'BuiltinInteger' is a type synonym for 'Integer' so there is no extra cost here.
   red :: Integer = txInfoL & BI.tail & BI.head & unsafeFromBuiltinData
-
------------------------------------------------------------
-
-{-# INLINEABLE untypedCheckSig #-}
-untypedCheckSig :: BuiltinData -> BuiltinData -> BuiltinUnit
-untypedCheckSig (unsafeFromBuiltinData -> symb) (unsafeFromBuiltinData -> ctx) = check $ checkSig symb ctx

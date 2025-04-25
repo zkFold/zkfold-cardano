@@ -137,4 +137,4 @@ checkSigSerialisedScript :: ByteString
 checkSigSerialisedScript = serialiseCompiledCode checkSigCompiledCode & fromShort
 
 checkSigCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
-checkSigCompiledCode = $$(PlutusTx.compile [||untypedCheckSig||])
+checkSigCompiledCode = $$(PlutusTx.compile [||checkSig||])
