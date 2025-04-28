@@ -125,16 +125,16 @@ web2AuthSerialisedScript :: ByteString
 web2AuthSerialisedScript = serialiseCompiledCode web2AuthCompiledCode & fromShort
 
 web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
-web2AuthCompiledCode = $$(PlutusTx.compile [||untypedWeb2Auth||])
+web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 
 walletSerialisedScript :: ByteString
 walletSerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
 
-walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
-walletCompiledCode = $$(PlutusTx.compile [||untypedWallet||])
+walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+walletCompiledCode = $$(PlutusTx.compile [||wallet||])
 
 checkSigSerialisedScript :: ByteString
 checkSigSerialisedScript = serialiseCompiledCode checkSigCompiledCode & fromShort
 
 checkSigCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
-checkSigCompiledCode = $$(PlutusTx.compile [||untypedCheckSig||])
+checkSigCompiledCode = $$(PlutusTx.compile [||checkSig||])
