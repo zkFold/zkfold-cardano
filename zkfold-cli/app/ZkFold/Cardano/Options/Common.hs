@@ -1,3 +1,5 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module ZkFold.Cardano.Options.Common where
 
 import           Cardano.Api                        (AddressAny, TxIn, parseAddressAny)
@@ -114,6 +116,14 @@ pChangeAddress' =
           , Opt.help "Address where ADA in excess of the tx fee will go to."
           ]
 
+pFMTag :: Parser Integer
+pFMTag = Opt.option Opt.auto
+  ( Opt.long "forwarding-mint-tag"
+      <> Opt.value defaultForwardingMintTag
+      <> Opt.metavar "INTEGER"
+      <> Opt.help "Tag (integer) discerning 'forwarding-mint' script."
+  )
+
 pOutAddress :: Parser AddressAny
 pOutAddress =
     Opt.option (readerFromParsecParser parseAddressAny) $
@@ -157,21 +167,13 @@ pTxOref :: Parser GYTxOutRef
 pTxOref =
     Opt.option
         (txOutRefFromApi <$> readerFromParsecParser parseTxIn)
-        ( Opt.long "tx-in"
-            <> Opt.metavar "TX-IN"
-            <> Opt.help "TxId#TxIx"
+        ( Opt.long "tx-oref"
+            <> Opt.metavar "TxId#TxIx"
+            <> Opt.help "Required TxOutRef (reference to a Tx input)."
         )
 
 pOutFile :: Parser FilePath
 pOutFile = parseFilePath "tx-out-file" "Path (relative to 'assets/') for Tx id file."
-
-pFMTag :: Parser Integer
-pFMTag = Opt.option Opt.auto
-  ( Opt.long "forwarding-mint-tag"
-      <> Opt.value defaultForwardingMintTag
-      <> Opt.metavar "INTEGER"
-      <> Opt.help "Tag (integer) discerning 'forwarding-mint' script."
-  )
 
 pReward :: Parser GYValue
 pReward = GY.valueFromLovelace <$> Opt.option Opt.auto
@@ -258,3 +260,37 @@ pTxIdAlt = Opt.asum
   [ TxIdUseGY <$> pTxId
   , TxIdUseFile <$> pTxIdFile
   ]
+
+----- :OutFile parser: -----
+
+data StageTx = RollupInit | RollupData | RollupUpdate | RollupClear
+
+class HasFileParser a where
+  outFileName   :: a -> String
+  outFileFlag   :: a -> String
+  outFileHelp   :: a -> String
+
+  pOutFile' :: a -> Parser FilePath
+  pOutFile' x = Opt.strOption
+    ( Opt.long (outFileFlag x)
+        <> Opt.value (outFileName x)
+        <> Opt.metavar "FILEPATH"
+        <> Opt.help (outFileHelp x)
+        <> Opt.completer (Opt.bashCompleter "file")
+    )
+
+instance HasFileParser StageTx where
+  outFileFlag RollupInit   = "rollup-init-out-file"
+  outFileFlag RollupData   = "rollup-data-out-file"
+  outFileFlag RollupUpdate = "rollup-update-out-file"
+  outFileFlag RollupClear  = "rollup-clear-out-file"
+
+  outFileName RollupInit   = "rollup-init.tx"
+  outFileName RollupData   = "rollup-data-tokens.tx"
+  outFileName RollupUpdate = "rollup-update.tx"
+  outFileName RollupClear  = "rollup-clear.tx"
+
+  outFileHelp RollupInit   = "Path (relative to 'assets/') for rollup initialization tx out-file."
+  outFileHelp RollupData   = "Path (relative to 'assets/') for rollup data tokens tx out-file."
+  outFileHelp RollupUpdate = "Path (relative to 'assets/') for rollup update tx out-file."
+  outFileHelp RollupClear  = "Path (relative to 'assets/') for rollup token-clearing tx out-file."

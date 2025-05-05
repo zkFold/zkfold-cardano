@@ -80,7 +80,7 @@ tokenTransfer (Transaction path coreCfg' tag pid reward sig changeAddr outFile) 
     skey     <- fromSigningKeyAltIO sig
 
     let nid            = cfgNetworkId coreCfg
-        forwardingMint = validatorFromPlutus $ forwardingMintCompiled tag
+        forwardingMint = scriptFromPlutus $ forwardingMintCompiled tag
 
     withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendDatum
                                                             nid

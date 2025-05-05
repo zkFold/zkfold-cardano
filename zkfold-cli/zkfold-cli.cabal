@@ -116,6 +116,7 @@ executable zkfold-cli
         symbolic-base                  ,
         text                           ,
         transformers-except            ,
+        symbolic-base                  ,
         zkfold-cardano                 ,
         zkfold-cardano-scripts         ,
         zkfold-example                 ,

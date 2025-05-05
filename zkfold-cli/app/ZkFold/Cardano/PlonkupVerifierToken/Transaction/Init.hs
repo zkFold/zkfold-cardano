@@ -82,7 +82,7 @@ tokenInit (Transaction path coreCfg' tag sig changeAddr sendTo outFile) = do
 
     let plutusValidators = [plonkupVerifierTokenCompiled setup, forwardingMintCompiled tag]
         policyId         = show $ currencySymbolOf $ head plutusValidators
-        validators       = validatorFromPlutus @PlutusV3 <$> plutusValidators
+        validators       = scriptFromPlutus @PlutusV3 <$> plutusValidators
 
     IO.writeFile (assetsPath </> "plonkupVerifierTokenPolicyId.txt") policyId
 

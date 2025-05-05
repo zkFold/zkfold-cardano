@@ -97,7 +97,7 @@ tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile
   EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
   let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
-      plonkupTokenValidator = validatorFromPlutus @PlutusV3 $ plonkupVerifierTokenCompiled setup
+      plonkupTokenValidator = scriptFromPlutus @PlutusV3 $ plonkupVerifierTokenCompiled setup
       policyId              = mintingPolicyId plonkupTokenValidator
       assetName             = AssetName $ fromBuiltin $ F.fromInput $ head input
       token                 = GYToken policyId (coerce assetName)

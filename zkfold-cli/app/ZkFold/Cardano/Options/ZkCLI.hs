@@ -13,11 +13,7 @@ import           Prelude
 import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Balancing
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
-import           ZkFold.Cardano.Options.Common                            (pChangeAddress, pChangeAddress', pFMTag,
-                                                                           pGYCoreConfig, pGYCoreConfig', pOutAddress,
-                                                                           pOutAddress', pOutFile, pPolicyIdAlt,
-                                                                           pReward, pSigningKeyAlt, pTokenAlt, pTxIdAlt,
-                                                                           pTxIdFile, pTxInOnly)
+import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
@@ -66,8 +62,8 @@ pCmds path mcfg = do
             , fmap TransactionBalancingInit     <$> pTransactionBalancingInit
             , fmap TransactionBalancingTransfer <$> pTransactionBalancingTransfer path
             , fmap TransactionBalancing         <$> pTransactionBalancing path
-            , fmap TransactionRollupInit        <$> pTransactionRollupInit path
-            , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path
+            , fmap TransactionRollupInit        <$> pTransactionRollupInit path mcfg
+            , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path mcfg
             , fmap TransactionRollupNext        <$> pTransactionRollupNext path
             ]
 
@@ -164,50 +160,49 @@ pTransactionBalancing path = do
             <*> pTxIdFile
             <*> pOutAddress
 
-pTransactionRollupInit :: FilePath -> Maybe (Parser RollupInit.Transaction)
-pTransactionRollupInit path = do
+pTransactionRollupInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupInit.Transaction)
+pTransactionRollupInit path mcfg = do
     pure $ subParser "rollup-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupInit.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutFile
-            <*> pOutAddress
-            <*> undefined
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pTxOref
+            <*> pOutAddress'
+            <*> pOutFile' RollupInit
 
-pTransactionRollupUpdate :: FilePath -> Maybe (Parser RollupUpdate.Transaction)
-pTransactionRollupUpdate path = do
+pTransactionRollupUpdate :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupUpdate.Transaction)
+pTransactionRollupUpdate path mcfg = do
     pure $ subParser "rollup-update" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupUpdate.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutFile
-            <*> undefined
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pOutFile' RollupInit
+            <*> pOutFile' RollupData
+            <*> pOutFile' RollupUpdate
 
 pTransactionRollupNext :: FilePath -> Maybe (Parser RollupNext.Transaction)
-pTransactionRollupNext path = do
-    pure $ subParser "rollup-next" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        RollupNext.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pTxIdFile
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutFile
-            <*> undefined
-            <*> pOutAddress
+pTransactionRollupNext _path = Nothing  --DEBUG: considering eliminating altogether
+-- pTransactionRollupNext path = do
+--     pure $ subParser "rollup-next" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--         RollupNext.Transaction path
+--             <$> pGYCoreConfig
+--             <*> pTxInOnly
+--             <*> pTxInOnly
+--             <*> pTxInOnly
+--             <*> pTxIdFile
+--             <*> pWitnessSigningData
+--             <*> pChangeAddress
+--             <*> pOutFile
+--             <*> undefined
+--             <*> pOutAddress
 
 data ClientCommandErrors
 

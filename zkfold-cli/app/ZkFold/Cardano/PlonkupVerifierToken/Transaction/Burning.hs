@@ -67,7 +67,7 @@ burnTokens nid providers skey changeAddr plonkupVerifierToken forwardingMint tok
 
       utxosAtFM <- runGYTxQueryMonadIO nid
                                        providers
-                                       (utxosAtAddress fmAddr (Just GYLovelace))
+                                       (utxosAtAddress fmAddr Nothing)
 
       let utxosAtFM' = utxosToList $ filterUTxOs (\u -> utxoOutDatum u == inlineDatum) utxosAtFM
 
@@ -113,9 +113,9 @@ tokenBurning (Transaction path coreCfg' tag sig changeAddr token' txidSetup' out
   EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
   let (setup, _, _)        = equalityCheckVerificationBytes x ps targetValue
-      plonkupVerifierToken = validatorFromPlutus @PlutusV3 $ plonkupVerifierTokenCompiled setup
+      plonkupVerifierToken = scriptFromPlutus @PlutusV3 $ plonkupVerifierTokenCompiled setup
 
-      forwardingMint = validatorFromPlutus @PlutusV3 $ forwardingMintCompiled tag
+      forwardingMint = scriptFromPlutus @PlutusV3 $ forwardingMintCompiled tag
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> burnTokens
                                                           nid
