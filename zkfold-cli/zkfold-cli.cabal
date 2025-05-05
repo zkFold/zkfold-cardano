@@ -90,7 +90,6 @@ executable zkfold-cli
         ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx
         ZkFold.Cardano.Rollup.Transaction.Clear
         ZkFold.Cardano.Rollup.Transaction.Init
-        ZkFold.Cardano.Rollup.Transaction.Next
         ZkFold.Cardano.Rollup.Transaction.Update
         ZkFold.Cardano.Rollup.Data
     build-depends:
