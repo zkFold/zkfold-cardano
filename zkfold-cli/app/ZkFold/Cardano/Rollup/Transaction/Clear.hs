@@ -10,14 +10,14 @@ import           Data.Maybe                     (fromJust)
 import           GeniusYield.GYConfig           (GYCoreConfig (cfgNetworkId), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusLedgerApi.V3             (Redeemer (..), TokenName (..), Value (..),
-                                                 dataToBuiltinData, fromData, toData)
+import           PlutusLedgerApi.V3             (Redeemer (..), TokenName (..), Value (..), dataToBuiltinData, fromData,
+                                                 toData)
 import           PlutusTx.AssocMap              as Pam
 import           Prelude
 import           System.FilePath                ((</>))
 
-import           ZkFold.Cardano.Options.Common  (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
-                                                 fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common  (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..), fromCoreConfigAltIO,
+                                                 fromSigningKeyAltIO, wrapUpSubmittedTx)
 import           ZkFold.Cardano.UPLC.Common     (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup     (RollupInfo (..))
 import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..), rollupDataCompiled)
@@ -47,7 +47,7 @@ burnDataTokens :: Integer                      ->
                   GYTxOutRef                   ->
                   [(TokenName, Integer)]       ->
                   GYTxSkeleton PlutusV3
-burnDataTokens parkingTag dataRef oref tks = 
+burnDataTokens parkingTag dataRef oref tks =
   let parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled parkingTag
       parkingWit  = GYTxInWitnessScript (GYBuildPlutusScriptInlined parkingSpot) Nothing unitRedeemer
 
@@ -102,5 +102,5 @@ rollupClear (Transaction path coreCfg' sig changeAddr initOut outFile) = do
                                    return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
         wrapUpSubmittedTx (assets </> outFile) tx
-      
+
     Left _  -> throwIO $ userError  "JSON error: unreadable rollupInfo script data."
