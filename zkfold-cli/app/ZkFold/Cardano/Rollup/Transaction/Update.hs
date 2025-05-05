@@ -1,41 +1,42 @@
 module ZkFold.Cardano.Rollup.Transaction.Update (Transaction(..), rollupUpdate) where
 
-import           Cardano.Api                    (getScriptData, prettyPrintJSON)
-import           Cardano.Api.Shelley            (scriptDataFromJsonDetailedSchema, toPlutusData)
-import           Control.Exception              (throwIO)
-import           Control.Monad                  (forM_)
-import           Data.Aeson                     (decode, decodeFileStrict)
-import qualified Data.ByteString                as BS
-import qualified Data.ByteString.Lazy           as BL
-import           Data.Char                      (toLower, isUpper)
-import           Data.Coerce                    (coerce)
-import           Data.Maybe                     (fromJust)
-import           Data.Set                       (lookupMin)
-import           GeniusYield.GYConfig           (GYCoreConfig (cfgNetworkId), withCfgProviders)
+import           Cardano.Api                             (getScriptData, prettyPrintJSON)
+import           Cardano.Api.Shelley                     (scriptDataFromJsonDetailedSchema, toPlutusData)
+import           Control.Exception                       (throwIO)
+import           Control.Monad                           (forM_)
+import           Data.Aeson                              (decode, decodeFileStrict)
+import qualified Data.ByteString                         as BS
+import qualified Data.ByteString.Lazy                    as BL
+import           Data.Char                               (isUpper, toLower)
+import           Data.Coerce                             (coerce)
+import           Data.Maybe                              (fromJust)
+import           Data.Set                                (lookupMin)
+import           GeniusYield.GYConfig                    (GYCoreConfig (cfgNetworkId), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusLedgerApi.V1.Value       (Lovelace(..), lovelaceValue)
-import           PlutusLedgerApi.V3             (BuiltinByteString, Redeemer (..), ToData (..), TokenName (..),
-                                                 dataToBuiltinData, fromData, toData)
+import           PlutusLedgerApi.V1.Value                (Lovelace (..), lovelaceValue)
+import           PlutusLedgerApi.V3                      (BuiltinByteString, Redeemer (..), ToData (..), TokenName (..),
+                                                          dataToBuiltinData, fromData, toData)
 import           Prelude
-import           System.Directory               (listDirectory, renameFile)
-import           System.FilePath                ((</>))
-import qualified System.IO                      as IO
-import           Test.QuickCheck.Arbitrary                   (Arbitrary (..))
-import           Test.QuickCheck.Gen                         (generate)
-import           Text.Read                      (readMaybe)
+import           System.Directory                        (listDirectory, renameFile)
+import           System.FilePath                         ((</>))
+import qualified System.IO                               as IO
+import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
+import           Test.QuickCheck.Gen                     (generate)
+import           Text.Read                               (readMaybe)
 
 import           ZkFold.Algebra.EllipticCurve.BLS12_381  (Fr)
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..), stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils  (dataToJSON)
+import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
-import           ZkFold.Cardano.OnChain.Utils   (dataToBlake)
-import           ZkFold.Cardano.Options.Common  (CoreConfigAlt, HasFileParser (..), SigningKeyAlt, StageTx (..), SubmittedTx (..),
-                                                 fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
-import           ZkFold.Cardano.Rollup.Data     (bridgeOut, evolve, rollupFee)
-import           ZkFold.Cardano.UPLC.Common     (parkingSpotCompiled)
-import           ZkFold.Cardano.UPLC.Rollup     (RollupInfo (..), RollupRedeemer (..), RollupSetup (..))
-import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..), rollupDataCompiled)
+import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
+import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, HasFileParser (..), SigningKeyAlt,
+                                                          StageTx (..), SubmittedTx (..), fromCoreConfigAltIO,
+                                                          fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Rollup.Data              (bridgeOut, evolve, rollupFee)
+import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
+import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..))
+import           ZkFold.Cardano.UPLC.RollupData          (RollupDataRedeemer (..), rollupDataCompiled)
 
 
 data Transaction = Transaction
@@ -67,7 +68,7 @@ dataTokenSkeleton :: GYAddress                   ->
                      Maybe (GYTxSkeleton PlutusV3)
 dataTokenSkeleton changeAddr dataAddr parkedTxId tuples =
   let rollupData = scriptFromPlutus @PlutusV3 $ rollupDataCompiled
-  
+
       dataOref = txOutRefFromTuple (parkedTxId, 1)
       dataRef  = GYBuildPlutusScriptReference @PlutusV3 dataOref rollupData
 
@@ -268,4 +269,4 @@ isNewFile _                 = False
 -- | Converts "newFileName" to "fileName" (lowercase first letter)
 toTargetName :: String -> String
 toTargetName ('n':'e':'w':c:rest) = toLower c : rest
-toTargetName name = name
+toTargetName name                 = name

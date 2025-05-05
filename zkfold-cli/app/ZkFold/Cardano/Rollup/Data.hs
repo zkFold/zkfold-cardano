@@ -3,7 +3,7 @@ module ZkFold.Cardano.Rollup.Data where
 import           Data.Coerce                  (coerce)
 import           GeniusYield.Types
 import           PlutusLedgerApi.V1.Value     (Lovelace (..))
-import           PlutusLedgerApi.V3           (TxOut (..), DatumHash (..), OutputDatum (..))
+import           PlutusLedgerApi.V3           (DatumHash (..), OutputDatum (..), TxOut (..))
 import           PlutusTx.Builtins            (BuiltinByteString, ByteOrder (..), blake2b_256, integerToByteString)
 import           Prelude                      (IO, Int, Integer, Maybe (..), Monad (..), ($), (.))
 import           System.Random                (randomRIO)

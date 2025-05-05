@@ -61,7 +61,7 @@ rollupScript :: SetupBytes  ->
 rollupScript setup nftOref nftName feeAddr =
   let nftPolicyId = mintingPolicyId $ nftMintingPolicy nftOref
       nftValue    = valueSingleton (GYToken nftPolicyId nftName) 1
-  
+
       rollupSetup = RollupSetup
         { rsLedgerRules  = setup
         , rsDataCurrency = currencySymbolOf rollupDataCompiled
@@ -86,7 +86,7 @@ initStateSkeleton nid changeAddr nftOref threadValue rollup iniState =
   let nftName = case lookupMin . valueAssets . valueNonAda $ threadValue of
                   Just (GYToken _ t) -> t
                   _                  -> error "Thread nft not found."
-  
+
       inlineDatum = Just (datumFromPlutusData iniState, GYTxOutUseInlineDatum @PlutusV3)
 
       nftPolicy'  = nftMintingPolicy nftOref
@@ -144,7 +144,7 @@ rollupInit (Transaction path coreCfg' sig changeAddr nftOref feeAddress outFile)
 
     let (ledgerRules, _, _)   = identityCircuitVerificationBytes x ps
         (rollupSetup, rollup) = rollupScript ledgerRules nftOref nftName feeAddress
-    
+
     let RollupSetup _ _ threadValue' _ = rollupSetup
     threadValue <- valueFromPlutusIO threadValue'
 
@@ -183,7 +183,7 @@ rollupInit (Transaction path coreCfg' sig changeAddr nftOref feeAddress outFile)
         wrapUpSubmittedTx outFile tx
 
       Nothing -> throwIO $ userError "Unable to parse change address"
-      
+
 
 ----- HELPER FUNCTIONS -----
 
