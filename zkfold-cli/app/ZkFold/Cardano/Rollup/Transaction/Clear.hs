@@ -1,4 +1,4 @@
-module ZkFold.Cardano.Rollup.Transaction.Clear where
+module ZkFold.Cardano.Rollup.Transaction.Clear (Transaction(..), rollupClear) where
 
 import           Cardano.Api                    (getScriptData)
 import           Cardano.Api.Shelley            (scriptDataFromJsonDetailedSchema, toPlutusData)
@@ -34,7 +34,7 @@ data Transaction = Transaction
 
 dataTokens :: GYMintingPolicyId -> GYUTxO -> Maybe [(TokenName, Integer)]
 dataTokens pid utxo = fmap Pam.toList . Pam.lookup (mintingPolicyIdToCurrencySymbol pid)
-                  . getValue . valueToPlutus $ utxoValue utxo
+                      . getValue . valueToPlutus $ utxoValue utxo
 
 mustBurnDataToken :: GYBuildPlutusScript PlutusV3 -> (TokenName, Integer) -> GYTxSkeleton PlutusV3
 mustBurnDataToken dataRef (tn, n) = mustMint (GYBuildPlutusScript dataRef) burnRedeemer gytn (-n)
