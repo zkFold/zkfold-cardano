@@ -30,9 +30,8 @@ import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContrac
 import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, HasFileParser (..), SigningKeyAlt,
-                                                          StageTx (..), SubmittedTx (..), fromCoreConfigAltIO,
-                                                          fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
+                                                          fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
 import           ZkFold.Cardano.Rollup.Data              (bridgeOut, evolve, rollupFee)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..))
@@ -190,9 +189,9 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr initOut dataOut updateOut
           parkingAddr = addressFromValidator nid parkingSpot
 
       initTxId     <- decodeFileStrict (assets </> initOut)
-                      >>= maybe (fail $ "Failed to decode " ++ outFileName RollupInit) pure
-      dataTokensTx <- decodeFileStrict (assets </> "dataTokens.tx")
-                      >>= maybe (fail $ "Failed to decode " ++ outFileName RollupData) pure
+                      >>= maybe (fail $ "Failed to decode " ++ initOut) pure
+      dataTokensTx <- decodeFileStrict (assets </> dataOut)
+                      >>= maybe (fail $ "Failed to decode " ++ dataOut) pure
       tokensAmount <- IO.readFile (assets </> "dataTokensAmount.txt")
                       >>= maybe (fail "Failed to parse dataTokensAmount.txt") pure . readMaybe @Word
 
@@ -201,10 +200,10 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr initOut dataOut updateOut
       let w1 = User' skey Nothing changeAddr
 
       let mSkeletonTuple = do
-            skeleton1 <- dataTokenSkeleton changeAddr
-                                           parkingAddr
-                                           initTxId
-                                           dataTokenInputs
+            skeleton1  <- dataTokenSkeleton changeAddr
+                                            parkingAddr
+                                            initTxId
+                                            dataTokenInputs
             skeleton2F <- rollupSkeleton nid
                                          changeAddr
                                          initTxId
