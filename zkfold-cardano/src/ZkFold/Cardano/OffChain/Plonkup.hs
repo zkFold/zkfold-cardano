@@ -23,9 +23,9 @@ import           ZkFold.Protocol.Plonkup.Verifier.Setup
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN i n l = Plonkup i n l BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
+type PlonkupN i o p n = Plonkup i o p n BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
 
-mkSetup :: forall i n l . KnownNat n => SetupVerify (PlonkupN i n l) -> SetupBytes
+mkSetup :: forall i o p n . KnownNat n => SetupVerify (PlonkupN i o p n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
@@ -47,10 +47,10 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmT1_bytes = convertG1 cmT1
     }
 
-mkInput :: Foldable l => Input (PlonkupN i n l) -> InputBytes
+mkInput :: Foldable o => Input (PlonkupN i o p n) -> InputBytes
 mkInput (PlonkupInput input) = map (F . convertZp) $ toList input
 
-mkProof :: Proof (PlonkupN i n l) -> ProofBytes
+mkProof :: Proof (PlonkupN i o p n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes
   { cmA_bytes     = convertG1 cmA
   , cmB_bytes     = convertG1 cmB

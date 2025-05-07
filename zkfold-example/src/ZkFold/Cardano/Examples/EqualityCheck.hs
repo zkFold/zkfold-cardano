@@ -20,6 +20,7 @@ import           ZkFold.Symbolic.Compiler               (ArithmeticCircuit (..),
 import           ZkFold.Symbolic.Data.Bool              (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement      (FieldElement)
+import ZkFold.Data.HFunctor (hmap)
 
 data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr
@@ -33,16 +34,16 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let ac = compileWith @Fr id (\(Par1 i) -> (U1 :*: U1, Par1 i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
+    let ac = hmap (:*: U1) $ compileWith @Fr id (\(Par1 i) -> (U1 :*: U1, Par1 i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 (Par1 :*: U1)
 
         (omega, k1, k2) = getParams 32
         witnessInputs   = Par1 targetValue
         (gs, h1) = getSecrectParams x
-        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 32 Par1
+        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 Par1 U1 32
         setupP  = setupProve plonkup
         setupV  = setupVerify plonkup
         witness = (PlonkupWitnessInput witnessInputs, ps)
-        (input, proof) = prove @(PlonkupN Par1 32 Par1) setupP witness
+        (input, proof) = prove @(PlonkupN Par1 Par1 U1 32) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 

@@ -203,12 +203,13 @@ instance NonInteractiveProof PlonkupPlutus where
 
 instance
         ( Representable i
-        , Representable l
-        , Foldable l
+        , Representable o
+        , Foldable o
+        , Foldable p
+        , Ord (Rep i)
         , KnownNat n
         , KnownNat (4 * n + 6)
-        , Ord (Rep i)
-        ) => CompatibleNonInteractiveProofs (PlonkupN i n l) PlonkupPlutus where
+        ) => CompatibleNonInteractiveProofs (PlonkupN i o p n) PlonkupPlutus where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof

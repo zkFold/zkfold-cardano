@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Examples.IdentityCircuit where
 
 import           Data.Aeson                             (FromJSON, ToJSON)
-import           GHC.Generics                           (Generic, Par1 (..))
+import           GHC.Generics                           (Generic, Par1 (..), (:*:) (..), U1 (..))
 import           Prelude                                hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import qualified Prelude                                as Haskell
 
@@ -18,6 +18,7 @@ import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
 import           ZkFold.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Symbolic.Compiler               (ArithmeticCircuit (..), eval, idCircuit)
+import ZkFold.Data.HFunctor (hmap)
 
 data IdentityCircuitContract = IdentityCircuitContract {
     x'  :: Fr
@@ -25,19 +26,19 @@ data IdentityCircuitContract = IdentityCircuitContract {
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-identityCircuit :: ArithmeticCircuit Fr Par1 Par1
-identityCircuit = idCircuit
+identityCircuit :: ArithmeticCircuit Fr Par1 (Par1 :*: U1)
+identityCircuit = hmap (:*: U1) idCircuit
 
 identityCircuitVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> (SetupBytes, InputBytes, ProofBytes)
 identityCircuitVerificationBytes x ps =
     let (omega, k1, k2) = getParams 2
-        witnessInputs   = eval identityCircuit $ Par1 zero
+        (witnessInputs :*: U1) = eval identityCircuit $ Par1 zero
         (gs, h1)        = getSecrectParams x
-        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 2 Par1
+        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 Par1 U1 2
         setupP          = setupProve plonkup
         setupV          = setupVerify plonkup
         witness         = (PlonkupWitnessInput @_ @BLS12_381_G1_Point witnessInputs, ps)
-        (input, proof)  = prove @(PlonkupN Par1 2 Par1) setupP witness
+        (input, proof)  = prove @(PlonkupN Par1 Par1 U1 2) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
@@ -48,11 +49,11 @@ stateCheckVerificationBytes x ps state =
         (omega, k1, k2) = getParams 2
         witnessInputs   = Par1 state'
         (gs, h1)        = getSecrectParams x
-        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 2 Par1
+        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 Par1 U1 2
         setupP          = setupProve plonkup
         setupV          = setupVerify plonkup
         witness         = (PlonkupWitnessInput witnessInputs, ps)
-        (input, proof)  = prove @(PlonkupN Par1 2 Par1) setupP witness
+        (input, proof)  = prove @(PlonkupN Par1 Par1 U1 2) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 

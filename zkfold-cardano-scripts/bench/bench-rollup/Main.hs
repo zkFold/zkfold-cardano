@@ -28,7 +28,6 @@ import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
 import           ZkFold.Cardano.UPLC.Rollup
 import           ZkFold.Protocol.Plonkup.Prover.Secret   (PlonkupProverSecret)
 
-
 --------------- SETUP  ----------------
 
 -- | Construct "update" of length n.
