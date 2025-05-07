@@ -11,10 +11,10 @@ import qualified System.IO                                as IO
 import           Test.QuickCheck.Arbitrary                (Arbitrary (..))
 import           Test.QuickCheck.Gen                      (generate)
 
+import           ZkFold.Cardano.Atlas.Utils               (SubmittedTx (..), wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils            (currencySymbolOf)
-import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
-                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO, fromSigningKeyAltIO)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 

@@ -20,18 +20,16 @@ import           PlutusLedgerApi.V3                      (BuiltinByteString, Red
 import           Prelude
 import           System.Directory                        (listDirectory, renameFile)
 import           System.FilePath                         ((</>))
-import qualified System.IO                               as IO
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
-import           Text.Read                               (readMaybe)
 
 import           ZkFold.Algebra.EllipticCurve.BLS12_381  (Fr)
+import           ZkFold.Cardano.Atlas.Utils              (SubmittedTx (..), readTxIdsFromFile, wrapUpSubmittedTx, wrapUpAndAppendSubmittedTx)
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..), stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
-                                                          fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, dataOut, fromCoreConfigAltIO, fromSigningKeyAltIO)
 import           ZkFold.Cardano.Rollup.Data              (bridgeOut, evolve, rollupFee)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..))
@@ -43,9 +41,9 @@ data Transaction = Transaction
   , coreCfgAlt     :: !CoreConfigAlt
   , requiredSigner :: !SigningKeyAlt
   , changeAddress  :: !GYAddress
-  , initOutFile    :: !FilePath
-  , outFileData    :: !FilePath
-  , outFileUpdate  :: !FilePath
+  , rollupParkOut  :: !FilePath
+  , dataParkOut    :: !FilePath
+  , updateOut      :: !FilePath
   }
 
 -- | Data token-name and redeemer from data update bytestring elements.
@@ -55,33 +53,32 @@ dataTokenInput dat = (tokenName, redeemer)
     tokenName = fromJust . tokenNameFromPlutus . TokenName $ dataToBlake dat
     redeemer  = redeemerFromPlutus' . toBuiltinData $ NewData dat
 
--- | Produce skeleton for minting data tokens.
-dataTokenSkeleton :: GYAddress                   ->
-                     -- ^ Change address for wallet funding this Tx.
-                     GYAddress                   ->
-                     -- ^ Address receiving the data tokens.
-                     GYTxId                      ->
-                     -- ^ TxId of parked scripts.
-                     [(GYTokenName, GYRedeemer)] ->
-                     -- ^ Token name and redeemer for data token minting.
-                     Maybe (GYTxSkeleton PlutusV3)
-dataTokenSkeleton changeAddr dataAddr parkedTxId tuples =
+-- | Produce skeletons for minting data tokens.
+dataTokenSkeletons :: GYPubKeyHash                ->
+                      -- ^ Pub key hash for change address.
+                      GYAddress                   ->
+                      -- ^ Address receiving the data tokens.
+                      GYTxId                      ->
+                      -- ^ TxId of parked scripts.
+                      [(GYTokenName, GYRedeemer)] ->
+                      -- ^ Token name and redeemer for data token minting.
+                      [GYTxSkeleton PlutusV3]
+dataTokenSkeletons pkh dataAddr parkedTxId tuples =
   let rollupData = scriptFromPlutus @PlutusV3 $ rollupDataCompiled
 
-      dataOref = txOutRefFromTuple (parkedTxId, 1)
+      dataOref = txOutRefFromTuple (parkedTxId, 0)
       dataRef  = GYBuildPlutusScriptReference @PlutusV3 dataOref rollupData
 
       mustProduceToken :: GYTokenName -> GYRedeemer -> GYTxSkeleton PlutusV3
       mustProduceToken tn red = mustHaveOutput (GYTxOut dataAddr dataValue unitDatum' Nothing)
                              <> mustMint (GYBuildPlutusScript dataRef) red tn 1
+                             <> mustBeSignedBy pkh
         where
           dataToken  = GYToken (mintingPolicyId rollupData) tn
           dataValue  = valueSingleton dataToken 1
           unitDatum' = Just (unitDatum, GYTxOutUseInlineDatum)
-  in do
-    pkh <- addressToPubKeyHash changeAddr
-    return $ mconcat (uncurry mustProduceToken <$> tuples)
-          <> mustBeSignedBy pkh
+
+  in uncurry mustProduceToken <$> tuples
 
 -- | Compute next rollup info.
 nextRollup :: GYNetworkId -> Fr -> Integer -> RollupInfo -> IO RollupInfo
@@ -101,48 +98,52 @@ nextRollup nid x parkingTag rollupInfo = do
 
     return $ RollupInfo parkingTag dataUpdate2 state2 rollupRedeemer2
 
--- | Produce rollup update skeleton as a function of the thread token's TxOutRef.
+-- | Produce rollup update skeleton.
 rollupSkeleton :: GYNetworkId       ->
-                  GYAddress         ->
-                  -- ^ Change address for wallet funding this Tx.
+                  GYPubKeyHash      ->
+                  -- ^ Pub key hash for change address.
+                  Integer           ->
+                  -- ^ Parking tag
                   GYTxId            ->
-                  -- ^ TxId of parked scripts.
+                  -- ^ TxId of 'rollup' parked script.
                   RollupRedeemer    ->
                   -- ^ Rollup redeemer.
                   GYScript PlutusV3 ->
                   -- ^ Parameterized 'rollup' validator.
-                  [GYTxOutRef]      ->
-                  -- ^ TxOut references to data tokens.
                   GYValue           ->
                   -- ^ Thread value.
                   F                 ->
                   -- ^ State.
                   GYAddress         ->
                   -- ^ Fee address.
-                  Integer           ->
-                  -- ^ Parking tag
-                  Maybe (GYTxOutRef -> GYTxSkeleton PlutusV3)
-rollupSkeleton nid changeAddr parkedTxId redeemer' rollup dataRefs threadValue state' feeAddr parkingTag =
-  let rollupRefOref = txOutRefFromTuple (parkedTxId, 0)
+                  [GYTxId]            ->
+                  -- ^ TxIds of minted data tokens.
+                  GYTxOutRef        ->
+                  -- ^ TxOutRef of thread token.
+                  GYTxSkeleton PlutusV3
+rollupSkeleton nid pkh parkingTag rollupTxId redeemer' rollup threadValue state' feeAddr
+               dataTokenTxIds rollupIn = 
+
+  let rollupRefOref = txOutRefFromTuple (rollupTxId, 0)
       rollupRef     = GYBuildPlutusScriptReference @PlutusV3 rollupRefOref rollup
       rollupAddr    = addressFromValidator nid rollup
 
       F state     = state'
       inlineDatum = Just (datumFromPlutusData state, GYTxOutUseInlineDatum @PlutusV3)
       redeemer    = redeemerFromPlutus . Redeemer . dataToBuiltinData $ toData redeemer'
-  in do
-    pkh <- addressToPubKeyHash changeAddr
-    return $ \rollupIn ->
-               mustHaveInput (GYTxIn rollupIn (GYTxInWitnessScript rollupRef Nothing redeemer))
-            <> mconcat (mustHaveRefInput <$> dataRefs)
-            <> mustHaveOutput (GYTxOut rollupAddr threadValue inlineDatum Nothing)
-            <> mustHaveOutput (GYTxOut feeAddr (valueFromLovelace $ coerce rollupFee) Nothing Nothing)
-            <> mustHaveOutput (fst $ bridgeOut nid parkingTag)
-            <> mustBeSignedBy pkh
+
+      dataRefs = (\dat -> txOutRefFromTuple (dat, 0)) <$> dataTokenTxIds
+      
+  in     mustHaveInput (GYTxIn rollupIn (GYTxInWitnessScript rollupRef Nothing redeemer))
+      <> mconcat (mustHaveRefInput <$> dataRefs)
+      <> mustHaveOutput (GYTxOut rollupAddr threadValue inlineDatum Nothing)
+      <> mustHaveOutput (GYTxOut feeAddr (valueFromLovelace $ coerce rollupFee) Nothing Nothing)
+      <> mustHaveOutput (fst $ bridgeOut nid parkingTag)
+      <> mustBeSignedBy pkh
 
 -- | Transactions for rollup update.
 rollupUpdate :: Transaction -> IO ()
-rollupUpdate (Transaction path coreCfg' sig changeAddr initOut dataOut updateOut) = do
+rollupUpdate (Transaction path coreCfg' sig changeAddr rollupParkOut dataParkOut updateOut) = do
   let testData = path </> "test-data"
       assets   = path </> "assets"
 
@@ -169,8 +170,8 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr initOut dataOut updateOut
       let rollupSetup = fromJust . fromData . toPlutusData . getScriptData $ rollupSetupScriptData :: RollupSetup
           rollupInfo  = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
 
-      let RollupSetup _ _ threadValue' feeAddr'                                  = rollupSetup
-          RollupInfo parkingTag dataUpdate nextState rollupRedeemer@(UpdateRollup _ update) = rollupInfo
+      let RollupSetup _ _ threadValue' feeAddr'                     = rollupSetup
+          RollupInfo parkingTag dataUpdate nextState rollupRedeemer = rollupInfo
 
       newRollupInfo <- nextRollup nid x parkingTag rollupInfo
       threadValue   <- valueFromPlutusIO threadValue'
@@ -183,50 +184,47 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr initOut dataOut updateOut
       let dataTokenInputs = dataTokenInput <$> dataUpdate
 
       BS.writeFile (assets </> "newRollupInfo.json") $ prettyPrintJSON $ dataToJSON newRollupInfo
-      IO.writeFile (assets </> "newDataTokensAmount.txt") . show . length $ update
 
       let parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled parkingTag
           parkingAddr = addressFromValidator nid parkingSpot
 
-      initTxId     <- decodeFileStrict (assets </> initOut)
-                      >>= maybe (fail $ "Failed to decode " ++ initOut) pure
-      dataTokensTx <- decodeFileStrict (assets </> dataOut)
-                      >>= maybe (fail $ "Failed to decode " ++ dataOut) pure
-      tokensAmount <- IO.readFile (assets </> "dataTokensAmount.txt")
-                      >>= maybe (fail "Failed to parse dataTokensAmount.txt") pure . readMaybe @Word
-
-      let dataRefs = (\n -> txOutRefFromTuple (dataTokensTx, n)) <$> [0..tokensAmount - 1]
+      rollupTxId     <- decodeFileStrict (assets </> rollupParkOut)
+                        >>= maybe (fail $ "Failed to decode " ++ rollupParkOut) pure
+      rollupDataTxId <- decodeFileStrict (assets </> dataParkOut)
+                        >>= maybe (fail $ "Failed to decode " ++ dataParkOut) pure
 
       let w1 = User' skey Nothing changeAddr
 
-      let mSkeletonTuple = do
-            skeleton1  <- dataTokenSkeleton changeAddr
-                                            parkingAddr
-                                            initTxId
-                                            dataTokenInputs
-            skeleton2F <- rollupSkeleton nid
-                                         changeAddr
-                                         initTxId
-                                         rollupRedeemer
-                                         rollup
-                                         dataRefs
-                                         threadValue
-                                         nextState
-                                         feeAddr
-                                         parkingTag
-            return (skeleton1, skeleton2F)
+      case addressToPubKeyHash changeAddr of
+        Just pkh -> do
+          let dataSkeletons = dataTokenSkeletons pkh
+                                                 parkingAddr
+                                                 rollupDataTxId
+                                                 dataTokenInputs
+              rollSkeleton = rollupSkeleton nid
+                                           pkh
+                                           parkingTag
+                                           rollupTxId
+                                           rollupRedeemer
+                                           rollup
+                                           threadValue
+                                           nextState
+                                           feeAddr
 
-      case mSkeletonTuple of
-        Just (skeleton1, skeleton2F) -> do
+          BS.writeFile (assets </> dataOut) BS.empty
+
           withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-            tx1 <- runGYTxGameMonadIO nid
-                                      providers $
-                                      asUser w1 $ do
-                                        txbody <- buildTxBody skeleton1
-                                        txid   <- signAndSubmitConfirmed txbody
-                                        return $ SubmittedTx txid (Just $ txBodyFee txbody)
+            let buildAndSubmitData sk = (runGYTxGameMonadIO nid
+                                                            providers $
+                                                            asUser w1 $ do
+                                                               txbody <- buildTxBody sk
+                                                               txid   <- signAndSubmitConfirmed txbody
+                                                               return $ SubmittedTx txid (Just $ txBodyFee txbody))
+                                        >>= wrapUpAndAppendSubmittedTx (assets </> dataOut)
 
-            wrapUpSubmittedTx (assets </> dataOut) tx1
+            mapM_ buildAndSubmitData dataSkeletons
+
+            dataTokenTxIds <- readTxIdsFromFile (assets </> dataOut)
 
             threadUtxos <- runGYTxQueryMonadIO nid
                                                providers
@@ -237,7 +235,7 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr initOut dataOut updateOut
                     tx2 <- runGYTxGameMonadIO nid
                                               providers $
                                               asUser w1 $ do
-                                                txbody <- buildTxBody $ skeleton2F rollupIn
+                                                txbody <- buildTxBody $ rollSkeleton dataTokenTxIds rollupIn
                                                 txid   <- signAndSubmitConfirmed txbody
                                                 return $ SubmittedTx txid (Just $ txBodyFee txbody)
 

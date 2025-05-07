@@ -19,14 +19,14 @@ import           System.Random                           (randomRIO)
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 
+import           ZkFold.Cardano.Atlas.Utils              (SubmittedTx (..), wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..),
                                                           identityCircuitVerificationBytes, stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils           (currencySymbolOf, dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Plonkup.Data     (SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..),
-                                                          fromCoreConfigAltIO, fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO, fromSigningKeyAltIO)
 import           ZkFold.Cardano.Rollup.Data              (bridgeOut, rmax, rollupFee, threadLovelace, updateLength)
 import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..),
@@ -41,7 +41,9 @@ data Transaction = Transaction
     , changeAddress  :: !GYAddress
     , nftOref        :: !GYTxOutRef
     , feeAddress     :: !GYAddress
-    , outFile        :: !FilePath
+    , initOut        :: !FilePath
+    , rollupParkOut  :: !FilePath
+    , dataParkOut    :: !FilePath
     }
 
 nftMintingPolicy :: GYTxOutRef -> GYScript PlutusV3
@@ -87,7 +89,8 @@ initStateSkeleton nid changeAddr nftOref threadValue rollup iniState =
                   Just (GYToken _ t) -> t
                   _                  -> error "Thread nft not found."
 
-      inlineDatum = Just (datumFromPlutusData iniState, GYTxOutUseInlineDatum @PlutusV3)
+      F iniState' = iniState
+      inlineDatum = Just (datumFromPlutusData iniState', GYTxOutUseInlineDatum @PlutusV3)
 
       nftPolicy'  = nftMintingPolicy nftOref
       nftPolicy   = GYBuildPlutusScript $ GYBuildPlutusScriptInlined nftPolicy'
@@ -100,29 +103,27 @@ initStateSkeleton nid changeAddr nftOref threadValue rollup iniState =
           <> mustMint nftPolicy unitRedeemer nftName 1
           <> mustBeSignedBy pkh
 
-parkRollupSkeleton :: GYNetworkId ->
+parkValidatorSkeleton :: GYNetworkId ->
                       GYAddress ->
                       -- ^ Change address for wallet funding this Tx.
                       Integer ->
                       -- ^ Parking tag
                       GYScript PlutusV3 ->
-                      -- ^ Rollup validator.
+                      -- ^ Script to be parked.
                       Maybe (GYTxSkeleton PlutusV3)
-parkRollupSkeleton nid changeAddr tag rollup =
+parkValidatorSkeleton nid changeAddr tag script =
   let parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled tag
       parkingAddr = addressFromValidator nid parkingSpot
 
-      rollupData = scriptFromPlutus $ rollupDataCompiled
-
-      validators = Just . GYPlutusScript <$> [rollup, rollupData]
-      valTxOuts  = GYTxOut parkingAddr mempty Nothing <$> validators
+      validator = Just $ GYPlutusScript script
+      valTxOut  = GYTxOut parkingAddr mempty Nothing validator
   in do
     pkh <- addressToPubKeyHash changeAddr
-    return $ mconcat (mustHaveOutput <$> valTxOuts)
+    return $ mustHaveOutput valTxOut
           <> mustBeSignedBy pkh
 
 rollupInit :: Transaction -> IO ()
-rollupInit (Transaction path coreCfg' sig changeAddr nftOref feeAddress outFile) = do
+rollupInit (Transaction path coreCfg' sig changeAddr nftOref feeAddress initOut rollupParkOut dataParkOut) = do
     let testData = path </> "test-data"
         assets   = path </> "assets"
 
@@ -145,10 +146,12 @@ rollupInit (Transaction path coreCfg' sig changeAddr nftOref feeAddress outFile)
     let (ledgerRules, _, _)   = identityCircuitVerificationBytes x ps
         (rollupSetup, rollup) = rollupScript ledgerRules nftOref nftName feeAddress
 
+    let rollupData = scriptFromPlutus $ rollupDataCompiled
+
     let RollupSetup _ _ threadValue' _ = rollupSetup
     threadValue <- valueFromPlutusIO threadValue'
 
-    BS.writeFile (path </> "rollupSetup.json") $ prettyPrintJSON $ dataToJSON rollupSetup
+    BS.writeFile (assets </> "rollupSetup.json") $ prettyPrintJSON $ dataToJSON rollupSetup
     writeScript (assets </> "rollup.script") rollup
 
     let dataUpdate = fmap (\s -> [dataToBlake s]) seeds
@@ -167,20 +170,40 @@ rollupInit (Transaction path coreCfg' sig changeAddr nftOref feeAddress outFile)
     let w1 = User' skey Nothing changeAddr
 
     let mskeleton = do
-          initState  <- initStateSkeleton nid changeAddr nftOref threadValue rollup iniState
-          parkRollup <- parkRollupSkeleton nid changeAddr parkingTag rollup
-          return $ initState <> parkRollup
+          initState      <- initStateSkeleton nid changeAddr nftOref threadValue rollup iniState
+          parkRollup     <- parkValidatorSkeleton nid changeAddr parkingTag rollup
+          parkRollupData <- parkValidatorSkeleton nid changeAddr parkingTag rollupData
+          return $ (initState, parkRollup, parkRollupData)
 
     case mskeleton of
-      Just skeleton -> withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-        tx <- runGYTxGameMonadIO nid
-                                 providers $
-                                 asUser w1 $ do
-                                   txbody <- buildTxBody skeleton
-                                   txid   <- signAndSubmitConfirmed txbody
-                                   return $ SubmittedTx txid (Just $ txBodyFee txbody)
+      Just (initState, parkRollup, parkRollupData) ->
+        withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+          tx1 <- runGYTxGameMonadIO nid
+                                    providers $
+                                    asUser w1 $ do
+                                      txbody <- buildTxBody initState
+                                      txid   <- signAndSubmitConfirmed txbody
+                                      return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-        wrapUpSubmittedTx outFile tx
+          wrapUpSubmittedTx (assets </> initOut) tx1
+
+          tx2 <- runGYTxGameMonadIO nid
+                                    providers $
+                                    asUser w1 $ do
+                                      txbody <- buildTxBody parkRollup
+                                      txid   <- signAndSubmitConfirmed txbody
+                                      return $ SubmittedTx txid (Just $ txBodyFee txbody)
+
+          wrapUpSubmittedTx (assets </> rollupParkOut) tx2
+
+          tx3 <- runGYTxGameMonadIO nid
+                                    providers $
+                                    asUser w1 $ do
+                                      txbody <- buildTxBody parkRollupData
+                                      txid   <- signAndSubmitConfirmed txbody
+                                      return $ SubmittedTx txid (Just $ txBodyFee txbody)
+
+          wrapUpSubmittedTx (assets </> dataParkOut) tx3
 
       Nothing -> throwIO $ userError "Unable to parse change address"
 

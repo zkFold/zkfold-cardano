@@ -8,9 +8,9 @@ import           GeniusYield.Types
 import           Prelude
 import           System.FilePath                       ((</>))
 
-import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, PolicyIdAlt, SigningKeyAlt, SubmittedTx (..),
-                                                        fromCoreConfigAltIO, fromPolicyIdAltIO, fromSigningKeyAltIO,
-                                                        wrapUpSubmittedTx)
+import           ZkFold.Cardano.Atlas.Utils            (SubmittedTx (..), wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, PolicyIdAlt, SigningKeyAlt,
+                                                        fromCoreConfigAltIO, fromPolicyIdAltIO, fromSigningKeyAltIO)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 
 

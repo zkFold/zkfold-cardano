@@ -170,8 +170,10 @@ pTransactionRollupInit path mcfg = do
             <*> pSigningKeyAlt
             <*> pChangeAddress'
             <*> pTxOref
-            <*> pOutAddress'
+            <*> pFeeAddress'
             <*> pOutFile' RollupInit
+            <*> pOutFile' RollupPark
+            <*> pOutFile' RollupDataPark
 
 pTransactionRollupUpdate :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupUpdate.Transaction)
 pTransactionRollupUpdate path mcfg = do
@@ -182,8 +184,8 @@ pTransactionRollupUpdate path mcfg = do
             <$> pGYCoreConfig' mcfg
             <*> pSigningKeyAlt
             <*> pChangeAddress'
-            <*> pOutFile' RollupInit
-            <*> pOutFile' RollupData
+            <*> pOutFile' RollupPark
+            <*> pOutFile' RollupDataPark
             <*> pOutFile' RollupUpdate
 
 pTransactionRollupClear :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupClear.Transaction)
@@ -195,7 +197,7 @@ pTransactionRollupClear path mcfg = do
             <$> pGYCoreConfig' mcfg
             <*> pSigningKeyAlt
             <*> pChangeAddress'
-            <*> pOutFile' RollupInit
+            <*> pOutFile' RollupDataPark
             <*> pOutFile' RollupClear
 
 data ClientCommandErrors

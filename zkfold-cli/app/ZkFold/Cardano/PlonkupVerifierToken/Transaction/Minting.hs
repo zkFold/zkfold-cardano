@@ -13,11 +13,11 @@ import           Prelude
 import           System.FilePath                          ((</>))
 import qualified System.IO                                as IO
 
+import           ZkFold.Cardano.Atlas.Utils               (SubmittedTx (..), wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
-import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..), TxIdAlt,
-                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTxIdAltIO,
-                                                           wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, TxIdAlt,
+                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTxIdAltIO)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
 data Transaction = Transaction

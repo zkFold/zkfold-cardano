@@ -5,10 +5,9 @@ module ZkFold.Cardano.Options.Common where
 import           Cardano.Api                        (AddressAny, TxIn, parseAddressAny)
 import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn, readerFromParsecParser)
 import           Control.Exception                  (throwIO)
-import           Control.Monad                      (when)
-import           Data.Aeson                         (decodeFileStrict, encodeFile)
+import           Data.Aeson                         (decodeFileStrict)
 import qualified Data.ByteString.Char8              as BS
-import           Data.Maybe                         (fromJust, isJust)
+import           Data.Maybe                         (fromJust)
 import           Data.String                        (fromString)
 import           GeniusYield.GYConfig               as GY
 import           GeniusYield.Types                  as GY
@@ -18,12 +17,15 @@ import           Prelude
 import           System.FilePath                    ((</>))
 import qualified System.IO                          as IO
 
-
 --------------------------- :Defaults: ---------------------------
 
 -- | Default tag (arbitrary integer) for 'ForwardingMint' script.
 defaultForwardingMintTag :: Integer
 defaultForwardingMintTag = 2927
+
+-- | Name of last data tokens mint Tx out-file.
+dataOut :: String
+dataOut = "dataTokens.tx"
 
 ------------------------- :Alternatives: -------------------------
 
@@ -78,24 +80,6 @@ fromTxIdAltIO path tid = case tid of
   TxIdUseGY txId     -> pure txId
   TxIdUseFile txFile -> decodeFileStrict (path </> txFile) >>= pure . fromJust
 
------------------------------ :Tx: -------------------------------
-
-data SubmittedTx = SubmittedTx
-  { stTxId  :: !GYTxId
-  , stTxFee :: !(Maybe Integer)
-  } deriving stock Show
-
-wrapUpSubmittedTx :: FilePath -> SubmittedTx -> IO ()
-wrapUpSubmittedTx outFile SubmittedTx{..} = do
-  putStr "\n"
-
-  when (isJust stTxFee) $
-    putStr $ "Estimated transaction fee: " ++ (show $ fromJust stTxFee) ++ " Lovelace\n"
-
-  putStr $ "Transaction Id: " ++ show stTxId ++ "\n\n"
-
-  encodeFile outFile stTxId
-
 --------------------------- :Parsers: ----------------------------
 
 pChangeAddress :: Parser AddressAny
@@ -142,6 +126,15 @@ pOutAddress' =
             , Opt.help "Tx out address."
             ]
 
+pFeeAddress' :: Parser GYAddress
+pFeeAddress' =
+    Opt.option (readerFromParsecParser $ fmap GY.addressFromApi parseAddressAny) $
+        mconcat
+            [ Opt.long "fee-address"
+            , Opt.metavar "ADDRESS"
+            , Opt.help "Tx out address."
+            ]
+
 pGYCoreConfig' :: Maybe GYCoreConfig -> Parser CoreConfigAlt
 pGYCoreConfig' mcfg = Opt.option (CoreConfigUseFile <$> Opt.maybeReader Just)
   ( Opt.long "core-config-file"
@@ -173,7 +166,7 @@ pTxOref =
         )
 
 pOutFile :: Parser FilePath
-pOutFile = parseFilePath "tx-out-file" "Path (relative to 'assets/') for Tx id file."
+pOutFile = parseFilePath "tx-out-file" "Path (relative to 'assets/') for output TxId file."
 
 pReward :: Parser GYValue
 pReward = GY.valueFromLovelace <$> Opt.option Opt.auto
@@ -263,7 +256,7 @@ pTxIdAlt = Opt.asum
 
 ----- :OutFile parser: -----
 
-data StageTx = RollupInit | RollupData | RollupUpdate | RollupClear
+data StageTx = RollupInit | RollupPark | RollupDataPark | RollupUpdate | RollupClear
 
 class HasFileParser a where
   outFileName   :: a -> String
@@ -280,17 +273,20 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag RollupInit   = "rollup-init-out-file"
-  outFileFlag RollupData   = "rollup-data-out-file"
-  outFileFlag RollupUpdate = "rollup-update-out-file"
-  outFileFlag RollupClear  = "rollup-clear-out-file"
+  outFileFlag RollupInit     = "rollup-init-out-file"
+  outFileFlag RollupPark     = "rollup-park-out-file"
+  outFileFlag RollupDataPark = "rollup-data-park-out-file"
+  outFileFlag RollupUpdate   = "rollup-update-out-file"
+  outFileFlag RollupClear    = "rollup-clear-out-file"
 
-  outFileName RollupInit   = "rollup-init.tx"
-  outFileName RollupData   = "rollup-data-tokens.tx"
-  outFileName RollupUpdate = "rollup-update.tx"
-  outFileName RollupClear  = "rollup-clear.tx"
+  outFileName RollupInit     = "rollup-init.tx"
+  outFileName RollupPark     = "rollup-park.tx"
+  outFileName RollupDataPark = "rollup-data-park.tx"
+  outFileName RollupUpdate   = "rollup-update.tx"
+  outFileName RollupClear    = "rollup-clear.tx"
 
-  outFileHelp RollupInit   = "Path (relative to 'assets/') for rollup initialization tx out-file."
-  outFileHelp RollupData   = "Path (relative to 'assets/') for rollup data tokens tx out-file."
-  outFileHelp RollupUpdate = "Path (relative to 'assets/') for rollup update tx out-file."
-  outFileHelp RollupClear  = "Path (relative to 'assets/') for rollup token-clearing tx out-file."
+  outFileHelp RollupInit     = "Path (relative to 'assets/') for rollup initialization tx out-file."
+  outFileHelp RollupPark     = "Path (relative to 'assets/') for 'rollup' script-parking tx out-file."
+  outFileHelp RollupDataPark = "Path (relative to 'assets/') for 'rollupData' script-parking tx out-file."
+  outFileHelp RollupUpdate   = "Path (relative to 'assets/') for rollup update tx out-file."
+  outFileHelp RollupClear    = "Path (relative to 'assets/') for rollup token-clearing tx out-file."

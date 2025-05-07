@@ -16,8 +16,8 @@ import           PlutusTx.AssocMap              as Pam
 import           Prelude
 import           System.FilePath                ((</>))
 
-import           ZkFold.Cardano.Options.Common  (CoreConfigAlt, SigningKeyAlt, SubmittedTx (..), fromCoreConfigAltIO,
-                                                 fromSigningKeyAltIO, wrapUpSubmittedTx)
+import           ZkFold.Cardano.Atlas.Utils     (SubmittedTx (..), wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common  (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO, fromSigningKeyAltIO)
 import           ZkFold.Cardano.UPLC.Common     (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup     (RollupInfo (..))
 import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..), rollupDataCompiled)
@@ -32,15 +32,15 @@ data Transaction = Transaction
   , outFile        :: !FilePath
   }
 
-dataTokens :: GYMintingPolicyId -> GYUTxO -> Maybe [(TokenName, Integer)]
-dataTokens pid utxo = fmap Pam.toList . Pam.lookup (mintingPolicyIdToCurrencySymbol pid)
-                      . getValue . valueToPlutus $ utxoValue utxo
+lookupTokens :: GYMintingPolicyId -> GYUTxO -> Maybe [(TokenName, Integer)]
+lookupTokens pid utxo = fmap Pam.toList . Pam.lookup (mintingPolicyIdToCurrencySymbol pid)
+                        . getValue . valueToPlutus $ utxoValue utxo
 
 mustBurnDataToken :: GYBuildPlutusScript PlutusV3 -> (TokenName, Integer) -> GYTxSkeleton PlutusV3
-mustBurnDataToken dataRef (tn, n) = mustMint (GYBuildPlutusScript dataRef) burnRedeemer gytn (-n)
+mustBurnDataToken dataRef (tn, n) = mustMint (GYBuildPlutusScript dataRef) burnRedeemer tn' (-n)
   where
     burnRedeemer = redeemerFromPlutus . Redeemer . dataToBuiltinData $ toData OldData
-    gytn         = fromJust $ tokenNameFromPlutus tn
+    tn'          = fromJust $ tokenNameFromPlutus tn
 
 burnDataTokens :: Integer                      ->
                   GYBuildPlutusScript PlutusV3 ->
@@ -55,11 +55,11 @@ burnDataTokens parkingTag dataRef oref tks =
     <> mconcat (mustBurnDataToken dataRef <$> tks)
 
 rollupClear :: Transaction -> IO ()
-rollupClear (Transaction path coreCfg' sig changeAddr initOut outFile) = do
+rollupClear (Transaction path coreCfg' sig changeAddr dataParkOut outFile) = do
   let assets = path </> "assets"
 
-  initTxId <- decodeFileStrict (assets </> initOut)
-              >>= maybe (fail $ "Failed to decode " ++ initOut) pure
+  rollupDataTxId <- decodeFileStrict (assets </> dataParkOut)
+                    >>= maybe (fail $ "Failed to decode " ++ dataParkOut) pure
 
   let rollupData   = scriptFromPlutus @PlutusV3 $ rollupDataCompiled
       dataPolicyId = mintingPolicyId rollupData
@@ -78,7 +78,7 @@ rollupClear (Transaction path coreCfg' sig changeAddr initOut outFile) = do
           parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled parkingTag
           parkingAddr = addressFromValidator nid parkingSpot
 
-      let dataRefOref = txOutRefFromTuple (initTxId, 1)
+      let dataRefOref = txOutRefFromTuple (rollupDataTxId, 0)
           dataRef     = GYBuildPlutusScriptReference @PlutusV3 dataRefOref rollupData
 
       pkh <- addressToPubKeyHashIO changeAddr
@@ -90,7 +90,7 @@ rollupClear (Transaction path coreCfg' sig changeAddr initOut outFile) = do
                                      providers
                                      (utxosAtAddress parkingAddr Nothing)
 
-        let dataTuples = Map.toList $ mapMaybeUTxOs (dataTokens dataPolicyId) utxos
+        let dataTuples = Map.toList $ mapMaybeUTxOs (lookupTokens dataPolicyId) utxos
             skeleton'  = mconcat $ uncurry (burnDataTokens parkingTag dataRef) <$> dataTuples
             skeleton   = skeleton' <> mustBeSignedBy pkh
 
