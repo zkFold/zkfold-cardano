@@ -10,6 +10,7 @@ import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
 import           ZkFold.Cardano.OffChain.Plonkup        (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data    (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Data.HFunctor                   (hmap)
 import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
@@ -20,7 +21,6 @@ import           ZkFold.Symbolic.Compiler               (ArithmeticCircuit (..),
 import           ZkFold.Symbolic.Data.Bool              (Bool (..))
 import           ZkFold.Symbolic.Data.Eq                (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement      (FieldElement)
-import ZkFold.Data.HFunctor (hmap)
 
 data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr

@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Examples.IdentityCircuit where
 
 import           Data.Aeson                             (FromJSON, ToJSON)
-import           GHC.Generics                           (Generic, Par1 (..), (:*:) (..), U1 (..))
+import           GHC.Generics                           (Generic, Par1 (..), U1 (..), (:*:) (..))
 import           Prelude                                hiding (Bool, Eq (..), Fractional (..), Num (..), length)
 import qualified Prelude                                as Haskell
 
@@ -12,13 +12,13 @@ import           ZkFold.Cardano.OffChain.Plonkup        (PlonkupN, mkInput, mkPr
 import           ZkFold.Cardano.OnChain.BLS12_381.F     (F (..))
 import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data    (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Data.HFunctor                   (hmap)
 import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
 import           ZkFold.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
 import           ZkFold.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
 import           ZkFold.Symbolic.Compiler               (ArithmeticCircuit (..), eval, idCircuit)
-import ZkFold.Data.HFunctor (hmap)
 
 data IdentityCircuitContract = IdentityCircuitContract {
     x'  :: Fr
