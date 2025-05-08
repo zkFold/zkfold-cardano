@@ -24,8 +24,14 @@ import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (.
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
+import qualified ZkFold.Cardano.UPLC.Wallet.Internal as WI 
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+
+
+{-# INLINEABLE base64urlEncode #-}
+base64urlEncode :: BuiltinByteString -> BuiltinByteString
+base64urlEncode = WI.base64urlEncode
 
 -- TODO: Account for rotation of public keys
 -- TODO: Check the client Id
@@ -45,7 +51,8 @@ web2Auth ::
 web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
-        publicInput = toInput (sha2_256 $ jwtPrefix <> w2cEmail <> jwtSuffix) * toInput bs
+        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
+        publicInput = toInput (sha2_256 encodedJwt) * toInput bs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
         verify @PlonkupPlutus expModCircuit [publicInput] proof
