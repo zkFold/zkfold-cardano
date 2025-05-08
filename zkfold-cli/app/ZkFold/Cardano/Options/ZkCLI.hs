@@ -77,7 +77,7 @@ pTransactionTokenInit path mcfg = do
             <*> pFMTag
             <*> pSigningKeyAlt
             <*> pChangeAddress'
-            <*> pOutAddress'
+            <*> pParkOutAddress'
             <*> pOutFile
 
 pTransactionTokenTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
@@ -103,7 +103,7 @@ pTransactionTokenMinting path mcfg = do
             <$> pGYCoreConfig' mcfg
             <*> pSigningKeyAlt
             <*> pChangeAddress'
-            <*> pOutAddress'
+            <*> pBenefOutAddress'
             <*> pTxIdAlt
             <*> pOutFile
 

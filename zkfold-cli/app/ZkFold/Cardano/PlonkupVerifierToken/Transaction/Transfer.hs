@@ -16,7 +16,7 @@ import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 
 data Transaction = Transaction
     { curPath        :: !FilePath
-    , coreCfgAlt     :: !CoreConfigAlt
+    , coreCfg        :: !CoreConfigAlt
     , fmTag          :: !Integer
     , policyId       :: !PolicyIdAlt
     , reward         :: !GYValue

@@ -23,12 +23,12 @@ import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenC
 
 data Transaction = Transaction
     { curPath        :: !FilePath
-    , coreCfgAlt     :: !CoreConfigAlt
+    , coreCfg        :: !CoreConfigAlt
     , fmTag          :: !Integer
     , requiredSigner :: !SigningKeyAlt
     , changeAddress  :: !GYAddress
     , token          :: !TokenAlt
-    , txidSetupAlt   :: !TxIdAlt
+    , txidSetup      :: !TxIdAlt
     , outFile        :: !FilePath
     }
 

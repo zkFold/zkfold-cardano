@@ -28,7 +28,7 @@ data Transaction = Transaction
   , coreCfgAlt     :: !CoreConfigAlt
   , requiredSigner :: !SigningKeyAlt
   , changeAddress  :: !GYAddress
-  , initOutFile    :: !FilePath
+  , dataParkOut    :: !FilePath
   , outFile        :: !FilePath
   }
 

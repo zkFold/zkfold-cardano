@@ -117,13 +117,22 @@ pOutAddress =
             , Opt.help "Tx out address."
             ]
 
-pOutAddress' :: Parser GYAddress
-pOutAddress' =
+pParkOutAddress' :: Parser GYAddress
+pParkOutAddress' =
     Opt.option (readerFromParsecParser $ fmap GY.addressFromApi parseAddressAny) $
         mconcat
-            [ Opt.long "out-address"
+            [ Opt.long "parking-address"
             , Opt.metavar "ADDRESS"
-            , Opt.help "Tx out address."
+            , Opt.help "Address to park scripts at."
+            ]
+
+pBenefOutAddress' :: Parser GYAddress
+pBenefOutAddress' =
+    Opt.option (readerFromParsecParser $ fmap GY.addressFromApi parseAddressAny) $
+        mconcat
+            [ Opt.long "beneficiary-address"
+            , Opt.metavar "ADDRESS"
+            , Opt.help "Address of beneficiary receiving tokens."
             ]
 
 pFeeAddress' :: Parser GYAddress
@@ -242,11 +251,11 @@ pTxId :: Parser GYTxId
 pTxId = Opt.option (Opt.eitherReader GY.txIdFromHexE)
     ( Opt.long "tx-id"
         <> Opt.metavar "HEX"
-        <> Opt.help "Hex-encoded TxId."
+        <> Opt.help "Hex-encoded TxId of setup (initialization)."
     )
 
 pTxIdFile :: Parser FilePath
-pTxIdFile = parseFilePath "tx-id-file" "Path (relative to 'assets/') for Tx id file."
+pTxIdFile = parseFilePath "tx-id-file" "Path (relative to 'assets/') of setup TxId file."
 
 pTxIdAlt :: Parser TxIdAlt
 pTxIdAlt = Opt.asum
