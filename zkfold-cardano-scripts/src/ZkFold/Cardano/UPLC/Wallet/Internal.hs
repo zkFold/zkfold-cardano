@@ -10,12 +10,12 @@ base64urlEncode bs = integerToByteString BigEndian w64Count $ foldr (\w acc -> w
     where
         pad :: Integer
         pad = case (lengthOfByteString bs * 8) `modulo` 6 of
-                m | m == 0 -> 1
                 m | m == 1 -> 32
                 m | m == 2 -> 16
                 m | m == 3 -> 8
                 m | m == 4 -> 4
-                _ -> 2 
+                m | m == 5 -> 2 
+                _          -> 1
 
         bsInt :: Integer
         bsInt = byteStringToInteger BigEndian bs * pad
