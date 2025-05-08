@@ -33,24 +33,23 @@ data Transaction = Transaction
     }
 
 -- | burining tokens to the reward.
-burnTokens ::
-    GYNetworkId ->
-    GYProviders ->
-    GYPaymentSigningKey ->
-    -- ^ Signing key for wallet funding this Tx.
-    GYAddress ->
-    -- ^ Change address for wallet funding this Tx.
-    GYScript PlutusV3 ->
-    -- ^ Parameterized PlonkupVerifierToken script.
-    GYScript PlutusV3 ->
-    -- ^ Parameterized ForwardingMint script.
-    GYAssetClass ->
-    -- ^ Token to burn.
-    GYTxId ->
-    -- ^ Setup reference TxId.
-    FilePath ->
-    -- ^ Path to output file.
-    IO ()
+burnTokens :: GYNetworkId         ->
+              GYProviders         ->
+              GYPaymentSigningKey ->
+              -- ^ Signing key for wallet funding this Tx.
+              GYAddress           ->
+              -- ^ Change address for wallet funding this Tx.
+              GYScript PlutusV3   ->
+              -- ^ Parameterized PlonkupVerifierToken script.
+              GYScript PlutusV3   ->
+              -- ^ Parameterized ForwardingMint script.
+              GYAssetClass        ->
+              -- ^ Token to burn.
+              GYTxId              ->
+              -- ^ Setup reference TxId.
+              FilePath            ->
+              -- ^ Path to output file.
+              IO ()
 burnTokens nid providers skey changeAddr plonkupVerifierToken forwardingMint token txidSetup outFile = do
   let w1     = User' skey Nothing changeAddr
       fmAddr = addressFromValidator nid forwardingMint

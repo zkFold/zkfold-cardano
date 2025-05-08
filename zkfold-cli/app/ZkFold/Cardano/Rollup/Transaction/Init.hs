@@ -105,10 +105,10 @@ initStateSkeleton nid changeAddr nftOref threadValue rollup iniState =
           <> mustMint nftPolicy unitRedeemer nftName 1
           <> mustBeSignedBy pkh
 
-parkValidatorSkeleton :: GYNetworkId ->
-                      GYAddress ->
+parkValidatorSkeleton :: GYNetworkId    ->
+                      GYAddress         ->
                       -- ^ Change address for wallet funding this Tx.
-                      Integer ->
+                      Integer           ->
                       -- ^ Parking tag
                       GYScript PlutusV3 ->
                       -- ^ Script to be parked.

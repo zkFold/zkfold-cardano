@@ -26,22 +26,21 @@ data Transaction = Transaction
     }
 
 -- | Sending a datum script to the network.
-sendDatum ::
-    GYNetworkId ->
-    GYProviders ->
-    GYPaymentSigningKey ->
-    -- ^ Signing key for wallet funding this Tx.
-    GYAddress ->
-    -- ^ Change address for wallet funding this Tx.
-    GYValue ->
-    -- ^ Lovelace value of reward
-    GYScript PlutusV3 ->
-    -- ^ Parameterized 'ForwardingMint' script.
-    GYMintingPolicyId ->
-    -- ^ PolicyID to be included in datum.
-    FilePath ->
-    -- ^ Path to output file.
-    IO ()
+sendDatum :: GYNetworkId         ->
+             GYProviders         ->
+             GYPaymentSigningKey ->
+             -- ^ Signing key for wallet funding this Tx.
+             GYAddress           ->
+             -- ^ Change address for wallet funding this Tx.
+             GYValue             ->
+             -- ^ Lovelace value of reward
+             GYScript PlutusV3   ->
+             -- ^ Parameterized 'ForwardingMint' script.
+             GYMintingPolicyId   ->
+             -- ^ PolicyID to be included in datum.
+             FilePath            ->
+             -- ^ Path to output file.
+             IO ()
 sendDatum nid providers skey changeAddr reward fmValidator policyid outFile = do
     let w1 = User' skey Nothing changeAddr
 

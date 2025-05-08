@@ -118,7 +118,7 @@ rollupSkeleton :: GYNetworkId       ->
                   -- ^ Rollup redeemer.
                   GYAddress         ->
                   -- ^ Fee address.
-                  [GYTxId]            ->
+                  [GYTxId]          ->
                   -- ^ TxIds of minted data tokens.
                   GYTxOutRef        ->
                   -- ^ TxOutRef of thread token.

@@ -31,20 +31,19 @@ data Transaction = Transaction
     }
 
 -- | Sending compiled scripts to the network.
-sendScripts ::
-    GYNetworkId ->
-    GYProviders ->
-    GYPaymentSigningKey ->
-    -- ^ Signing key for wallet funding this Tx.
-    GYAddress ->
-    -- ^ Change address for wallet funding this Tx.
-    GYAddress ->
-    -- ^ Wallet address where validators will be parked at.
-    [GYScript PlutusV3] ->
-    -- ^ Validators.
-    FilePath ->
-    -- ^ Relative path to output file.
-    IO ()
+sendScripts :: GYNetworkId         ->
+               GYProviders         ->
+               GYPaymentSigningKey ->
+               -- ^ Signing key for wallet funding this Tx.
+               GYAddress           ->
+               -- ^ Change address for wallet funding this Tx.
+               GYAddress           ->
+               -- ^ Wallet address where validators will be parked at.
+               [GYScript PlutusV3] ->
+               -- ^ Validators.
+               FilePath            ->
+               -- ^ Relative path to output file.
+               IO ()
 sendScripts nid providers skey changeAddr sendTo validators outFile = do
     let w1          = User' skey Nothing changeAddr
         validators' = Just . GYPlutusScript <$> validators

@@ -31,28 +31,27 @@ data Transaction = Transaction
     }
 
 -- | Sending a tokens script to the address.
-sendMintTokens ::
-    GYNetworkId ->
-    GYProviders ->
-    FilePath ->
-    -- ^ Path to 'assets' directory.
-    GYPaymentSigningKey ->
-    -- ^ Signing key for wallet funding this Tx.
-    GYAddress ->
-    -- ^ Change address for wallet funding this Tx.
-    GYAddress ->
-    -- ^ Beneficiary receiving token.
-    GYScript PlutusV3 ->
-    -- ^ Parameterized PlonkupVerifierToken script.
-    GYTxId ->
-    -- ^ Setup reference TxId.
-    GYRedeemer ->
-    -- ^ Redeemer containing proof.
-    GYAssetClass ->
-    -- ^ Token to mint.
-    FilePath ->
-    -- ^ Path to output file.
-    IO ()
+sendMintTokens :: GYNetworkId         ->
+                  GYProviders         ->
+                  FilePath            ->
+                  -- ^ Path to 'assets' directory.
+                  GYPaymentSigningKey ->
+                  -- ^ Signing key for wallet funding this Tx.
+                  GYAddress           ->
+                  -- ^ Change address for wallet funding this Tx.
+                  GYAddress           ->
+                  -- ^ Beneficiary receiving token.
+                  GYScript PlutusV3   ->
+                  -- ^ Parameterized PlonkupVerifierToken script.
+                  GYTxId              ->
+                  -- ^ Setup reference TxId.
+                  GYRedeemer          ->
+                  -- ^ Redeemer containing proof.
+                  GYAssetClass        ->
+                  -- ^ Token to mint.
+                  FilePath            ->
+                  -- ^ Path to output file.
+                  IO ()
 sendMintTokens nid providers assetsPath skey changeAddr sendTo validator txidSetup redeemer token outFile = do
   let w1 = User' skey Nothing changeAddr
 
