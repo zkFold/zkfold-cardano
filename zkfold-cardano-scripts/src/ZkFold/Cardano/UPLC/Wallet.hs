@@ -49,16 +49,13 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
     $ let
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         publicInput = toInput (sha2_256 encodedJwt) * toInput bs
-       in traceError (decodeUtf8 encodedJwt)
-
-    {--
+       in 
         -- Check that the user knows an RSA signature for a JWT containing the email
         verify @PlonkupPlutus expModCircuit [publicInput] proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
---}
  where
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
