@@ -63,7 +63,7 @@ common lang-extra
     -fexpose-all-unfoldings
     -- Comment the following line to enable PlutusTx error messages
     -- By default, we defer the errors as they mess with the HLS
-    -fplugin-opt PlutusTx.Plugin:defer-errors
+--    -fplugin-opt PlutusTx.Plugin:defer-errors
 
 library
   import:           lang
