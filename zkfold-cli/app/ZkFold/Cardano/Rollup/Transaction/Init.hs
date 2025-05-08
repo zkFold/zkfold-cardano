@@ -26,7 +26,8 @@ import           ZkFold.Cardano.OffChain.Utils           (currencySymbolOf, data
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), bls12_381_field_prime, toInput)
 import           ZkFold.Cardano.OnChain.Plonkup.Data     (SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO, fromSigningKeyAltIO)
+import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO,
+                                                          fromSigningKeyAltIO)
 import           ZkFold.Cardano.Rollup.Data              (bridgeOut, rmax, rollupFee, threadLovelace, updateLength)
 import           ZkFold.Cardano.UPLC.Common              (nftPolicyCompiled, parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..),

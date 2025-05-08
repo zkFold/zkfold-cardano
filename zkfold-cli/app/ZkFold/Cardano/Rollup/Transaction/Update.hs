@@ -24,12 +24,14 @@ import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Algebra.EllipticCurve.BLS12_381  (Fr)
-import           ZkFold.Cardano.Atlas.Utils              (SubmittedTx (..), readTxIdsFromFile, wrapUpSubmittedTx, wrapUpAndAppendSubmittedTx)
+import           ZkFold.Cardano.Atlas.Utils              (SubmittedTx (..), readTxIdsFromFile,
+                                                          wrapUpAndAppendSubmittedTx, wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.IdentityCircuit (IdentityCircuitContract (..), stateCheckVerificationBytes)
 import           ZkFold.Cardano.OffChain.Utils           (dataToJSON)
 import           ZkFold.Cardano.OnChain.BLS12_381        (F (..), toInput)
 import           ZkFold.Cardano.OnChain.Utils            (dataToBlake)
-import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, dataOut, fromCoreConfigAltIO, fromSigningKeyAltIO)
+import           ZkFold.Cardano.Options.Common           (CoreConfigAlt, SigningKeyAlt, dataOut, fromCoreConfigAltIO,
+                                                          fromSigningKeyAltIO)
 import           ZkFold.Cardano.Rollup.Data              (bridgeOut, evolve, rollupFee)
 import           ZkFold.Cardano.UPLC.Common              (parkingSpotCompiled)
 import           ZkFold.Cardano.UPLC.Rollup              (RollupInfo (..), RollupRedeemer (..), RollupSetup (..))
@@ -122,7 +124,7 @@ rollupSkeleton :: GYNetworkId       ->
                   -- ^ TxOutRef of thread token.
                   GYTxSkeleton PlutusV3
 rollupSkeleton nid pkh parkingTag rollupTxId rollup threadValue state' redeemer' feeAddr
-               dataTokenTxIds rollupIn = 
+               dataTokenTxIds rollupIn =
 
   let rollupOref = txOutRefFromTuple (rollupTxId, 0)
       rollupRef  = GYBuildPlutusScriptReference @PlutusV3 rollupOref rollup
@@ -133,7 +135,7 @@ rollupSkeleton nid pkh parkingTag rollupTxId rollup threadValue state' redeemer'
       redeemer    = redeemerFromPlutus . Redeemer . dataToBuiltinData $ toData redeemer'
 
       dataRefs = (\dat -> txOutRefFromTuple (dat, 0)) <$> dataTokenTxIds
-      
+
   in     mustHaveInput (GYTxIn rollupIn (GYTxInWitnessScript rollupRef Nothing redeemer))
       <> mconcat (mustHaveRefInput <$> dataRefs)
       <> mustHaveOutput (GYTxOut rollupAddr threadValue inlineDatum Nothing)
@@ -196,7 +198,7 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr rollupParkOut dataParkOut
       let w1 = User' skey Nothing changeAddr
 
       pkh <- addressToPubKeyHashIO changeAddr
-      
+
       let dataSkeletons = dataTokenSkeletons pkh
                                              parkingAddr
                                              rollupDataTxId

@@ -16,7 +16,8 @@ import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
 import           ZkFold.Cardano.OnChain.Plonkup.Data      (ProofBytes (..))
 import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, TokenAlt, TxIdAlt,
-                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTokenAltIO, fromTxIdAltIO)
+                                                           fromCoreConfigAltIO, fromSigningKeyAltIO, fromTokenAltIO,
+                                                           fromTxIdAltIO)
 import           ZkFold.Cardano.UPLC.ForwardingScripts    (forwardingMintCompiled)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
