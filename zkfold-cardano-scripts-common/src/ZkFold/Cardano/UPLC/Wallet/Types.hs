@@ -26,7 +26,8 @@ newtype Web2Creds = Web2Creds
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''Web2Creds [('Web2Creds, 0)]
 
 data JWTParts = JWTParts
-  { jwtPrefix :: BuiltinByteString
+  { jwtHeader :: BuiltinByteString
+  , jwtPrefix :: BuiltinByteString
   , jwtSuffix :: BuiltinByteString
   }
   deriving stock (Show, Generic)

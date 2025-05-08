@@ -81,6 +81,7 @@ library
     ZkFold.Cardano.UPLC.UtxoAccumulator
     ZkFold.Cardano.UPLC.Wallet
     ZkFold.Cardano.UPLC.Wallet.Compile
+    ZkFold.Cardano.UPLC.Wallet.Internal
   hs-source-dirs:   src
   build-depends:
     base                >=4.9 && <5,
