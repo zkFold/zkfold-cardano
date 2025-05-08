@@ -14,11 +14,11 @@ import           Prelude
 ---------------------------- :write/read TxIds: ----------------------------
 
 appendTxIdToFile :: FilePath -> GYTxId -> IO ()
-appendTxIdToFile fp txid = do
+appendTxIdToFile file txid = do
   let raw    = serialiseToRawBytes $ txIdToApi txid
       hexBS  = B16.encode raw <> BS8.pack "\n"
 
-  BS.appendFile fp hexBS
+  BS.appendFile file hexBS
 
 readTxIdsFromFile :: FilePath -> IO [GYTxId]
 readTxIdsFromFile file = do

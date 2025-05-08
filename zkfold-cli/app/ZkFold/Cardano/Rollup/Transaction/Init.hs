@@ -70,6 +70,7 @@ rollupScript setup nftOref nftName feeAddr =
         , rsThreadValue  = lovelaceValue threadLovelace <> valueToPlutus nftValue
         , rsFeeAddress   = addressToPlutus feeAddr
         }
+
   in (rollupSetup, scriptFromPlutus $ rollupCompiled rollupSetup)
 
 initStateSkeleton :: GYNetworkId       ->

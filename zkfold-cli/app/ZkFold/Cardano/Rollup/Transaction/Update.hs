@@ -59,7 +59,7 @@ dataTokenSkeletons :: GYPubKeyHash                ->
                       GYAddress                   ->
                       -- ^ Address receiving the data tokens.
                       GYTxId                      ->
-                      -- ^ TxId of parked scripts.
+                      -- ^ TxId of parked 'rollupData' script.
                       [(GYTokenName, GYRedeemer)] ->
                       -- ^ Token name and redeemer for data token minting.
                       [GYTxSkeleton PlutusV3]
@@ -106,14 +106,14 @@ rollupSkeleton :: GYNetworkId       ->
                   -- ^ Parking tag
                   GYTxId            ->
                   -- ^ TxId of 'rollup' parked script.
-                  RollupRedeemer    ->
-                  -- ^ Rollup redeemer.
                   GYScript PlutusV3 ->
                   -- ^ Parameterized 'rollup' validator.
                   GYValue           ->
                   -- ^ Thread value.
                   F                 ->
                   -- ^ State.
+                  RollupRedeemer    ->
+                  -- ^ Rollup redeemer.
                   GYAddress         ->
                   -- ^ Fee address.
                   [GYTxId]            ->
@@ -121,12 +121,12 @@ rollupSkeleton :: GYNetworkId       ->
                   GYTxOutRef        ->
                   -- ^ TxOutRef of thread token.
                   GYTxSkeleton PlutusV3
-rollupSkeleton nid pkh parkingTag rollupTxId redeemer' rollup threadValue state' feeAddr
+rollupSkeleton nid pkh parkingTag rollupTxId rollup threadValue state' redeemer' feeAddr
                dataTokenTxIds rollupIn = 
 
-  let rollupRefOref = txOutRefFromTuple (rollupTxId, 0)
-      rollupRef     = GYBuildPlutusScriptReference @PlutusV3 rollupRefOref rollup
-      rollupAddr    = addressFromValidator nid rollup
+  let rollupOref = txOutRefFromTuple (rollupTxId, 0)
+      rollupRef  = GYBuildPlutusScriptReference @PlutusV3 rollupOref rollup
+      rollupAddr = addressFromValidator nid rollup
 
       F state     = state'
       inlineDatum = Just (datumFromPlutusData state, GYTxOutUseInlineDatum @PlutusV3)
@@ -195,56 +195,53 @@ rollupUpdate (Transaction path coreCfg' sig changeAddr rollupParkOut dataParkOut
 
       let w1 = User' skey Nothing changeAddr
 
-      case addressToPubKeyHash changeAddr of
-        Just pkh -> do
-          let dataSkeletons = dataTokenSkeletons pkh
-                                                 parkingAddr
-                                                 rollupDataTxId
-                                                 dataTokenInputs
-              rollSkeleton = rollupSkeleton nid
-                                           pkh
-                                           parkingTag
-                                           rollupTxId
-                                           rollupRedeemer
-                                           rollup
-                                           threadValue
-                                           nextState
-                                           feeAddr
+      pkh <- addressToPubKeyHashIO changeAddr
+      
+      let dataSkeletons = dataTokenSkeletons pkh
+                                             parkingAddr
+                                             rollupDataTxId
+                                             dataTokenInputs
+          rollSkeleton  = rollupSkeleton nid
+                                         pkh
+                                         parkingTag
+                                         rollupTxId
+                                         rollup
+                                         threadValue
+                                         nextState
+                                         rollupRedeemer
+                                         feeAddr
 
-          BS.writeFile (assets </> dataOut) BS.empty
+      BS.writeFile (assets </> dataOut) BS.empty
 
-          withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-            let buildAndSubmitData sk = (runGYTxGameMonadIO nid
-                                                            providers $
-                                                            asUser w1 $ do
-                                                               txbody <- buildTxBody sk
-                                                               txid   <- signAndSubmitConfirmed txbody
-                                                               return $ SubmittedTx txid (Just $ txBodyFee txbody))
-                                        >>= wrapUpAndAppendSubmittedTx (assets </> dataOut)
+      withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+        forM_ dataSkeletons $ \sk -> (runGYTxGameMonadIO nid
+                                                         providers $
+                                                         asUser w1 $ do
+                                                           txbody <- buildTxBody sk
+                                                           txid   <- signAndSubmitConfirmed txbody
+                                                           return $ SubmittedTx txid (Just $ txBodyFee txbody))
+                                     >>= wrapUpAndAppendSubmittedTx (assets </> dataOut)
 
-            mapM_ buildAndSubmitData dataSkeletons
+        dataTokenTxIds <- readTxIdsFromFile (assets </> dataOut)
 
-            dataTokenTxIds <- readTxIdsFromFile (assets </> dataOut)
+        threadUtxos <- runGYTxQueryMonadIO nid
+                                           providers
+                                           (utxosAtAddress rollupAddr (Just threadToken))
 
-            threadUtxos <- runGYTxQueryMonadIO nid
-                                               providers
-                                               (utxosAtAddress rollupAddr (Just threadToken))
+        case utxosRefs threadUtxos of
+              [rollupIn] -> do
+                tx2 <- runGYTxGameMonadIO nid
+                                          providers $
+                                          asUser w1 $ do
+                                            txbody <- buildTxBody $ rollSkeleton dataTokenTxIds rollupIn
+                                            txid   <- signAndSubmitConfirmed txbody
+                                            return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-            case utxosRefs threadUtxos of
-                  [rollupIn] -> do
-                    tx2 <- runGYTxGameMonadIO nid
-                                              providers $
-                                              asUser w1 $ do
-                                                txbody <- buildTxBody $ rollSkeleton dataTokenTxIds rollupIn
-                                                txid   <- signAndSubmitConfirmed txbody
-                                                return $ SubmittedTx txid (Just $ txBodyFee txbody)
+                wrapUpSubmittedTx (assets </> updateOut) tx2
 
-                    wrapUpSubmittedTx (assets </> updateOut) tx2
+                renameNewFiles assets
 
-                    renameNewFiles assets
-
-                  _ -> throwIO $ userError "Missing utxo with thread token."
-        Nothing -> throwIO $ userError "Unable to parse change address"
+              _ -> throwIO $ userError "Missing utxo with thread token."
     Left _  -> throwIO $ userError  "JSON error: unreadable rollup script data."
 
 

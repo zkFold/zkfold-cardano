@@ -23,7 +23,7 @@ import qualified System.IO                          as IO
 defaultForwardingMintTag :: Integer
 defaultForwardingMintTag = 2927
 
--- | Name of last data tokens mint Tx out-file.
+-- | Name of data tokens mint Tx out-file.
 dataOut :: String
 dataOut = "dataTokens.tx"
 

@@ -78,8 +78,8 @@ rollupClear (Transaction path coreCfg' sig changeAddr dataParkOut outFile) = do
           parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled parkingTag
           parkingAddr = addressFromValidator nid parkingSpot
 
-      let dataRefOref = txOutRefFromTuple (rollupDataTxId, 0)
-          dataRef     = GYBuildPlutusScriptReference @PlutusV3 dataRefOref rollupData
+      let dataOref = txOutRefFromTuple (rollupDataTxId, 0)
+          dataRef  = GYBuildPlutusScriptReference @PlutusV3 dataOref rollupData
 
       pkh <- addressToPubKeyHashIO changeAddr
 
