@@ -6,6 +6,7 @@ import           PlutusTx.Builtins                            (BuiltinByteString
 import           PlutusTx.Prelude                             (($), (.))
 import           Prelude                                      (fromIntegral, map)
 
+import           ZkFold.Algebra.Class                         ((+), (^))
 import           ZkFold.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
 import           ZkFold.Algebra.Number                        (KnownNat, value)
 import           ZkFold.Algebra.Polynomial.Univariate         (PolyVec)
@@ -17,10 +18,9 @@ import           ZkFold.Protocol.NonInteractiveProof          (NonInteractivePro
 import           ZkFold.Protocol.Plonkup                      (Plonkup)
 import           ZkFold.Protocol.Plonkup.Input                (PlonkupInput (..))
 import           ZkFold.Protocol.Plonkup.Proof
+import           ZkFold.Protocol.Plonkup.Relation             (PlonkupRelation (..))
 import           ZkFold.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Protocol.Plonkup.Verifier.Setup
-import ZkFold.Protocol.Plonkup.Relation (PlonkupRelation(..))
-import ZkFold.Algebra.Class ((+), (^))
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
