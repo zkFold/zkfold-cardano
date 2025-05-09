@@ -24,15 +24,6 @@ echo "someone address:"
 echo "$(cardano-cli query utxo --address $(cat $keypath/someone.addr) --testnet-magic $magic)"
 echo ""
 
-# cabal run zkfold-cli token init \
-#     --path-to-gycoreconfig $GYCORECONFIG_PATH \
-#     --change-address "$(cat $keypath/someone.addr)" \
-#     --out-address "$keypath/forwardingMint.tx" \
-#     --out-address "$keypath/plonkupVerifierToken.tx" \
-#     --tx-in $in1 \
-#     --tx-out "$(cat $keypath/zkfold-main.addr)" \
-#     --signing-key-file "$keypath/someone.skey"
-
 cabal run zkfold-cli -- token-init \
     --path-to-gycoreconfig $GYCORECONFIG_PATH \
     --tx-in $in1 \
