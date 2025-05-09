@@ -164,7 +164,7 @@ instance NonInteractiveProof PlonkupPlutus where
                   (a_xi * b_xi) `mul` cmQm + a_xi `mul` cmQl + b_xi `mul` cmQr + c_xi `mul` cmQo + cmQc
                 + ((a_xi + beta * xi + gamma) * (b_xi + beta * k1 * xi + gamma) * (c_xi + beta * k2 * xi + gamma) * alpha + lagrange1_xi * alpha2) `mul` cmZ1
                 - ((a_xi + beta * s1_xi + gamma) * (b_xi + beta * s2_xi + gamma) * alpha * beta * z1_xi') `mul` cmS3
-                + ((a_xi - f_xi) * alpha3) `mul` cmQk
+                + ((a_xi + zeta * (b_xi + zeta * c_xi) - f_xi) * alpha3) `mul` cmQk
                 + ((one + delta) * (epsilon + f_xi) * (epsilon * (one + delta) + t_xi + delta * t_xi') * alpha4 + lagrange1_xi * alpha5) `mul` cmZ2
                 - (z2_xi' * (epsilon * (one + delta) + h2_xi + delta * h1_xi') * alpha4) `mul` cmH1
                 - zhX_xi `mul` (cmQlow + xi_n2 `mul` cmQmid + (xi_n2 * xi_n2) `mul` cmQhigh)
