@@ -12,7 +12,7 @@ import           PlutusTx.Builtins                   (BuiltinByteString, ByteOrd
                                                       bls12_381_finalVerify, bls12_381_millerLoop, byteStringToInteger,
                                                       consByteString, emptyByteString, integerToByteString,
                                                       subtractInteger)
-import           PlutusTx.Prelude                    (Bool (..), head, length, (!!), ($), (&&), (.), (<>), (==))
+import           PlutusTx.Prelude                    (Bool (..), length, (!!), ($), (&&), (.), (<>), (==))
 import           Prelude                             (undefined, Ord)
 
 import           ZkFold.Algebra.Class
@@ -62,6 +62,8 @@ instance NonInteractiveProof PlonkupPlutus where
             cmS2  = bls12_381_G1_uncompress cmS2_bytes
             cmS3  = bls12_381_G1_uncompress cmS3_bytes
             cmT1  = bls12_381_G1_uncompress cmT1_bytes
+            cmT2  = bls12_381_G1_uncompress cmT2_bytes
+            cmT3  = bls12_381_G1_uncompress cmT3_bytes
 
             -- uncompress Proof G1 and wrap Integer to F
             cmA     = bls12_381_G1_uncompress cmA_bytes
@@ -92,6 +94,7 @@ instance NonInteractiveProof PlonkupPlutus where
 
             -- create beta, gamma, alpha, xi, v, u from Transcript
             ts1 = cmA_bytes <> cmB_bytes <> cmC_bytes
+            zeta = F . byteStringToInteger LittleEndian . blake2b_224 $ ts1
 
             ts2 = ts1 <> cmF_bytes <> cmH1_bytes <> cmH2_bytes
             beta    = F . byteStringToInteger LittleEndian . blake2b_224 $ ts2 <> consByteString 1 emptyByteString
@@ -135,19 +138,19 @@ instance NonInteractiveProof PlonkupPlutus where
             zhX_xi = xi_n - one
 
             omegas i =
-                if i == 1
-                    then omega
+                if i == nPrv + 1
+                    then omegaNPrv
                     else omegas (i `subtractInteger` 1) * omega
 
-            lagrange1_xi = omega * zhX_xi * head l_xi
+            lagrange1_xi = omega * zhX_xi * l1_xi
 
             -- public inputs
             pi_xi i =
                 if i == 0
                     then F 0
-                    else pi_xi (i `subtractInteger` 1) + (pi !! (i `subtractInteger` 1)) * (l_xi !! (i `subtractInteger` 1)) * omegas i
+                    else pi_xi (i `subtractInteger` 1) + (pi !! (i `subtractInteger` 1)) * (l_xi !! (i `subtractInteger` 1)) * omegas (nPrv + i)
 
-            cmT_zeta = cmT1
+            cmT_zeta = cmT1 + zeta `mul` (cmT2 + zeta `mul` cmT3)
 
             -- final calculations
             r0 =
@@ -196,20 +199,19 @@ instance NonInteractiveProof PlonkupPlutus where
             lagrangeIsValid i =
                 if i == 0
                     then True
-                    else (l_xi !! (i `subtractInteger` 1)) * F n * (xi - omegas i) == one
+                    else (l_xi !! (i `subtractInteger` 1)) * F n * (xi - omegas (nPrv + i)) == one
                         && lagrangeIsValid (i `subtractInteger` 1)
 
-        in bls12_381_finalVerify p1 p2 && lagrangeIsValid l
+        in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one) && lagrangeIsValid l
 
 instance
         ( Representable i
         , Representable o
         , Foldable o
-        , Foldable p
         , Ord (Rep i)
         , KnownNat n
         , KnownNat (4 * n + 6)
-        ) => CompatibleNonInteractiveProofs (PlonkupN i o p n) PlonkupPlutus where
+        ) => CompatibleNonInteractiveProofs (PlonkupN i o n) PlonkupPlutus where
     nipSetupTransform = mkSetup
     nipInputTransform = mkInput
     nipProofTransform = mkProof

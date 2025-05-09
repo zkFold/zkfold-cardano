@@ -2,7 +2,6 @@
 
 module ZkFold.Cardano.OffChain.Plonkup where
 
-import           Data.Foldable                                (Foldable, toList)
 import           PlutusTx.Builtins                            (BuiltinByteString)
 import           PlutusTx.Prelude                             (($), (.))
 import           Prelude                                      (fromIntegral, map)
@@ -20,18 +19,22 @@ import           ZkFold.Protocol.Plonkup.Input                (PlonkupInput (..)
 import           ZkFold.Protocol.Plonkup.Proof
 import           ZkFold.Protocol.Plonkup.Verifier.Commitments
 import           ZkFold.Protocol.Plonkup.Verifier.Setup
+import ZkFold.Protocol.Plonkup.Relation (PlonkupRelation(..))
+import ZkFold.Algebra.Class ((+), (^))
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
-type PlonkupN i o p n = Plonkup i o p n BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
+type PlonkupN i o n = Plonkup i o n BLS12_381_G1_Point BLS12_381_G2_Point BuiltinByteString (PolyVec Fr)
 
-mkSetup :: forall i o p n . KnownNat n => SetupVerify (PlonkupN i o p n) -> SetupBytes
+mkSetup :: forall i o n . KnownNat n => SetupVerify (PlonkupN i o n) -> SetupBytes
 mkSetup PlonkupVerifierSetup {..} =
   let PlonkupCircuitCommitments {..} = commitments
   in SetupBytes
     { n          = fromIntegral (value @n)
+    , nPrv       = fromIntegral $ prvNum relation
     , pow        = log2ceiling (value @n)
     , omega      = F $ convertZp omega
+    , omegaNPrv  = F $ convertZp (omega ^ (prvNum relation + 1))
     , k1         = F $ convertZp k1
     , k2         = F $ convertZp k2
     , h1_bytes   = convertG2 h1
@@ -45,12 +48,14 @@ mkSetup PlonkupVerifierSetup {..} =
     , cmS2_bytes = convertG1 cmS2
     , cmS3_bytes = convertG1 cmS3
     , cmT1_bytes = convertG1 cmT1
+    , cmT2_bytes = convertG1 cmT2
+    , cmT3_bytes = convertG1 cmT3
     }
 
-mkInput :: Foldable o => Input (PlonkupN i o p n) -> InputBytes
-mkInput (PlonkupInput input) = map (F . convertZp) $ toList input
+mkInput :: Input (PlonkupN i o n) -> InputBytes
+mkInput (PlonkupInput input) = map (F . convertZp) input
 
-mkProof :: Proof (PlonkupN i o p n) -> ProofBytes
+mkProof :: Proof (PlonkupN i o n) -> ProofBytes
 mkProof PlonkupProof {..} = ProofBytes
   { cmA_bytes     = convertG1 cmA
   , cmB_bytes     = convertG1 cmB
@@ -77,5 +82,6 @@ mkProof PlonkupProof {..} = ProofBytes
   , z2_xi'_int    = convertZp z2_xi'
   , h1_xi'_int    = convertZp h1_xi'
   , h2_xi_int     = convertZp h2_xi
+  , l1_xi         = F $ convertZp l1_xi
   , l_xi          = map (F . convertZp) l_xi
   }

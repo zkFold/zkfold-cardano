@@ -10,7 +10,6 @@ import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
 import           ZkFold.Cardano.OffChain.Plonkup        (PlonkupN, mkInput, mkProof, mkSetup)
 import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data    (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Data.HFunctor                   (hmap)
 import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 import           ZkFold.Protocol.Plonkup                (Plonkup (..))
 import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
@@ -34,16 +33,16 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let ac = hmap (:*: U1) $ compileWith @Fr id (\(Par1 i) -> (U1 :*: U1, Par1 i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 (Par1 :*: U1)
+    let ac = compileWith @Fr id (\(Par1 i) -> (U1 :*: U1, Par1 i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
 
         (omega, k1, k2) = getParams 32
         witnessInputs   = Par1 targetValue
         (gs, h1) = getSecrectParams x
-        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 Par1 U1 32
+        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 Par1 32
         setupP  = setupProve plonkup
         setupV  = setupVerify plonkup
         witness = (PlonkupWitnessInput witnessInputs, ps)
-        (input, proof) = prove @(PlonkupN Par1 Par1 U1 32) setupP witness
+        (input, proof) = prove @(PlonkupN Par1 Par1 32) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
