@@ -94,7 +94,7 @@ tokenBurning (Transaction path pathCfg txIn1 txIn2 forwardingMintIn sig changeAd
 
     let (setup, input, _) = equalityCheckVerificationBytes x ps targetValue
         assetName = AssetName $ fromBuiltin $ F.fromInput $ head input
-        redeemer  = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 [F.F 0]
+        redeemer  = toBuiltinData $ ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0) [F.F 0]
 
     coreCfg <- coreConfigIO pathCfg
     (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
