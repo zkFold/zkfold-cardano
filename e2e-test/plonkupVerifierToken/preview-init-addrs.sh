@@ -6,7 +6,7 @@ set -e
 set -u
 set -o pipefail
 
-sanchomagic=4
+previewmagic=2
 keypath=./plonkupVerifierToken/keys
 privpath=./plonkupVerifierToken/priv
 
@@ -20,8 +20,8 @@ else
     exit 1
 fi
 
-printf "$sanchomagic" > $privpath/testnet.flag
-magic=$sanchomagic
+printf "$previewmagic" > $privpath/testnet.flag
+magic=$previewmagic
 
 #---------------------------------- :someone: ----------------------------------
 

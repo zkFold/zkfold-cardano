@@ -78,10 +78,11 @@ executable zkfold-cli
     main-is:          Main.hs
     hs-source-dirs:   app
     other-modules:
+        ZkFold.Cardano.Atlas.Utils
         ZkFold.Cardano.Balancing.Transaction.Balancing
         ZkFold.Cardano.Balancing.Transaction.Init
         ZkFold.Cardano.Balancing.Transaction.Transfer
-        ZkFold.Cardano.Options.CardanoCLI
+        ZkFold.Cardano.Options.Common
         ZkFold.Cardano.Options.ZkCLI
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
@@ -90,13 +91,13 @@ executable zkfold-cli
         ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx
         ZkFold.Cardano.Rollup.Transaction.Clear
         ZkFold.Cardano.Rollup.Transaction.Init
-        ZkFold.Cardano.Rollup.Transaction.Next
         ZkFold.Cardano.Rollup.Transaction.Update
         ZkFold.Cardano.Rollup.Data
     build-depends:
         aeson                          ,
         atlas-cardano                  ,
         base              >= 4.9 && < 5,
+        base16-bytestring              ,
         bytestring                     ,
         cardano-api                    ,
         cardano-cli                    ,
@@ -104,6 +105,7 @@ executable zkfold-cli
         cborg                          ,
         containers                     ,
         directory                      ,
+        extra                          ,
         filepath                       ,
         optparse-applicative-fork      ,
         parsec                         ,
@@ -116,6 +118,7 @@ executable zkfold-cli
         symbolic-base                  ,
         text                           ,
         transformers-except            ,
+        symbolic-base                  ,
         zkfold-cardano                 ,
         zkfold-cardano-scripts         ,
         zkfold-example                 ,

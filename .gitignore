@@ -18,11 +18,10 @@ cabal.sandbox.config
 *.hp
 *.eventlog
 .stack-work/
-cabal.project.local
-cabal.project.local~
 .HTF/
 .ghc.environment.*
 .DS_Store
+cabal.project.local
 compiled_scripts/*
 logs
 *.svg
@@ -33,3 +32,4 @@ assets
 test-data
 e2e-test/local-testnet/example/
 e2e-test/*/priv
+maestro-config.json

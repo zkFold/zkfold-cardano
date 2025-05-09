@@ -1,97 +1,126 @@
 module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting (tokenMinting, Transaction(..)) where
 
-import           Cardano.Api                              (AddressAny, AssetName (..), TxIn)
-import           Cardano.CLI.Read                         (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Type.Common                  (WitnessSigningData)
-import           Data.Aeson                               (decode, decodeFileStrict, encodeFile)
+import           Cardano.Api                              (AssetName (..))
+import           Data.Aeson                               (decode)
 import qualified Data.ByteString.Lazy                     as BL
 import           Data.Coerce                              (coerce)
-import qualified Data.Map.Strict                          as Map
 import           Data.Maybe                               (fromJust)
-import           GeniusYield.GYConfig                     (GYCoreConfig (..), coreConfigIO, withCfgProviders)
-import           GeniusYield.Transaction.Common           (minimumUTxO)
+import           GeniusYield.GYConfig                     (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusLedgerApi.V3                       (ToData (..), fromBuiltin)
-import           PlutusTx.Builtins                        (BuiltinData)
-import           Prelude                                  (Either (..), FilePath, IO, Maybe (..), head, toInteger, ($),
-                                                           (.), (<$>), (<>))
+import           PlutusLedgerApi.V3                       (fromBuiltin)
+import           Prelude
 import           System.FilePath                          ((</>))
+import qualified System.IO                                as IO
 
+import           ZkFold.Cardano.Atlas.Utils               (SubmittedTx (..), wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F
+import           ZkFold.Cardano.Options.Common            (CoreConfigAlt, SigningKeyAlt, TxIdAlt, fromCoreConfigAltIO,
+                                                           fromSigningKeyAltIO, fromTxIdAltIO)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 
 data Transaction = Transaction
-    { curPath         :: !FilePath
-    , pathCoreCfg     :: !FilePath
-    , txIn            :: !TxIn
-    , requiredSigners :: !WitnessSigningData
-    , changeAddresses :: !AddressAny
-    , outAddress      :: !AddressAny
-    , txidSetupFile   :: !FilePath
-    , outFile         :: !FilePath
+    { curPath        :: !FilePath
+    , coreCfg        :: !CoreConfigAlt
+    , requiredSigner :: !SigningKeyAlt
+    , changeAddress  :: !GYAddress
+    , outAddress     :: !GYAddress
+    , txidSetup      :: !TxIdAlt
+    , outFile        :: !FilePath
     }
 
 -- | Sending a tokens script to the address.
-sendMintTokens ::
-    GYNetworkId ->
-    GYProviders ->
-    GYPaymentSigningKey ->
-    GYAddress ->
-    GYTxIn PlutusV3 ->
-    GYAddress ->
-    GYScript PlutusV3 ->
-    GYTxId ->
-    BuiltinData ->
-    AssetName ->
-    FilePath ->
-    IO ()
-sendMintTokens nid providers skey changeAddr txIn sendTo validator txidSetup redeemer' assetName outFile = do
-    let w1 = User' skey Nothing changeAddr
-        txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
-        redeemer = redeemerFromPlutus' redeemer'
-        tokenName = coerce @AssetName @GYTokenName assetName
-        refScript = GYMintReference @PlutusV3 txOutRefSetup validator
-        tokens = valueMake $ Map.singleton (GYToken (mintingPolicyId validator) tokenName) 1
-        outMin = GYTxOut sendTo tokens Nothing Nothing
+sendMintTokens :: GYNetworkId         ->
+                  GYProviders         ->
+                  FilePath            ->
+                  -- ^ Path to 'assets' directory.
+                  GYPaymentSigningKey ->
+                  -- ^ Signing key for wallet funding this Tx.
+                  GYAddress           ->
+                  -- ^ Change address for wallet funding this Tx.
+                  GYAddress           ->
+                  -- ^ Beneficiary receiving token.
+                  GYScript PlutusV3   ->
+                  -- ^ Parameterized PlonkupVerifierToken script.
+                  GYTxId              ->
+                  -- ^ Setup reference TxId.
+                  GYRedeemer          ->
+                  -- ^ Redeemer containing proof.
+                  GYAssetClass        ->
+                  -- ^ Token to mint.
+                  FilePath            ->
+                  -- ^ Path to output file.
+                  IO ()
+sendMintTokens nid providers assetsPath skey changeAddr sendTo validator txidSetup redeemer token outFile = do
+  let w1 = User' skey Nothing changeAddr
 
-    params <- gyGetProtocolParameters providers
-    let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
+  let txOutRefSetup = txOutRefFromTuple (txidSetup, 0)
+      refScript     = GYMintReference @PlutusV3 txOutRefSetup validator
 
-    -- --tx-in-collateral $collateral
-    pkh <- addressToPubKeyHashIO changeAddr
-    let skeleton = mustHaveInput txIn
-                <> mustHaveOutput (GYTxOut sendTo (calculateMin <> tokens) Nothing Nothing)
-                <> mustMint refScript redeemer tokenName 1
-                <> mustBeSignedBy pkh
+  let tokenValue = valueSingleton token 1
+      tokenName | GYToken _ t <- token = t
+                | otherwise            = error "absurd"
 
-    txid <- runGYTxGameMonadIO nid providers $ asUser w1 $ do
-        txBody <- buildTxBody skeleton
-        signAndSubmitConfirmed txBody
+  pkh <- addressToPubKeyHashIO changeAddr
 
-    encodeFile outFile txid
+  let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue Nothing Nothing)
+              <> mustMint refScript redeemer tokenName 1
+              <> mustBeSignedBy pkh
+
+  tx <- runGYTxGameMonadIO nid
+                           providers $
+                           asUser w1 $ do
+                             txbody <- buildTxBody skeleton
+                             txid   <- signAndSubmitConfirmed txbody
+                             return $ SubmittedTx txid (Just $ txBodyFee txbody)
+
+  let (pidStg, tnStg) = asTuple token
+  putStrLn $ "Policy ID: " ++ pidStg
+  putStrLn $ "Token Name: " ++ tnStg
+  IO.writeFile (assetsPath </> "lastMintedToken.txt") $ "\"" ++ pidStg ++ "." ++ tnStg ++ "\""
+
+  wrapUpSubmittedTx (assetsPath </> outFile) tx
 
 tokenMinting :: Transaction -> IO ()
-tokenMinting (Transaction path pathCfg txIn sig changeAddr outAddress txidSetupFile outFile) = do
-    let testData = path </> "test-data"
-    EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
+tokenMinting (Transaction path coreCfg' sig changeAddr sendTo txidSetup' outFile) = do
+  let assetsPath = path </> "assets"
+      testData   = path </> "test-data"
 
-    let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
-        assetName = AssetName $ fromBuiltin $ F.fromInput $ head input
-        redeemer  = toBuiltinData proof
+  coreCfg   <- fromCoreConfigAltIO coreCfg'
+  skey      <- fromSigningKeyAltIO sig
+  txidSetup <- fromTxIdAltIO assetsPath txidSetup'
 
-    coreCfg <- coreConfigIO pathCfg
-    (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
-    (Just txId) <- decodeFileStrict txidSetupFile
+  let nid = cfgNetworkId coreCfg
 
-    let nid         = cfgNetworkId coreCfg
-        skey        = signingKeyFromApi sks
-        changeAddr' = addressFromApi changeAddr
-        txIn'       = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        sendTo      = addressFromApi outAddress
+  EqualityCheckContract{..} <- fromJust . decode <$> BL.readFile (testData </> "plonkup-raw-contract-data.json")
 
-        plonkupVerifierToken = validatorFromPlutus $ plonkupVerifierTokenCompiled setup
+  let (setup, input, proof) = equalityCheckVerificationBytes x ps targetValue
+      plonkupTokenValidator = scriptFromPlutus @PlutusV3 $ plonkupVerifierTokenCompiled setup
+      policyId              = mintingPolicyId plonkupTokenValidator
+      assetName             = AssetName $ fromBuiltin $ F.fromInput $ head input
+      token                 = GYToken policyId (coerce assetName)
+      redeemer              = redeemerFromPlutusData proof
 
-    withCfgProviders coreCfg "main" $ \providers -> do
-       sendMintTokens nid providers skey changeAddr' txIn' sendTo plonkupVerifierToken txId redeemer assetName outFile
+  withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendMintTokens
+                                                          nid
+                                                          providers
+                                                          assetsPath
+                                                          skey
+                                                          changeAddr
+                                                          sendTo
+                                                          plonkupTokenValidator
+                                                          txidSetup
+                                                          redeemer
+                                                          token
+                                                          outFile
+
+
+------- :Helpers: -------
+
+-- | GYAssetClass as a tuple of strings.
+asTuple :: GYAssetClass -> (String, String)
+asTuple GYLovelace    = ("", "Lovelace")
+asTuple (GYToken p t) = (trim $ show p, trim . show $ tokenNameToHex t)
+  where
+    trim = reverse . drop 1 . reverse . drop 1

@@ -1,163 +1,106 @@
-module ZkFold.Cardano.Rollup.Transaction.Clear where
-import           Cardano.Api                    hiding (Key, Lovelace, TxOut)
-import           Control.Applicative            (Applicative (..), (<$>))
-import           Control.Monad                  (Functor (..), Monad (..))
-import           Data.Aeson                     (FromJSON (..), Key, Object, Value (..), eitherDecode, withObject)
-import           Data.Aeson.Key                 (toText)
-import           Data.Aeson.KeyMap              (toList)
-import           Data.Aeson.Types               (Parser, parseMaybe, (.!=), (.:), (.:?))
-import qualified Data.ByteString                as BS
-import qualified Data.ByteString.Lazy           as BL
-import           Data.Either                    (Either (..))
-import           Data.List                      (concat, concatMap, length, replicate, unlines, zipWith)
-import           Data.Maybe                     (Maybe (..), fromMaybe)
-import           Data.String                    (fromString)
-import qualified Data.Text                      as T
-import           Data.Tuple                     (fst)
-import           Prelude                        (IO, Int, Num (..), Show (..), String, error, ($), (++), (.))
-import           System.FilePath                (FilePath, (</>))
-import qualified System.IO                      as IO
+module ZkFold.Cardano.Rollup.Transaction.Clear (Transaction(..), rollupClear) where
 
-import           ZkFold.Cardano.OffChain.Utils  (dataToCBOR, scriptHashOf)
+import           Cardano.Api                    (getScriptData)
+import           Cardano.Api.Shelley            (scriptDataFromJsonDetailedSchema, toPlutusData)
+import           Control.Exception              (throwIO)
+import           Data.Aeson                     (decode, decodeFileStrict)
+import qualified Data.ByteString.Lazy           as BL
+import qualified Data.Map                       as Map
+import           Data.Maybe                     (fromJust)
+import           GeniusYield.GYConfig           (GYCoreConfig (cfgNetworkId), withCfgProviders)
+import           GeniusYield.TxBuilder
+import           GeniusYield.Types
+import           PlutusLedgerApi.V3             (Redeemer (..), TokenName (..), Value (..), dataToBuiltinData, fromData,
+                                                 toData)
+import           PlutusTx.AssocMap              as Pam
+import           Prelude
+import           System.FilePath                ((</>))
+
+import           ZkFold.Cardano.Atlas.Utils     (SubmittedTx (..), wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common  (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO, fromSigningKeyAltIO)
+import           ZkFold.Cardano.UPLC.Common     (parkingSpotCompiled)
+import           ZkFold.Cardano.UPLC.Rollup     (RollupInfo (..))
 import           ZkFold.Cardano.UPLC.RollupData (RollupDataRedeemer (..), rollupDataCompiled)
 
-data Utxo = Utxo
-  { utxoKey   :: String
-  , utxoValue :: TxOut
-  } deriving stock Show
 
-data TxOut = TxOut
-  { txOutAddress         :: String
-  , txOutDatum           :: Maybe String
-  , txOutInlineDatum     :: Maybe InlineDatum
-  , txOutInlineDatumhash :: Maybe String
-  , txOutReferenceScript :: Maybe String
-  , txOutValue           :: TokenValue
-  } deriving stock Show
+data Transaction = Transaction
+  { curPath        :: !FilePath
+  , coreCfgAlt     :: !CoreConfigAlt
+  , requiredSigner :: !SigningKeyAlt
+  , changeAddress  :: !GYAddress
+  , dataParkOut    :: !FilePath
+  , outFile        :: !FilePath
+  }
 
-data InlineDatum = InlineDatum
-  { constructor :: Int
-  , fields      :: [String]
-  } deriving stock Show
+lookupTokens :: GYMintingPolicyId -> GYUTxO -> Maybe [(TokenName, Integer)]
+lookupTokens pid utxo = fmap Pam.toList . Pam.lookup (mintingPolicyIdToCurrencySymbol pid)
+                        . getValue . valueToPlutus $ utxoValue utxo
 
-newtype TokenValue = TokenValue
-  { tokens :: [(String, Int)]
-  } deriving stock Show
-
-instance FromJSON Utxo where
-  parseJSON = withObject "Utxo" $ \v ->
-    Utxo <$> v .: "key" <*> v .: "value"
-
--- | Parse token values
-parseTokenValue :: Object -> TokenValue
-parseTokenValue obj = fromMaybe (TokenValue []) (parseMaybe parseJSON (Object obj))
-
-instance FromJSON TxOut where
-  parseJSON = withObject "TxOut" $ \v ->
-    TxOut <$> v .: "address"
-          <*> v .:? "datum"
-          <*> v .:? "inlineDatum"
-          <*> v .:? "inlineDatumhash"
-          <*> v .:? "referenceScript"
-          <*> (parseTokenValue <$> v .: "value")
-
-instance FromJSON InlineDatum where
-  parseJSON = withObject "InlineDatum" $ \v ->
-    InlineDatum <$> v .: "constructor" <*> v .:? "fields" .!= []
-
-thePolicyId :: Key
-thePolicyId = fromString . show . scriptHashOf $ rollupDataCompiled
-
-instance FromJSON TokenValue where
-  parseJSON = withObject "TokenValue" $ \v -> do
-    tokenMap <- v .:? thePolicyId :: Parser (Maybe Object)
-    let tokens = case tokenMap of
-          Nothing  -> []
-          Just obj -> [(T.unpack (toText k), 1) | (k, _) <- toList obj]
-    return $ TokenValue tokens
-
-
--- Due to lack of composability of transactions built with cardano-cli, we need to dynamically
--- generate cardano-cli code for transactions with variable inputs and/or variable minting
--- parameters.
-
-initialCodeBlock :: [String]
-initialCodeBlock =
-  [ "#! /bin/bash"
-  , "set -e"
-  , "set -u"
-  , "set -o pipefail"
-  , "assets=../assets"
-  , "keypath=./rollup/keys"
-  , "privpath=./rollup/priv"
-  , "mN=$(cat $privpath/testnet.flag)"
-  , "unitDatum=$assets/unit.cbor"
-  , "unitRedeemer=$assets/unit.cbor"
-  , "dataPolicy=$assets/rollupData.plutus"
-  , "dataCleanRedeemer=$assets/dataCleanRedeemer.cbor"
-  , "parkingSpotPolicy=$assets/parkingSpot.plutus"
-  , "collateral=$(cardano-cli conway transaction txid --tx-file \"$keypath/splitAlice.tx\")#0"
-  , ""
-  , "in1=$(cardano-cli conway transaction txid --tx-file \"$keypath/rollupOut.tx\")#3"
-  , "dataPolicyId=$(cardano-cli conway transaction policyid --script-file $dataPolicy)"
-  , ""
-  , "cardano-cli conway transaction build \\"
-  , "  --testnet-magic $mN \\"
-  , "  --tx-in $in1 \\"
-  ]
-
-middleCodeBlock :: [String]
-middleCodeBlock =
-  [ "  --tx-in-collateral $collateral \\"
-  , "  --change-address $(cat $keypath/alice.addr) \\"
-  ]
-
-finalCodeBlock :: [String]
-finalCodeBlock =
-  [ "  --mint-script-file $dataPolicy \\"
-  , "  --mint-redeemer-cbor-file $dataCleanRedeemer \\"
-  , "  --out-file $keypath/dataClean.txbody"
-  ]
-
-inputCodeBlock :: String -> [String]
-inputCodeBlock s =
-  [ "  --tx-in " ++ s ++ " \\"
-  , "  --tx-in-script-file $parkingSpotPolicy \\"
-  , "  --tx-in-inline-datum-present \\"
-  , "  --tx-in-redeemer-cbor-file $unitRedeemer \\"
-  ]
-
-mintCodeBlock :: [String] -> [String]
-mintCodeBlock tokenNames = ["  --mint \"" ++ concat (zipWith zipper tokenNames wrapUps)]
+mustBurnDataToken :: GYBuildPlutusScript PlutusV3 -> (TokenName, Integer) -> GYTxSkeleton PlutusV3
+mustBurnDataToken dataRef (tn, n) = mustMint (GYBuildPlutusScript dataRef) burnRedeemer tn' (-n)
   where
-    zipper tn s = "-1 $dataPolicyId"  ++ "." ++ tn ++ s
-    wrapUps     = replicate (length tokenNames - 1) " + " ++ ["\" \\"]
+    burnRedeemer = redeemerFromPlutus . Redeemer . dataToBuiltinData $ toData OldData
+    tn'          = fromJust $ tokenNameFromPlutus tn
 
+burnDataTokens :: Integer                      ->
+                  GYBuildPlutusScript PlutusV3 ->
+                  GYTxOutRef                   ->
+                  [(TokenName, Integer)]       ->
+                  GYTxSkeleton PlutusV3
+burnDataTokens parkingTag dataRef oref tks =
+  let parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled parkingTag
+      parkingWit  = GYTxInWitnessScript (GYBuildPlutusScriptInlined parkingSpot) Nothing unitRedeemer
 
--- | Extract keys and token names from parsed UTxOs
-extractKeysAndTokens :: [Utxo] -> ([String], [String])
-extractKeysAndTokens utxos  =
-    let keys       = fmap utxoKey utxos
-        tokenNames = concatMap (fmap fst . tokens . txOutValue . utxoValue) utxos
-    in (keys, tokenNames)
+  in   mustHaveInput (GYTxIn oref parkingWit)
+    <> mconcat (mustBurnDataToken dataRef <$> tks)
 
-rollupClear :: FilePath -> IO ()
-rollupClear path = do
-    let assets = path </> "assets"
+rollupClear :: Transaction -> IO ()
+rollupClear (Transaction path coreCfg' sig changeAddr dataParkOut outFile) = do
+  let assets = path </> "assets"
 
-    BS.writeFile (assets </> "dataCleanRedeemer.cbor") . dataToCBOR $ OldData
+  rollupDataTxId <- decodeFileStrict (assets </> dataParkOut)
+                    >>= maybe (fail $ "Failed to decode " ++ dataParkOut) pure
 
-    content <- BL.readFile $ assets </> "dataTokensBurn.json"
+  let rollupData   = scriptFromPlutus @PlutusV3 $ rollupDataCompiled
+      dataPolicyId = mintingPolicyId rollupData
 
-    utxos <- case eitherDecode content of
-      Left err    -> error $ "Error parsing JSON: " ++ err
-      Right utxos -> return utxos
+  rollupInfoE  <- scriptDataFromJsonDetailedSchema . fromJust . decode <$> BL.readFile (assets </> "rollupInfo.json")
 
-    let (keys, tokenNames) = extractKeysAndTokens utxos
-        inputs = concatMap inputCodeBlock keys
-        mints  = mintCodeBlock tokenNames
+  case rollupInfoE of
+    Right rollupInfoScriptData -> do
+      coreCfg  <- fromCoreConfigAltIO coreCfg'
+      skey     <- fromSigningKeyAltIO sig
 
-    IO.putStrLn $ "\nBurning used data tokens: " ++ show tokenNames ++ "\n"
+      let nid = cfgNetworkId coreCfg
 
-    IO.writeFile (assets </> "burnDataTokens.sh") . unlines
-      $ initialCodeBlock ++ inputs ++ middleCodeBlock ++ mints ++ finalCodeBlock
+      let rollupInfo  = fromJust . fromData . toPlutusData . getScriptData $ rollupInfoScriptData :: RollupInfo
+          RollupInfo parkingTag _ _ _ = rollupInfo
+          parkingSpot = scriptFromPlutus @PlutusV3 $ parkingSpotCompiled parkingTag
+          parkingAddr = addressFromValidator nid parkingSpot
+
+      let dataOref = txOutRefFromTuple (rollupDataTxId, 0)
+          dataRef  = GYBuildPlutusScriptReference @PlutusV3 dataOref rollupData
+
+      pkh <- addressToPubKeyHashIO changeAddr
+
+      let w1 = User' skey Nothing changeAddr
+
+      withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+        utxos <- runGYTxQueryMonadIO nid
+                                     providers
+                                     (utxosAtAddress parkingAddr Nothing)
+
+        let dataTuples = Map.toList $ mapMaybeUTxOs (lookupTokens dataPolicyId) utxos
+            skeleton'  = mconcat $ uncurry (burnDataTokens parkingTag dataRef) <$> dataTuples
+            skeleton   = skeleton' <> mustBeSignedBy pkh
+
+        tx <- runGYTxGameMonadIO nid
+                                 providers $
+                                 asUser w1 $ do
+                                   txbody <- buildTxBody $ skeleton
+                                   txid   <- signAndSubmitConfirmed txbody
+                                   return $ SubmittedTx txid (Just $ txBodyFee txbody)
+
+        wrapUpSubmittedTx (assets </> outFile) tx
+
+    Left _  -> throwIO $ userError  "JSON error: unreadable rollupInfo script data."
