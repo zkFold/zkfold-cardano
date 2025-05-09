@@ -6,13 +6,13 @@ set -e
 set -u
 set -o pipefail
 
-sanchomagic=4
+previewmagic=2
 keypath=./plonkupVerifierToken/keys
 privpath=./plonkupVerifierToken/priv
 
 magic=$(cat $privpath/testnet.flag)
-if [ $magic -ne $sanchomagic ]; then
-    echo "This script is only meant to be run on SanchoNet."
+if [ $magic -ne $previewmagic ]; then
+    echo "This script is only meant to be run on Preview testnet."
     exit 1
 fi
 

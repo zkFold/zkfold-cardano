@@ -1,81 +1,92 @@
 module ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer (tokenTransfer, Transaction(..)) where
 
-import           Cardano.Api                           (AddressAny, SerialiseAsRawBytes (..), TxIn)
-import           Cardano.Api.Ledger                    (toCBOR)
-import           Cardano.CLI.Read                      (SomeSigningWitness (..), readWitnessSigningData)
-import           Cardano.CLI.Type.Common               (WitnessSigningData)
-import           Codec.CBOR.Write                      (toLazyByteString)
-import qualified Codec.Serialise                       as Codec
-import           Data.Aeson                            (encodeFile)
-import           GeniusYield.GYConfig                  (GYCoreConfig (..), coreConfigIO, withCfgProviders)
+import           Control.Exception                     (throwIO)
+import           GeniusYield.GYConfig                  (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.Transaction.Common        (minimumUTxO)
 import           GeniusYield.TxBuilder
-import           GeniusYield.Types                     (GYAddress, GYNetworkId, GYPaymentSigningKey, GYProviders,
-                                                        GYScript, GYTxIn (..), GYTxInWitness (..), GYTxOut (..),
-                                                        GYTxOutUseInlineDatum (..), PlutusVersion (..), addressFromApi,
-                                                        addressFromValidator, datumFromPlutusData,
-                                                        gyGetProtocolParameters, mintingPolicyId, mintingPolicyIdToApi,
-                                                        signingKeyFromApi, txOutRefFromApi, validatorFromPlutus,
-                                                        valueFromLovelace)
-import           PlutusTx.Builtins                     (BuiltinByteString)
-import           Prelude                               (Either (..), FilePath, IO, Maybe (..), toInteger, ($), (<>))
+import           GeniusYield.Types
+import           Prelude
+import           System.FilePath                       ((</>))
 
+import           ZkFold.Cardano.Atlas.Utils            (SubmittedTx (..), wrapUpSubmittedTx)
+import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, PolicyIdAlt, SigningKeyAlt, fromCoreConfigAltIO,
+                                                        fromPolicyIdAltIO, fromSigningKeyAltIO)
 import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingMintCompiled)
 
+
 data Transaction = Transaction
-    { pathCoreCfg     :: !FilePath
-    , txIn            :: !TxIn
-    , requiredSigners :: !WitnessSigningData
-    , changeAddresses :: !AddressAny
-    , outFile         :: !FilePath
+    { curPath        :: !FilePath
+    , coreCfg        :: !CoreConfigAlt
+    , fmTag          :: !Integer
+    , policyId       :: !PolicyIdAlt
+    , reward         :: !GYValue
+    , requiredSigner :: !SigningKeyAlt
+    , changeAddress  :: !GYAddress
+    , outFile        :: !FilePath
     }
 
-
 -- | Sending a datum script to the network.
-sendDatum ::
-    GYNetworkId ->
-    GYProviders ->
-    GYPaymentSigningKey ->
-    GYAddress ->
-    GYTxIn PlutusV3 ->
-    GYScript PlutusV3 ->
-    BuiltinByteString ->
-    FilePath ->
-    IO ()
-sendDatum nid providers skey changeAddr txIn validator datum outFile = do
+sendDatum :: GYNetworkId         ->
+             GYProviders         ->
+             GYPaymentSigningKey ->
+             -- ^ Signing key for wallet funding this Tx.
+             GYAddress           ->
+             -- ^ Change address for wallet funding this Tx.
+             GYValue             ->
+             -- ^ Lovelace value of reward
+             GYScript PlutusV3   ->
+             -- ^ Parameterized 'ForwardingMint' script.
+             GYMintingPolicyId   ->
+             -- ^ PolicyID to be included in datum.
+             FilePath            ->
+             -- ^ Path to output file.
+             IO ()
+sendDatum nid providers skey changeAddr reward fmValidator policyid outFile = do
     let w1 = User' skey Nothing changeAddr
-        inlineDatum = Just (datumFromPlutusData datum, GYTxOutUseInlineDatum @PlutusV3)
-        validdatorAddr = addressFromValidator nid validator
-        outMin = GYTxOut validdatorAddr (valueFromLovelace 0) inlineDatum Nothing
+
+    let cs = mintingPolicyIdToCurrencySymbol policyid
+        inlineDatum = Just (datumFromPlutusData cs, GYTxOutUseInlineDatum @PlutusV3)
+
+    let forwardingMintAddr = addressFromValidator nid fmValidator
 
     params <- gyGetProtocolParameters providers
-    let calculateMin = valueFromLovelace $ toInteger $ minimumUTxO params outMin
+    let outMin          = GYTxOut forwardingMintAddr (valueFromLovelace 0) inlineDatum Nothing
+        minUtxoLovelace = toInteger $ minimumUTxO params outMin
 
-    pkh <- addressToPubKeyHashIO changeAddr
-    let skeleton = mustHaveInput txIn
-                <> mustHaveOutput (GYTxOut validdatorAddr calculateMin inlineDatum Nothing)
-                <> mustBeSignedBy pkh
+    if valueAda reward >= minUtxoLovelace
+      then do
+        pkh <- addressToPubKeyHashIO changeAddr
+        let skeleton = mustHaveOutput (GYTxOut forwardingMintAddr reward inlineDatum Nothing)
+                    <> mustBeSignedBy pkh
 
-    txid <- runGYTxGameMonadIO nid providers $ asUser w1 $ do
-        txBody <- buildTxBody skeleton
-        signAndSubmitConfirmed txBody
+        tx <- runGYTxGameMonadIO nid
+                                 providers $
+                                 asUser w1 $ do
+                                   txbody <- buildTxBody skeleton
+                                   txid   <- signAndSubmitConfirmed txbody
+                                   return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-    encodeFile outFile txid
+        wrapUpSubmittedTx outFile tx
+
+      else throwIO $ userError "Reward must be at least minimumUTxO lovelace."
 
 tokenTransfer :: Transaction -> IO ()
-tokenTransfer (Transaction pathCfg txIn sig changeAddr outFile) = do
-    coreCfg <- coreConfigIO pathCfg
-    (Right (APaymentSigningWitness sks)) <- readWitnessSigningData sig
+tokenTransfer (Transaction path coreCfg' tag pid reward sig changeAddr outFile) = do
+    let assetsPath = path </> "assets"
+
+    coreCfg  <- fromCoreConfigAltIO coreCfg'
+    policyid <- fromPolicyIdAltIO assetsPath pid
+    skey     <- fromSigningKeyAltIO sig
 
     let nid            = cfgNetworkId coreCfg
-        skey           = signingKeyFromApi sks
-        changeAddr'    = addressFromApi changeAddr
-        txIn'          = GYTxIn (txOutRefFromApi txIn) GYTxInWitnessKey
-        fmLabel        = 0
+        forwardingMint = scriptFromPlutus $ forwardingMintCompiled tag
 
-        forwardingMint = validatorFromPlutus $ forwardingMintCompiled fmLabel
-        policyid       = mintingPolicyIdToApi $ mintingPolicyId forwardingMint
-        datum          = Codec.deserialise $ toLazyByteString $ toCBOR $ serialiseToRawBytes policyid
-
-    withCfgProviders coreCfg "main" $ \providers -> do
-        sendDatum nid providers skey changeAddr' txIn' forwardingMint datum outFile
+    withCfgProviders coreCfg "zkfold-cli" $ \providers -> sendDatum
+                                                            nid
+                                                            providers
+                                                            skey
+                                                            changeAddr
+                                                            reward
+                                                            forwardingMint
+                                                            policyid
+                                                            (assetsPath </> outFile)

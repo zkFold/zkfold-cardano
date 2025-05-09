@@ -4,6 +4,7 @@ import           Cardano.Api                                              (Doc, 
 import           Cardano.CLI.EraBased.Common.Option                       (pWitnessSigningData)
 import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
+import           GeniusYield.GYConfig                                     (GYCoreConfig)
 import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
                                                                            (<**>))
 import qualified Options.Applicative                                      as Opt
@@ -12,15 +13,15 @@ import           Prelude
 import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Balancing
 import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
 import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
-import           ZkFold.Cardano.Options.CardanoCLI                        (pChangeAddress, pGYCoreConfig, pOutAddress,
-                                                                           pOutFile, pTxIdFile, pTxInOnly)
+import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
+import qualified ZkFold.Cardano.Rollup.Transaction.Clear                  as RollupClear
 import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
-import qualified ZkFold.Cardano.Rollup.Transaction.Next                   as RollupNext
 import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
+
 
 data ClientCommand
     = TransactionTokenInit     TokenInit.Transaction
@@ -32,11 +33,11 @@ data ClientCommand
     | TransactionBalancing         Balancing.Transaction
     | TransactionRollupInit   RollupInit.Transaction
     | TransactionRollupUpdate RollupUpdate.Transaction
-    | TransactionRollupNext   RollupNext.Transaction
+    | TransactionRollupClear  RollupClear.Transaction
 
-opts :: FilePath -> ParserInfo ClientCommand
-opts path =
-    Opt.info (pCmds path <**> Opt.helper) $
+opts :: FilePath -> Maybe GYCoreConfig -> ParserInfo ClientCommand
+opts path mcfg =
+    Opt.info (pCmds path mcfg <**> Opt.helper) $
         mconcat
             [ Opt.fullDesc
             , Opt.header $
@@ -50,80 +51,79 @@ opts path =
 pref :: ParserPrefs
 pref = Opt.prefs $ mconcat [] -- no help
 
-pCmds :: FilePath -> Parser ClientCommand
-pCmds path = do
+pCmds :: FilePath -> Maybe GYCoreConfig -> Parser ClientCommand
+pCmds path mcfg = do
     asum $
         catMaybes
-            [ fmap TransactionTokenInit         <$> pTransactionTokenInit path
-            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer
-            , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path
-            , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path
+            [ fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
+            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer path mcfg
+            , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
+            , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
             , fmap TransactionBalancingInit     <$> pTransactionBalancingInit
             , fmap TransactionBalancingTransfer <$> pTransactionBalancingTransfer path
             , fmap TransactionBalancing         <$> pTransactionBalancing path
-            , fmap TransactionRollupInit        <$> pTransactionRollupInit path
-            , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path
-            , fmap TransactionRollupNext        <$> pTransactionRollupNext path
+            , fmap TransactionRollupInit        <$> pTransactionRollupInit path mcfg
+            , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path mcfg
+            , fmap TransactionRollupClear       <$> pTransactionRollupClear path mcfg
             ]
 
-pTransactionTokenInit :: FilePath -> Maybe (Parser TokenInit.Transaction)
-pTransactionTokenInit path = do
+pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
+pTransactionTokenInit path mcfg = do
     pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenInit.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutAddress
+            <$> pGYCoreConfig' mcfg
+            <*> pFMTag
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pParkOutAddress'
             <*> pOutFile
 
-pTransactionTokenTransfer :: Maybe (Parser TokenTransfer.Transaction)
-pTransactionTokenTransfer = do
+pTransactionTokenTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
+pTransactionTokenTransfer path mcfg = do
     pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        TokenTransfer.Transaction
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
+        TokenTransfer.Transaction path
+            <$> pGYCoreConfig' mcfg
+            <*> pFMTag
+            <*> pPolicyIdAlt
+            <*> pReward
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
             <*> pOutFile
 
-pTransactionTokenMinting :: FilePath -> Maybe (Parser TokenMinting.Transaction)
-pTransactionTokenMinting path = do
-    pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionTokenMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenMinting.Transaction)
+pTransactionTokenMinting path mcfg = do
+    pure $ subParser "token-mint" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenMinting.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutAddress
-            <*> pTxIdFile
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pBenefOutAddress'
+            <*> pTxIdAlt
             <*> pOutFile
 
-pTransactionTokenBurning :: FilePath -> Maybe (Parser TokenBurning.Transaction)
-pTransactionTokenBurning path = do
-    pure $ subParser "token-minting" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionTokenBurning :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenBurning.Transaction)
+pTransactionTokenBurning path mcfg = do
+    pure $ subParser "token-burn" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         TokenBurning.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutAddress
-            <*> pTxIdFile
-            <*> pTxIdFile
+            <$> pGYCoreConfig' mcfg
+            <*> pFMTag
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pTokenAlt
+            <*> pTxIdAlt
+            <*> pOutFile
 
 pTransactionBalancingInit :: Maybe (Parser BalancingInit.Transaction)
 pTransactionBalancingInit = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "balancing-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         BalancingInit.Transaction
@@ -135,7 +135,7 @@ pTransactionBalancingInit = do
 
 pTransactionBalancingTransfer :: FilePath -> Maybe (Parser BalancingTransfer.Transaction)
 pTransactionBalancingTransfer path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "balancing-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         BalancingTransfer.Transaction path
@@ -147,7 +147,7 @@ pTransactionBalancingTransfer path = do
 
 pTransactionBalancing :: FilePath -> Maybe (Parser Balancing.Transaction)
 pTransactionBalancing path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "balancing-something" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         Balancing.Transaction path
@@ -160,50 +160,45 @@ pTransactionBalancing path = do
             <*> pTxIdFile
             <*> pOutAddress
 
-pTransactionRollupInit :: FilePath -> Maybe (Parser RollupInit.Transaction)
-pTransactionRollupInit path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionRollupInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupInit.Transaction)
+pTransactionRollupInit path mcfg = do
+    pure $ subParser "rollup-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupInit.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutFile
-            <*> pOutAddress
-            <*> undefined
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pTxOref
+            <*> pFeeAddress'
+            <*> pOutFile' RollupInit
+            <*> pOutFile' RollupPark
+            <*> pOutFile' RollupDataPark
 
-pTransactionRollupUpdate :: FilePath -> Maybe (Parser RollupUpdate.Transaction)
-pTransactionRollupUpdate path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionRollupUpdate :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupUpdate.Transaction)
+pTransactionRollupUpdate path mcfg = do
+    pure $ subParser "rollup-update" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         RollupUpdate.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutFile
-            <*> undefined
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pOutFile' RollupPark
+            <*> pOutFile' RollupDataPark
+            <*> pOutFile' RollupUpdate
 
-pTransactionRollupNext :: FilePath -> Maybe (Parser RollupNext.Transaction)
-pTransactionRollupNext path = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionRollupClear :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupClear.Transaction)
+pTransactionRollupClear path mcfg = do
+    pure $ subParser "rollup-clear" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        RollupNext.Transaction path
-            <$> pGYCoreConfig
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pTxInOnly
-            <*> pTxIdFile
-            <*> pWitnessSigningData
-            <*> pChangeAddress
-            <*> pOutFile
-            <*> undefined
-            <*> pOutAddress
+        RollupClear.Transaction path
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pChangeAddress'
+            <*> pOutFile' RollupDataPark
+            <*> pOutFile' RollupClear
 
 data ClientCommandErrors
 
@@ -218,7 +213,7 @@ runClientCommand = \case
     TransactionBalancing         cmd -> ExceptT (Right <$> Balancing.balancingPlonkup          cmd)
     TransactionRollupInit        cmd -> ExceptT (Right <$> RollupInit.rollupInit               cmd)
     TransactionRollupUpdate      cmd -> ExceptT (Right <$> RollupUpdate.rollupUpdate           cmd)
-    TransactionRollupNext        cmd -> ExceptT (Right <$> RollupNext.rollupNext               cmd)
+    TransactionRollupClear       cmd -> ExceptT (Right <$> RollupClear.rollupClear             cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

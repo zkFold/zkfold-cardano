@@ -6,7 +6,7 @@ set -e
 set -u
 set -o pipefail
 
-sanchomagic=4
+previewmagic=2
 keypath=./plonkupVerifierToken/keys
 privpath=./plonkupVerifierToken/priv
 assets=../assets
