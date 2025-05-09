@@ -73,7 +73,7 @@ burnTokens nid providers skey changeAddr plonkupVerifierToken forwardingMint tok
 
       case utxosAtFM' of
         utxo : _ -> do
-          let dummyRedeemer' = ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 [F.F 0]
+          let dummyRedeemer' = ProofBytes "" "" "" "" "" "" "" "" "" "" "" "" "" 0 0 0 0 0 0 0 0 0 0 0 0 (F.F 0) [F.F 0]
               dummyRedeemer  = redeemerFromPlutusData $ toBuiltinData dummyRedeemer'
 
           let fmWit = GYTxInWitnessScript fmRef Nothing unitRedeemer
