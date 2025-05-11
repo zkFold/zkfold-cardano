@@ -17,19 +17,21 @@ import           Data.Function                       ((&))
 import           PlutusLedgerApi.V1.Value            (valueOf)
 import           PlutusLedgerApi.V3
 import qualified PlutusTx.AssocMap                   as AssocMap
+import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
+import           PlutusTx.Trace
 
 import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput, fromInput, F (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.F  (F (..), fromInput, toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode, bsAsInteger, showInteger)
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
-
-import PlutusTx.Trace
+prefix :: BuiltinByteString
+prefix = integerToByteString BigEndian 224 0x01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff003031300d060960864801650304020105000420
 
 -- TODO: Account for rotation of public keys
 -- TODO: Check the client Id
@@ -49,11 +51,12 @@ web2Auth ::
 web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
-        jwtHash = sha2_256 encodedJwt
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
-        publicInput = toInput jwtHash * toInput bs
-        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger jwtHash <> ">; jwt int: <" <> (let F x = toInput jwtHash in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">"
-       in 
+        jwtHash = sha2_256 encodedJwt
+        withPrefix = prefix <> jwtHash
+        publicInput = toInput withPrefix * toInput bs
+        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger withPrefix <> ">; jwt int: <" <> (let F x = toInput withPrefix in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">"
+       in
         -- Check that the user knows an RSA signature for a JWT containing the email
         verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
           -- Check that we mint a token with the correct name
