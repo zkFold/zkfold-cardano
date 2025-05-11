@@ -52,7 +52,7 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
         jwtHash = sha2_256 encodedJwt
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         publicInput = toInput jwtHash * toInput bs
-        traceMsg = "Token hash: <" <> BI.decodeUtf8 jwtHash <> ">;\nToken int: <" <> (BI.decodeUtf8 . fromInput $ toInput jwtHash) <> "Public input: <" <> (BI.decodeUtf8 . fromInput $ publicInput) <> ">;"
+        traceMsg = "Token hash: <" <> (BI.decodeUtf8 $ base64urlEncode jwtHash) <> ">;\nToken int: <" <> (BI.decodeUtf8 . base64urlEncode . fromInput $ toInput jwtHash) <> "Public input: <" <> (BI.decodeUtf8 . base64urlEncode . fromInput $ publicInput) <> ">;"
        in 
         -- Check that the user knows an RSA signature for a JWT containing the email
         verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
