@@ -1,8 +1,29 @@
-module ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode) where
+module ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode, bsAsInteger, showInteger) where
 
 import           PlutusLedgerApi.V3
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude
+
+
+{-# INLINEABLE showInteger #-}
+showInteger :: Integer -> BuiltinByteString
+showInteger int = integerToByteString BigEndian 0 $ foldr (\w acc -> w + acc * 256) 0 conv
+    where
+        conv :: [Integer]
+        conv = fmap toAscii $ go int 
+            where
+                go n
+                  | n == 0 = []
+                  | otherwise = (n `modulo` 10) : go (n `divide` 10) 
+
+        toAscii :: Integer -> Integer
+        toAscii n = n + 48 
+
+
+{-# INLINEABLE bsAsInteger #-}
+bsAsInteger :: BuiltinByteString -> BuiltinByteString
+bsAsInteger bs = showInteger $ byteStringToInteger BigEndian bs
+
 
 {-# INLINEABLE base64urlEncode #-}
 base64urlEncode :: BuiltinByteString -> BuiltinByteString
