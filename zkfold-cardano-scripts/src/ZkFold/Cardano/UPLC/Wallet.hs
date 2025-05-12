@@ -55,10 +55,11 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
         jwtHash = sha2_256 encodedJwt
         withPrefix = prefix <> jwtHash
         publicInput = toInput withPrefix * toInput bs
-        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger withPrefix <> ">; jwt int: <" <> (let F x = toInput withPrefix in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">"
+--        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger withPrefix <> ">; jwt int: <" <> (let F x = toInput withPrefix in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">"
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-        verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
+        -- verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
+        verify @PlonkupPlutus expModCircuit [publicInput] proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
