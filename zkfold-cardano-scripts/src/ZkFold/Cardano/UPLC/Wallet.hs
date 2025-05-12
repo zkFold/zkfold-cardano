@@ -30,9 +30,6 @@ import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode, bsAsInteg
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
-prefix :: BuiltinByteString
-prefix = integerToByteString BigEndian 224 0x01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff003031300d060960864801650304020105000420
-
 -- TODO: Account for rotation of public keys
 -- TODO: Check the client Id
 -- TODO: Check the suffix length (must be a predefined size)
@@ -53,8 +50,7 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
     $ let
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
-        withPrefix = prefix <> jwtHash
-        publicInput = toInput withPrefix * toInput bs
+        publicInput = toInput jwtHash * toInput bs
 --        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger withPrefix <> ">; jwt int: <" <> (let F x = toInput withPrefix in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">"
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
