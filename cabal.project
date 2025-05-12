@@ -27,8 +27,11 @@ benchmarks: true
 source-repository-package
   type: git
   location: https://github.com/zkFold/symbolic.git
-  tag: 54869525a739cc093cca9946b5a1ab1e416a8b57
-  subdir: symbolic-base
+  tag: 4b742a107591771eb42d74a0ce790ed8c3571d6e
+  subdir:
+    symbolic-base
+    symbolic-examples
+
 
 index-state:
   , hackage.haskell.org 2025-04-15T19:49:23Z

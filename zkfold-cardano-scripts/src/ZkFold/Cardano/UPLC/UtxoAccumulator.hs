@@ -3,66 +3,108 @@
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 module ZkFold.Cardano.UPLC.UtxoAccumulator where
 
 import           GHC.Generics                 (Generic)
-import           PlutusLedgerApi.V3           (Redeemer (..), ScriptContext (..), TokenName (..), TxInfo (..),
-                                               UnsafeFromData (..), mintValueToMap)
-import           PlutusLedgerApi.V3.Contexts  (ownCurrencySymbol)
-import           PlutusTx                     (CompiledCode, compile, makeIsDataIndexed)
-import           PlutusTx.AssocMap            (lookup, toList)
-import           PlutusTx.Prelude             hiding (toList, (*), (+))
+import           PlutusLedgerApi.V3           (Redeemer (..), TxInfo (..), ScriptContext (..), OutputDatum (OutputDatum, NoOutputDatum), Datum (..), TxOut (..), TxInInfo (..), ToData (..), Address, Value)
+import           PlutusLedgerApi.V3.Contexts  (findOwnInput)
+import           PlutusTx                     (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, liftCodeDef, unsafeApplyCode, makeLift)
 import           Prelude                      (Show)
 
-import           ZkFold.Cardano.OnChain.Utils (dataToBlake)
+import PlutusTx.Prelude ((+), BuiltinByteString, Integer, Bool, Maybe (..), BuiltinData, BuiltinUnit, check, ($), (.), Eq (..), head, (&&), tail, byteStringToInteger, blake2b_224, AdditiveGroup (..))
+import ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes, ProofBytes)
+import ZkFold.Cardano.OnChain.Plonkup.Update (updateSetupBytes)
+import PlutusTx.Builtins (serialiseData, ByteOrder (..))
+import ZkFold.Cardano.OnChain.Plonkup (PlonkupPlutus)
+import ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
-data RollupDataRedeemer =
-      NewData [BuiltinByteString]
-    | OldData
-    -- ^ Adjust the stake in the rollup.
+type N = 100
+type M = 4096 -- 2^12
+
+data UtxoAccumulatorParameters =
+    UtxoAccumulatorParameters
+      { maybeSwitchAddress :: Maybe Address
+      , maybeNextAddress   :: Maybe Address
+      , nextGroupElement   :: BuiltinByteString
+      , utxoValue          :: Value
+      }
   deriving stock (Show, Generic)
 
-makeIsDataIndexed ''RollupDataRedeemer [('NewData,0),('OldData,1)]
+makeIsDataIndexed ''UtxoAccumulatorParameters [('UtxoAccumulatorParameters,0)]
+makeLift ''UtxoAccumulatorParameters
 
--- | Plutus script for posting rollup data on-chain.
--- Creates a token with the hash of the data as the name.
+data UtxoAccumulatorRedeemer =
+      AddUtxo Integer
+    | RemoveUtxo Address ProofBytes
+    | Switch
+  deriving stock (Show, Generic)
+
+makeIsDataIndexed ''UtxoAccumulatorRedeemer [('AddUtxo,0),('RemoveUtxo,1),('Switch,2)]
+makeLift ''UtxoAccumulatorRedeemer
+
 {-# INLINABLE utxoAccumulator #-}
-utxoAccumulator :: RollupDataRedeemer -> ScriptContext -> Bool
-utxoAccumulator (NewData update) ctx =
+utxoAccumulator :: UtxoAccumulatorParameters -> UtxoAccumulatorRedeemer -> ScriptContext -> Bool
+utxoAccumulator UtxoAccumulatorParameters {..} (AddUtxo h) ctx =
   let
-    -- Get the current rollup output
-    symbol = ownCurrencySymbol ctx
+    Just (TxInInfo _ (TxOut _ v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
-    minted = map (unTokenName . fst) $ toList $ case lookup symbol $ mintValueToMap $ txInfoMint $ scriptContextTxInfo ctx of
-      Just v  -> v
-      Nothing -> traceError "rollupData: no minted value"
+    Just nextAddress = maybeNextAddress
+
+    v' = v + utxoValue
+
+    setup  = unsafeFromBuiltinData d :: SetupBytes
+    setup' = updateSetupBytes setup h nextGroupElement
+    d' = toBuiltinData setup'
+
+    outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
   in
-    -- Check that the token name is the hash of the data
-    minted == [dataToBlake update]
-utxoAccumulator OldData ctx =
+    outputAcc == TxOut nextAddress v' (OutputDatum (Datum d')) Nothing
+utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof) ctx =
   let
-    -- Get the current rollup output
-    symbol = ownCurrencySymbol ctx
+    Just (TxInInfo _ (TxOut _ v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
-    burned = toList $ case lookup symbol $ mintValueToMap $ txInfoMint $ scriptContextTxInfo ctx of
-      Just v  -> v
-      Nothing -> traceError "rollupData: no burned value"
+    Just nextAddress = maybeNextAddress
+
+    v' = v - utxoValue
+
+    a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
+
+    setup  = unsafeFromBuiltinData d :: SetupBytes
+    setup' = updateSetupBytes setup a nextGroupElement
+    d' = toBuiltinData setup'
+
+    outputAcc  = head $ txInfoOutputs $ scriptContextTxInfo ctx
+    outputUser = head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
   in
-    -- Check that all tokens are burned
-    all (\(_, n) -> n < 0) burned
+       outputAcc  == TxOut nextAddress v' (OutputDatum (Datum d')) Nothing
+    && outputUser == TxOut addr utxoValue NoOutputDatum Nothing
+    && verify @PlonkupPlutus setup [] proof
+utxoAccumulator UtxoAccumulatorParameters {..} Switch ctx =
+  let
+    Just (TxInInfo _ (TxOut _ v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
+
+    Just switchAddress = maybeSwitchAddress
+
+    setup  = unsafeFromBuiltinData d :: SetupBytes
+    setup' = updateSetupBytes setup 1 nextGroupElement
+    d' = toBuiltinData setup'
+
+    outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
+  in
+    outputAcc == TxOut switchAddress v (OutputDatum (Datum d')) Nothing
 
 {-# INLINABLE untypedUtxoAccumulator #-}
-untypedUtxoAccumulator :: BuiltinData -> BuiltinUnit
-untypedUtxoAccumulator ctx' =
+untypedUtxoAccumulator :: UtxoAccumulatorParameters -> BuiltinData -> BuiltinUnit
+untypedUtxoAccumulator par ctx' =
   let
     ctx      = unsafeFromBuiltinData ctx'
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
-    check $ utxoAccumulator redeemer ctx
+    check $ utxoAccumulator par redeemer ctx
 
-utxoAccumulatorCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
-utxoAccumulatorCompiled =
+utxoAccumulatorCompiled :: UtxoAccumulatorParameters -> CompiledCode (BuiltinData -> BuiltinUnit)
+utxoAccumulatorCompiled par =
     $$(compile [|| untypedUtxoAccumulator ||])
+      `unsafeApplyCode` liftCodeDef par
