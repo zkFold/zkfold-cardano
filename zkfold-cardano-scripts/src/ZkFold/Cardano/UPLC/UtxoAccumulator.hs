@@ -7,18 +7,23 @@
 
 module ZkFold.Cardano.UPLC.UtxoAccumulator where
 
-import           GHC.Generics                 (Generic)
-import           PlutusLedgerApi.V3           (Redeemer (..), TxInfo (..), ScriptContext (..), OutputDatum (OutputDatum, NoOutputDatum), Datum (..), TxOut (..), TxInInfo (..), ToData (..), Address, Value)
-import           PlutusLedgerApi.V3.Contexts  (findOwnInput)
-import           PlutusTx                     (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, liftCodeDef, unsafeApplyCode, makeLift)
-import           Prelude                      (Show)
+import           GHC.Generics                          (Generic)
+import           PlutusLedgerApi.V3                    (Address, Datum (..), OutputDatum (NoOutputDatum, OutputDatum),
+                                                        Redeemer (..), ScriptContext (..), ToData (..), TxInInfo (..),
+                                                        TxInfo (..), TxOut (..), Value)
+import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
+import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, liftCodeDef,
+                                                        makeIsDataIndexed, makeLift, unsafeApplyCode)
+import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData)
+import           PlutusTx.Prelude                      (AdditiveGroup (..), Bool, BuiltinByteString, BuiltinData,
+                                                        BuiltinUnit, Eq (..), Integer, Maybe (..), blake2b_224,
+                                                        byteStringToInteger, check, head, tail, ($), (&&), (+), (.))
+import           Prelude                               (Show)
 
-import PlutusTx.Prelude ((+), BuiltinByteString, Integer, Bool, Maybe (..), BuiltinData, BuiltinUnit, check, ($), (.), Eq (..), head, (&&), tail, byteStringToInteger, blake2b_224, AdditiveGroup (..))
-import ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes, ProofBytes)
-import ZkFold.Cardano.OnChain.Plonkup.Update (updateSetupBytes)
-import PlutusTx.Builtins (serialiseData, ByteOrder (..))
-import ZkFold.Cardano.OnChain.Plonkup (PlonkupPlutus)
-import ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           ZkFold.Cardano.OnChain.Plonkup        (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data   (ProofBytes, SetupBytes)
+import           ZkFold.Cardano.OnChain.Plonkup.Update (updateSetupBytes)
+import           ZkFold.Protocol.NonInteractiveProof   (NonInteractiveProof (..))
 
 type N = 100
 type M = 4096 -- 2^12

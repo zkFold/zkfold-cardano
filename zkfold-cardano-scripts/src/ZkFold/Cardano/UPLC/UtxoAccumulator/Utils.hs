@@ -1,21 +1,25 @@
 module ZkFold.Cardano.UPLC.UtxoAccumulator.Utils where
 
-import Data.Foldable (foldr', toList)
-import           PlutusLedgerApi.V3           (ToData (..), Address (..), Value, Credential (..))
-import           Prelude                      (undefined, snd, map)
-import PlutusTx.Builtins (serialiseData, ByteOrder (..))
-import PlutusTx.Prelude (BuiltinByteString, Maybe (..), ($), head, byteStringToInteger, blake2b_224)
+import           Data.Foldable                            (foldr', toList)
+import           PlutusLedgerApi.V3                       (Address (..), Credential (..), ToData (..), Value)
+import           PlutusTx.Builtins                        (ByteOrder (..), serialiseData)
+import           PlutusTx.Prelude                         (BuiltinByteString, Maybe (..), blake2b_224,
+                                                           byteStringToInteger, head, ($))
+import           Prelude                                  (map, snd, undefined)
 
-import ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
-import ZkFold.Cardano.UPLC.UtxoAccumulator (UtxoAccumulatorParameters (..), UtxoAccumulatorRedeemer (..), M, N, utxoAccumulatorCompiled)
-import ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point)
-import ZkFold.Algebra.EllipticCurve.Class (ScalarFieldOf)
-import ZkFold.Cardano.OffChain.Utils (scriptHashOf)
-import ZkFold.Symbolic.Examples.UtxoAccumulator (distributionGroupElements, switchGroupElement, accumulationGroupElements, utxoAccumulatorVerifierSetup, utxoAccumulatorHash, utxoAccumulatorProve)
-import ZkFold.Cardano.OffChain.BLS12_381 (convertG1, convertZp)
-import ZkFold.Cardano.OffChain.Plonkup (mkSetup, mkProof)
-import ZkFold.Algebra.Field (toZp)
-import ZkFold.Data.Vector (init, last)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381   (BLS12_381_G1_Point)
+import           ZkFold.Algebra.EllipticCurve.Class       (ScalarFieldOf)
+import           ZkFold.Algebra.Field                     (toZp)
+import           ZkFold.Cardano.OffChain.BLS12_381        (convertG1, convertZp)
+import           ZkFold.Cardano.OffChain.Plonkup          (mkProof, mkSetup)
+import           ZkFold.Cardano.OffChain.Utils            (scriptHashOf)
+import           ZkFold.Cardano.OnChain.Plonkup.Data      (SetupBytes)
+import           ZkFold.Cardano.UPLC.UtxoAccumulator      (M, N, UtxoAccumulatorParameters (..),
+                                                           UtxoAccumulatorRedeemer (..), utxoAccumulatorCompiled)
+import           ZkFold.Data.Vector                       (init, last)
+import           ZkFold.Symbolic.Examples.UtxoAccumulator (accumulationGroupElements, distributionGroupElements,
+                                                           switchGroupElement, utxoAccumulatorHash,
+                                                           utxoAccumulatorProve, utxoAccumulatorVerifierSetup)
 
 -- TODO: add staking creds
 utxoAccumulatorAddress :: UtxoAccumulatorParameters -> Address
