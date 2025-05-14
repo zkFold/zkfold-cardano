@@ -23,7 +23,7 @@ import           PlutusTx.Prelude                    hiding (toList, (*), (+))
 import           PlutusTx.Trace
 
 import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F  (F (..), fromInput, toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381.F  (F (..), fromInput, toInput, toF)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode, bsAsInteger, showInteger)
@@ -50,7 +50,7 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
     $ let
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
-        publicInput = toInput jwtHash * toInput bs
+        publicInput = toF (byteStringToInteger LittleEndian jwtHash) * toInput bs
         zkp = verify @PlonkupPlutus expModCircuit [publicInput] proof
         traceMsg = "zkp: " <> (if zkp then "True" else "False")
        in
