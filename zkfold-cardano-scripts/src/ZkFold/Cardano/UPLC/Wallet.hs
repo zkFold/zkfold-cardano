@@ -51,11 +51,11 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = toInput jwtHash * toInput bs
-        zkp = verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
+        zkp = verify @PlonkupPlutus expModCircuit [publicInput] proof
         traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger jwtHash <> ">; zkp: " <> (if zkp then "True" else "False")
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-        zkp 
+        trace traceMsg $ zkp 
         -- verify @PlonkupPlutus expModCircuit [publicInput] proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
