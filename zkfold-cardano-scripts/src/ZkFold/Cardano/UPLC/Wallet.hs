@@ -52,7 +52,7 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
         jwtHash = sha2_256 encodedJwt
         publicInput = toInput jwtHash * toInput bs
         zkp = verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
-        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger jwtHash <> ">; jwt int: <" <> (let F x = toInput jwtHash in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">; zkp: " <> (if zkp then "True" else "False")
+        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger jwtHash <> ">; zkp: " <> (if zkp then "True" else "False")
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
         zkp 
