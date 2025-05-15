@@ -20,13 +20,12 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
-import           PlutusTx.Trace
 
 import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
-import           ZkFold.Cardano.OnChain.BLS12_381.F  (F (..), fromInput, toInput)
+import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
-import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode, bsAsInteger, showInteger)
+import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
@@ -51,10 +50,9 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = toInput jwtHash * toInput bs
-        traceMsg = BI.decodeUtf8 $ "jwt hash: <" <> bsAsInteger jwtHash <> ">; jwt int: <" <> (let F x = toInput jwtHash in showInteger x) <> ">; token name: <" <> bsAsInteger bs <> ">; token name int: <" <> (let F x = toInput bs in showInteger x) <> ">; PI: <" <> (let F x = publicInput in showInteger x) <> ">"
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-        verify @PlonkupPlutus expModCircuit [trace traceMsg publicInput] proof
+        verify @PlonkupPlutus expModCircuit [publicInput] proof
         -- verify @PlonkupPlutus expModCircuit [publicInput] proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
