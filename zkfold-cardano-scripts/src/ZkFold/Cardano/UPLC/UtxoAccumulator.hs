@@ -25,9 +25,6 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data   (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Plonkup.Update (updateSetupBytes)
 import           ZkFold.Protocol.NonInteractiveProof   (NonInteractiveProof (..))
 
-type N = 100
-type M = 4096 -- 2^12
-
 data UtxoAccumulatorParameters =
     UtxoAccumulatorParameters
       { maybeSwitchAddress :: Maybe Address
