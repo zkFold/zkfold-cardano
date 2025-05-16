@@ -27,11 +27,11 @@ import           ZkFold.Protocol.NonInteractiveProof   (NonInteractiveProof (..)
 
 data UtxoAccumulatorParameters =
     UtxoAccumulatorParameters
-      { maybeSwitchAddress :: Maybe Address
-      , maybeNextAddress   :: Maybe Address
-      , nextGroupElement   :: BuiltinByteString
-      , switchGroupElement :: BuiltinByteString
-      , utxoValue          :: Value
+      { maybeSwitchAddress  :: Maybe Address
+      , maybeNextAddress    :: Maybe Address
+      , currentGroupElement :: BuiltinByteString
+      , switchGroupElement  :: BuiltinByteString
+      , utxoValue           :: Value
       }
   deriving stock (Show, Generic)
 
@@ -58,7 +58,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} (AddUtxo h) ctx =
     v' = v + utxoValue
 
     setup  = unsafeFromBuiltinData d :: SetupBytes
-    setup' = updateSetupBytes setup h nextGroupElement
+    setup' = updateSetupBytes setup h currentGroupElement
     d' = toBuiltinData setup'
 
     outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
@@ -75,7 +75,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof) ctx =
     a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
 
     setup  = unsafeFromBuiltinData d :: SetupBytes
-    setup' = updateSetupBytes setup a nextGroupElement
+    setup' = updateSetupBytes setup a currentGroupElement
     d' = toBuiltinData setup'
 
     outputAcc  = head $ txInfoOutputs $ scriptContextTxInfo ctx
