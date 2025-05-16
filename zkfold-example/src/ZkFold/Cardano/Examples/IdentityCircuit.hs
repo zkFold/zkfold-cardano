@@ -33,11 +33,11 @@ identityCircuitVerificationBytes x ps =
     let (omega, k1, k2) = getParams 2
         witnessInputs   = eval identityCircuit $ Par1 zero
         (gs, h1)        = getSecrectParams x
-        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 2 Par1
+        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 Par1 2
         setupP          = setupProve plonkup
         setupV          = setupVerify plonkup
         witness         = (PlonkupWitnessInput @_ @BLS12_381_G1_Point witnessInputs, ps)
-        (input, proof)  = prove @(PlonkupN Par1 2 Par1) setupP witness
+        (input, proof)  = prove @(PlonkupN Par1 Par1 2) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
@@ -48,11 +48,11 @@ stateCheckVerificationBytes x ps state =
         (omega, k1, k2) = getParams 2
         witnessInputs   = Par1 state'
         (gs, h1)        = getSecrectParams x
-        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 2 Par1
+        plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 Par1 2
         setupP          = setupProve plonkup
         setupV          = setupVerify plonkup
         witness         = (PlonkupWitnessInput witnessInputs, ps)
-        (input, proof)  = prove @(PlonkupN Par1 2 Par1) setupP witness
+        (input, proof)  = prove @(PlonkupN Par1 Par1 2) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 

@@ -13,8 +13,10 @@ import           ZkFold.Cardano.OnChain.Orphans     ()
 
 data SetupBytes = SetupBytes {
     n          :: Integer
+  , nPrv       :: Integer
   , pow        :: Integer
   , omega      :: F
+  , omegaNPrv  :: F
   , k1         :: F
   , k2         :: F
   , h1_bytes   :: BuiltinByteString
@@ -28,6 +30,8 @@ data SetupBytes = SetupBytes {
   , cmS2_bytes :: BuiltinByteString
   , cmS3_bytes :: BuiltinByteString
   , cmT1_bytes :: BuiltinByteString
+  , cmT2_bytes :: BuiltinByteString
+  , cmT3_bytes :: BuiltinByteString
 } deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
 
@@ -62,6 +66,7 @@ data ProofBytes = ProofBytes {
   , z2_xi'_int    :: Integer
   , h1_xi'_int    :: Integer
   , h2_xi_int     :: Integer
+  , l1_xi         :: F
   , l_xi          :: [F]
 } deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON, HasBlueprintDefinition)

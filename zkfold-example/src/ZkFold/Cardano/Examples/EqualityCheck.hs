@@ -38,11 +38,11 @@ equalityCheckVerificationBytes x ps targetValue =
         (omega, k1, k2) = getParams 32
         witnessInputs   = Par1 targetValue
         (gs, h1) = getSecrectParams x
-        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 32 Par1
+        plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 Par1 32
         setupP  = setupProve plonkup
         setupV  = setupVerify plonkup
         witness = (PlonkupWitnessInput witnessInputs, ps)
-        (input, proof) = prove @(PlonkupN Par1 32 Par1) setupP witness
+        (input, proof) = prove @(PlonkupN Par1 Par1 32) setupP witness
 
     in (mkSetup setupV, mkInput input, mkProof proof)
 
