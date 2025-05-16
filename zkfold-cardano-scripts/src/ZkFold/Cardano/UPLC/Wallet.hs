@@ -17,7 +17,6 @@ import           Data.Function                       ((&))
 import           PlutusLedgerApi.V1.Value            (valueOf)
 import           PlutusLedgerApi.V3
 import qualified PlutusTx.AssocMap                   as AssocMap
-import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
 
@@ -53,7 +52,6 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
         verify @PlonkupPlutus expModCircuit [publicInput] proof
-        -- verify @PlonkupPlutus expModCircuit [publicInput] proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
