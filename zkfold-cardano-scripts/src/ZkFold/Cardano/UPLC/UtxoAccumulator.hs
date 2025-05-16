@@ -30,6 +30,7 @@ data UtxoAccumulatorParameters =
       { maybeSwitchAddress :: Maybe Address
       , maybeNextAddress   :: Maybe Address
       , nextGroupElement   :: BuiltinByteString
+      , switchGroupElement :: BuiltinByteString
       , utxoValue          :: Value
       }
   deriving stock (Show, Generic)
@@ -90,7 +91,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} Switch ctx =
     Just switchAddress = maybeSwitchAddress
 
     setup  = unsafeFromBuiltinData d :: SetupBytes
-    setup' = updateSetupBytes setup 1 nextGroupElement
+    setup' = updateSetupBytes setup 1 switchGroupElement
     d' = toBuiltinData setup'
 
     outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
