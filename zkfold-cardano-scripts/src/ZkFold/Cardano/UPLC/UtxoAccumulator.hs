@@ -31,7 +31,7 @@ data UtxoAccumulatorParameters =
       , maybeNextAddress    :: Maybe Address
       , currentGroupElement :: BuiltinByteString
       , switchGroupElement  :: BuiltinByteString
-      , utxoValue           :: Value
+      , accumulationValue   :: Value
       }
   deriving stock (Show, Generic)
 
@@ -55,7 +55,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} (AddUtxo h) ctx =
 
     Just nextAddress = maybeNextAddress
 
-    v' = v + utxoValue
+    v' = v + accumulationValue
 
     setup  = unsafeFromBuiltinData d :: SetupBytes
     setup' = updateSetupBytes setup h currentGroupElement
@@ -70,7 +70,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof) ctx =
 
     Just nextAddress = maybeNextAddress
 
-    v' = v - utxoValue
+    v' = v - accumulationValue
 
     a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
 
@@ -82,7 +82,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof) ctx =
     outputUser = head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
   in
        outputAcc  == TxOut nextAddress v' (OutputDatum (Datum d')) Nothing
-    && outputUser == TxOut addr utxoValue NoOutputDatum Nothing
+    && outputUser == TxOut addr accumulationValue NoOutputDatum Nothing
     && verify @PlonkupPlutus setup [] proof
 utxoAccumulator UtxoAccumulatorParameters {..} Switch ctx =
   let
