@@ -68,6 +68,7 @@ library
     ZkFold.Cardano.OnChain.Orphans
     ZkFold.Cardano.OnChain.Plonkup
     ZkFold.Cardano.OnChain.Plonkup.Data
+    ZkFold.Cardano.OnChain.Plonkup.Update
     ZkFold.Cardano.OnChain.Utils
   hs-source-dirs:   src
   build-depends:

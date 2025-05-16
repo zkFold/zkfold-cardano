@@ -11,7 +11,7 @@ import           PlutusTx.Builtins                   (BuiltinByteString, ByteOrd
                                                       bls12_381_G2_compressed_generator, bls12_381_G2_uncompress,
                                                       bls12_381_finalVerify, bls12_381_millerLoop, byteStringToInteger,
                                                       consByteString, emptyByteString, integerToByteString,
-                                                      subtractInteger)
+                                                      subtractInteger, addInteger)
 import           PlutusTx.Prelude                    (Bool (..), length, (!!), ($), (&&), (.), (<>), (==))
 import           Prelude                             (undefined, Ord)
 
@@ -138,7 +138,7 @@ instance NonInteractiveProof PlonkupPlutus where
             zhX_xi = xi_n - one
 
             omegas i =
-                if i == nPrv + 1
+                if i == nPrv `addInteger` 1
                     then omegaNPrv
                     else omegas (i `subtractInteger` 1) * omega
 
@@ -148,7 +148,8 @@ instance NonInteractiveProof PlonkupPlutus where
             pi_xi i =
                 if i == 0
                     then F 0
-                    else pi_xi (i `subtractInteger` 1) + (pi !! (i `subtractInteger` 1)) * (l_xi !! (i `subtractInteger` 1)) * omegas (nPrv + i)
+                    else pi_xi (i `subtractInteger` 1)
+                    + (pi !! (i `subtractInteger` 1)) * (l_xi !! (i `subtractInteger` 1)) * omegas (nPrv `addInteger` i)
 
             cmT_zeta = cmT1 + zeta `mul` (cmT2 + zeta `mul` cmT3)
 
@@ -199,7 +200,7 @@ instance NonInteractiveProof PlonkupPlutus where
             lagrangeIsValid i =
                 if i == 0
                     then True
-                    else (l_xi !! (i `subtractInteger` 1)) * F n * (xi - omegas (nPrv + i)) == one
+                    else (l_xi !! (i `subtractInteger` 1)) * F n * (xi - omegas (nPrv `addInteger` i)) == one
                         && lagrangeIsValid (i `subtractInteger` 1)
 
         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one) && lagrangeIsValid l

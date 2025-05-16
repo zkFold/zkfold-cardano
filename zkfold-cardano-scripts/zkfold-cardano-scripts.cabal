@@ -78,6 +78,7 @@ library
     ZkFold.Cardano.UPLC.RollupData
     ZkFold.Cardano.UPLC.RollupDeposit
     ZkFold.Cardano.UPLC.PlonkupVerifierTx
+    ZkFold.Cardano.UPLC.UtxoAccumulator
     ZkFold.Cardano.UPLC.Wallet
     ZkFold.Cardano.UPLC.Wallet.Compile
   hs-source-dirs:   src
@@ -90,6 +91,7 @@ library
     plutus-tx                      ,
     plutus-tx-plugin               ,
     symbolic-base                  ,
+    symbolic-examples              ,
     zkfold-cardano                 ,
     zkfold-cardano-scripts-common  ,
 
