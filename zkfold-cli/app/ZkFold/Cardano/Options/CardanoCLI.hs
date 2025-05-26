@@ -1,26 +1,19 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 module ZkFold.Cardano.Options.CardanoCLI where
 
-import Cardano.Api
-
--- import Cardano.CLI.Compatible.Transaction.Command
--- import Cardano.CLI.Environment
-import Cardano.CLI.EraBased.Common.Option hiding (pRefScriptFp, pTxOutDatum, pVoteFiles)
--- import Cardano.CLI.EraBased.Script.Vote.Type
--- import Cardano.CLI.Parser
-import Cardano.CLI.Type.Common
--- import Cardano.CLI.Type.Governance
-
-import Data.Foldable hiding (toList)
-import Options.Applicative
-import Options.Applicative qualified as Opt
-import Prelude
+import           Cardano.Api
+import           Cardano.CLI.EraBased.Common.Option hiding (pRefScriptFp, pTxOutDatum, pVoteFiles)
+import           Cardano.CLI.Type.Common
+import           Data.Foldable                      hiding (toList)
+import           Options.Applicative
+import qualified Options.Applicative                as Opt
+import           Prelude
 
 
 pTxOutEraAware :: ShelleyBasedEra era -> Parser TxOutAnyEra

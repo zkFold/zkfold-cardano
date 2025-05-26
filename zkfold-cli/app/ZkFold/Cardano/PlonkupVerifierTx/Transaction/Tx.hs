@@ -2,32 +2,33 @@
 
 module ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx where
 
-import           Cardano.Api                           (runExceptT)
-import           Cardano.CLI.Type.Common               (ReferenceScriptAnyEra (..), ScriptDataOrFile, TxOutAnyEra (..), TxOutDatumAnyEra (..))
+import           Cardano.Api                             (runExceptT)
 import           Cardano.CLI.EraBased.Script.Read.Common (readScriptDataOrFile)
-import           Control.Exception                     (throwIO)
-import           Control.Monad                         (forM, when)
-import           Data.Aeson                            (decode)
-import qualified Data.ByteString.Lazy                  as BL
-import           Data.Maybe                            (fromJust, isJust)
-import           GeniusYield.GYConfig                  (GYCoreConfig (cfgNetworkId), withCfgProviders)
+import           Cardano.CLI.Type.Common                 (ReferenceScriptAnyEra (..), ScriptDataOrFile,
+                                                          TxOutAnyEra (..), TxOutDatumAnyEra (..))
+import           Control.Exception                       (throwIO)
+import           Control.Monad                           (forM, when)
+import           Data.Aeson                              (decode)
+import qualified Data.ByteString.Lazy                    as BL
+import           Data.Maybe                              (fromJust, isJust)
+import           GeniusYield.GYConfig                    (GYCoreConfig (cfgNetworkId), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import qualified PlutusLedgerApi.V2                    as V2
-import           PlutusLedgerApi.V3                    as V3
-import qualified PlutusTx.Builtins.Internal            as BI
-import           PlutusTx.Prelude                      (blake2b_224, sortBy)
+import qualified PlutusLedgerApi.V2                      as V2
+import           PlutusLedgerApi.V3                      as V3
+import qualified PlutusTx.Builtins.Internal              as BI
+import           PlutusTx.Prelude                        (blake2b_224, sortBy)
 import           Prelude
-import           System.FilePath                       ((</>))
-import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
-import           Test.QuickCheck.Gen                   (generate)
+import           System.FilePath                         ((</>))
+import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
+import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils         (outRefCompare)
-import           ZkFold.Cardano.OnChain.BLS12_381      (toInput)
+import           ZkFold.Cardano.OffChain.Utils           (outRefCompare)
+import           ZkFold.Cardano.OnChain.BLS12_381        (toInput)
 import           ZkFold.Cardano.Options.Common
 import           ZkFold.Cardano.PlonkupVerifierTx.Types
-import           ZkFold.Cardano.UPLC.PlonkupVerifierTx (plonkupVerifierTxCompiled)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
 
 
 data Transaction = Transaction
@@ -84,11 +85,11 @@ txOutFromApi (TxOutAnyEra addr val dat refS) = do
     TxOutDatumByValue sd       -> Just <$> datumFromScriptData sd False
     TxOutInlineDatumByValue sd -> Just <$> datumFromScriptData sd True
     TxOutDatumByNone           -> pure Nothing
-    _ -> throwIO $ userError "Unsupported datum specification."
+    _                          -> throwIO $ userError "Unsupported datum specification."
 
   case refS of
     ReferenceScriptAnyEraNone -> return $ GYTxOut addr' val' dat' Nothing
-    _ -> throwIO $ userError "Output with reference script is not supported."
+    _                         -> throwIO $ userError "Output with reference script is not supported."
 
 utxoToTxInInfo :: GYUTxO -> TxInInfo
 utxoToTxInInfo u = TxInInfo txOutRef txOut

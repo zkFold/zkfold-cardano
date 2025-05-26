@@ -1,7 +1,6 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
-import           Cardano.Api                                              (ShelleyBasedEra (..), Doc, ExceptT (..))
--- import           Cardano.CLI.EraBased.Common.Option                       (pWitnessSigningData)
+import           Cardano.Api                                              (Doc, ExceptT (..), ShelleyBasedEra (..))
 import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
 import           GeniusYield.GYConfig                                     (GYCoreConfig)
@@ -10,9 +9,6 @@ import           Options.Applicative                                      (Parse
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
--- import qualified ZkFold.Cardano.Balancing.Transaction.Balancing           as Balancing
--- import qualified ZkFold.Cardano.Balancing.Transaction.Init                as BalancingInit
--- import qualified ZkFold.Cardano.Balancing.Transaction.Transfer            as BalancingTransfer
 import           ZkFold.Cardano.Options.CardanoCLI                        (pTxOutEraAware)
 import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning

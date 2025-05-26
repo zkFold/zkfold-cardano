@@ -3,8 +3,8 @@
 module ZkFold.Cardano.PlonkupVerifierTx.Types where
 
 import           Data.Aeson
-import           Prelude
 import           GHC.Generics
+import           Prelude
 
 import           ZkFold.Algebra.EllipticCurve.BLS12_381 (Fr)
 
