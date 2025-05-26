@@ -97,7 +97,7 @@ executable zkfold-cli
         ZkFold.Cardano.Rollup.Transaction.Init
         ZkFold.Cardano.Rollup.Transaction.Update
         ZkFold.Cardano.Rollup.Data
-        -- ZkFold.Cardano.Experimental
+        ZkFold.Cardano.Experimental
     build-depends:
         aeson                          ,
         atlas-cardano                  ,
