@@ -1,63 +1,52 @@
+{-# LANGUAGE GADTs #-}
+
 module ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx where
 
-import           Cardano.Api                           (SerialiseAsRawBytes (..), parsePolicyId, prettyPrintJSON, runExceptT)
-import           Cardano.Api.Ledger                    (toCBOR)
-import           Cardano.Api.Shelley                   (toPlutusData)
+import           Cardano.Api                           (runExceptT)
 import           Cardano.CLI.Type.Common               (ReferenceScriptAnyEra (..), ScriptDataOrFile, TxOutAnyEra (..), TxOutDatumAnyEra (..))
 import           Cardano.CLI.EraBased.Script.Read.Common (readScriptDataOrFile)
-import           Codec.CBOR.Write                      (toStrictByteString)
 import           Control.Exception                     (throwIO)
 import           Control.Monad                         (forM, when)
-import           Data.Aeson                            (decode, encode)
-import           Data.ByteString                       as BS (writeFile)
+import           Data.Aeson                            (decode)
 import qualified Data.ByteString.Lazy                  as BL
--- import           Data.Coerce                           (coerce)
 import           Data.Maybe                            (fromJust, isJust)
 import           GeniusYield.GYConfig                  (GYCoreConfig (cfgNetworkId), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
--- import           PlutusLedgerApi.V1                    (TxOutRef (..))
 import qualified PlutusLedgerApi.V2                    as V2
 import           PlutusLedgerApi.V3                    as V3
--- import           PlutusLedgerApi.V3                    (BuiltinData, OutputDatum (..), ScriptHash, ToData, TxInInfo (..), TxOut (..), TxOutRef (..), UnsafeFromData,
---                                                         toBuiltinData, unsafeFromBuiltinData, unsafeFromData)
 import qualified PlutusTx.Builtins.Internal            as BI
 import           PlutusTx.Prelude                      (blake2b_224, sortBy)
 import           Prelude
--- import           Prelude                               (Bool (..), Either (..), FilePath, IO, Show (..), String, error,
---                                                         head, ($), (++), (.), (<$>))
-import           System.Directory                      (createDirectoryIfMissing)
 import           System.FilePath                       ((</>))
 import           Test.QuickCheck.Arbitrary             (Arbitrary (..))
 import           Test.QuickCheck.Gen                   (generate)
-import           Text.Parsec                           (parse)
 
-import           ZkFold.Cardano.Examples.EqualityCheck (EqualityCheckContract (..), equalityCheckVerificationBytes)
-import           ZkFold.Cardano.OffChain.Utils         (dataToJSON, outRefCompare, savePlutus)
+import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes, stateCheckVerificationBytes)
+import           ZkFold.Cardano.OffChain.Utils         (outRefCompare)
 import           ZkFold.Cardano.OnChain.BLS12_381      (toInput)
 import           ZkFold.Cardano.Options.Common
--- import           ZkFold.Cardano.Options.Common         (CoreConfigAlt, SigningKeyAlt, TxInputInfo (..), fromCoreConfigAltIO,
---                                                         fromSigningKeyAltIO)
-import           ZkFold.Cardano.UPLC.ForwardingScripts (forwardingRewardCompiled)
+import           ZkFold.Cardano.PlonkupVerifierTx.Types
 import           ZkFold.Cardano.UPLC.PlonkupVerifierTx (plonkupVerifierTxCompiled)
 
 
 data Transaction = Transaction
---  { curPath        :: !FilePath
-  { coreCfgAlt :: !CoreConfigAlt
-  , txInVerify :: !GYTxOutRef
-  , txInputs   :: ![TxInputInfo]
-  , txRefs     :: ![GYTxOutRef]
-  , txOuts     :: ![TxOutAnyEra]
+  { curPath        :: !FilePath
+  , coreCfgAlt     :: !CoreConfigAlt
+  , requiredSigner :: !SigningKeyAlt
+  , changeAddress  :: !GYAddress
+  , txInputs       :: ![TxInputInfo]
+  , txRefs         :: ![GYTxOutRef]
+  , txOuts         :: ![TxOutAnyEra]
   }
 
 txInFromInfo :: TxInputInfo -> IO (GYTxIn PlutusV3)
 txInFromInfo (TxInputInfo oref input) = do
   case input of
-    ScriptInput scriptFile sd refOref -> do
+    ScriptInput scriptFile sd refOref' -> do
       script <- readScript @PlutusV3 scriptFile
 
-      let plutusScript = case refOref of
+      let plutusScript = case refOref' of
             ScriptRefOref refOref -> GYBuildPlutusScriptReference @PlutusV3 refOref script
             NotScriptRef          -> GYBuildPlutusScriptInlined @PlutusV3 script
 
@@ -101,9 +90,6 @@ txOutFromApi (TxOutAnyEra addr val dat refS) = do
     ReferenceScriptAnyEraNone -> return $ GYTxOut addr' val' dat' Nothing
     _ -> throwIO $ userError "Output with reference script is not supported."
 
--- convertBetweenPlutusVersions :: (ToData a, FromData b) => a -> b
--- convertBetweenPlutusVersions = fromJust . fromBuiltinData . toBuiltinData
-
 utxoToTxInInfo :: GYUTxO -> TxInInfo
 utxoToTxInInfo u = TxInInfo txOutRef txOut
   where
@@ -131,18 +117,28 @@ alwaysValid :: Interval POSIXTime
 alwaysValid = Interval (LowerBound (NegInf:: Extended POSIXTime) True) (UpperBound PosInf True)
 
 verifierTx :: Transaction -> IO ()
-verifierTx (Transaction coreCfg' _inVerify ins gyRefs outs) = do
-  coreCfg  <- fromCoreConfigAltIO coreCfg'
+verifierTx (Transaction path coreCfg' sig changeAddr ins gyRefs outs) = do
+  let assetsPath = path </> "assets"
+      setupFile  = assetsPath </> "plonkupVerifierTx-setup-data.json"
+
+  coreCfg <- fromCoreConfigAltIO coreCfg'
+  skey    <- fromSigningKeyAltIO sig
 
   let nid = cfgNetworkId coreCfg
+      w1  = User' skey Nothing changeAddr
+
+  PlonkupVerifierTxSetup x <- fromJust . decode <$> BL.readFile setupFile
+  ps <- generate arbitrary
+
+  let (setup, _, _) = identityCircuitVerificationBytes x ps
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
     gyTxIns  <- forM ins txInFromInfo
     gyTxOuts <- forM outs txOutFromApi
 
-    let skeleton = mconcat (mustHaveInput <$> gyTxIns)
-                <> mconcat (mustHaveRefInput <$> gyRefs)
-                <> mconcat (mustHaveOutput <$> gyTxOuts)
+    let skeleton' = mconcat (mustHaveInput <$> gyTxIns)
+                 <> mconcat (mustHaveRefInput <$> gyRefs)
+                 <> mconcat (mustHaveOutput <$> gyTxOuts)
 
     mUtxosIn  <- forM (txinOref <$> ins) $ runGYTxQueryMonadIO nid providers . utxoAtTxOutRef
     mUtxosRef <- forM gyRefs $ runGYTxQueryMonadIO nid providers . utxoAtTxOutRef
@@ -150,8 +146,23 @@ verifierTx (Transaction coreCfg' _inVerify ins gyRefs outs) = do
     when (not $ all isJust mUtxosIn) . throwIO $ userError "No UTxO found for some input."
     when (not $ all isJust mUtxosRef) . throwIO $ userError "No UTxO found for some reference input."
 
-    let ins'  = sortTxInInfoList $ utxoToTxInInfo . fromJust <$> mUtxosIn
-        refs' = sortTxInInfoList $ utxoToTxInInfo . fromJust <$> mUtxosRef
+    let utxosIn  = fromJust <$> mUtxosIn
+        utxosRef = fromJust <$> mUtxosRef
+
+    let plutusValidator = plonkupVerifierTxCompiled setup
+        script          = scriptFromPlutus @PlutusV3 plutusValidator
+        scriptAddr      = addressFromValidator nid script
+        plutusScript    = GYBuildPlutusScriptInlined @PlutusV3 script
+
+    utxosAtScript <- runGYTxQueryMonadIO nid
+                                         providers
+                                         (utxosAtAddress scriptAddr Nothing)
+
+    let selectedOref = fst . fromJust $ someTxOutRef utxosAtScript
+        selectedUtxo = fromJust $ utxosLookup selectedOref utxosAtScript
+
+    let ins'  = sortTxInInfoList $ utxoToTxInInfo <$> (selectedUtxo : utxosIn)
+        refs' = sortTxInInfoList $ utxoToTxInInfo <$> utxosRef
         outs' = txOutToPlutus <$> gyTxOuts
 
     let insBD    = toBuiltinData ins'
@@ -164,6 +175,22 @@ verifierTx (Transaction coreCfg' _inVerify ins gyRefs outs) = do
 
     putStr $ "Verifier's input: " ++ (show input) ++ "\n\n"
 
+    let (_, _, proof) = stateCheckVerificationBytes x ps input
+
+    let redeemer = redeemerFromPlutusData proof
+        wit      = GYTxInWitnessScript plutusScript Nothing redeemer
+
+    pkh <- addressToPubKeyHashIO changeAddr
+    let skeleton = skeleton'
+                <> mustHaveInput (GYTxIn @PlutusV3 selectedOref wit)
+                <> mustBeSignedBy pkh
+
+    txbody <- runGYTxGameMonadIO nid
+                                 providers $
+                                 asUser w1
+                                 (buildTxBody skeleton)
+
+    print txbody
 
 
 ----- HELPER FUNCTIONS -----

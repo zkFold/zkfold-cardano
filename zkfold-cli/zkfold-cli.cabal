@@ -79,11 +79,10 @@ executable zkfold-cli
     hs-source-dirs:   app
     other-modules:
         ZkFold.Cardano.Atlas.Utils
-        ZkFold.Cardano.Balancing.Transaction.Balancing
-        ZkFold.Cardano.Balancing.Transaction.Init
-        ZkFold.Cardano.Balancing.Transaction.Transfer
+--        ZkFold.Cardano.Balancing.Transaction.Balancing
+--        ZkFold.Cardano.Balancing.Transaction.Init
+--        ZkFold.Cardano.Balancing.Transaction.Transfer
         ZkFold.Cardano.Options.Common
-        ZkFold.Cardano.Options.TmpExperiment
         ZkFold.Cardano.Options.CardanoCLI
         ZkFold.Cardano.Options.ZkCLI
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
@@ -92,12 +91,12 @@ executable zkfold-cli
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
         ZkFold.Cardano.PlonkupVerifierTx.Types
         ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init
+        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer
         ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx
         ZkFold.Cardano.Rollup.Transaction.Clear
         ZkFold.Cardano.Rollup.Transaction.Init
         ZkFold.Cardano.Rollup.Transaction.Update
         ZkFold.Cardano.Rollup.Data
-        ZkFold.Cardano.Experimental
     build-depends:
         aeson                          ,
         atlas-cardano                  ,
