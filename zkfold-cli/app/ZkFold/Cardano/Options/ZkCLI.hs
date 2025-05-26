@@ -1,11 +1,14 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
-import           Cardano.Api                                              (Doc, ExceptT (..))
+import           Cardano.Api                                              (ShelleyBasedEra (..), Doc, ExceptT (..))
 import           Cardano.CLI.EraBased.Common.Option                       (pWitnessSigningData)
+import           Cardano.CLI.EraBased.Common.Option                       (pScriptDataOrFile)  --DEBUG
+import           Cardano.CLI.Type.Common                                  (ScriptDataOrFile, TxOutAnyEra)  --DEBUG
 import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
 import           GeniusYield.GYConfig                                     (GYCoreConfig)
-import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
+import           GeniusYield.Types                                        (GYTxOutRef)  --DEBUG
+import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum, many,
                                                                            (<**>))
 import qualified Options.Applicative                                      as Opt
 import           Prelude
@@ -18,9 +21,13 @@ import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as Tok
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
+import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init        as VerifierInit
+import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx          as VerifierTx
 import qualified ZkFold.Cardano.Rollup.Transaction.Clear                  as RollupClear
 import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
 import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
+import qualified ZkFold.Cardano.Options.TmpExperiment                     as TmpExperiment  --DEBUG
+import           ZkFold.Cardano.Options.CardanoCLI                        (pTxOutEraAware)  --DEBUG
 
 
 data ClientCommand
@@ -31,9 +38,13 @@ data ClientCommand
     | TransactionBalancingInit     BalancingInit.Transaction
     | TransactionBalancingTransfer BalancingTransfer.Transaction
     | TransactionBalancing         Balancing.Transaction
+    | TransactionVerifierInit VerifierInit.Transaction
+    | TransactionVerifierTx   VerifierTx.Transaction
     | TransactionRollupInit   RollupInit.Transaction
     | TransactionRollupUpdate RollupUpdate.Transaction
     | TransactionRollupClear  RollupClear.Transaction
+--    | TransactionExperimental ScriptDataOrFile  --DEBUG
+    | TransactionExperimental [TxOutAnyEra]  --DEBUG
 
 opts :: FilePath -> Maybe GYCoreConfig -> ParserInfo ClientCommand
 opts path mcfg =
@@ -65,6 +76,9 @@ pCmds path mcfg = do
             , fmap TransactionRollupInit        <$> pTransactionRollupInit path mcfg
             , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path mcfg
             , fmap TransactionRollupClear       <$> pTransactionRollupClear path mcfg
+            , fmap TransactionVerifierInit      <$> pTransactionVerifierInit path mcfg
+            , fmap TransactionVerifierTx        <$> pTransactionVerifierTx mcfg
+            , fmap TransactionExperimental      <$> pTransactionExperimental  --DEBUG
             ]
 
 pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
@@ -169,7 +183,7 @@ pTransactionRollupInit path mcfg = do
             <$> pGYCoreConfig' mcfg
             <*> pSigningKeyAlt
             <*> pChangeAddress'
-            <*> pTxOref
+            <*> pTxInOref
             <*> pFeeAddress'
             <*> pOutFile' RollupInit
             <*> pOutFile' RollupPark
@@ -200,6 +214,33 @@ pTransactionRollupClear path mcfg = do
             <*> pOutFile' RollupDataPark
             <*> pOutFile' RollupClear
 
+pTransactionVerifierInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierInit.Transaction)
+pTransactionVerifierInit path mcfg = do
+    pure $ subParser "plonkup-verifier-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+      VerifierInit.Transaction path
+            <$> pGYCoreConfig' mcfg
+
+pTransactionVerifierTx :: Maybe GYCoreConfig -> Maybe (Parser VerifierTx.Transaction)  --DEBUG
+pTransactionVerifierTx mcfg = do
+    pure $ subParser "plonkup-verifier-tx" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+      VerifierTx.Transaction
+            <$> pGYCoreConfig' mcfg
+            <*> pTxInVerify
+            <*> many pTxInputInfo
+            <*> many pTxInRefOref
+            <*> many (pTxOutEraAware ShelleyBasedEraConway)
+
+pTransactionExperimental :: Maybe (Parser [TxOutAnyEra])  --DEBUG
+pTransactionExperimental = do
+    pure $ subParser "see-txouts" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = many (pTxOutEraAware ShelleyBasedEraConway)
+-- pTransactionExperimental = Just $ pTxOutEraAware ShelleyBasedEraConway
+
 data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
@@ -214,7 +255,9 @@ runClientCommand = \case
     TransactionRollupInit        cmd -> ExceptT (Right <$> RollupInit.rollupInit               cmd)
     TransactionRollupUpdate      cmd -> ExceptT (Right <$> RollupUpdate.rollupUpdate           cmd)
     TransactionRollupClear       cmd -> ExceptT (Right <$> RollupClear.rollupClear             cmd)
-
+    TransactionVerifierInit      cmd -> ExceptT (Right <$> VerifierInit.verifierInit           cmd)
+    TransactionVerifierTx        cmd -> ExceptT (Right <$> VerifierTx.verifierTx               cmd)
+    TransactionExperimental      cmd -> ExceptT (Right <$> TmpExperiment.whatsup               cmd)  --DEBUG
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined
 
