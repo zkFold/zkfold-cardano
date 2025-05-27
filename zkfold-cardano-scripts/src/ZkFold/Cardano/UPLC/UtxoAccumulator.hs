@@ -13,10 +13,8 @@ import           PlutusLedgerApi.V3                    (Address, Datum (..), Out
                                                         TxInfo (..), TxOut (..), Value)
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
 import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift)
-import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, error)
-import           PlutusTx.Prelude                      (AdditiveGroup (..), Bool (..), BuiltinByteString, BuiltinData,
-                                                        BuiltinUnit, Eq (..), Integer, Maybe (..), blake2b_224,
-                                                        byteStringToInteger, check, head, tail, ($), (&&), (+), (.))
+import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, error, BuiltinByteString, Integer, BuiltinData, blake2b_224, byteStringToInteger)
+import           PlutusTx.Prelude                      (Maybe (..), Bool, BuiltinUnit, check, ($), (.), tail, head, (&&), (==), (+), (-))
 import           Prelude                               (Show)
 
 import           ZkFold.Cardano.OnChain.Plonkup        (PlonkupPlutus)
