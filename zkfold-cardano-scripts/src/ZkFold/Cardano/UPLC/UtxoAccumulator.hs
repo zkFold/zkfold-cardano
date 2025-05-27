@@ -13,7 +13,7 @@ import           PlutusLedgerApi.V3                    (Address, Datum (..), Out
                                                         TxInfo (..), TxOut (..), Value)
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
 import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift)
-import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, error, BuiltinByteString, Integer, BuiltinData, blake2b_224, byteStringToInteger)
+import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, BuiltinByteString, Integer, BuiltinData, blake2b_224, byteStringToInteger)
 import qualified PlutusTx.Builtins.Internal            as BI
 import           PlutusTx.Prelude                      (Maybe (..), Bool (..), BuiltinUnit, check, ($), (.), tail, head, (&&), (==), (+), (-))
 import           Prelude                               (Show)
@@ -74,10 +74,9 @@ utxoAccumulator redeemerData ctx =
       RemoveUtxo _ _ _        -> v - accumulationValue
       Switch _                -> v
 
-    hash = case redeemer of
-      AddUtxo _ _             -> maybeNextParHash
-      RemoveUtxo _ _ _        -> maybeNextParHash
-      Switch _                -> maybeSwitchParHash
+    hash = if redeemerConstr == 2
+      then maybeSwitchParHash
+      else maybeNextParHash
 
     setup' = updateSetupBytes setup x g
     d' = toBuiltinData (par', setup')
