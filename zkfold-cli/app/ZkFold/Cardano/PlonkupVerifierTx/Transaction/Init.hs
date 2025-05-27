@@ -1,11 +1,9 @@
 module ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init where
 
-import           Control.Exception                       (throwIO)
 import           Data.Aeson                              (decode, encode)
 import qualified Data.ByteString.Lazy                    as BL
-import           Data.Maybe                              (fromJust, isJust)
-import           GeniusYield.GYConfig                    (GYCoreConfig (cfgNetworkId), withCfgProviders)
-import           GeniusYield.TxBuilder
+import           Data.Maybe                              (fromJust)
+import           GeniusYield.GYConfig                    (GYCoreConfig (cfgNetworkId))
 import           GeniusYield.Types
 import           Prelude
 import           System.Directory                        (createDirectoryIfMissing, doesFileExist)

@@ -1,21 +1,18 @@
 module ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer where
 
-import           Control.Exception                       (throwIO)
-import           Data.Aeson                              (decode, encode)
+import           Data.Aeson                              (decode)
 import qualified Data.ByteString.Lazy                    as BL
-import           Data.Maybe                              (fromJust, isJust)
+import           Data.Maybe                              (fromJust)
 import           GeniusYield.GYConfig                    (GYCoreConfig (cfgNetworkId), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           Prelude
-import           System.Directory                        (createDirectoryIfMissing, doesFileExist)
 import           System.FilePath                         ((</>))
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 
 import           ZkFold.Cardano.Atlas.Utils              (SubmittedTx (..), wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes)
-import           ZkFold.Cardano.OnChain.Plonkup.Data     (SetupBytes)
 import           ZkFold.Cardano.Options.Common
 import           ZkFold.Cardano.PlonkupVerifierTx.Types
 import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
