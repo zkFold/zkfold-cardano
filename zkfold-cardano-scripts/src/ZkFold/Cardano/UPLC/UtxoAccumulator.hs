@@ -14,6 +14,7 @@ import           PlutusLedgerApi.V3                    (Address, Datum (..), Out
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
 import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, error, BuiltinByteString, Integer, BuiltinData, blake2b_224, byteStringToInteger)
+import qualified PlutusTx.Builtins.Internal            as BI
 import           PlutusTx.Prelude                      (Maybe (..), Bool (..), BuiltinUnit, check, ($), (.), tail, head, (&&), (==), (+), (-))
 import           Prelude                               (Show)
 
@@ -45,22 +46,24 @@ makeIsDataIndexed ''UtxoAccumulatorRedeemer [('AddUtxo,0),('RemoveUtxo,1),('Swit
 makeLift ''UtxoAccumulatorRedeemer
 
 {-# INLINABLE utxoAccumulator #-}
-utxoAccumulator :: UtxoAccumulatorRedeemer -> ScriptContext -> Bool
-utxoAccumulator redeemer ctx =
+utxoAccumulator :: BuiltinData -> ScriptContext -> Bool
+utxoAccumulator redeemerData ctx =
   let
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
     (UtxoAccumulatorParameters {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorParameters, SetupBytes)
+
+    redeemer = unsafeFromBuiltinData redeemerData :: UtxoAccumulatorRedeemer
+    redeemerConstr = BI.fst $ BI.unsafeDataAsConstr redeemerData
 
     x = case redeemer of
       AddUtxo h _             -> h
       RemoveUtxo addr _ _     -> byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
       Switch _                -> 1
 
-    g = case redeemer of
-      AddUtxo _ _             -> currentGroupElement
-      RemoveUtxo _ _ _        -> currentGroupElement
-      Switch _                -> switchGroupElement
-    
+    g = if redeemerConstr == 2
+      then switchGroupElement
+      else currentGroupElement
+
     par' = case redeemer of
       AddUtxo _ p'            -> p'
       RemoveUtxo _ _ p'       -> p'
@@ -85,8 +88,8 @@ utxoAccumulator redeemer ctx =
     && hash == Just (blake2b_224 $ serialiseData $ toBuiltinData par')
     && case redeemer of
       RemoveUtxo addr proof _  ->
-        let outputUser = head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
-        in verify @PlonkupPlutus setup [] proof && outputUser == TxOut addr accumulationValue NoOutputDatum Nothing
+        verify @PlonkupPlutus setup [] proof
+        && head (tail $ txInfoOutputs $ scriptContextTxInfo ctx) == TxOut addr accumulationValue NoOutputDatum Nothing
       _                     -> True
 -- utxoAccumulator (AddUtxo h par') ctx =
 --   let
@@ -139,7 +142,7 @@ untypedUtxoAccumulator :: BuiltinData -> BuiltinUnit
 untypedUtxoAccumulator ctx' =
   let
     ctx      = unsafeFromBuiltinData ctx'
-    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+    redeemer = getRedeemer . scriptContextRedeemer $ ctx
   in
     check $ utxoAccumulator redeemer ctx
 
