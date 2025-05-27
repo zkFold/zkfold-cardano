@@ -12,8 +12,7 @@ import           PlutusLedgerApi.V3                    (Address, Datum (..), Out
                                                         Redeemer (..), ScriptContext (..), ToData (..), TxInInfo (..),
                                                         TxInfo (..), TxOut (..), Value)
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
-import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, liftCodeDef,
-                                                        makeIsDataIndexed, makeLift, unsafeApplyCode)
+import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift)
 import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData)
 import           PlutusTx.Prelude                      (AdditiveGroup (..), Bool, BuiltinByteString, BuiltinData,
                                                         BuiltinUnit, Eq (..), Integer, Maybe (..), blake2b_224,
@@ -27,8 +26,8 @@ import           ZkFold.Protocol.NonInteractiveProof   (NonInteractiveProof (..)
 
 data UtxoAccumulatorParameters =
     UtxoAccumulatorParameters
-      { maybeSwitchAddress  :: Maybe Address
-      , maybeNextAddress    :: Maybe Address
+      { maybeNextParHash    :: Maybe BuiltinByteString
+      , maybeSwitchParHash  :: Maybe BuiltinByteString
       , currentGroupElement :: BuiltinByteString
       , switchGroupElement  :: BuiltinByteString
       , accumulationValue   :: Value
@@ -39,75 +38,71 @@ makeIsDataIndexed ''UtxoAccumulatorParameters [('UtxoAccumulatorParameters,0)]
 makeLift ''UtxoAccumulatorParameters
 
 data UtxoAccumulatorRedeemer =
-      AddUtxo Integer
-    | RemoveUtxo Address ProofBytes
-    | Switch
+      AddUtxo Integer UtxoAccumulatorParameters
+    | RemoveUtxo Address ProofBytes UtxoAccumulatorParameters
+    | Switch UtxoAccumulatorParameters
   deriving stock (Show, Generic)
 
 makeIsDataIndexed ''UtxoAccumulatorRedeemer [('AddUtxo,0),('RemoveUtxo,1),('Switch,2)]
 makeLift ''UtxoAccumulatorRedeemer
 
 {-# INLINABLE utxoAccumulator #-}
-utxoAccumulator :: UtxoAccumulatorParameters -> UtxoAccumulatorRedeemer -> ScriptContext -> Bool
-utxoAccumulator UtxoAccumulatorParameters {..} (AddUtxo h) ctx =
+utxoAccumulator :: UtxoAccumulatorRedeemer -> ScriptContext -> Bool
+utxoAccumulator (AddUtxo h par') ctx =
   let
-    Just (TxInInfo _ (TxOut _ v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
+    Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
-    Just nextAddress = maybeNextAddress
+    (UtxoAccumulatorParameters {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorParameters, SetupBytes)
+    setup' = updateSetupBytes setup h currentGroupElement
+    d' = toBuiltinData (par', setup')
 
     v' = v + accumulationValue
 
-    setup  = unsafeFromBuiltinData d :: SetupBytes
-    setup' = updateSetupBytes setup h currentGroupElement
-    d' = toBuiltinData setup'
-
     outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
   in
-    outputAcc == TxOut nextAddress v' (OutputDatum (Datum d')) Nothing
-utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof) ctx =
+    outputAcc == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
+    && maybeNextParHash == Just (blake2b_224 $ serialiseData $ toBuiltinData par')
+utxoAccumulator (RemoveUtxo addr proof par') ctx =
   let
-    Just (TxInInfo _ (TxOut _ v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
-
-    Just nextAddress = maybeNextAddress
-
-    v' = v - accumulationValue
+    Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
     a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
 
-    setup  = unsafeFromBuiltinData d :: SetupBytes
+    (UtxoAccumulatorParameters {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorParameters, SetupBytes)
     setup' = updateSetupBytes setup a currentGroupElement
-    d' = toBuiltinData setup'
+    d' = toBuiltinData (par', setup')
+
+    v' = v - accumulationValue
 
     outputAcc  = head $ txInfoOutputs $ scriptContextTxInfo ctx
     outputUser = head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
   in
-       outputAcc  == TxOut nextAddress v' (OutputDatum (Datum d')) Nothing
+       outputAcc  == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
     && outputUser == TxOut addr accumulationValue NoOutputDatum Nothing
     && verify @PlonkupPlutus setup [] proof
-utxoAccumulator UtxoAccumulatorParameters {..} Switch ctx =
+    && maybeNextParHash == Just (blake2b_224 $ serialiseData $ toBuiltinData par')
+utxoAccumulator (Switch par') ctx =
   let
-    Just (TxInInfo _ (TxOut _ v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
+    Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
-    Just switchAddress = maybeSwitchAddress
-
-    setup  = unsafeFromBuiltinData d :: SetupBytes
+    (UtxoAccumulatorParameters {..}, setup) = unsafeFromBuiltinData d :: (UtxoAccumulatorParameters, SetupBytes)
     setup' = updateSetupBytes setup 1 switchGroupElement
-    d' = toBuiltinData setup'
+    d' = toBuiltinData (par', setup')
 
     outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
   in
-    outputAcc == TxOut switchAddress v (OutputDatum (Datum d')) Nothing
+    outputAcc == TxOut ownAddr v (OutputDatum (Datum d')) Nothing
+    && maybeSwitchParHash == Just (blake2b_224 $ serialiseData $ toBuiltinData par')
 
 {-# INLINABLE untypedUtxoAccumulator #-}
-untypedUtxoAccumulator :: UtxoAccumulatorParameters -> BuiltinData -> BuiltinUnit
-untypedUtxoAccumulator par ctx' =
+untypedUtxoAccumulator :: BuiltinData -> BuiltinUnit
+untypedUtxoAccumulator ctx' =
   let
     ctx      = unsafeFromBuiltinData ctx'
     redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
   in
-    check $ utxoAccumulator par redeemer ctx
+    check $ utxoAccumulator redeemer ctx
 
-utxoAccumulatorCompiled :: UtxoAccumulatorParameters -> CompiledCode (BuiltinData -> BuiltinUnit)
-utxoAccumulatorCompiled par =
+utxoAccumulatorCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
+utxoAccumulatorCompiled =
     $$(compile [|| untypedUtxoAccumulator ||])
-      `unsafeApplyCode` liftCodeDef par
