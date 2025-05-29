@@ -13,7 +13,7 @@ import           PlutusLedgerApi.V3                    (Address, Datum (..), Out
                                                         TxInfo (..), TxOut (..), Value)
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
 import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift, unsafeApplyCode, liftCodeDef)
-import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, error)
+import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData)
 import           PlutusTx.Prelude                      (AdditiveGroup (..), Bool, BuiltinByteString, BuiltinData,
                                                         BuiltinUnit, Eq (..), Integer, Maybe (..), blake2b_224,
                                                         byteStringToInteger, check, head, tail, ($), (&&), (+), (.), fromMaybe)
@@ -51,7 +51,7 @@ utxoAccumulator accumulationValue (AddUtxo h dat') ctx =
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
     (UtxoAccumulatorDatum {..}, datumRemove, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorDatum, UtxoAccumulatorDatum, SetupBytes)
-    setup' = updateSetupBytes setup h $ fromMaybe (error ()) maybeCurrentGroupElement
+    setup' = updateSetupBytes setup h $ fromMaybe "" maybeCurrentGroupElement
     d' = toBuiltinData (dat', datumRemove, setup')
 
     v' = v + accumulationValue
@@ -67,7 +67,7 @@ utxoAccumulator accumulationValue (RemoveUtxo addr proof dat') ctx =
     a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
 
     (datumAdd, UtxoAccumulatorDatum {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorDatum, UtxoAccumulatorDatum, SetupBytes)
-    setup' = updateSetupBytes setup a $ fromMaybe (error ()) maybeCurrentGroupElement
+    setup' = updateSetupBytes setup a $ fromMaybe "" maybeCurrentGroupElement
     d' = toBuiltinData (datumAdd, dat', setup')
 
     v' = v - accumulationValue
