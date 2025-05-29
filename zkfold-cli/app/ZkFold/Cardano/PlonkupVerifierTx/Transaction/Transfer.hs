@@ -29,8 +29,8 @@ data Transaction = Transaction
 
 verifierTransfer :: Transaction -> IO ()
 verifierTransfer (Transaction path coreCfg' reward sig changeAddr outFile) = do
-  let assetsPath = path </> "assets"
-      setupFile  = assetsPath </> "plonkupVerifierTx-setup-data.json"
+  let assets    = path </> "assets"
+      setupFile = assets </> "plonkupVerifierTx-setup-data.json"
 
   coreCfg <- fromCoreConfigAltIO coreCfg'
   skey    <- fromSigningKeyAltIO sig
@@ -58,4 +58,4 @@ verifierTransfer (Transaction path coreCfg' reward sig changeAddr outFile) = do
                                txid   <- signAndSubmitConfirmed txbody
                                return $ SubmittedTx txid (Just $ txBodyFee txbody)
 
-    wrapUpSubmittedTx outFile tx
+    wrapUpSubmittedTx (assets </> outFile) tx

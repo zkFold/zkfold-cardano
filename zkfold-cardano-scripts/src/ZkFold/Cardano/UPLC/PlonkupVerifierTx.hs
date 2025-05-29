@@ -13,8 +13,8 @@ import           PlutusLedgerApi.V3                  (ToData (..), TxInInfo (..)
 import           PlutusTx                            (CompiledCode, compile, liftCodeDef, unsafeApplyCode,
                                                       unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal          as BI
-import           PlutusTx.Prelude                    (BuiltinData, BuiltinUnit, blake2b_224, check, filter, isNothing,
-                                                      traceError, ($), (.))
+import           PlutusTx.Prelude                    (BuiltinData, BuiltinUnit, Integer, blake2b_224, check, filter, isNothing,
+                                                      take, ($), (.))
 
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
@@ -39,7 +39,7 @@ untypedPlonkupVerifierTx contract ctx =
                  $ unsafeFromBuiltinData @[TxInInfo] refs
 
       outs   = BI.head infoBeforeOutputs         -- txInfoOutputs
-      outs'  = toBuiltinData . initOuts $ unsafeFromBuiltinData @[TxOut] outs
+      outs'  = toBuiltinData . take n $ unsafeFromBuiltinData @[TxOut] outs
 
       range  = BI.head $ tail5 infoBeforeOutputs -- txInfoValidRange
 
@@ -49,7 +49,7 @@ untypedPlonkupVerifierTx contract ctx =
       input = toInput . blake2b_224 . BI.serialiseData $ txData
 
       -- Extract redeemer from ScriptContext
-      proof = unsafeFromBuiltinData @ProofBytes $ BI.head $ BI.tail scriptContextTxInfo'
+      (proof, n) = unsafeFromBuiltinData $ BI.head $ BI.tail scriptContextTxInfo' :: (ProofBytes, Integer)
 
       -- Extracting transaction builtin fields
       scriptContextTxInfo' = BI.snd $ BI.unsafeDataAsConstr ctx
@@ -68,10 +68,6 @@ untypedPlonkupVerifierTx contract ctx =
               BI.mkCons c $
                 BI.mkCons d $
                   BI.mkNilData BI.unitval
-
-      initOuts [_]    =  []
-      initOuts (x:xs) =  x : initOuts xs
-      initOuts []     =  traceError "missing change output"
 
 plonkupVerifierTxCompiled :: SetupBytes -> CompiledCode (BuiltinData -> BuiltinUnit)
 plonkupVerifierTxCompiled contract =

@@ -176,6 +176,37 @@ pTxInOref =
             <> Opt.help "Required TxOutRef (reference to a Tx input)."
         )
 
+pTxInRefOref :: Parser GYTxOutRef
+pTxInRefOref =
+    Opt.option
+        (txOutRefFromApi <$> readerFromParsecParser parseTxIn)
+        ( Opt.long "read-only-tx-in-reference"
+            <> Opt.metavar "TxId#TxIx"
+            <> Opt.help "Read only TxOutRef."
+        )
+
+pOutFile :: Parser FilePath
+pOutFile = parseFilePath "tx-out-file" "Path (relative to 'assets/') for output TxId file."
+
+pReward :: Parser GYValue
+pReward = GY.valueFromLovelace <$> Opt.option Opt.auto
+  ( Opt.long "lovelace-reward"
+      <> Opt.metavar "INTEGER"
+      <> Opt.help "Reward lovelace value."
+  )
+
+pSubmitTx :: Parser Bool
+pSubmitTx =
+  Opt.option Opt.auto
+      ( Opt.long "submit-tx"
+          <> Opt.metavar "BOOL"
+          <> Opt.value False
+          <> Opt.showDefault
+          <> Opt.help "Whether to submit the Tx (true or false)."
+      )
+
+----- :parsing TxInputInfo: -----
+
 data TxInputInfo = TxInputInfo
   { txinOref   :: !GYTxOutRef
   , txinScript :: !ScriptInput
@@ -226,25 +257,6 @@ pScriptRefOref =
       )
   )
   <|> pure NotScriptRef
-
-pTxInRefOref :: Parser GYTxOutRef
-pTxInRefOref =
-    Opt.option
-        (txOutRefFromApi <$> readerFromParsecParser parseTxIn)
-        ( Opt.long "read-only-tx-in-reference"
-            <> Opt.metavar "TxId#TxIx"
-            <> Opt.help "Read only TxOutRef."
-        )
-
-pOutFile :: Parser FilePath
-pOutFile = parseFilePath "tx-out-file" "Path (relative to 'assets/') for output TxId file."
-
-pReward :: Parser GYValue
-pReward = GY.valueFromLovelace <$> Opt.option Opt.auto
-  ( Opt.long "lovelace-reward"
-      <> Opt.metavar "INTEGER"
-      <> Opt.help "Reward lovelace value."
-  )
 
 ----- :parsing PolicyId: -----
 
@@ -328,7 +340,7 @@ pTxIdAlt = Opt.asum
 ----- :OutFile parser: -----
 
 data StageTx = RollupInit | RollupPark | RollupDataPark | RollupUpdate | RollupClear
-             | VerifierTransfer
+             | VerifierTransfer | VerifierTx
 
 class HasFileParser a where
   outFileName   :: a -> String
@@ -350,18 +362,21 @@ instance HasFileParser StageTx where
   outFileFlag RollupDataPark   = "rollup-data-park-out-file"
   outFileFlag RollupUpdate     = "rollup-update-out-file"
   outFileFlag RollupClear      = "rollup-clear-out-file"
-  outFileFlag VerifierTransfer = "verifier-init-out-file"
+  outFileFlag VerifierTransfer = "verifier-transfer-out-file"
+  outFileFlag VerifierTx       = "verifier-tx-out-file"
 
   outFileName RollupInit       = "rollup-init.tx"
   outFileName RollupPark       = "rollup-park.tx"
   outFileName RollupDataPark   = "rollup-data-park.tx"
   outFileName RollupUpdate     = "rollup-update.tx"
   outFileName RollupClear      = "rollup-clear.tx"
-  outFileName VerifierTransfer = "assets" </> "verifier-init.tx"
+  outFileName VerifierTransfer = "verifier-transfer.tx"
+  outFileName VerifierTx       = "verifier-tx.tx"
 
   outFileHelp RollupInit       = "Path (relative to 'assets/') for rollup initialization tx out-file."
   outFileHelp RollupPark       = "Path (relative to 'assets/') for 'rollup' script-parking tx out-file."
   outFileHelp RollupDataPark   = "Path (relative to 'assets/') for 'rollupData' script-parking tx out-file."
   outFileHelp RollupUpdate     = "Path (relative to 'assets/') for rollup update tx out-file."
   outFileHelp RollupClear      = "Path (relative to 'assets/') for rollup token-clearing tx out-file."
-  outFileHelp VerifierTransfer = "Path (relative to 'assets/') for plonkupVerifierTx initialization tx out-file."
+  outFileHelp VerifierTransfer = "Path (relative to 'assets/') for plonkupVerifierTx transfer tx out-file."
+  outFileHelp VerifierTx       = "Path (relative to 'assets/') for plonkupVerifierTx verification tx out-file."

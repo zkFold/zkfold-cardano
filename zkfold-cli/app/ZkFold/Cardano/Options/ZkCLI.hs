@@ -238,6 +238,8 @@ pTransactionVerifierTx path mcfg = do
             <*> many pTxInputInfo
             <*> many pTxInRefOref
             <*> many (pTxOutEraAware ShelleyBasedEraConway)
+            <*> pSubmitTx
+            <*> pOutFile' VerifierTx
 
 data ClientCommandErrors
 
