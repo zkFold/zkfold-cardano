@@ -10,7 +10,7 @@ module ZkFold.Cardano.UPLC.UtxoAccumulator where
 import           GHC.Generics                          (Generic)
 import           PlutusLedgerApi.V3                    (Address, Datum (..), OutputDatum (NoOutputDatum, OutputDatum),
                                                         Redeemer (..), ScriptContext (..), ToData (..), TxInInfo (..),
-                                                        TxInfo (..), TxOut (..), Value)
+                                                        TxInfo (..), TxOut (..), Value, PubKeyHash)
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
 import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift, unsafeApplyCode, liftCodeDef)
 import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData)
@@ -24,7 +24,7 @@ import           ZkFold.Cardano.OnChain.Plonkup.Data   (ProofBytes, SetupBytes)
 import           ZkFold.Cardano.OnChain.Plonkup.Update (updateSetupBytes)
 import           ZkFold.Protocol.NonInteractiveProof   (NonInteractiveProof (..))
 
-type UtxoAccumulatorParameters = Value
+type UtxoAccumulatorParameters = (Value, PubKeyHash)
 
 data UtxoAccumulatorDatum =
     UtxoAccumulatorDatum
@@ -46,7 +46,7 @@ makeLift ''UtxoAccumulatorRedeemer
 
 {-# INLINABLE utxoAccumulator #-}
 utxoAccumulator :: UtxoAccumulatorParameters -> UtxoAccumulatorRedeemer -> ScriptContext -> Bool
-utxoAccumulator accumulationValue (AddUtxo h dat') ctx =
+utxoAccumulator (accumulationValue, pkh) (AddUtxo h dat') ctx =
   let
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
@@ -60,7 +60,8 @@ utxoAccumulator accumulationValue (AddUtxo h dat') ctx =
   in
     outputAcc == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
     && nextDatumHash == blake2b_224 (serialiseData $ toBuiltinData dat')
-utxoAccumulator accumulationValue (RemoveUtxo addr proof dat') ctx =
+    && txInfoSignatories (scriptContextTxInfo ctx) == [pkh]
+utxoAccumulator (accumulationValue, _) (RemoveUtxo addr proof dat') ctx =
   let
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
