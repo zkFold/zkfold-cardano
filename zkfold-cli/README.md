@@ -28,6 +28,12 @@ cabal run zkfold-cli -- token-init --help
 
 Note that only some of the options are mandatory; default values are chosen for the remainder.
 
+### PlonkupVerifierTx
+
+- `plonkup-verifier-init`
+- `plonkup-verifier-transfer`
+- `plonkup-verifier-tx`
+
 ### PlonkupVerifierToken
 
 - `token-init`              
@@ -41,13 +47,60 @@ Note that only some of the options are mandatory; default values are chosen for 
 - `rollup-update`            
 - `rollup-clear`             
 
-### PlonkupVerifierTx
+## Sample routine for *PlonkupVerifierTx*
 
-(In progress.)
+### Initialization
 
-### Balancing
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- plonkup-verifier-init
 
-(In progress.)
+plonkupVerifierTx Address:
+unsafeAddressFromText "addr_test1wptf204qe8t8uxw6ul09ta8uscrx5hw8rcv3secv2ylrapgz6zkax"
+```
+
+(To reset initialization, remove file `./assets/plonkupVerifierTx-setup-data.json`.)
+
+### Transfer
+
+Alice sent 5 Ada to the PlonkupVerifierTx script address:
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- plonkup-verifier-transfer \
+> --lovelace-reward 5000000 \
+> --signing-key-file ../tests/keys/alice.skey \
+> --change-address $(cat ../tests/keys/alice.addr)
+
+Estimated transaction fee: 173245 Lovelace
+Transaction Id: f99c96ebe0537619b84a841a2dc2d3154235e6a371e3c9429b8a36ace033bbf0
+```
+
+### Verifier transaction
+
+With minimal flags, only input is the UTxO at the script address and there is no output (other than the change output, not considered in the plonkup verifier's input).  Transaction is built and it's fee is estimated, but by default it is not sent.
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- plonkup-verifier-tx \
+> --signing-key-file ../tests/keys/alice.skey \
+> --change-address $(cat ../tests/keys/alice.addr)
+
+Estimated transaction fee: 1162606 Lovelace
+```
+
+Let us now include one extra input and one output, this time submiting the transaction.  Note the higher fee.
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- plonkup-verifier-tx \
+> --signing-key-file ../tests/keys/alice.skey \
+> --change-address $(cat ../tests/keys/alice.addr) \
+> --tx-in 5134cdb516069ab0128d831621b38d0043239f7d0a684161acc9dd66d706b9c9#1 \
+> --tx-out "$(cat ../tests/keys/alice.addr) + 5000000 lovelace" \
+> --submit-tx True
+
+Estimated transaction fee: 1177953 Lovelace
+Transaction Id: 065e424251b28a771e64be27b7ff15cd6942becfae1b45074041e7503da485ac
+```
+
+In both cases, the proof was automatically computed and attached in the redeemer.
 
 ## Sample routine for *PlonkupVerifierToken*
 
