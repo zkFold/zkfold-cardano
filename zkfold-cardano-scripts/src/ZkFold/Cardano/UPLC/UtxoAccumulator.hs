@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
--- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
@@ -13,10 +13,10 @@ import           PlutusLedgerApi.V3                    (Address, Datum (..), Out
                                                         TxInfo (..), TxOut (..), Value)
 import           PlutusLedgerApi.V3.Contexts           (findOwnInput)
 import           PlutusTx                              (CompiledCode, UnsafeFromData (..), compile, makeIsDataIndexed, makeLift, unsafeApplyCode, liftCodeDef)
-import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData)
+import           PlutusTx.Builtins                     (ByteOrder (..), serialiseData, error)
 import           PlutusTx.Prelude                      (AdditiveGroup (..), Bool, BuiltinByteString, BuiltinData,
                                                         BuiltinUnit, Eq (..), Integer, Maybe (..), blake2b_224,
-                                                        byteStringToInteger, check, head, tail, ($), (&&), (+), (.))
+                                                        byteStringToInteger, check, head, tail, ($), (&&), (+), (.), fromMaybe)
 import           Prelude                               (Show)
 
 import           ZkFold.Cardano.OnChain.Plonkup        (PlonkupPlutus)
@@ -35,24 +35,32 @@ data UtxoAccumulatorParameters =
 makeIsDataIndexed ''UtxoAccumulatorParameters [('UtxoAccumulatorParameters,0)]
 makeLift ''UtxoAccumulatorParameters
 
-data UtxoAccumulatorDatum =
-    UtxoAccumulatorDatum
-      { currentGroupElement :: BuiltinByteString
-      , maybeNextDatumHash  :: Maybe BuiltinByteString
-      , canSwitch           :: Bool
+data AddDatum =
+    AddDatum
+      { maybeAddGroupElement  :: Maybe BuiltinByteString
+      , nextAddDatumHash      :: BuiltinByteString
       }
   deriving stock (Show, Generic)
 
-makeIsDataIndexed ''UtxoAccumulatorDatum [('UtxoAccumulatorDatum,0)]
-makeLift ''UtxoAccumulatorDatum
+makeIsDataIndexed ''AddDatum [('AddDatum,0)]
+makeLift ''AddDatum
 
-data UtxoAccumulatorRedeemer =
-      AddUtxo Integer UtxoAccumulatorDatum
-    | RemoveUtxo Address ProofBytes UtxoAccumulatorDatum
-    | Switch UtxoAccumulatorDatum
+data RemoveDatum =
+    RemoveDatum
+      { maybeRemoveGroupElement :: Maybe BuiltinByteString
+      , nextRemoveDatumHash     :: BuiltinByteString
+      }
   deriving stock (Show, Generic)
 
-makeIsDataIndexed ''UtxoAccumulatorRedeemer [('AddUtxo,0),('RemoveUtxo,1),('Switch,2)]
+makeIsDataIndexed ''RemoveDatum [('RemoveDatum,0)]
+makeLift ''RemoveDatum
+
+data UtxoAccumulatorRedeemer =
+      AddUtxo Integer AddDatum
+    | RemoveUtxo Address ProofBytes RemoveDatum
+  deriving stock (Show, Generic)
+
+makeIsDataIndexed ''UtxoAccumulatorRedeemer [('AddUtxo,0),('RemoveUtxo,1)]
 makeLift ''UtxoAccumulatorRedeemer
 
 {-# INLINABLE utxoAccumulator #-}
@@ -61,25 +69,25 @@ utxoAccumulator UtxoAccumulatorParameters {..} (AddUtxo h dat') ctx =
   let
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
-    (UtxoAccumulatorDatum {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorDatum, SetupBytes)
-    setup' = updateSetupBytes setup h currentGroupElement
-    d' = toBuiltinData (dat', setup')
+    (AddDatum {..}, datumRemove, setup)  = unsafeFromBuiltinData d :: (AddDatum, RemoveDatum, SetupBytes)
+    setup' = updateSetupBytes setup h $ fromMaybe (error ()) maybeAddGroupElement
+    d' = toBuiltinData (dat', datumRemove, setup')
 
     v' = v + accumulationValue
 
     outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
   in
     outputAcc == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
-    && maybeNextDatumHash == Just (blake2b_224 $ serialiseData $ toBuiltinData dat')
+    && nextAddDatumHash == blake2b_224 (serialiseData $ toBuiltinData dat')
 utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof dat') ctx =
   let
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
     a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
 
-    (UtxoAccumulatorDatum {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorDatum, SetupBytes)
-    setup' = updateSetupBytes setup a currentGroupElement
-    d' = toBuiltinData (dat', setup')
+    (datumAdd, RemoveDatum {..}, setup)  = unsafeFromBuiltinData d :: (AddDatum, RemoveDatum, SetupBytes)
+    setup' = updateSetupBytes setup a $ fromMaybe (error ()) maybeRemoveGroupElement
+    d' = toBuiltinData (datumAdd, dat', setup')
 
     v' = v - accumulationValue
 
@@ -89,20 +97,7 @@ utxoAccumulator UtxoAccumulatorParameters {..} (RemoveUtxo addr proof dat') ctx 
        outputAcc  == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
     && outputUser == TxOut addr accumulationValue NoOutputDatum Nothing
     && verify @PlonkupPlutus setup [] proof
-    && maybeNextDatumHash == Just (blake2b_224 $ serialiseData $ toBuiltinData dat')
-utxoAccumulator UtxoAccumulatorParameters {..} (Switch dat') ctx =
-  let
-    Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
-
-    (UtxoAccumulatorDatum {..}, setup) = unsafeFromBuiltinData d :: (UtxoAccumulatorDatum, SetupBytes)
-    setup' = updateSetupBytes setup 1 switchGroupElement
-    d' = toBuiltinData (dat', setup')
-
-    outputAcc = head $ txInfoOutputs $ scriptContextTxInfo ctx
-  in
-    outputAcc == TxOut ownAddr v (OutputDatum (Datum d')) Nothing
-    && switchDatumHash == blake2b_224 (serialiseData $ toBuiltinData dat')
-    && canSwitch
+    && nextRemoveDatumHash == blake2b_224 (serialiseData $ toBuiltinData dat')
 
 {-# INLINABLE untypedUtxoAccumulator #-}
 untypedUtxoAccumulator :: UtxoAccumulatorParameters -> BuiltinData -> BuiltinUnit
