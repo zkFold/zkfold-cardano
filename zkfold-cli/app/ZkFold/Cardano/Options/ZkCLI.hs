@@ -28,9 +28,6 @@ data ClientCommand
     | TransactionTokenTransfer TokenTransfer.Transaction
     | TransactionTokenMinting  TokenMinting.Transaction
     | TransactionTokenBurning  TokenBurning.Transaction
---    | TransactionBalancingInit     BalancingInit.Transaction
---    | TransactionBalancingTransfer BalancingTransfer.Transaction
---    | TransactionBalancing         Balancing.Transaction
     | TransactionVerifierInit     VerifierInit.Transaction
     | TransactionVerifierTransfer VerifierTransfer.Transaction
     | TransactionVerifierTx       VerifierTx.Transaction
@@ -62,9 +59,6 @@ pCmds path mcfg = do
             , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer path mcfg
             , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
             , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
---            , fmap TransactionBalancingInit     <$> pTransactionBalancingInit
---            , fmap TransactionBalancingTransfer <$> pTransactionBalancingTransfer path
---            , fmap TransactionBalancing         <$> pTransactionBalancing path
             , fmap TransactionRollupInit        <$> pTransactionRollupInit path mcfg
             , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path mcfg
             , fmap TransactionRollupClear       <$> pTransactionRollupClear path mcfg
@@ -126,45 +120,6 @@ pTransactionTokenBurning path mcfg = do
             <*> pTokenAlt
             <*> pTxIdAlt
             <*> pOutFile
-
--- pTransactionBalancingInit :: Maybe (Parser BalancingInit.Transaction)
--- pTransactionBalancingInit = do
---     pure $ subParser "balancing-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
---   where
---     pCmd = do
---         BalancingInit.Transaction
---             <$> pGYCoreConfig
---             <*> pTxInOnly
---             <*> pWitnessSigningData
---             <*> pChangeAddress
---             <*> pOutFile
-
--- pTransactionBalancingTransfer :: FilePath -> Maybe (Parser BalancingTransfer.Transaction)
--- pTransactionBalancingTransfer path = do
---     pure $ subParser "balancing-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
---   where
---     pCmd = do
---         BalancingTransfer.Transaction path
---             <$> pGYCoreConfig
---             <*> pTxInOnly
---             <*> pWitnessSigningData
---             <*> pChangeAddress
---             <*> pOutFile
-
--- pTransactionBalancing :: FilePath -> Maybe (Parser Balancing.Transaction)
--- pTransactionBalancing path = do
---     pure $ subParser "balancing-something" $ Opt.info pCmd $ Opt.progDescDoc Nothing
---   where
---     pCmd = do
---         Balancing.Transaction path
---             <$> pGYCoreConfig
---             <*> pTxInOnly
---             <*> pTxInOnly
---             <*> pWitnessSigningData
---             <*> pChangeAddress
---             <*> pOutFile
---             <*> pTxIdFile
---             <*> pOutAddress
 
 pTransactionRollupInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupInit.Transaction)
 pTransactionRollupInit path mcfg = do
@@ -249,9 +204,6 @@ runClientCommand = \case
     TransactionTokenTransfer     cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer         cmd)
     TransactionTokenMinting      cmd -> ExceptT (Right <$> TokenMinting.tokenMinting           cmd)
     TransactionTokenBurning      cmd -> ExceptT (Right <$> TokenBurning.tokenBurning           cmd)
---    TransactionBalancingInit     cmd -> ExceptT (Right <$> BalancingInit.balancingInit         cmd)
---    TransactionBalancingTransfer cmd -> ExceptT (Right <$> BalancingTransfer.balancingTransfer cmd)
---    TransactionBalancing         cmd -> ExceptT (Right <$> Balancing.balancingPlonkup          cmd)
     TransactionRollupInit        cmd -> ExceptT (Right <$> RollupInit.rollupInit               cmd)
     TransactionRollupUpdate      cmd -> ExceptT (Right <$> RollupUpdate.rollupUpdate           cmd)
     TransactionRollupClear       cmd -> ExceptT (Right <$> RollupClear.rollupClear             cmd)

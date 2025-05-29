@@ -34,10 +34,6 @@ Note that only some of the options are mandatory; default values are chosen for 
 - `plonkup-verifier-transfer`
 - `plonkup-verifier-tx`
 
-### Balancing
-
-(In progress.)
-
 ### PlonkupVerifierToken
 
 - `token-init`              
