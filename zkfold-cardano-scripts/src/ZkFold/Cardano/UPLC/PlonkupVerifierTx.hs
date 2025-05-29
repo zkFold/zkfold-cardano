@@ -13,8 +13,8 @@ import           PlutusLedgerApi.V3                  (ToData (..), TxInInfo (..)
 import           PlutusTx                            (CompiledCode, compile, liftCodeDef, unsafeApplyCode,
                                                       unsafeFromBuiltinData)
 import qualified PlutusTx.Builtins.Internal          as BI
-import           PlutusTx.Prelude                    (BuiltinData, BuiltinUnit, Integer, blake2b_224, check, filter, isNothing,
-                                                      take, ($), (.))
+import           PlutusTx.Prelude                    (BuiltinData, BuiltinUnit, Integer, blake2b_224, check, filter,
+                                                      isNothing, take, ($), (.))
 
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
