@@ -1,25 +1,26 @@
 module ZkFold.Cardano.Examples.EqualityCheck where
 
-import           Data.Aeson                             (FromJSON, ToJSON)
-import           GHC.Generics                           (Generic, Par1 (..), U1 (..), type (:*:) (..))
-import           Prelude                                hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import qualified Prelude                                as Haskell
+import           Data.Aeson                                 (FromJSON, ToJSON)
+import           GHC.Generics                               (Generic, Par1 (..), U1 (..), type (:*:) (..))
+import           Prelude                                    hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import qualified Prelude                                    as Haskell
 
-import           ZkFold.Algebra.Class                   (FromConstant (..))
-import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
-import           ZkFold.Cardano.OffChain.Plonkup        (PlonkupN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data    (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Protocol.Plonkup                (Plonkup (..))
-import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
-import           ZkFold.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
-import           ZkFold.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
-import           ZkFold.Symbolic.Class                  (Symbolic (..))
-import           ZkFold.Symbolic.Compiler               (ArithmeticCircuit (..), compileWith)
-import           ZkFold.Symbolic.Data.Bool              (Bool (..))
-import           ZkFold.Symbolic.Data.Eq                (Eq (..))
-import           ZkFold.Symbolic.Data.FieldElement      (FieldElement)
+import           ZkFold.Algebra.Class                       (FromConstant (..))
+import           ZkFold.Algebra.EllipticCurve.BLS12_381     (BLS12_381_G1_Point, Fr)
+import           ZkFold.Cardano.OffChain.Plonkup            (PlonkupN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OnChain.Plonkup             (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data        (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Protocol.NonInteractiveProof        (NonInteractiveProof (..))
+import           ZkFold.Protocol.Plonkup                    (Plonkup (..))
+import           ZkFold.Protocol.Plonkup.Prover.Secret      (PlonkupProverSecret)
+import           ZkFold.Protocol.Plonkup.Utils              (getParams, getSecretParams)
+import           ZkFold.Protocol.Plonkup.Witness            (PlonkupWitnessInput (..))
+import           ZkFold.Symbolic.Class                      (Symbolic (..))
+import           ZkFold.Symbolic.Compiler                   (compileWith)
+import           ZkFold.Symbolic.Compiler.ArithmeticCircuit (ArithmeticCircuit (..), solder)
+import           ZkFold.Symbolic.Data.Bool                  (Bool (..))
+import           ZkFold.Symbolic.Data.Eq                    (Eq (..))
+import           ZkFold.Symbolic.Data.FieldElement          (FieldElement)
 
 data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr
@@ -33,11 +34,11 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let ac = compileWith @Fr id (\(Par1 i) -> (U1 :*: U1, Par1 i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
+    let ac = compileWith @Fr solder (\i -> (U1 :*: U1, i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
 
         (omega, k1, k2) = getParams 32
         witnessInputs   = Par1 targetValue
-        (gs, h1) = getSecrectParams x
+        (gs, h1) = getSecretParams x
         plonkup = Plonkup omega k1 k2 ac h1 gs :: PlonkupN Par1 Par1 32
         setupP  = setupProve plonkup
         setupV  = setupVerify plonkup

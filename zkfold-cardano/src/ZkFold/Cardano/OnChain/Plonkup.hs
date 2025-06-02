@@ -3,6 +3,7 @@
 
 module ZkFold.Cardano.OnChain.Plonkup where
 
+import           Data.Binary                         (Binary (..))
 import           Data.Foldable                       (Foldable)
 import           Data.Functor.Rep                    (Rep, Representable)
 
@@ -210,6 +211,7 @@ instance
         , Representable o
         , Foldable o
         , Ord (Rep i)
+        , Binary (Rep i)
         , KnownNat n
         , KnownNat (4 * n + 6)
         ) => CompatibleNonInteractiveProofs (PlonkupN i o n) PlonkupPlutus where

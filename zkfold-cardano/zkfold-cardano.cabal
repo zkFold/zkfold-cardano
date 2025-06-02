@@ -75,6 +75,7 @@ library
     adjunctions                    ,
     aeson                          ,
     base              >= 4.9 && < 5,
+    binary                         ,
     bytestring                     ,
     base64-bytestring              ,
     cardano-api                    ,
