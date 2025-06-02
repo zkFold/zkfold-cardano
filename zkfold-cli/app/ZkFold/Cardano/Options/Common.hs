@@ -3,7 +3,9 @@
 module ZkFold.Cardano.Options.Common where
 
 import           Cardano.Api                        (AddressAny, TxIn, parseAddressAny)
-import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn, readerFromParsecParser)
+import           Cardano.CLI.EraBased.Common.Option (pScriptRedeemerOrFile, parseFilePath, parseTxIn,
+                                                     readerFromParsecParser)
+import           Cardano.CLI.Type.Common            (ScriptDataOrFile)
 import           Control.Exception                  (throwIO)
 import           Data.Aeson                         (decodeFileStrict)
 import qualified Data.ByteString.Char8              as BS
@@ -11,7 +13,7 @@ import           Data.Maybe                         (fromJust)
 import           Data.String                        (fromString)
 import           GeniusYield.GYConfig               as GY
 import           GeniusYield.Types                  as GY
-import           Options.Applicative                (Parser)
+import           Options.Applicative                (Parser, (<|>))
 import qualified Options.Applicative                as Opt
 import           Prelude
 import           System.FilePath                    ((</>))
@@ -160,18 +162,27 @@ pTxInOnly :: Parser TxIn
 pTxInOnly =
     Opt.option
         (readerFromParsecParser parseTxIn)
-        ( Opt.long "tx-in"
+        ( Opt.long "tx-in-only"
             <> Opt.metavar "TX-IN"
             <> Opt.help "TxId#TxIx"
         )
 
-pTxOref :: Parser GYTxOutRef
-pTxOref =
+pTxInOref :: Parser GYTxOutRef
+pTxInOref =
     Opt.option
         (txOutRefFromApi <$> readerFromParsecParser parseTxIn)
         ( Opt.long "tx-oref"
             <> Opt.metavar "TxId#TxIx"
             <> Opt.help "Required TxOutRef (reference to a Tx input)."
+        )
+
+pTxInRefOref :: Parser GYTxOutRef
+pTxInRefOref =
+    Opt.option
+        (txOutRefFromApi <$> readerFromParsecParser parseTxIn)
+        ( Opt.long "read-only-tx-in-reference"
+            <> Opt.metavar "TxId#TxIx"
+            <> Opt.help "Read only TxOutRef."
         )
 
 pOutFile :: Parser FilePath
@@ -183,6 +194,69 @@ pReward = GY.valueFromLovelace <$> Opt.option Opt.auto
       <> Opt.metavar "INTEGER"
       <> Opt.help "Reward lovelace value."
   )
+
+pSubmitTx :: Parser Bool
+pSubmitTx =
+  Opt.option Opt.auto
+      ( Opt.long "submit-tx"
+          <> Opt.metavar "BOOL"
+          <> Opt.value False
+          <> Opt.showDefault
+          <> Opt.help "Whether to submit the Tx (true or false)."
+      )
+
+----- :parsing TxInputInfo: -----
+
+data TxInputInfo = TxInputInfo
+  { txinOref   :: !GYTxOutRef
+  , txinScript :: !ScriptInput
+  } deriving stock Show
+
+data ScriptInput = ScriptInput FilePath ScriptDataOrFile ScriptRefOref
+                 | PubKeyInput
+                 deriving stock Show
+
+data ScriptRefOref = ScriptRefOref GYTxOutRef
+                   | NotScriptRef
+                   deriving stock Show
+
+pTxInputInfo :: Parser TxInputInfo
+pTxInputInfo =
+  TxInputInfo
+    <$> (txOutRefFromApi <$>
+           Opt.option
+             (readerFromParsecParser parseTxIn)
+             ( Opt.long "tx-in"
+               <> Opt.metavar "TxId#TxIx"
+               <> Opt.help "Required TxOutRef (reference to a Tx input)."
+             )
+        )
+    <*> pScriptInput
+
+pScriptInput :: Parser ScriptInput
+pScriptInput =
+  ( ScriptInput <$>
+      Opt.strOption
+        ( Opt.long "script-file"
+            <> Opt.metavar "FILEPATH"
+            <> Opt.help "Path to script file."
+            <> Opt.completer (Opt.bashCompleter "file")
+        )
+    <*> pScriptRedeemerOrFile "spending-reference-tx-in"
+    <*> pScriptRefOref
+  )
+  <|> pure PubKeyInput
+
+pScriptRefOref :: Parser ScriptRefOref
+pScriptRefOref =
+  ( Opt.option
+      (ScriptRefOref . txOutRefFromApi <$> readerFromParsecParser parseTxIn)
+      ( Opt.long "script-reference-oref"
+        <> Opt.metavar "TxId#TxIx"
+        <> Opt.help "TxOutRef to reference script."
+      )
+  )
+  <|> pure NotScriptRef
 
 ----- :parsing PolicyId: -----
 
@@ -266,6 +340,7 @@ pTxIdAlt = Opt.asum
 ----- :OutFile parser: -----
 
 data StageTx = RollupInit | RollupPark | RollupDataPark | RollupUpdate | RollupClear
+             | VerifierTransfer | VerifierTx
 
 class HasFileParser a where
   outFileName   :: a -> String
@@ -282,20 +357,26 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag RollupInit     = "rollup-init-out-file"
-  outFileFlag RollupPark     = "rollup-park-out-file"
-  outFileFlag RollupDataPark = "rollup-data-park-out-file"
-  outFileFlag RollupUpdate   = "rollup-update-out-file"
-  outFileFlag RollupClear    = "rollup-clear-out-file"
+  outFileFlag RollupInit       = "rollup-init-out-file"
+  outFileFlag RollupPark       = "rollup-park-out-file"
+  outFileFlag RollupDataPark   = "rollup-data-park-out-file"
+  outFileFlag RollupUpdate     = "rollup-update-out-file"
+  outFileFlag RollupClear      = "rollup-clear-out-file"
+  outFileFlag VerifierTransfer = "verifier-transfer-out-file"
+  outFileFlag VerifierTx       = "verifier-tx-out-file"
 
-  outFileName RollupInit     = "rollup-init.tx"
-  outFileName RollupPark     = "rollup-park.tx"
-  outFileName RollupDataPark = "rollup-data-park.tx"
-  outFileName RollupUpdate   = "rollup-update.tx"
-  outFileName RollupClear    = "rollup-clear.tx"
+  outFileName RollupInit       = "rollup-init.tx"
+  outFileName RollupPark       = "rollup-park.tx"
+  outFileName RollupDataPark   = "rollup-data-park.tx"
+  outFileName RollupUpdate     = "rollup-update.tx"
+  outFileName RollupClear      = "rollup-clear.tx"
+  outFileName VerifierTransfer = "verifier-transfer.tx"
+  outFileName VerifierTx       = "verifier-tx.tx"
 
-  outFileHelp RollupInit     = "Path (relative to 'assets/') for rollup initialization tx out-file."
-  outFileHelp RollupPark     = "Path (relative to 'assets/') for 'rollup' script-parking tx out-file."
-  outFileHelp RollupDataPark = "Path (relative to 'assets/') for 'rollupData' script-parking tx out-file."
-  outFileHelp RollupUpdate   = "Path (relative to 'assets/') for rollup update tx out-file."
-  outFileHelp RollupClear    = "Path (relative to 'assets/') for rollup token-clearing tx out-file."
+  outFileHelp RollupInit       = "Path (relative to 'assets/') for rollup initialization tx out-file."
+  outFileHelp RollupPark       = "Path (relative to 'assets/') for 'rollup' script-parking tx out-file."
+  outFileHelp RollupDataPark   = "Path (relative to 'assets/') for 'rollupData' script-parking tx out-file."
+  outFileHelp RollupUpdate     = "Path (relative to 'assets/') for rollup update tx out-file."
+  outFileHelp RollupClear      = "Path (relative to 'assets/') for rollup token-clearing tx out-file."
+  outFileHelp VerifierTransfer = "Path (relative to 'assets/') for plonkupVerifierTx transfer tx out-file."
+  outFileHelp VerifierTx       = "Path (relative to 'assets/') for plonkupVerifierTx verification tx out-file."

@@ -79,16 +79,17 @@ executable zkfold-cli
     hs-source-dirs:   app
     other-modules:
         ZkFold.Cardano.Atlas.Utils
-        ZkFold.Cardano.Balancing.Transaction.Balancing
-        ZkFold.Cardano.Balancing.Transaction.Init
-        ZkFold.Cardano.Balancing.Transaction.Transfer
         ZkFold.Cardano.Options.Common
+        ZkFold.Cardano.Options.CardanoCLI
         ZkFold.Cardano.Options.ZkCLI
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
-        ZkFold.Cardano.PlonkupVerifierTx.PlonkupVerifierTx
+        ZkFold.Cardano.PlonkupVerifierTx.Types
+        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init
+        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer
+        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx
         ZkFold.Cardano.Rollup.Transaction.Clear
         ZkFold.Cardano.Rollup.Transaction.Init
         ZkFold.Cardano.Rollup.Transaction.Update
@@ -118,7 +119,6 @@ executable zkfold-cli
         symbolic-base                  ,
         text                           ,
         transformers-except            ,
-        symbolic-base                  ,
         zkfold-cardano                 ,
         zkfold-cardano-scripts         ,
         zkfold-example                 ,
