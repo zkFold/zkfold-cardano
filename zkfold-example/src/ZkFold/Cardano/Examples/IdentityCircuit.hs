@@ -1,23 +1,23 @@
 module ZkFold.Cardano.Examples.IdentityCircuit where
 
-import           Data.Aeson                             (FromJSON, ToJSON)
-import           GHC.Generics                           (Generic, Par1 (..))
-import           Prelude                                hiding (Bool, Eq (..), Fractional (..), Num (..), length)
-import qualified Prelude                                as Haskell
+import           Data.Aeson                                 (FromJSON, ToJSON)
+import           GHC.Generics                               (Generic, Par1 (..))
+import           Prelude                                    hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import qualified Prelude                                    as Haskell
 
-import           ZkFold.Algebra.Class                   (zero)
-import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, Fr)
-import           ZkFold.Algebra.Field                   (toZp)
-import           ZkFold.Cardano.OffChain.Plonkup        (PlonkupN, mkInput, mkProof, mkSetup)
-import           ZkFold.Cardano.OnChain.BLS12_381.F     (F (..))
-import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data    (InputBytes, ProofBytes, SetupBytes)
-import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
-import           ZkFold.Protocol.Plonkup                (Plonkup (..))
-import           ZkFold.Protocol.Plonkup.Prover.Secret  (PlonkupProverSecret)
-import           ZkFold.Protocol.Plonkup.Utils          (getParams, getSecrectParams)
-import           ZkFold.Protocol.Plonkup.Witness        (PlonkupWitnessInput (..))
-import           ZkFold.Symbolic.Compiler               (ArithmeticCircuit (..), eval, idCircuit)
+import           ZkFold.Algebra.Class                       (zero)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381     (BLS12_381_G1_Point, Fr)
+import           ZkFold.Algebra.Field                       (toZp)
+import           ZkFold.Cardano.OffChain.Plonkup            (PlonkupN, mkInput, mkProof, mkSetup)
+import           ZkFold.Cardano.OnChain.BLS12_381.F         (F (..))
+import           ZkFold.Cardano.OnChain.Plonkup             (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data        (InputBytes, ProofBytes, SetupBytes)
+import           ZkFold.Protocol.NonInteractiveProof        (NonInteractiveProof (..))
+import           ZkFold.Protocol.Plonkup                    (Plonkup (..))
+import           ZkFold.Protocol.Plonkup.Prover.Secret      (PlonkupProverSecret)
+import           ZkFold.Protocol.Plonkup.Utils              (getParams, getSecretParams)
+import           ZkFold.Protocol.Plonkup.Witness            (PlonkupWitnessInput (..))
+import           ZkFold.Symbolic.Compiler.ArithmeticCircuit (ArithmeticCircuit (..), eval, idCircuit)
 
 data IdentityCircuitContract = IdentityCircuitContract {
     x'  :: Fr
@@ -32,7 +32,7 @@ identityCircuitVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point
 identityCircuitVerificationBytes x ps =
     let (omega, k1, k2) = getParams 2
         witnessInputs   = eval identityCircuit $ Par1 zero
-        (gs, h1)        = getSecrectParams x
+        (gs, h1)        = getSecretParams x
         plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 Par1 2
         setupP          = setupProve plonkup
         setupV          = setupVerify plonkup
@@ -47,7 +47,7 @@ stateCheckVerificationBytes x ps state =
         state'          = toZp n :: Fr
         (omega, k1, k2) = getParams 2
         witnessInputs   = Par1 state'
-        (gs, h1)        = getSecrectParams x
+        (gs, h1)        = getSecretParams x
         plonkup         = Plonkup omega k1 k2 identityCircuit h1 gs :: PlonkupN Par1 Par1 2
         setupP          = setupProve plonkup
         setupV          = setupVerify plonkup
