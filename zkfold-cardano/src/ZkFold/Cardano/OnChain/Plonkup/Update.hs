@@ -1,7 +1,8 @@
 module ZkFold.Cardano.OnChain.Plonkup.Update where
 
-import           PlutusTx.Builtins                   (BuiltinByteString, Integer, bls12_381_G1_compress,
-                                                      bls12_381_G1_scalarMul, bls12_381_G1_uncompress, bls12_381_G1_add)
+import           PlutusTx.Builtins                   (BuiltinByteString, Integer, bls12_381_G1_add,
+                                                      bls12_381_G1_compress, bls12_381_G1_scalarMul,
+                                                      bls12_381_G1_uncompress)
 import           PlutusTx.Prelude                    (($), (+))
 
 import           ZkFold.Algebra.Class                ((*))

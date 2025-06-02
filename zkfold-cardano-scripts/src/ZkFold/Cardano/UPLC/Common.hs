@@ -6,8 +6,8 @@ import           PlutusLedgerApi.V1.Value (flattenValue)
 import           PlutusLedgerApi.V3       (BuiltinData, ScriptContext (..), TxInInfo (..), TxInfo (..), TxOutRef,
                                            UnsafeFromData (..), mintValueBurned, mintValueMinted)
 import           PlutusTx                 (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
-import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, Integer, Monoid (mempty), any, check, ($), (&&),
-                                           (==), error)
+import           PlutusTx.Prelude         (Bool (..), BuiltinUnit, Integer, Monoid (mempty), any, check, error, ($),
+                                           (&&), (==))
 
 ---------------------------- :nftPolicy: ----------------------------
 
