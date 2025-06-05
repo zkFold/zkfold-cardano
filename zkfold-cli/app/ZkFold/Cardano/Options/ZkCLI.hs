@@ -1,36 +1,38 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
-import           Cardano.Api                                              (Doc, ExceptT (..), ShelleyBasedEra (..))
+import           Cardano.Api                                              (Doc, ExceptT (..))  -- ShelleyBasedEra (..)
 import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
 import           GeniusYield.GYConfig                                     (GYCoreConfig)
-import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum, many,
+import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,  -- many
                                                                            (<**>))
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
-import           ZkFold.Cardano.Options.CardanoCLI                        (pTxOutEraAware)
+import qualified ZkFold.Cardano.Asterizm.Transaction.Minting              as AsterizmMinting
+-- import           ZkFold.Cardano.Options.CardanoCLI                        (pTxOutEraAware)
 import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
-import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init        as VerifierInit
-import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer    as VerifierTransfer
-import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx          as VerifierTx
+-- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init        as VerifierInit
+-- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer    as VerifierTransfer
+-- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx          as VerifierTx
 import qualified ZkFold.Cardano.Rollup.Transaction.Clear                  as RollupClear
 import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
 import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
 
 
 data ClientCommand
-    = TransactionTokenInit     TokenInit.Transaction
+    = TransactionAsterizmMinting AsterizmMinting.Transaction
+    | TransactionTokenInit     TokenInit.Transaction
     | TransactionTokenTransfer TokenTransfer.Transaction
     | TransactionTokenMinting  TokenMinting.Transaction
     | TransactionTokenBurning  TokenBurning.Transaction
-    | TransactionVerifierInit     VerifierInit.Transaction
-    | TransactionVerifierTransfer VerifierTransfer.Transaction
-    | TransactionVerifierTx       VerifierTx.Transaction
+--    | TransactionVerifierInit     VerifierInit.Transaction
+--    | TransactionVerifierTransfer VerifierTransfer.Transaction
+--    | TransactionVerifierTx       VerifierTx.Transaction
     | TransactionRollupInit   RollupInit.Transaction
     | TransactionRollupUpdate RollupUpdate.Transaction
     | TransactionRollupClear  RollupClear.Transaction
@@ -55,17 +57,29 @@ pCmds :: FilePath -> Maybe GYCoreConfig -> Parser ClientCommand
 pCmds path mcfg = do
     asum $
         catMaybes
-            [ fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
+            [ fmap TransactionAsterizmMinting   <$> pTransactionAsterizmMinting path mcfg
+            , fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
             , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer path mcfg
             , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
             , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
             , fmap TransactionRollupInit        <$> pTransactionRollupInit path mcfg
             , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path mcfg
             , fmap TransactionRollupClear       <$> pTransactionRollupClear path mcfg
-            , fmap TransactionVerifierInit      <$> pTransactionVerifierInit path mcfg
-            , fmap TransactionVerifierTransfer  <$> pTransactionVerifierTransfer path mcfg
-            , fmap TransactionVerifierTx        <$> pTransactionVerifierTx path mcfg
+            -- , fmap TransactionVerifierInit      <$> pTransactionVerifierInit path mcfg
+            -- , fmap TransactionVerifierTransfer  <$> pTransactionVerifierTransfer path mcfg
+            -- , fmap TransactionVerifierTx        <$> pTransactionVerifierTx path mcfg
             ]
+
+pTransactionAsterizmMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser AsterizmMinting.Transaction)
+pTransactionAsterizmMinting path mcfg = do
+    pure $ subParser "asterizm-mint" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = do
+        AsterizmMinting.Transaction path
+            <$> pGYCoreConfig' mcfg
+            <*> pSigningKeyAlt
+            <*> pBenefOutAddress'
+            <*> pMessage
 
 pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
 pTransactionTokenInit path mcfg = do
@@ -161,45 +175,46 @@ pTransactionRollupClear path mcfg = do
             <*> pOutFile' RollupDataPark
             <*> pOutFile' RollupClear
 
-pTransactionVerifierInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierInit.Transaction)
-pTransactionVerifierInit path mcfg = do
-    pure $ subParser "plonkup-verifier-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-      VerifierInit.Transaction path
-            <$> pGYCoreConfig' mcfg
+-- pTransactionVerifierInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierInit.Transaction)
+-- pTransactionVerifierInit path mcfg = do
+--     pure $ subParser "plonkup-verifier-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--       VerifierInit.Transaction path
+--             <$> pGYCoreConfig' mcfg
 
-pTransactionVerifierTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierTransfer.Transaction)
-pTransactionVerifierTransfer path mcfg = do
-    pure $ subParser "plonkup-verifier-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-      VerifierTransfer.Transaction path
-            <$> pGYCoreConfig' mcfg
-            <*> pReward
-            <*> pSigningKeyAlt
-            <*> pChangeAddress'
-            <*> pOutFile' VerifierTransfer
+-- pTransactionVerifierTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierTransfer.Transaction)
+-- pTransactionVerifierTransfer path mcfg = do
+--     pure $ subParser "plonkup-verifier-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--       VerifierTransfer.Transaction path
+--             <$> pGYCoreConfig' mcfg
+--             <*> pReward
+--             <*> pSigningKeyAlt
+--             <*> pChangeAddress'
+--             <*> pOutFile' VerifierTransfer
 
-pTransactionVerifierTx :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierTx.Transaction)
-pTransactionVerifierTx path mcfg = do
-    pure $ subParser "plonkup-verifier-tx" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-      VerifierTx.Transaction path
-            <$> pGYCoreConfig' mcfg
-            <*> pSigningKeyAlt
-            <*> pChangeAddress'
-            <*> many pTxInputInfo
-            <*> many pTxInRefOref
-            <*> many (pTxOutEraAware ShelleyBasedEraConway)
-            <*> pSubmitTx
-            <*> pOutFile' VerifierTx
+-- pTransactionVerifierTx :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser VerifierTx.Transaction)
+-- pTransactionVerifierTx path mcfg = do
+--     pure $ subParser "plonkup-verifier-tx" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--       VerifierTx.Transaction path
+--             <$> pGYCoreConfig' mcfg
+--             <*> pSigningKeyAlt
+--             <*> pChangeAddress'
+--             <*> many pTxInputInfo
+--             <*> many pTxInRefOref
+--             <*> many (pTxOutEraAware ShelleyBasedEraConway)
+--             <*> pSubmitTx
+--             <*> pOutFile' VerifierTx
 
 data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
+    TransactionAsterizmMinting   cmd -> ExceptT (Right <$> AsterizmMinting.mint                cmd)
     TransactionTokenInit         cmd -> ExceptT (Right <$> TokenInit.tokenInit                 cmd)
     TransactionTokenTransfer     cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer         cmd)
     TransactionTokenMinting      cmd -> ExceptT (Right <$> TokenMinting.tokenMinting           cmd)
@@ -207,9 +222,9 @@ runClientCommand = \case
     TransactionRollupInit        cmd -> ExceptT (Right <$> RollupInit.rollupInit               cmd)
     TransactionRollupUpdate      cmd -> ExceptT (Right <$> RollupUpdate.rollupUpdate           cmd)
     TransactionRollupClear       cmd -> ExceptT (Right <$> RollupClear.rollupClear             cmd)
-    TransactionVerifierInit      cmd -> ExceptT (Right <$> VerifierInit.verifierInit           cmd)
-    TransactionVerifierTransfer  cmd -> ExceptT (Right <$> VerifierTransfer.verifierTransfer   cmd)
-    TransactionVerifierTx        cmd -> ExceptT (Right <$> VerifierTx.verifierTx               cmd)
+    -- TransactionVerifierInit      cmd -> ExceptT (Right <$> VerifierInit.verifierInit           cmd)
+    -- TransactionVerifierTransfer  cmd -> ExceptT (Right <$> VerifierTransfer.verifierTransfer   cmd)
+    -- TransactionVerifierTx        cmd -> ExceptT (Right <$> VerifierTx.verifierTx               cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

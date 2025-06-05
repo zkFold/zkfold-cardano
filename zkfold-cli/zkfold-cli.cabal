@@ -78,6 +78,7 @@ executable zkfold-cli
     main-is:          Main.hs
     hs-source-dirs:   app
     other-modules:
+        ZkFold.Cardano.Asterizm.Transaction.Minting
         ZkFold.Cardano.Atlas.Utils
         ZkFold.Cardano.Options.Common
         ZkFold.Cardano.Options.CardanoCLI
@@ -86,10 +87,10 @@ executable zkfold-cli
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
         ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
-        ZkFold.Cardano.PlonkupVerifierTx.Types
-        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init
-        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer
-        ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx
+        -- ZkFold.Cardano.PlonkupVerifierTx.Types
+        -- ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init
+        -- ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer
+        -- ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx
         ZkFold.Cardano.Rollup.Transaction.Clear
         ZkFold.Cardano.Rollup.Transaction.Init
         ZkFold.Cardano.Rollup.Transaction.Update

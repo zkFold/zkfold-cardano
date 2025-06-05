@@ -28,7 +28,13 @@ cabal run zkfold-cli -- token-init --help
 
 Note that only some of the options are mandatory; default values are chosen for the remainder.
 
+### Asterizm
+
+- `asterizm-mint`
+
 ### PlonkupVerifierTx
+
+*(Temporarily disabled)*
 
 - `plonkup-verifier-init`
 - `plonkup-verifier-transfer`
@@ -46,6 +52,17 @@ Note that only some of the options are mandatory; default values are chosen for 
 - `rollup-init`              
 - `rollup-update`            
 - `rollup-clear`             
+
+## Sample routine for *Asterizm*
+
+### Minting
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- asterizm-mint \
+> --signing-key-file ../tests/keys/alice.skey \
+> --beneficiary-address $(cat ../tests/keys/bob.addr) \
+> --message "Hello, Asterizm!"
+```
 
 ## Sample routine for *PlonkupVerifierTx*
 
