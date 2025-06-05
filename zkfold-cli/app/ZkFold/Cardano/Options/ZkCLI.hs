@@ -1,24 +1,20 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
-import           Cardano.Api                                              (Doc, ExceptT (..))  -- ShelleyBasedEra (..)
+import           Cardano.Api                                              (Doc, ExceptT (..))
 import           Cardano.CLI.Parser                                       (commandWithMetavar)
 import           Data.Maybe                                               (catMaybes)
 import           GeniusYield.GYConfig                                     (GYCoreConfig)
-import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,  -- many
+import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
                                                                            (<**>))
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
 import qualified ZkFold.Cardano.Asterizm.Transaction.Minting              as AsterizmMinting
--- import           ZkFold.Cardano.Options.CardanoCLI                        (pTxOutEraAware)
 import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
--- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init        as VerifierInit
--- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer    as VerifierTransfer
--- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx          as VerifierTx
 import qualified ZkFold.Cardano.Rollup.Transaction.Clear                  as RollupClear
 import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
 import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate

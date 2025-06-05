@@ -1,8 +1,8 @@
 module ZkFold.Cardano.Asterizm.Transaction.Minting where
 
 import           Control.Monad                 (when)
-import qualified Data.ByteString.Char8         as BS8
 import           Data.Aeson                    (encodeFile)
+import qualified Data.ByteString.Char8         as BS8
 import           Data.Maybe                    (fromJust)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
