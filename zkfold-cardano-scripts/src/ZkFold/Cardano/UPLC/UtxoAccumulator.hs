@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:optimize #-}
 
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
@@ -40,7 +40,7 @@ makeLift ''UtxoAccumulatorDatum
 
 data UtxoAccumulatorRedeemer =
       AddUtxo Integer UtxoAccumulatorDatum
-    | RemoveUtxo Address ProofBytes UtxoAccumulatorDatum
+    | RemoveUtxo Address Integer ProofBytes UtxoAccumulatorDatum
   deriving stock (Show, Generic)
 
 makeIsDataIndexed ''UtxoAccumulatorRedeemer [('AddUtxo,0),('RemoveUtxo,1)]
@@ -62,11 +62,11 @@ utxoAccumulator accumulationValue (AddUtxo h dat') ctx =
   in
     outputAcc == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
     && nextDatumHash == blake2b_224 (serialiseData $ toBuiltinData dat')
-utxoAccumulator accumulationValue (RemoveUtxo addr proof dat') ctx =
+utxoAccumulator accumulationValue (RemoveUtxo addr l proof dat') ctx =
   let
     Just (TxInInfo _ (TxOut ownAddr v (OutputDatum (Datum d)) Nothing))  = findOwnInput ctx
 
-    a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData addr
+    a = byteStringToInteger BigEndian $ blake2b_224 $ serialiseData $ toBuiltinData (addr, l)
 
     (datumAdd, UtxoAccumulatorDatum {..}, setup)  = unsafeFromBuiltinData d :: (UtxoAccumulatorDatum, UtxoAccumulatorDatum, SetupBytes)
     setup' = updateSetupBytes setup a $ fromMaybe "" maybeCurrentGroupElement
