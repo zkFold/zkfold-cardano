@@ -1,5 +1,7 @@
 # Cli scripts
 
+*Note:  This documentation is outdated.  Please refer to this [README](https://github.com/zkFold/zkfold-cardano/blob/main/zkfold-cli/README.md) .*
+
 ## Docs
 
 We have a description of transactions in `docs`.
