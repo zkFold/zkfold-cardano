@@ -15,20 +15,18 @@ import           System.FilePath               ((</>))
 import           ZkFold.Cardano.Options.Common
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmMessageCompiled)
 
+
 data Transaction = Transaction
   { curPath        :: !FilePath
   , coreCfgAlt     :: !CoreConfigAlt
   , requiredSigner :: !SigningKeyAlt
   , outAddress     :: !GYAddress
   , message        :: !String
+  , submitTx       :: !Bool
   }
 
--- | 'doSubmit == False' suffices for testing.  Set it to 'True' to actually mint & send Asterizm token.
-doSubmit :: Bool
-doSubmit = True
-
 mint :: Transaction -> IO ()
-mint (Transaction path coreCfg' sig sendTo msg) = do
+mint (Transaction path coreCfg' sig sendTo msg doSubmit) = do
   let assetsPath = path </> "assets"
 
   coreCfg <- fromCoreConfigAltIO coreCfg'
@@ -53,11 +51,11 @@ mint (Transaction path coreCfg' sig sendTo msg) = do
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
 
-  withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    let skeleton = mustHaveOutput (GYTxOut sendTo  tokenValue Nothing Nothing)
-                <> mustMint policy redeemer tokenName 1
-                <> mustBeSignedBy pkh
+  let skeleton = mustHaveOutput (GYTxOut sendTo  tokenValue Nothing Nothing)
+              <> mustMint policy redeemer tokenName 1
+              <> mustBeSignedBy pkh
 
+  withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
     txbody <- runGYTxGameMonadIO nid
                                  providers $
                                  asUser w1
@@ -73,5 +71,3 @@ mint (Transaction path coreCfg' sig sendTo msg) = do
 
       putStr $ "Transaction Id: " ++ show txid ++ "\n\n"
       encodeFile (assetsPath </> "asterizm-mint.tx") txid
-
---      wrapUpSubmittedTx "./assets/experimentSend.tx" tx

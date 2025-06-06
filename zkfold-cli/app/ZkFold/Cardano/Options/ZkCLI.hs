@@ -76,6 +76,7 @@ pTransactionAsterizmMinting path mcfg = do
             <*> pSigningKeyAlt
             <*> pBenefOutAddress'
             <*> pMessage
+            <*> pSubmitTx
 
 pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
 pTransactionTokenInit path mcfg = do

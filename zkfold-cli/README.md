@@ -62,6 +62,10 @@ zkfold-cardano$ cabal run zkfold-cli -- asterizm-mint \
 > --signing-key-file ../tests/keys/alice.skey \
 > --beneficiary-address $(cat ../tests/keys/bob.addr) \
 > --message "Hello, Asterizm!"
+> --submit-tx True
+
+Estimated transaction fee: 206813 Lovelace
+Transaction Id: 425452f6f7a440c7cabec6dcb9781d5b71fa63049880c0a8f099bf4eaeb1f805
 ```
 
 ## Sample routine for *PlonkupVerifierTx*
