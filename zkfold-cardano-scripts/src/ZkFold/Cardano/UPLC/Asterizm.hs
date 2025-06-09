@@ -14,9 +14,8 @@ import           PlutusLedgerApi.V1          (flattenValue)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol)
 import           PlutusTx                    (CompiledCode, compile)
--- import qualified PlutusTx.Builtins.Internal as BI
-import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Ord (..), blake2b_256, check, head,
-                                              ($), (&&), (.), (<>), (==), (||))
+import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Ord (..), blake2b_256, check, head, ($),
+                                              (&&), (.), (<>), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
 -- | Plutus script (minting policy) for posting signed messages on-chain.
