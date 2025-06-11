@@ -15,11 +15,12 @@ import           PlutusLedgerApi.V1          (currencySymbolValueOf, flattenValu
 import           PlutusLedgerApi.V1.Value    (withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
-import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift, unsafeApplyCode)
+import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
+                                              unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys)
 import           PlutusTx.Foldable           (foldMap)
-import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Ord (..), blake2b_256, check, elem, find, head,
-                                              ($), (<$>), (&&), (.), (==), (/=), (||))
+import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Ord (..), blake2b_256, check, elem, find,
+                                              head, ($), (&&), (.), (/=), (<$>), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
 
@@ -64,7 +65,7 @@ untypedAsterizmClient AsterizmClientSetup{..} ctx' = check $
     message :: BuiltinByteString
     message = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
 
-    relayers :: [CurrencySymbol] 
+    relayers :: [CurrencySymbol]
     relayers = case txOutDatum threadInput of
                  OutputDatum d -> unsafeFromBuiltinData $ getDatum d
                  _             -> traceError "Missing registry"
