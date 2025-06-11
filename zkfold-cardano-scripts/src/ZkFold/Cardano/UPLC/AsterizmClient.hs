@@ -9,15 +9,14 @@
 
 module ZkFold.Cardano.UPLC.AsterizmClient where
 
-import           Data.Coerce                 (coerce)
 import           Data.Maybe                  (fromJust)
-import           PlutusLedgerApi.V1          (currencySymbolValueOf, flattenValue, symbols)
+import           PlutusLedgerApi.V1          (currencySymbolValueOf, symbols)
 import           PlutusLedgerApi.V1.Value    (withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
                                               unsafeApplyCode)
-import           PlutusTx.AssocMap           (keys)
+import           PlutusTx.AssocMap           (keys, lookup, toList)
 import           PlutusTx.Foldable           (foldMap)
 import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Ord (..), blake2b_256, check, elem, find,
                                               head, ($), (&&), (.), (/=), (<$>), (==), (||))
@@ -36,8 +35,8 @@ makeIsDataIndexed ''AsterizmClientSetup [('AsterizmClientSetup,0)]
 -- | Plutus script (minting policy) for posting actual messages on-chain.
 {-# INLINABLE untypedAsterizmClient #-}
 untypedAsterizmClient :: AsterizmClientSetup -> BuiltinData -> BuiltinUnit
-untypedAsterizmClient AsterizmClientSetup{..} ctx' = check $
-    conditionBurning || conditionMinting && conditionSigned && conditionVerifying
+untypedAsterizmClient AsterizmClientSetup{..} ctx' = check $ conditionSigned &&
+    (conditionBurning || conditionMinting && conditionVerifying)
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -55,10 +54,10 @@ untypedAsterizmClient AsterizmClientSetup{..} ctx' = check $
     valueReferenced :: Value
     valueReferenced = foldMap txOutValue refInputs
 
-    minted :: [(CurrencySymbol, TokenName, Integer)]
-    minted = flattenValue . coerce . mintValueToMap $ txInfoMint info
+    minted :: [(TokenName, Integer)]
+    minted = toList . fromJust . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
 
-    (cs, tn, amt) = case minted of
+    (tn, amt) = case minted of
       [x] -> x
       _   -> traceError "Expected exactly one minting action"
 
@@ -75,14 +74,14 @@ untypedAsterizmClient AsterizmClientSetup{..} ctx' = check $
 
     tokenName = TokenName $ blake2b_256 message
 
-    conditionMinting = cs == ownCurrencySymbol ctx && tn == tokenName
+    conditionBurning = amt < 0
 
-    conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tm ->
-      head (keys tm) == tokenName
+    conditionMinting = tn == tokenName
 
     conditionSigned = txSignedBy info acsClientPKH
 
-    conditionBurning = amt < 0
+    conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tm ->
+      head (keys tm) == tokenName
 
 asterizmClientCompiled :: AsterizmClientSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmClientCompiled setup =
