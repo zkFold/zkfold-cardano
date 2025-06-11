@@ -71,6 +71,7 @@ library
   default-language: Haskell2010
   exposed-modules:
     ZkFold.Cardano.UPLC.Asterizm
+    ZkFold.Cardano.UPLC.AsterizmClient
     ZkFold.Cardano.UPLC.Common
     ZkFold.Cardano.UPLC.ForwardingScripts
     ZkFold.Cardano.UPLC.PlonkupVerifierToken
