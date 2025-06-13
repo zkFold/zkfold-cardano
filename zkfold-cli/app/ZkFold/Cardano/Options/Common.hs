@@ -205,6 +205,14 @@ pSubmitTx =
           <> Opt.help "Whether to submit the Tx (true or false)."
       )
 
+pMessage :: Parser String
+pMessage =
+  Opt.strOption
+    ( Opt.long "message"
+        <> Opt.metavar "MESSAGE"
+        <> Opt.help "Asterizm message."
+    )
+
 ----- :parsing TxInputInfo: -----
 
 data TxInputInfo = TxInputInfo
