@@ -13,8 +13,8 @@ import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.AssocMap           (lookup, toList)
-import           PlutusTx.Prelude            (BuiltinUnit, Integer, Maybe (..), Ord (..), check, fmapDefault, lengthOfByteString,
-                                              ($), (&&), (.), (==), (||))
+import           PlutusTx.Prelude            (BuiltinUnit, Integer, Maybe (..), Ord (..), check, fmapDefault,
+                                              lengthOfByteString, ($), (&&), (.), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
 
