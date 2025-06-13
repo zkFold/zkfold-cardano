@@ -9,12 +9,11 @@
 
 module ZkFold.Cardano.UPLC.AsterizmRelayer where
 
-import           Data.Maybe                  (fromJust)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.AssocMap           (lookup, toList)
-import           PlutusTx.Prelude            (BuiltinUnit, Integer, Ord (..), check, lengthOfByteString,
+import           PlutusTx.Prelude            (BuiltinUnit, Integer, Maybe (..), Ord (..), check, fmapDefault, lengthOfByteString,
                                               ($), (&&), (.), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
@@ -22,9 +21,9 @@ import           PlutusTx.Trace              (traceError)
 type RelayerPKH = PubKeyHash
 
 -- | Plutus script (minting policy) for posting signed messages on-chain.
-{-# INLINABLE untypedAsterizmMessage #-}
-untypedAsterizmMessage :: RelayerPKH -> BuiltinData -> BuiltinUnit
-untypedAsterizmMessage pkh ctx' = check $ conditionSigned && (conditionBurning || conditionVerifying)
+{-# INLINABLE untypedAsterizmRelayer #-}
+untypedAsterizmRelayer :: RelayerPKH -> BuiltinData -> BuiltinUnit
+untypedAsterizmRelayer pkh ctx' = check $ conditionSigned && (conditionBurning || conditionVerifying)
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -32,12 +31,12 @@ untypedAsterizmMessage pkh ctx' = check $ conditionSigned && (conditionBurning |
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
-    minted :: [(TokenName, Integer)]
-    minted = toList . fromJust . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
+    minted :: Maybe [(TokenName, Integer)]
+    minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
 
     (tn, amt) = case minted of
-      [x] -> x
-      _   -> traceError "Expected exactly one minting action"
+      Just [x] -> x
+      _        -> traceError "Expected exactly one minting action"
 
     messageHash :: BuiltinByteString
     messageHash = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
@@ -48,7 +47,7 @@ untypedAsterizmMessage pkh ctx' = check $ conditionSigned && (conditionBurning |
 
     conditionVerifying = lengthOfByteString messageHash == 32 && tn == TokenName messageHash
 
-asterizmMessageCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmMessageCompiled pkh =
-    $$(compile [|| untypedAsterizmMessage ||])
+asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmRelayerCompiled pkh =
+    $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
