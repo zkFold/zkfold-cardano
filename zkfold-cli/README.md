@@ -55,17 +55,57 @@ Note that only some of the options are mandatory; default values are chosen for 
 
 ## Sample routine for *Asterizm*
 
-### Minting
+### Init
 
 ```shell
-zkfold-cardano$ cabal run zkfold-cli -- asterizm-mint \
+zkfold-cardano$ cabal run zkfold-cli -- asterizm-init \
 > --signing-key-file ../tests/keys/alice.skey \
-> --beneficiary-address $(cat ../tests/keys/bob.addr) \
-> --message "Hello, Asterizm!" \
-> --submit-tx True
+> --tx-oref ec083d219f2d3f8d0dab367c8fab827462ae0d57e1248f0f583fa1a5dd9888eb#1 \
+> --beneficiary-address $(cat ../tests/keys/asterizm.addr) \
+> --client-pkh 5a5acb3bc00d3e7471d54b5c788b3f38f1b2a0eb2e2a259a027f5d07 \
+> --relayer-pkh 1b9e19486b86bc8bb54dda6878b62e67144fa1e64bf3d4ca937ad9ac \
+> --relayer-pkh 32c21126b8b3abf751d8d0a0d0c0e476143290cf764fc007a70a3155 \
+> --relayer-pkh faba5e87fb451ef0513f3949a45c392086e6fa2e92e81c3e8fcf9308
 
-Estimated transaction fee: 206813 Lovelace
-Transaction Id: 425452f6f7a440c7cabec6dcb9781d5b71fa63049880c0a8f099bf4eaeb1f805
+Estimated transaction fee: 397683 Lovelace
+Transaction Id: f50334e7dbd72d55af9c368f03402a17689f6b35dfe06c6cef8cbcf78b2d7d66
+```
+
+### Message
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- asterizm-message \
+> --message "Hello, Asterizm!"
+
+Saving Asterizm message (private file: message.private)...
+Saving message hash (public file: message-hash.public)...
+Done.
+```
+
+### Relayer
+
+Relayer mints token, with token-name the hash of the message.
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- asterizm-relayer \
+> --signing-key-file ../tests/keys/bob.skey \
+> --beneficiary-address $(cat ../tests/keys/bob.addr)
+
+Estimated transaction fee: 884420 Lovelace
+Transaction Id: 2d08f778c5dc9a2b483434fe3d38d05bff55e78fe88a6ba4532b7951adaadfc2
+```
+
+### Client
+
+Client mints token, with token-name the hash of the message, and posting the raw message as datum.
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- asterizm-client \
+> --signing-key-file ../tests/keys/alice.skey \
+> --beneficiary-address $(cat ../tests/keys/alice.addr)
+
+Estimated transaction fee: 1383689 Lovelace
+Transaction Id: 5aaf5cbc4c5e430ee9c8eda1c8bf19ad5e0e1c1ced8a3724a3e674165c93f7f7
 ```
 
 ## Sample routine for *PlonkupVerifierTx*

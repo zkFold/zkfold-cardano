@@ -92,7 +92,7 @@ pTransactionAsterizmInit path mcfg = do
 
 pTransactionAsterizmClient :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser AsterizmClient.Transaction)
 pTransactionAsterizmClient path mcfg = do
-    pure $ subParser "asterizm-client-test" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pure $ subParser "asterizm-client" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         AsterizmClient.Transaction path
@@ -100,8 +100,6 @@ pTransactionAsterizmClient path mcfg = do
             <*> pSigningKeyAlt
             <*> pBenefOutAddress
             <*> pMessageFile
-            <*> pTxInOref
-            <*> pTxInOref
 
 pTransactionAsterizmMessage :: FilePath -> Maybe (Parser AsterizmMessage.Transaction)
 pTransactionAsterizmMessage path = do
