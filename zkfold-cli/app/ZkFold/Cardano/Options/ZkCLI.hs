@@ -9,10 +9,9 @@ import           Options.Applicative                                      (Parse
 import qualified Options.Applicative                                      as Opt
 import           Prelude
 
-import qualified ZkFold.Cardano.Asterizm.Transaction.Init                 as AsterizmInit
 import qualified ZkFold.Cardano.Asterizm.Transaction.Client               as AsterizmClient
+import qualified ZkFold.Cardano.Asterizm.Transaction.Init                 as AsterizmInit
 import qualified ZkFold.Cardano.Asterizm.Transaction.Message              as AsterizmMessage
--- import qualified ZkFold.Cardano.Asterizm.Transaction.Minting              as AsterizmMinting
 import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer              as AsterizmRelayer
 import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning

@@ -1,10 +1,9 @@
 module ZkFold.Cardano.Asterizm.Types where
 
-import           Data.Aeson             (ToJSON(..), FromJSON(..), object, withObject, withText,
-                                         (.:), (.=))
-import           Data.ByteString        (ByteString)
-import qualified Data.ByteString.Base16 as B16
-import qualified Data.Text.Encoding     as TE
+import           Data.Aeson                    (FromJSON (..), ToJSON (..), object, withObject, withText, (.:), (.=))
+import           Data.ByteString               (ByteString)
+import qualified Data.ByteString.Base16        as B16
+import qualified Data.Text.Encoding            as TE
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (bsToHex, hexToBS)
@@ -41,7 +40,7 @@ instance ToJSON HexByteString where
   toJSON (HexByteString bs) = toJSON (TE.decodeUtf8 $ B16.encode bs)
 
 instance FromJSON HexByteString where
-  parseJSON = withText "HexByteString" $ \t -> 
+  parseJSON = withText "HexByteString" $ \t ->
     case B16.decode $ TE.encodeUtf8 t of
       Left err -> fail $ "Invalid hex string: " ++ err
       Right bs -> pure $ HexByteString bs

@@ -1,19 +1,19 @@
 module ZkFold.Cardano.Asterizm.Transaction.Message where
 
-import           Data.Aeson             (encodeFile)
-import qualified Data.ByteString        as BS
-import           PlutusCore.Crypto.Hash (blake2b_256)
+import           Data.Aeson                    (encodeFile)
+import qualified Data.ByteString               as BS
+import           PlutusCore.Crypto.Hash        (blake2b_256)
 import           Prelude
-import           System.FilePath        ((</>))
+import           System.FilePath               ((</>))
 
 import           ZkFold.Cardano.Asterizm.Types (HexByteString (..))
 
 
 data Transaction = Transaction
-  { curPath        :: !FilePath
-  , message        :: !BS.ByteString
-  , privateFile    :: !FilePath
-  , publicFile     :: !FilePath
+  { curPath     :: !FilePath
+  , message     :: !BS.ByteString
+  , privateFile :: !FilePath
+  , publicFile  :: !FilePath
   }
 
 clientMessage :: Transaction -> IO ()
