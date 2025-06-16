@@ -1,7 +1,6 @@
 module ZkFold.Cardano.Asterizm.Transaction.Init where
 
 import           Data.Aeson                          (encode, encodeFile)
-import qualified Data.ByteString                     as BS
 import qualified Data.ByteString.Lazy                as BL
 import           Data.String                         (fromString)
 import           GeniusYield.GYConfig                (GYCoreConfig (..), withCfgProviders)
