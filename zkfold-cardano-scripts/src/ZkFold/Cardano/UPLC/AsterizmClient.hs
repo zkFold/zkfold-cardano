@@ -64,7 +64,9 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
       _        -> traceError "Expected exactly one minting action"
 
     message :: BuiltinByteString
-    message = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
+    message = case txOutDatum . head $ txInfoOutputs info of
+      OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+      _             -> traceError "Expected output datum"
 
     relayers :: [CurrencySymbol]
     relayers = case txOutDatum threadInput of
@@ -79,14 +81,14 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
 
     tokenName = TokenName $ blake2b_256 message
 
+    conditionSigned = txSignedBy info acsClientPKH
+
     conditionBurning = amt < 0
 
     conditionMinting = tn == tokenName
 
-    conditionSigned = txSignedBy info acsClientPKH
-
-    conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tm ->
-      head (keys tm) == tokenName
+    conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
+      head (keys tokensMap) == tokenName
 
 asterizmClientCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmClientCompiled setup =

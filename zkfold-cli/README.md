@@ -61,7 +61,7 @@ Note that only some of the options are mandatory; default values are chosen for 
 zkfold-cardano$ cabal run zkfold-cli -- asterizm-mint \
 > --signing-key-file ../tests/keys/alice.skey \
 > --beneficiary-address $(cat ../tests/keys/bob.addr) \
-> --message "Hello, Asterizm!"
+> --message "Hello, Asterizm!" \
 > --submit-tx True
 
 Estimated transaction fee: 206813 Lovelace

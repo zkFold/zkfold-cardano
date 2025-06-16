@@ -41,9 +41,9 @@ untypedAsterizmRelayer pkh ctx' = check $ conditionSigned && (conditionBurning |
     messageHash :: BuiltinByteString
     messageHash = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
 
-    conditionBurning = amt < 0
-
     conditionSigned = txSignedBy info pkh
+
+    conditionBurning = amt < 0
 
     conditionVerifying = lengthOfByteString messageHash == 32 && tn == TokenName messageHash
 

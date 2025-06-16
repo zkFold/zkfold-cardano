@@ -78,7 +78,13 @@ executable zkfold-cli
     main-is:          Main.hs
     hs-source-dirs:   app
     other-modules:
-        ZkFold.Cardano.Asterizm.Transaction.Minting
+        ZkFold.Cardano.Asterizm.Types
+        ZkFold.Cardano.Asterizm.Utils
+        ZkFold.Cardano.Asterizm.Transaction.Init
+        ZkFold.Cardano.Asterizm.Transaction.Client
+        ZkFold.Cardano.Asterizm.Transaction.Message
+--         ZkFold.Cardano.Asterizm.Transaction.Minting
+        ZkFold.Cardano.Asterizm.Transaction.Relayer
         ZkFold.Cardano.Atlas.Utils
         ZkFold.Cardano.Options.Common
         ZkFold.Cardano.Options.CardanoCLI
@@ -111,6 +117,7 @@ executable zkfold-cli
         filepath                       ,
         optparse-applicative-fork      ,
         parsec                         ,
+        plutus-core                    ,
         plutus-ledger-api              ,
         plutus-tx                      ,
         prettyprinter                  ,
