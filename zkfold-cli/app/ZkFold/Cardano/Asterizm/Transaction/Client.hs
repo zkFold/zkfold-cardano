@@ -87,7 +87,7 @@ clientMint (Transaction path coreCfg' sig sendTo privFile) = do
 
     relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
       Right pids -> pure $ (\pid -> GYNonAdaToken pid tokenName) <$> pids
-      Left _ -> throwIO $ userError "Corrupted relayers' registry."
+      Left _     -> throwIO $ userError "Corrupted relayers' registry."
 
     relayerUtxos <- forM relayerTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
 
