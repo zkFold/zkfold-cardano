@@ -1,13 +1,14 @@
 module ZkFold.Cardano.Asterizm.Types where
 
-import           Data.Aeson                    (FromJSON (..), ToJSON (..), object, withObject, withText, (.:), (.=))
-import           Data.ByteString               (ByteString)
-import qualified Data.ByteString.Base16        as B16
-import qualified Data.Text.Encoding            as TE
-import qualified PlutusLedgerApi.V3            as V3
+import           Data.Aeson                         (FromJSON (..), ToJSON (..), object, withObject, withText, (.:),
+                                                     (.=))
+import           Data.ByteString                    (ByteString)
+import qualified Data.ByteString.Base16             as B16
+import qualified Data.Text.Encoding                 as TE
+import qualified PlutusLedgerApi.V3                 as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (bsToHex, hexToBS)
+import           ZkFold.Cardano.Asterizm.Utils      (bsToHex, hexToBS)
 import           ZkFold.Cardano.UPLC.AsterizmClient (AsterizmSetup (..))
 
 

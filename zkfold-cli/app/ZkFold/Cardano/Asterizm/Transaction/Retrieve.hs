@@ -9,7 +9,8 @@ import           Data.Aeson.Types
 import           Data.Coerce                        (coerce)
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as TE
-import           GeniusYield.GYConfig               (Confidential (..), GYCoreConfig (..), GYCoreProviderInfo (..), withCfgProviders)
+import           GeniusYield.GYConfig               (Confidential (..), GYCoreConfig (..), GYCoreProviderInfo (..),
+                                                     withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           Network.HTTP.Simple
@@ -23,8 +24,8 @@ import           ZkFold.Cardano.UPLC.AsterizmClient (asterizmClientCompiled)
 
 
 data Transaction = Transaction
-  { curPath        :: !FilePath
-  , coreCfgAlt     :: !CoreConfigAlt
+  { curPath    :: !FilePath
+  , coreCfgAlt :: !CoreConfigAlt
   }
 
 fromNetworkIdIO :: GYNetworkId -> IO String
@@ -32,7 +33,7 @@ fromNetworkIdIO nid = case nid of
   GYMainnet        -> pure "mainnet"
   GYTestnetPreprod -> pure "preprod"
   GYTestnetPreview -> pure "preview"
-  _ -> throwIO $ userError "Network not supported."
+  _                -> throwIO $ userError "Network not supported."
 
 displayMsg :: GYOutDatum -> IO ()
 displayMsg od = case od of

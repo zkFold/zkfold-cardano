@@ -1,30 +1,22 @@
 module ZkFold.Cardano.Options.ZkCLI where
 
-import           Cardano.Api                                              (Doc, ExceptT (..))
-import           Cardano.CLI.Parser                                       (commandWithMetavar)
-import           Data.Maybe                                               (catMaybes)
-import           GeniusYield.GYConfig                                     (GYCoreConfig)
-import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum, many,
-                                                                           (<**>))
-import qualified Options.Applicative                                      as Opt
+import           Cardano.Api                                  (Doc, ExceptT (..))
+import           Cardano.CLI.Parser                           (commandWithMetavar)
+import           Data.Maybe                                   (catMaybes)
+import           GeniusYield.GYConfig                         (GYCoreConfig)
+import           Options.Applicative                          (Parser, ParserInfo, ParserPrefs, asum, many, (<**>))
+import qualified Options.Applicative                          as Opt
 import           Prelude
 
-import qualified ZkFold.Cardano.Asterizm.Transaction.Client               as AsterizmClient
-import qualified ZkFold.Cardano.Asterizm.Transaction.Init                 as AsterizmInit
-import qualified ZkFold.Cardano.Asterizm.Transaction.Message              as AsterizmMessage
-import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer              as AsterizmRelayer
-import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve             as AsterizmRetrieve
+import qualified ZkFold.Cardano.Asterizm.Transaction.Client   as AsterizmClient
+import qualified ZkFold.Cardano.Asterizm.Transaction.Init     as AsterizmInit
+import qualified ZkFold.Cardano.Asterizm.Transaction.Message  as AsterizmMessage
+import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer  as AsterizmRelayer
+import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve as AsterizmRetrieve
 import           ZkFold.Cardano.Options.Common
--- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
--- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
--- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
--- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
--- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init        as VerifierInit
--- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer    as VerifierTransfer
--- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx          as VerifierTx
-import qualified ZkFold.Cardano.Rollup.Transaction.Clear                  as RollupClear
-import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
-import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
+import qualified ZkFold.Cardano.Rollup.Transaction.Clear      as RollupClear
+import qualified ZkFold.Cardano.Rollup.Transaction.Init       as RollupInit
+import qualified ZkFold.Cardano.Rollup.Transaction.Update     as RollupUpdate
 
 
 data ClientCommand
