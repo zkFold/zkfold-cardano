@@ -4,9 +4,11 @@ import           Data.Aeson                    (FromJSON (..), ToJSON (..), obje
 import           Data.ByteString               (ByteString)
 import qualified Data.ByteString.Base16        as B16
 import qualified Data.Text.Encoding            as TE
+import qualified PlutusLedgerApi.V3            as V3
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (bsToHex, hexToBS)
+import           ZkFold.Cardano.UPLC.AsterizmClient (AsterizmSetup (..))
 
 
 data AsterizmParams = AsterizmParams
@@ -26,10 +28,16 @@ instance FromJSON AsterizmParams where
     clientPKHHex    <- obj .: "apClientPKH"
     threadSymbolHex <- obj .: "apThreadSymbol"
 
-    clientPKH       <- hexToBS clientPKHHex
-    threadSymbol    <- hexToBS threadSymbolHex
+    clientPKH    <- hexToBS clientPKHHex
+    threadSymbol <- hexToBS threadSymbolHex
 
-    pure $ AsterizmParams clientPKH threadSymbol
+    return $ AsterizmParams clientPKH threadSymbol
+
+fromAsterizmParams :: AsterizmParams -> AsterizmSetup
+fromAsterizmParams (AsterizmParams pkh cs) = AsterizmSetup
+  { acsClientPKH    = V3.PubKeyHash $ V3.toBuiltin pkh
+  , acsThreadSymbol = V3.CurrencySymbol $ V3.toBuiltin cs
+  }
 
 
 -- | Hex-encoded ByteString wrapper.

@@ -83,16 +83,16 @@ executable zkfold-cli
         ZkFold.Cardano.Asterizm.Transaction.Init
         ZkFold.Cardano.Asterizm.Transaction.Client
         ZkFold.Cardano.Asterizm.Transaction.Message
---         ZkFold.Cardano.Asterizm.Transaction.Minting
         ZkFold.Cardano.Asterizm.Transaction.Relayer
+        ZkFold.Cardano.Asterizm.Transaction.Retrieve
         ZkFold.Cardano.Atlas.Utils
         ZkFold.Cardano.Options.Common
         ZkFold.Cardano.Options.CardanoCLI
         ZkFold.Cardano.Options.ZkCLI
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
+        -- ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
+        -- ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
+        -- ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
+        -- ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
         -- ZkFold.Cardano.PlonkupVerifierTx.Types
         -- ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init
         -- ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer
@@ -115,6 +115,7 @@ executable zkfold-cli
         directory                      ,
         extra                          ,
         filepath                       ,
+        http-conduit                   ,
         optparse-applicative-fork      ,
         parsec                         ,
         plutus-core                    ,

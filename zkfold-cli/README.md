@@ -42,6 +42,8 @@ Note that only some of the options are mandatory; default values are chosen for 
 
 ### PlonkupVerifierToken
 
+*(Temporarily disabled)*
+
 - `token-init`              
 - `token-transfer`           
 - `token-mint`               
@@ -106,6 +108,14 @@ zkfold-cardano$ cabal run zkfold-cli -- asterizm-client \
 
 Estimated transaction fee: 1383689 Lovelace
 Transaction Id: 5aaf5cbc4c5e430ee9c8eda1c8bf19ad5e0e1c1ced8a3724a3e674165c93f7f7
+```
+
+### Retrieve Messages
+
+To retrieve messages stored on-chain:
+
+```shell
+zkfold-cardano$ cabal run zkfold-cli -- asterizm-retrieve-messages
 ```
 
 ## Sample routine for *PlonkupVerifierTx*

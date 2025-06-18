@@ -13,7 +13,7 @@ import           PlutusLedgerApi.V3                 as V3
 import           Prelude
 import           System.FilePath                    ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types      (AsterizmParams (..), HexByteString (..))
+import           ZkFold.Cardano.Asterizm.Types      (HexByteString (..), fromAsterizmParams)
 import           ZkFold.Cardano.Asterizm.Utils      (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common
 import           ZkFold.Cardano.UPLC.AsterizmClient (AsterizmSetup (..), asterizmClientCompiled)
@@ -27,12 +27,6 @@ data Transaction = Transaction
   , privateFile    :: !FilePath
   }
 
-fromAsterizmParams :: AsterizmParams -> AsterizmSetup
-fromAsterizmParams (AsterizmParams pkh cs) = AsterizmSetup
-  { acsClientPKH    = PubKeyHash $ toBuiltin pkh
-  , acsThreadSymbol = CurrencySymbol $ toBuiltin cs
-  }
-
 clientMint :: Transaction -> IO ()
 clientMint (Transaction path coreCfg' sig sendTo privFile) = do
   let assetsPath = path </> "assets"
@@ -42,7 +36,7 @@ clientMint (Transaction path coreCfg' sig sendTo privFile) = do
 
   asterizmSetup <- case mAsterizmParams of
     Just ap -> pure $ fromAsterizmParams ap
-    Nothing -> throwIO $ userError "Unable to retrieve Asterizm setup file."
+    Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
   threadPolicyId <- case mintingPolicyIdFromCurrencySymbol $ acsThreadSymbol asterizmSetup of
     Right pid -> pure pid
@@ -63,7 +57,7 @@ clientMint (Transaction path coreCfg' sig sendTo privFile) = do
       changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash pkh
       w1         = User' skey Nothing changeAddr
 
-  let plutusPolicy = asterizmClientCompiled asterizmSetup
+  let plutusPolicy       = asterizmClientCompiled asterizmSetup
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = blake2b_256 msg
@@ -77,6 +71,8 @@ clientMint (Transaction path coreCfg' sig sendTo privFile) = do
     threadUtxos <- runGYTxQueryMonadIO nid providers $
       utxosWithAsset . GYNonAdaToken threadPolicyId $ fromString "Asterizm Registry"
 
+    -- | Assumption: whenever the thread-token is consumed, datum with Relayer's Registry
+    -- is updated correctly and pushed to the new UTxO where the thread-token is sent to.
     (threadOref, threadDatum) <- case utxosToList threadUtxos of
       [u] -> pure $ (utxoRef u, utxoOutDatum u)
       _   -> throwIO $ userError "Thread-symbol error: unable to locate thread-token."

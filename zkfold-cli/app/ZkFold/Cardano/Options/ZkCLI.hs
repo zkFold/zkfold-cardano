@@ -13,11 +13,15 @@ import qualified ZkFold.Cardano.Asterizm.Transaction.Client               as Ast
 import qualified ZkFold.Cardano.Asterizm.Transaction.Init                 as AsterizmInit
 import qualified ZkFold.Cardano.Asterizm.Transaction.Message              as AsterizmMessage
 import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer              as AsterizmRelayer
+import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve             as AsterizmRetrieve
 import           ZkFold.Cardano.Options.Common
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
+-- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
+-- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
+-- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
+-- import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
+-- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init        as VerifierInit
+-- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer    as VerifierTransfer
+-- import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Tx          as VerifierTx
 import qualified ZkFold.Cardano.Rollup.Transaction.Clear                  as RollupClear
 import qualified ZkFold.Cardano.Rollup.Transaction.Init                   as RollupInit
 import qualified ZkFold.Cardano.Rollup.Transaction.Update                 as RollupUpdate
@@ -27,15 +31,15 @@ data ClientCommand
     = TransactionAsterizmInit    AsterizmInit.Transaction
     | TransactionAsterizmClient  AsterizmClient.Transaction
     | TransactionAsterizmMessage AsterizmMessage.Transaction
---    | TransactionAsterizmMinting AsterizmMinting.Transaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
-    | TransactionTokenInit     TokenInit.Transaction
-    | TransactionTokenTransfer TokenTransfer.Transaction
-    | TransactionTokenMinting  TokenMinting.Transaction
-    | TransactionTokenBurning  TokenBurning.Transaction
---    | TransactionVerifierInit     VerifierInit.Transaction
---    | TransactionVerifierTransfer VerifierTransfer.Transaction
---    | TransactionVerifierTx       VerifierTx.Transaction
+    | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
+    -- | TransactionTokenInit     TokenInit.Transaction
+    -- | TransactionTokenTransfer TokenTransfer.Transaction
+    -- | TransactionTokenMinting  TokenMinting.Transaction
+    -- | TransactionTokenBurning  TokenBurning.Transaction
+    -- | TransactionVerifierInit     VerifierInit.Transaction
+    -- | TransactionVerifierTransfer VerifierTransfer.Transaction
+    -- | TransactionVerifierTx       VerifierTx.Transaction
     | TransactionRollupInit   RollupInit.Transaction
     | TransactionRollupUpdate RollupUpdate.Transaction
     | TransactionRollupClear  RollupClear.Transaction
@@ -63,12 +67,12 @@ pCmds path mcfg = do
             [ fmap TransactionAsterizmInit      <$> pTransactionAsterizmInit path mcfg
             , fmap TransactionAsterizmClient    <$> pTransactionAsterizmClient path mcfg
             , fmap TransactionAsterizmMessage   <$> pTransactionAsterizmMessage path
---            , fmap TransactionAsterizmMinting   <$> pTransactionAsterizmMinting path mcfg
             , fmap TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer path mcfg
-            , fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
-            , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer path mcfg
-            , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
-            , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
+            , fmap TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve path mcfg
+            -- , fmap TransactionTokenInit         <$> pTransactionTokenInit path mcfg
+            -- , fmap TransactionTokenTransfer     <$> pTransactionTokenTransfer path mcfg
+            -- , fmap TransactionTokenMinting      <$> pTransactionTokenMinting path mcfg
+            -- , fmap TransactionTokenBurning      <$> pTransactionTokenBurning path mcfg
             , fmap TransactionRollupInit        <$> pTransactionRollupInit path mcfg
             , fmap TransactionRollupUpdate      <$> pTransactionRollupUpdate path mcfg
             , fmap TransactionRollupClear       <$> pTransactionRollupClear path mcfg
@@ -111,18 +115,6 @@ pTransactionAsterizmMessage path = do
             <*> pMessageFile
             <*> pMessageHashFile
 
--- pTransactionAsterizmMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser AsterizmMinting.Transaction)
--- pTransactionAsterizmMinting path mcfg = do
---     pure $ subParser "asterizm-mint" $ Opt.info pCmd $ Opt.progDescDoc Nothing
---   where
---     pCmd = do
---         AsterizmMinting.Transaction path
---             <$> pGYCoreConfig mcfg
---             <*> pSigningKeyAlt
---             <*> pBenefOutAddress
---             <*> pMessage'
---             <*> pSubmitTx
-
 pTransactionAsterizmRelayer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser AsterizmRelayer.Transaction)
 pTransactionAsterizmRelayer path mcfg = do
     pure $ subParser "asterizm-relayer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
@@ -134,59 +126,67 @@ pTransactionAsterizmRelayer path mcfg = do
             <*> pBenefOutAddress
             <*> pMessageHashFile
 
-pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
-pTransactionTokenInit path mcfg = do
-    pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionAsterizmRetrieve :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser AsterizmRetrieve.Transaction)
+pTransactionAsterizmRetrieve path mcfg = do
+    pure $ subParser "asterizm-retrieve-messages" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        TokenInit.Transaction path
+        AsterizmRetrieve.Transaction path
             <$> pGYCoreConfig mcfg
-            <*> pFMTag
-            <*> pSigningKeyAlt
-            <*> pChangeAddress
-            <*> pParkOutAddress
-            <*> pOutFile TokenInit
 
-pTransactionTokenTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
-pTransactionTokenTransfer path mcfg = do
-    pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        TokenTransfer.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pFMTag
-            <*> pPolicyIdAlt
-            <*> pReward
-            <*> pSigningKeyAlt
-            <*> pChangeAddress
-            <*> pOutFile TokenTransfer
+-- pTransactionTokenInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenInit.Transaction)
+-- pTransactionTokenInit path mcfg = do
+--     pure $ subParser "token-init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--         TokenInit.Transaction path
+--             <$> pGYCoreConfig mcfg
+--             <*> pFMTag
+--             <*> pSigningKeyAlt
+--             <*> pChangeAddress
+--             <*> pParkOutAddress
+--             <*> pOutFile TokenInit
 
-pTransactionTokenMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenMinting.Transaction)
-pTransactionTokenMinting path mcfg = do
-    pure $ subParser "token-mint" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        TokenMinting.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
-            <*> pChangeAddress
-            <*> pBenefOutAddress
-            <*> pTxIdAlt
-            <*> pOutFile TokenMinting
+-- pTransactionTokenTransfer :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenTransfer.Transaction)
+-- pTransactionTokenTransfer path mcfg = do
+--     pure $ subParser "token-transfer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--         TokenTransfer.Transaction path
+--             <$> pGYCoreConfig mcfg
+--             <*> pFMTag
+--             <*> pPolicyIdAlt
+--             <*> pReward
+--             <*> pSigningKeyAlt
+--             <*> pChangeAddress
+--             <*> pOutFile TokenTransfer
 
-pTransactionTokenBurning :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenBurning.Transaction)
-pTransactionTokenBurning path mcfg = do
-    pure $ subParser "token-burn" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        TokenBurning.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pFMTag
-            <*> pSigningKeyAlt
-            <*> pChangeAddress
-            <*> pTokenAlt
-            <*> pTxIdAlt
-            <*> pOutFile TokenBurning
+-- pTransactionTokenMinting :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenMinting.Transaction)
+-- pTransactionTokenMinting path mcfg = do
+--     pure $ subParser "token-mint" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--         TokenMinting.Transaction path
+--             <$> pGYCoreConfig mcfg
+--             <*> pSigningKeyAlt
+--             <*> pChangeAddress
+--             <*> pBenefOutAddress
+--             <*> pTxIdAlt
+--             <*> pOutFile TokenMinting
+
+-- pTransactionTokenBurning :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser TokenBurning.Transaction)
+-- pTransactionTokenBurning path mcfg = do
+--     pure $ subParser "token-burn" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+--   where
+--     pCmd = do
+--         TokenBurning.Transaction path
+--             <$> pGYCoreConfig mcfg
+--             <*> pFMTag
+--             <*> pSigningKeyAlt
+--             <*> pChangeAddress
+--             <*> pTokenAlt
+--             <*> pTxIdAlt
+--             <*> pOutFile TokenBurning
 
 pTransactionRollupInit :: FilePath -> Maybe GYCoreConfig -> Maybe (Parser RollupInit.Transaction)
 pTransactionRollupInit path mcfg = do
@@ -270,12 +270,12 @@ runClientCommand = \case
     TransactionAsterizmInit      cmd -> ExceptT (Right <$> AsterizmInit.asterizmInit           cmd)
     TransactionAsterizmClient    cmd -> ExceptT (Right <$> AsterizmClient.clientMint           cmd)
     TransactionAsterizmMessage   cmd -> ExceptT (Right <$> AsterizmMessage.clientMessage       cmd)
---    TransactionAsterizmMinting   cmd -> ExceptT (Right <$> AsterizmMinting.mint                cmd)
     TransactionAsterizmRelayer   cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint         cmd)
-    TransactionTokenInit         cmd -> ExceptT (Right <$> TokenInit.tokenInit                 cmd)
-    TransactionTokenTransfer     cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer         cmd)
-    TransactionTokenMinting      cmd -> ExceptT (Right <$> TokenMinting.tokenMinting           cmd)
-    TransactionTokenBurning      cmd -> ExceptT (Right <$> TokenBurning.tokenBurning           cmd)
+    TransactionAsterizmRetrieve  cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs       cmd)
+    -- TransactionTokenInit         cmd -> ExceptT (Right <$> TokenInit.tokenInit                 cmd)
+    -- TransactionTokenTransfer     cmd -> ExceptT (Right <$> TokenTransfer.tokenTransfer         cmd)
+    -- TransactionTokenMinting      cmd -> ExceptT (Right <$> TokenMinting.tokenMinting           cmd)
+    -- TransactionTokenBurning      cmd -> ExceptT (Right <$> TokenBurning.tokenBurning           cmd)
     TransactionRollupInit        cmd -> ExceptT (Right <$> RollupInit.rollupInit               cmd)
     TransactionRollupUpdate      cmd -> ExceptT (Right <$> RollupUpdate.rollupUpdate           cmd)
     TransactionRollupClear       cmd -> ExceptT (Right <$> RollupClear.rollupClear             cmd)
