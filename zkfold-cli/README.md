@@ -30,7 +30,11 @@ Note that only some of the options are mandatory; default values are chosen for 
 
 ### Asterizm
 
-- `asterizm-mint`
+- `asterizm-init`
+- `asterizm-message`
+- `asterizm-relayer`
+- `asterizm-client`
+- `asterizm-retrieve-messages`
 
 ### PlonkupVerifierTx
 
