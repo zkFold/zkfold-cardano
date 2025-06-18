@@ -83,12 +83,12 @@ retrieveMsgs (Transaction path coreCfg') = do
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
     msgUtxos' <- forM msgTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
-    let msgUtxos = concat $ utxosToList . filterUTxOs (isInlineDatum . utxoOutDatum) <$> msgUtxos'
+    let msgUtxos = concat $ utxosToList <$> msgUtxos'
 
     putStr "\n"
     putStr"Messages on-chain:\n\n"
     mapM_ displayMsg $ utxoOutDatum <$> msgUtxos
-
+    putStr "\n"
 
 ------- :Helpers: -------
 
