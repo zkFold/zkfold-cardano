@@ -9,19 +9,34 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
-import           Data.Coerce                 (coerce)
-import           PlutusLedgerApi.V1          (flattenValue)
+import           PlutusLedgerApi.V1          (currencySymbolValueOf, symbols)
+import           PlutusLedgerApi.V1.Value    (withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
-import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol)
-import           PlutusTx                    (CompiledCode, compile)
-import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Ord (..), blake2b_256, check, head, ($),
-                                              (&&), (.), (<>), (==), (||))
+import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
+import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift, unsafeApplyCode)
+import           PlutusTx.AssocMap           (keys, lookup, toList)
+import           PlutusTx.Foldable           (foldMap)
+import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), blake2b_256, check, elem, find, fmapDefault,
+                                              head, lengthOfByteString, ($), (&&), (.), (/=), (<$>), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
+
+type RelayerPKH = PubKeyHash
+
+-- | Setup parameters for @asterizmClient@
+data AsterizmSetup = AsterizmSetup
+  { acsClientPKH    :: PubKeyHash
+  , acsThreadSymbol :: CurrencySymbol
+  }
+
+makeLift ''AsterizmSetup
+makeIsDataIndexed ''AsterizmSetup [('AsterizmSetup,0)]
+
+
 -- | Plutus script (minting policy) for posting signed messages on-chain.
-{-# INLINABLE untypedAsterizmMessage #-}
-untypedAsterizmMessage :: BuiltinData -> BuiltinUnit
-untypedAsterizmMessage ctx' = check $ conditionCurrency && (conditionBurning || conditionVerifying)
+{-# INLINABLE untypedAsterizmRelayer #-}
+untypedAsterizmRelayer :: RelayerPKH -> BuiltinData -> BuiltinUnit
+untypedAsterizmRelayer pkh ctx' = check $ conditionSigned && (conditionBurning || conditionVerifying)
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -29,72 +44,89 @@ untypedAsterizmMessage ctx' = check $ conditionCurrency && (conditionBurning || 
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
-    minted :: [(CurrencySymbol, TokenName, Integer)]
-    minted = flattenValue . coerce . mintValueToMap $ txInfoMint info
+    minted :: Maybe [(TokenName, Integer)]
+    minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
 
-    (cs, tn, amt) = case minted of
-      [x] -> x
-      _   -> traceError "Expected exactly one minting action"
+    (tn, amt) = case minted of
+      Just [x] -> x
+      _        -> traceError "Expected exactly one minting action"
 
-    conditionCurrency  = cs == ownCurrencySymbol ctx
+    messageHash :: BuiltinByteString
+    messageHash = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
 
-    conditionVerifying = tn == TokenName (blake2b_256 (getPubKeyHash pkh <> messageHash))
-      where
-        -- Redeemer expected as just a messageHash :: BuiltinByteString
-        messageHash = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
+    conditionSigned = txSignedBy info pkh
 
-        -- Extract verification key from signatories
-        pkh = case txInfoSignatories info of
-          [s] -> s
-          _   -> traceError "Expected exactly one signatory"
+    conditionBurning = amt < 0
 
-    conditionBurning = amt < 0 && case txOutDatum . head $ txInfoOutputs info of
-                           -- Datum (of first TxOut) expected as original message
-      OutputDatum d -> let message = unsafeFromBuiltinData $ getDatum d
-
-                           -- Redeemer expected as relayer's pkh
-                           pkh = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
-                       in  tn == TokenName (blake2b_256 (getPubKeyHash pkh <> blake2b_256 message))
-      _             -> False
+    conditionVerifying = lengthOfByteString messageHash == 32 && tn == TokenName messageHash
 
 
-{-
-untypedAsterizmMessage :: BuiltinData -> BuiltinUnit
-untypedAsterizmMessage ctx =
-  check $ conditionCurrency && conditionTokenName && (conditionBurning || conditionVerifying)
+-- | Plutus script (minting policy) for posting actual messages on-chain.
+{-# INLINABLE untypedAsterizmClient #-}
+untypedAsterizmClient :: AsterizmSetup -> BuiltinData -> BuiltinUnit
+untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
+    (conditionBurning || conditionMinting && conditionVerifying)
   where
-      scriptContextTxInfo'     = BI.snd $ BI.unsafeDataAsConstr ctx
-      scriptContextRedeemer'   = BI.tail scriptContextTxInfo'
-      scriptContextScriptInfo' = BI.tail scriptContextRedeemer'
+    ctx :: ScriptContext
+    ctx = unsafeFromBuiltinData ctx'
 
-      cs'        = BI.head $ BI.snd $ BI.unsafeDataAsConstr $ BI.head scriptContextScriptInfo'
-      info       = BI.head scriptContextTxInfo'
-      txInfoMint = BI.head $ tail4 $ BI.snd $ BI.unsafeDataAsConstr info
-      tail4      = BI.tail . BI.tail . BI.tail . BI.tail
+    info :: TxInfo
+    info = scriptContextTxInfo ctx
 
-      mints'             = BI.head $ BI.unsafeDataAsMap txInfoMint
-      conditionCurrency  = BI.ifThenElse (BI.equalsData cs' $ BI.fst mints') True False
+    refInputs :: [TxOut]
+    refInputs = txInInfoResolved <$> txInfoReferenceInputs info
 
-      ms = BI.unsafeDataAsMap $ BI.snd mints'
-      m' = BI.head ms
-      conditionTokenName = BI.ifThenElse (BI.null $ BI.tail ms) True False
+    threadInput :: TxOut
+    threadInput = case find (\i -> currencySymbolValueOf (txOutValue i) acsThreadSymbol == 1)
+                       refInputs of
+      Just out -> out
+      Nothing  -> traceError "Missing thread token."
 
-      t = BI.unsafeDataAsB $ BI.fst m'
-      n = BI.unsafeDataAsI $ BI.snd m'
+    valueReferenced :: Value
+    valueReferenced = foldMap txOutValue refInputs
 
-      -- Extract message from ScriptContext
-      message = BI.unsafeDataAsB $ BI.head scriptContextRedeemer'
+    minted :: Maybe [(TokenName, Integer)]
+    minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
 
-      -- Extract signatory
-      vk = BI.unsafeDataAsB $ BI.head $ BI.unsafeDataAsList $ BI.head $ tail4 $ tail4 $ BI.snd $ BI.unsafeDataAsConstr info
+    (tn, amt) = case minted of
+      Just [x] -> x
+      _        -> traceError "Expected exactly one minting action"
 
-      -- Burning already minted tokens
-      conditionBurning = n < 0
+    message :: BuiltinByteString
+    message = case txOutDatum . head $ txInfoOutputs info of
+      OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+      _             -> traceError "Expected output datum"
 
-      -- Verifying message signature
-      conditionVerifying = t == BI.blake2b_256 (vk <> message)
--}
+    relayers :: [CurrencySymbol]
+    relayers = case txOutDatum threadInput of
+                 OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+                 _             -> traceError "Missing registry"
 
-asterizmMessageCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmMessageCompiled =
-    $$(compile [|| untypedAsterizmMessage ||])
+    relayerCS :: CurrencySymbol
+    relayerCS = case find (\s -> s /= adaSymbol && s `elem` relayers) $ symbols
+                     valueReferenced of
+      Just cs -> cs
+      Nothing -> traceError "Unrecognized relayer"
+
+    tokenName = TokenName $ blake2b_256 message
+
+    conditionSigned = txSignedBy info acsClientPKH
+
+    conditionBurning = amt < 0
+
+    conditionMinting = tn == tokenName
+
+    conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
+      head (keys tokensMap) == tokenName
+
+
+asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmRelayerCompiled pkh =
+    $$(compile [|| untypedAsterizmRelayer ||])
+    `unsafeApplyCode` liftCodeDef pkh
+
+
+asterizmClientCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmClientCompiled setup =
+    $$(compile [|| untypedAsterizmClient ||])
+    `unsafeApplyCode` liftCodeDef setup

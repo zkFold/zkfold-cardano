@@ -2,25 +2,25 @@
 
 module ZkFold.Cardano.Asterizm.Transaction.Retrieve where
 
-import           Control.Exception                  (throwIO)
-import           Control.Monad                      (forM)
+import           Control.Exception             (throwIO)
+import           Control.Monad                 (forM)
 import           Data.Aeson
 import           Data.Aeson.Types
-import           Data.Coerce                        (coerce)
-import qualified Data.Text                          as T
-import qualified Data.Text.Encoding                 as TE
-import           GeniusYield.GYConfig               (Confidential (..), GYCoreConfig (..), GYCoreProviderInfo (..),
-                                                     withCfgProviders)
+import           Data.Coerce                   (coerce)
+import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as TE
+import           GeniusYield.GYConfig          (Confidential (..), GYCoreConfig (..), GYCoreProviderInfo (..),
+                                                withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           Network.HTTP.Simple
 import           Prelude
-import           System.FilePath                    ((</>))
+import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types      (fromAsterizmParams)
-import           ZkFold.Cardano.Asterizm.Utils      (policyFromPlutus)
+import           ZkFold.Cardano.Asterizm.Types (fromAsterizmParams)
+import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common
-import           ZkFold.Cardano.UPLC.AsterizmClient (asterizmClientCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
 
 
 data Transaction = Transaction
@@ -42,53 +42,60 @@ displayMsg od = case od of
 
 retrieveMsgs :: Transaction -> IO ()
 retrieveMsgs (Transaction path coreCfg') = do
-  let assetsPath = path </> "assets"
-      setupFile  = assetsPath </> "asterizm-setup.json"
-
-  mAsterizmParams <- decodeFileStrict setupFile
-
-  asterizmSetup <- case mAsterizmParams of
-    Just ap -> pure $ fromAsterizmParams ap
-    Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
-
-  let policyId  = snd . policyFromPlutus . asterizmClientCompiled $ asterizmSetup
-  let policyId' = trimQuot $ show policyId
-
   coreCfg <- fromCoreConfigAltIO coreCfg'
 
-  let nid = cfgNetworkId coreCfg
-  nidStg <- fromNetworkIdIO nid
+  case cfgCoreProvider coreCfg of
+    GYMaestro {} -> do
+      let assetsPath = path </> "assets"
+          setupFile  = assetsPath </> "asterizm-setup.json"
 
-  let requestUrl = "https://" ++ nidStg ++ ".gomaestro-api.org/v1/policy/" ++ policyId' ++ "/assets?count=100"
+      mAsterizmParams <- decodeFileStrict setupFile
 
-  let apiKey = TE.encodeUtf8 . coerce . cpiMaestroToken . cfgCoreProvider $ coreCfg
+      asterizmSetup <- case mAsterizmParams of
+        Just ap -> pure $ fromAsterizmParams ap
+        Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
-  initialRequest <- parseRequest requestUrl
-  let request = setRequestMethod "GET"
-              . addRequestHeader "accept" "application/json"
-              . addRequestHeader "api-key" apiKey
-              $ initialRequest
+      let policyId  = snd . policyFromPlutus $ asterizmClientCompiled asterizmSetup
+      let policyId' = trimQuot $ show policyId
 
-  response <- httpLBS request
-  let body = getResponseBody response
+      let nid = cfgNetworkId coreCfg
+      nid' <- fromNetworkIdIO nid
 
-  tokenNames <- case eitherDecode body of
-    Left err  -> throwIO $ userError $ "Failed to decode JSON: " ++ err
-    Right val -> do
-      case parseMaybe extractAssetNames val of
-        Nothing  -> throwIO $ userError "Could not extract asset names"
-        Just tns -> pure $ unsafeTokenNameFromHex <$> tns
+      let requestUrl = "https://" ++ nid' ++ ".gomaestro-api.org/v1/policy/" ++ policyId' ++ "/assets?count=100"
 
-  let msgTokens = GYNonAdaToken policyId <$> tokenNames
+      let apiKey = TE.encodeUtf8 . coerce . cpiMaestroToken . cfgCoreProvider $ coreCfg
 
-  withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    msgUtxos' <- forM msgTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
-    let msgUtxos = concat $ utxosToList <$> msgUtxos'
+      initialRequest <- parseRequest requestUrl
+      let request = setRequestMethod "GET"
+                  . addRequestHeader "accept" "application/json"
+                  . addRequestHeader "api-key" apiKey
+                  $ initialRequest
 
-    putStr "\n"
-    putStr"Messages on-chain:\n\n"
-    mapM_ displayMsg $ utxoOutDatum <$> msgUtxos
-    putStr "\n"
+      response <- httpLBS request
+      let body = getResponseBody response
+
+      tokenNames <- case eitherDecode body of
+        Left err  -> throwIO $ userError $ "Failed to decode JSON: " ++ err
+        Right val -> do
+          case parseMaybe extractAssetNames val of
+            Nothing  -> throwIO $ userError "Could not extract asset names"
+            Just tns -> pure $ unsafeTokenNameFromHex <$> tns
+
+      let msgTokens = GYNonAdaToken policyId <$> tokenNames
+
+      withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+        msgUtxos' <- forM msgTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
+        let msgUtxos = concat $ utxosToList <$> msgUtxos'
+
+        putStr "\n"
+        putStr "Client's messages on-chain:\n\n"
+
+        mapM_ displayMsg $ utxoOutDatum <$> msgUtxos
+
+        putStr "\n"
+
+    _            -> throwIO $ userError "Only 'Maestro' is currently supported as provider."
+
 
 ------- :Helpers: -------
 
