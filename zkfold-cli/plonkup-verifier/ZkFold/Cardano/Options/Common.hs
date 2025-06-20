@@ -177,8 +177,8 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag VerifierTransfer = "verifier-transfer-out-file"
-  outFileFlag VerifierTx       = "verifier-tx-out-file"
+  outFileFlag VerifierTransfer = "transfer-out-file"
+  outFileFlag VerifierTx       = "tx-out-file"
 
   outFileName VerifierTransfer = "verifier-transfer.tx"
   outFileName VerifierTx       = "verifier-tx.tx"

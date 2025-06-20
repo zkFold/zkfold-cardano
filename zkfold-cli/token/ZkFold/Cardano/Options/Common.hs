@@ -231,10 +231,10 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag TokenInit     = "token-init-out-file"
-  outFileFlag TokenTransfer = "token-transfer-out-file"
-  outFileFlag TokenMinting  = "token-mint-out-file"
-  outFileFlag TokenBurning  = "token-burn-out-file"
+  outFileFlag TokenInit     = "init-out-file"
+  outFileFlag TokenTransfer = "transfer-out-file"
+  outFileFlag TokenMinting  = "mint-out-file"
+  outFileFlag TokenBurning  = "burn-out-file"
 
   outFileName TokenInit     = "token-init.tx"
   outFileName TokenTransfer = "token-transfer.tx"

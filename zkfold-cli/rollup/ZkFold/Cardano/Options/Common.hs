@@ -119,11 +119,11 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag RollupInit     = "rollup-init-out-file"
-  outFileFlag RollupPark     = "rollup-park-out-file"
-  outFileFlag RollupDataPark = "rollup-data-park-out-file"
-  outFileFlag RollupUpdate   = "rollup-update-out-file"
-  outFileFlag RollupClear    = "rollup-clear-out-file"
+  outFileFlag RollupInit     = "init-out-file"
+  outFileFlag RollupPark     = "park-out-file"
+  outFileFlag RollupDataPark = "data-park-out-file"
+  outFileFlag RollupUpdate   = "update-out-file"
+  outFileFlag RollupClear    = "clear-out-file"
 
   outFileName RollupInit     = "rollup-init.tx"
   outFileName RollupPark     = "rollup-park.tx"

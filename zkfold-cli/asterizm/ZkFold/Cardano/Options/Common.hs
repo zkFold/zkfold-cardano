@@ -173,9 +173,9 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag AsterizmInit    = "asterizm-init-out-file"
-  outFileFlag AsterizmRelayer = "asterizm-relayer-out-file"
-  outFileFlag AsterizmClient  = "asterizm-client-out-file"
+  outFileFlag AsterizmInit    = "init-out-file"
+  outFileFlag AsterizmRelayer = "relayer-out-file"
+  outFileFlag AsterizmClient  = "client-out-file"
 
   outFileName AsterizmInit    = "asterizm-init.tx"
   outFileName AsterizmRelayer = "asterizm-relayer-mint.tx"
