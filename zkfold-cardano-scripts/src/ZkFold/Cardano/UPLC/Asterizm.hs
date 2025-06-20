@@ -13,11 +13,13 @@ import           PlutusLedgerApi.V1          (currencySymbolValueOf, symbols)
 import           PlutusLedgerApi.V1.Value    (withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
-import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift, unsafeApplyCode)
+import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
+                                              unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
 import           PlutusTx.Foldable           (foldMap)
-import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), blake2b_256, check, elem, find, fmapDefault,
-                                              head, lengthOfByteString, ($), (&&), (.), (/=), (<$>), (==), (||))
+import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), blake2b_256, check,
+                                              elem, find, fmapDefault, head, lengthOfByteString, ($), (&&), (.), (/=),
+                                              (<$>), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
 

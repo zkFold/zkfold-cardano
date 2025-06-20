@@ -1,17 +1,18 @@
 module ZkFold.Cardano.Options.TokenCLI where
 
-import           Cardano.Api                                  (Doc, ExceptT (..))
-import           Cardano.CLI.Parser                           (commandWithMetavar)
-import           GeniusYield.GYConfig                         (GYCoreConfig)
-import           Options.Applicative                          (Parser, ParserInfo, ParserPrefs, asum, (<**>))
-import qualified Options.Applicative                          as Opt
+import           Cardano.Api                                              (Doc, ExceptT (..))
+import           Cardano.CLI.Parser                                       (commandWithMetavar)
+import           GeniusYield.GYConfig                                     (GYCoreConfig)
+import           Options.Applicative                                      (Parser, ParserInfo, ParserPrefs, asum,
+                                                                           (<**>))
+import qualified Options.Applicative                                      as Opt
 import           Prelude
 
 import           ZkFold.Cardano.Options.Common
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
-import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
 import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning  as TokenBurning
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init     as TokenInit
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting  as TokenMinting
+import qualified ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer as TokenTransfer
 
 
 data ClientCommand

@@ -3,8 +3,7 @@
 module ZkFold.Cardano.Options.Common where
 
 import           Cardano.Api                        (parseAddressAny)
-import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn,
-                                                     readerFromParsecParser)
+import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn, readerFromParsecParser)
 import           Control.Exception                  (throwIO)
 import qualified Data.ByteString.Char8              as BS
 import           GeniusYield.GYConfig               as GY
@@ -120,20 +119,20 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag RollupInit       = "rollup-init-out-file"
-  outFileFlag RollupPark       = "rollup-park-out-file"
-  outFileFlag RollupDataPark   = "rollup-data-park-out-file"
-  outFileFlag RollupUpdate     = "rollup-update-out-file"
-  outFileFlag RollupClear      = "rollup-clear-out-file"
+  outFileFlag RollupInit     = "rollup-init-out-file"
+  outFileFlag RollupPark     = "rollup-park-out-file"
+  outFileFlag RollupDataPark = "rollup-data-park-out-file"
+  outFileFlag RollupUpdate   = "rollup-update-out-file"
+  outFileFlag RollupClear    = "rollup-clear-out-file"
 
-  outFileName RollupInit       = "rollup-init.tx"
-  outFileName RollupPark       = "rollup-park.tx"
-  outFileName RollupDataPark   = "rollup-data-park.tx"
-  outFileName RollupUpdate     = "rollup-update.tx"
-  outFileName RollupClear      = "rollup-clear.tx"
+  outFileName RollupInit     = "rollup-init.tx"
+  outFileName RollupPark     = "rollup-park.tx"
+  outFileName RollupDataPark = "rollup-data-park.tx"
+  outFileName RollupUpdate   = "rollup-update.tx"
+  outFileName RollupClear    = "rollup-clear.tx"
 
-  outFileHelp RollupInit       = "Path (relative to 'assets/') for rollup initialization tx out-file."
-  outFileHelp RollupPark       = "Path (relative to 'assets/') for 'rollup' script-parking tx out-file."
-  outFileHelp RollupDataPark   = "Path (relative to 'assets/') for 'rollupData' script-parking tx out-file."
-  outFileHelp RollupUpdate     = "Path (relative to 'assets/') for rollup update tx out-file."
-  outFileHelp RollupClear      = "Path (relative to 'assets/') for rollup token-clearing tx out-file."
+  outFileHelp RollupInit     = "Path (relative to 'assets/') for rollup initialization tx out-file."
+  outFileHelp RollupPark     = "Path (relative to 'assets/') for 'rollup' script-parking tx out-file."
+  outFileHelp RollupDataPark = "Path (relative to 'assets/') for 'rollupData' script-parking tx out-file."
+  outFileHelp RollupUpdate   = "Path (relative to 'assets/') for rollup update tx out-file."
+  outFileHelp RollupClear    = "Path (relative to 'assets/') for rollup token-clearing tx out-file."

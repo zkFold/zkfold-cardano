@@ -3,8 +3,7 @@
 module ZkFold.Cardano.Options.Common where
 
 import           Cardano.Api                        (parseAddressAny)
-import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn,
-                                                     readerFromParsecParser)
+import           Cardano.CLI.EraBased.Common.Option (parseFilePath, parseTxIn, readerFromParsecParser)
 import           Control.Exception                  (throwIO)
 import qualified Data.ByteString.Base16             as B16
 import qualified Data.ByteString.Char8              as BS

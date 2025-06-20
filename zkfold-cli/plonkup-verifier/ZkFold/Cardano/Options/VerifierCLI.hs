@@ -1,10 +1,11 @@
 module ZkFold.Cardano.Options.VerifierCLI where
 
-import           Cardano.Api                                  (Doc, ExceptT (..), ShelleyBasedEra (..))
-import           Cardano.CLI.Parser                           (commandWithMetavar)
-import           GeniusYield.GYConfig                         (GYCoreConfig)
-import           Options.Applicative                          (Parser, ParserInfo, ParserPrefs, asum, many, (<**>))
-import qualified Options.Applicative                          as Opt
+import           Cardano.Api                                           (Doc, ExceptT (..), ShelleyBasedEra (..))
+import           Cardano.CLI.Parser                                    (commandWithMetavar)
+import           GeniusYield.GYConfig                                  (GYCoreConfig)
+import           Options.Applicative                                   (Parser, ParserInfo, ParserPrefs, asum, many,
+                                                                        (<**>))
+import qualified Options.Applicative                                   as Opt
 import           Prelude
 
 import           ZkFold.Cardano.Options.CardanoCLI

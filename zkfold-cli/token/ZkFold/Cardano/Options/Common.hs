@@ -231,17 +231,17 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag TokenInit        = "token-init-out-file"
-  outFileFlag TokenTransfer    = "token-transfer-out-file"
-  outFileFlag TokenMinting     = "token-mint-out-file"
-  outFileFlag TokenBurning     = "token-burn-out-file"
+  outFileFlag TokenInit     = "token-init-out-file"
+  outFileFlag TokenTransfer = "token-transfer-out-file"
+  outFileFlag TokenMinting  = "token-mint-out-file"
+  outFileFlag TokenBurning  = "token-burn-out-file"
 
-  outFileName TokenInit        = "token-init.tx"
-  outFileName TokenTransfer    = "token-transfer.tx"
-  outFileName TokenMinting     = "token-mint.tx"
-  outFileName TokenBurning     = "token-burn.tx"
+  outFileName TokenInit     = "token-init.tx"
+  outFileName TokenTransfer = "token-transfer.tx"
+  outFileName TokenMinting  = "token-mint.tx"
+  outFileName TokenBurning  = "token-burn.tx"
 
-  outFileHelp TokenInit        = "Path (relative to 'assets/') for plonkupVerifierToken initialization tx out-file."
-  outFileHelp TokenTransfer    = "Path (relative to 'assets/') for plonkupVerifierToken reward transfer tx out-file."
-  outFileHelp TokenMinting     = "Path (relative to 'assets/') for plonkupVerifierToken minting tx out-file."
-  outFileHelp TokenBurning     = "Path (relative to 'assets/') for plonkupVerifierToken burning tx out-file."
+  outFileHelp TokenInit     = "Path (relative to 'assets/') for plonkupVerifierToken initialization tx out-file."
+  outFileHelp TokenTransfer = "Path (relative to 'assets/') for plonkupVerifierToken reward transfer tx out-file."
+  outFileHelp TokenMinting  = "Path (relative to 'assets/') for plonkupVerifierToken minting tx out-file."
+  outFileHelp TokenBurning  = "Path (relative to 'assets/') for plonkupVerifierToken burning tx out-file."
