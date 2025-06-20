@@ -22,10 +22,11 @@ data Transaction = Transaction
   , requiredSigner :: !SigningKeyAlt
   , outAddress     :: !GYAddress
   , publicFile     :: !FilePath
+  , outFile        :: !FilePath
   }
 
 relayerMint :: Transaction -> IO ()
-relayerMint (Transaction path coreCfg' sig sendTo pubFile) = do
+relayerMint (Transaction path coreCfg' sig sendTo pubFile outFile) = do
   let assetsPath = path </> "assets"
 
   coreCfg <- fromCoreConfigAltIO coreCfg'
@@ -70,4 +71,4 @@ relayerMint (Transaction path coreCfg' sig sendTo pubFile) = do
                                (signAndSubmitConfirmed txbody)
 
     putStr $ "Transaction Id: " ++ show txid ++ "\n\n"
-    encodeFile (assetsPath </> "asterizm-relayer-mint.tx") txid
+    encodeFile (assetsPath </> outFile) txid

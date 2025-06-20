@@ -27,10 +27,11 @@ data Transaction = Transaction
   , outAddress     :: !GYAddress
   , clientPKH      :: !GYPubKeyHash
   , relayerPKHs    :: ![GYPubKeyHash]
+  , outFile        :: !FilePath
   }
 
 asterizmInit :: Transaction -> IO ()
-asterizmInit (Transaction path coreCfg' sig nftOref sendTo clientPKH relayerPKHs) = do
+asterizmInit (Transaction path coreCfg' sig nftOref sendTo clientPKH relayerPKHs outFile) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
 
@@ -88,7 +89,7 @@ asterizmInit (Transaction path coreCfg' sig nftOref sendTo clientPKH relayerPKHs
                                    (signAndSubmitConfirmed txbody)
 
         putStr $ "Transaction Id: " ++ show txid ++ "\n\n"
-        encodeFile (assetsPath </> "asterizm-init.tx") txid
+        encodeFile (assetsPath </> outFile) txid
 
 
 ------------------------------- :Helpers: --------------------------------

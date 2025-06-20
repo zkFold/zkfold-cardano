@@ -25,10 +25,11 @@ data Transaction = Transaction
   , requiredSigner :: !SigningKeyAlt
   , outAddress     :: !GYAddress
   , privateFile    :: !FilePath
+  , outFile        :: !FilePath
   }
 
 clientMint :: Transaction -> IO ()
-clientMint (Transaction path coreCfg' sig sendTo privFile) = do
+clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
 
@@ -110,4 +111,4 @@ clientMint (Transaction path coreCfg' sig sendTo privFile) = do
                                (signAndSubmitConfirmed txbody)
 
     putStr $ "Transaction Id: " ++ show txid ++ "\n\n"
-    encodeFile (assetsPath </> "asterizm-client-mint.tx") txid
+    encodeFile (assetsPath </> outFile) txid
