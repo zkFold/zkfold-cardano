@@ -23,6 +23,8 @@ import           ZkFold.Cardano.Options.Common
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
 
 
+-- Assumption: client's tokens are never consumed.
+
 data Transaction = Transaction
   { curPath    :: !FilePath
   , coreCfgAlt :: !CoreConfigAlt
