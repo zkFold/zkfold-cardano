@@ -2,10 +2,10 @@
 
 This directory houses CLI commands for the following projects:
 
+- Asterizm
+- PlonkupVerifierTx
 - PlonkupVerifierToken
 - Rollup
-- PlonkupVerifierTx
-- Balancing
 
 High-level documentation for some of these can be found [here](https://github.com/zkFold/zkfold-cardano/tree/main/docs).
 
