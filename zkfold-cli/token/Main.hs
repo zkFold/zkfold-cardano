@@ -12,7 +12,7 @@ import           System.Directory                (createDirectoryIfMissing, getC
 import           System.Environment              (lookupEnv)
 import           System.FilePath                 (takeFileName, (</>))
 
-import           ZkFold.Cardano.Options.ZkCLI    (opts, pref, renderClientCommandError, runClientCommand)
+import           ZkFold.Cardano.Options.TokenCLI (opts, pref, renderClientCommandError, runClientCommand)
 
 main :: IO ()
 main = toplevelExceptionHandler $ do
