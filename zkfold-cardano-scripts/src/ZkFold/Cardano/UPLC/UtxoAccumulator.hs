@@ -8,6 +8,7 @@
 module ZkFold.Cardano.UPLC.UtxoAccumulator where
 
 import           GHC.Generics                          (Generic)
+import           PlutusLedgerApi.V1.Value              (geq)
 import           PlutusLedgerApi.V3                    (Address, Datum (..), OutputDatum (NoOutputDatum, OutputDatum),
                                                         Redeemer (..), ScriptContext (..), ToData (..), TxInInfo (..),
                                                         TxInfo (..), TxOut (..), Value)
@@ -75,10 +76,12 @@ utxoAccumulator accumulationValue (RemoveUtxo addr l proof dat') ctx =
     v' = v - accumulationValue
 
     outputAcc  = head $ txInfoOutputs $ scriptContextTxInfo ctx
-    outputUser = head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
+    TxOut outputAddr outputValue NoOutputDatum Nothing =
+      head $ tail $ txInfoOutputs $ scriptContextTxInfo ctx
   in
        outputAcc  == TxOut ownAddr v' (OutputDatum (Datum d')) Nothing
-    && outputUser == TxOut addr accumulationValue NoOutputDatum Nothing
+    && outputAddr == addr
+    && outputValue `geq` accumulationValue
     && verify @PlonkupPlutus setup [] proof
     && nextDatumHash == blake2b_224 (serialiseData $ toBuiltinData dat')
 
