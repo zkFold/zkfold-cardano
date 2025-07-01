@@ -70,13 +70,33 @@ common lang-extra
     -- By default, we defer the errors as they mess with the HLS
     -fplugin-opt PlutusTx.Plugin:defer-errors
 
+library
+  import: lang
+  default-language: Haskell2010
+  exposed-modules:
+    ZkFold.Cardano.CLI.Parsers
+    ZkFold.Cardano.CLI.Utils
+  hs-source-dirs: src
+  build-depends:
+    aeson                     ,
+    atlas-cardano             ,
+    base         >= 4.9 && < 5,
+    base16-bytestring         ,
+    bytestring                ,
+    cardano-api               ,
+    cardano-cli               ,
+    extra                     ,
+    optparse-applicative-fork ,
+    parsec                    ,
+    plutus-ledger-api
+
 executable asterizm
     import:           lang
     import:           lang-extra
     default-language: Haskell2010
     ghc-options:      -rtsopts
     main-is:          Main.hs
-    hs-source-dirs:   asterizm
+    hs-source-dirs:   app/asterizm
     other-modules:
         ZkFold.Cardano.Asterizm.Types
         ZkFold.Cardano.Asterizm.Utils
@@ -110,84 +130,7 @@ executable asterizm
         transformers-except            ,
         zkfold-cardano                 ,
         zkfold-cardano-scripts         ,
-        zkfold-example                 ,
-
-executable rollup
-    import:           lang
-    import:           lang-extra
-    default-language: Haskell2010
-    ghc-options:      -rtsopts
-    main-is:          Main.hs
-    hs-source-dirs:   rollup
-    other-modules:
-        ZkFold.Cardano.Atlas.Utils
-        ZkFold.Cardano.Options.Common
-        ZkFold.Cardano.Options.RollupCLI
-        ZkFold.Cardano.Rollup.Transaction.Clear
-        ZkFold.Cardano.Rollup.Transaction.Init
-        ZkFold.Cardano.Rollup.Transaction.Update
-        ZkFold.Cardano.Rollup.Data
-    build-depends:
-        aeson                          ,
-        atlas-cardano                  ,
-        base              >= 4.9 && < 5,
-        base16-bytestring              ,
-        bytestring                     ,
-        cardano-api                    ,
-        cardano-cli                    ,
-        cardano-crypto-class           ,
-        containers                     ,
-        directory                      ,
-        extra                          ,
-        filepath                       ,
-        optparse-applicative-fork      ,
-        parsec                         ,
-        plutus-ledger-api              ,
-        plutus-tx                      ,
-        QuickCheck                     ,
-        random                         ,
-        symbolic-base                  ,
-        transformers-except            ,
-        zkfold-cardano                 ,
-        zkfold-cardano-scripts         ,
-        zkfold-example                 ,
-
-executable token
-    import:           lang
-    import:           lang-extra
-    default-language: Haskell2010
-    ghc-options:      -rtsopts
-    main-is:          Main.hs
-    hs-source-dirs:   token
-    other-modules:
-        ZkFold.Cardano.Atlas.Utils
-        ZkFold.Cardano.Options.Common
-        ZkFold.Cardano.Options.TokenCLI
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
-        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
-    build-depends:
-        aeson                          ,
-        atlas-cardano                  ,
-        base              >= 4.9 && < 5,
-        base16-bytestring              ,
-        bytestring                     ,
-        cardano-api                    ,
-        cardano-cli                    ,
-        cardano-crypto-class           ,
-        directory                      ,
-        extra                          ,
-        filepath                       ,
-        optparse-applicative-fork      ,
-        parsec                         ,
-        plutus-ledger-api              ,
-        plutus-tx                      ,
-        QuickCheck                     ,
-        symbolic-base                  ,
-        transformers-except            ,
-        zkfold-cardano                 ,
-        zkfold-cardano-scripts         ,
+        zkfold-cli                     ,
         zkfold-example                 ,
 
 executable plonkup-verifier
@@ -196,7 +139,7 @@ executable plonkup-verifier
     default-language: Haskell2010
     ghc-options:      -rtsopts
     main-is:          Main.hs
-    hs-source-dirs:   plonkup-verifier
+    hs-source-dirs:   app/plonkup-verifier
     other-modules:
         ZkFold.Cardano.Atlas.Utils
         ZkFold.Cardano.Options.Common
@@ -210,14 +153,12 @@ executable plonkup-verifier
         aeson                          ,
         atlas-cardano                  ,
         base              >= 4.9 && < 5,
-        base16-bytestring              ,
         bytestring                     ,
         cardano-api                    ,
         cardano-cli                    ,
         cardano-crypto-class           ,
         containers                     ,
         directory                      ,
-        extra                          ,
         filepath                       ,
         optparse-applicative-fork      ,
         parsec                         ,
@@ -228,4 +169,79 @@ executable plonkup-verifier
         transformers-except            ,
         zkfold-cardano                 ,
         zkfold-cardano-scripts         ,
+        zkfold-cli                     ,
+        zkfold-example                 ,
+
+executable rollup
+    import:           lang
+    import:           lang-extra
+    default-language: Haskell2010
+    ghc-options:      -rtsopts
+    main-is:          Main.hs
+    hs-source-dirs:   app/rollup
+    other-modules:
+        ZkFold.Cardano.Options.Common
+        ZkFold.Cardano.Options.RollupCLI
+        ZkFold.Cardano.Rollup.Transaction.Clear
+        ZkFold.Cardano.Rollup.Transaction.Init
+        ZkFold.Cardano.Rollup.Transaction.Update
+        ZkFold.Cardano.Rollup.Data
+    build-depends:
+        aeson                          ,
+        atlas-cardano                  ,
+        base              >= 4.9 && < 5,
+        bytestring                     ,
+        cardano-api                    ,
+        cardano-cli                    ,
+        cardano-crypto-class           ,
+        containers                     ,
+        directory                      ,
+        filepath                       ,
+        optparse-applicative-fork      ,
+        parsec                         ,
+        plutus-ledger-api              ,
+        plutus-tx                      ,
+        QuickCheck                     ,
+        random                         ,
+        symbolic-base                  ,
+        transformers-except            ,
+        zkfold-cardano                 ,
+        zkfold-cardano-scripts         ,
+        zkfold-cli                     ,
+        zkfold-example                 ,
+
+executable token
+    import:           lang
+    import:           lang-extra
+    default-language: Haskell2010
+    ghc-options:      -rtsopts
+    main-is:          Main.hs
+    hs-source-dirs:   app/token
+    other-modules:
+        ZkFold.Cardano.Options.Common
+        ZkFold.Cardano.Options.TokenCLI
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Burning
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Init
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Minting
+        ZkFold.Cardano.PlonkupVerifierToken.Transaction.Transfer
+    build-depends:
+        aeson                          ,
+        atlas-cardano                  ,
+        base              >= 4.9 && < 5,
+        bytestring                     ,
+        cardano-api                    ,
+        cardano-cli                    ,
+        cardano-crypto-class           ,
+        directory                      ,
+        filepath                       ,
+        optparse-applicative-fork      ,
+        parsec                         ,
+        plutus-ledger-api              ,
+        plutus-tx                      ,
+        QuickCheck                     ,
+        symbolic-base                  ,
+        transformers-except            ,
+        zkfold-cardano                 ,
+        zkfold-cardano-scripts         ,
+        zkfold-cli                     ,
         zkfold-example                 ,
