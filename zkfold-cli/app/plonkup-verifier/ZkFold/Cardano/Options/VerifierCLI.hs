@@ -8,8 +8,8 @@ import           Options.Applicative                                   (Parser, 
 import qualified Options.Applicative                                   as Opt
 import           Prelude
 
-import           ZkFold.Cardano.Options.CardanoCLI
 import           ZkFold.Cardano.CLI.Parsers
+import           ZkFold.Cardano.Options.CardanoCLI
 import           ZkFold.Cardano.Options.Common
 import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Init     as VerifierInit
 import qualified ZkFold.Cardano.PlonkupVerifierTx.Transaction.Transfer as VerifierTransfer

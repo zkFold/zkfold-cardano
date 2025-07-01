@@ -11,7 +11,8 @@ import           PlutusLedgerApi.V3                       (ToData (..))
 import           Prelude
 import           System.FilePath                          ((</>))
 
-import           ZkFold.Cardano.CLI.Parsers               (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO, fromSigningKeyAltIO)
+import           ZkFold.Cardano.CLI.Parsers               (CoreConfigAlt, SigningKeyAlt, fromCoreConfigAltIO,
+                                                           fromSigningKeyAltIO)
 import           ZkFold.Cardano.CLI.Utils                 (SubmittedTx (..), wrapUpSubmittedTx)
 import           ZkFold.Cardano.Examples.EqualityCheck    (EqualityCheckContract (..), equalityCheckVerificationBytes)
 import qualified ZkFold.Cardano.OnChain.BLS12_381.F       as F

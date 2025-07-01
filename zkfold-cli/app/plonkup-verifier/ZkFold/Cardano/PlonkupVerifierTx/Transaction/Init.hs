@@ -11,9 +11,9 @@ import           System.FilePath                         ((</>))
 import           Test.QuickCheck.Arbitrary               (Arbitrary (..))
 import           Test.QuickCheck.Gen                     (generate)
 
+import           ZkFold.Cardano.CLI.Parsers              (CoreConfigAlt, fromCoreConfigAltIO)
 import           ZkFold.Cardano.Examples.IdentityCircuit (identityCircuitVerificationBytes)
 import           ZkFold.Cardano.OnChain.Plonkup.Data     (SetupBytes)
-import           ZkFold.Cardano.CLI.Parsers              (CoreConfigAlt, fromCoreConfigAltIO)
 import           ZkFold.Cardano.PlonkupVerifierTx.Types
 import           ZkFold.Cardano.UPLC.PlonkupVerifierTx   (plonkupVerifierTxCompiled)
 
