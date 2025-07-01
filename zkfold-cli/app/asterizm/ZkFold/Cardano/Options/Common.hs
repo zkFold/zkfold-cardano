@@ -19,10 +19,18 @@ data PubKeyHashAlt = PubKeyHashUseGY GYPubKeyHash
                    deriving stock Show
 
 readPaymentVerificationKey :: FilePath -> IO GYPaymentVerificationKey
-readPaymentVerificationKey _ = undefined
+readPaymentVerificationKey fp = do
+  s <- Api.readFileTextEnvelope (Api.AsVerificationKey Api.AsPaymentKey) (Api.File fp)
+  case s of
+    Left err  -> throwIO $ userError (show err)
+    Right vpk -> return $ paymentVerificationKeyFromApi vpk
 
 fromPubKeyHashAltIO :: PubKeyHashAlt -> IO GYPubKeyHash
-fromPubKeyHashAltIO _ = undefined
+fromPubKeyHashAltIO pkha = case pkha of
+  PubKeyHashUseGY pkh     -> pure pkh
+  PaymentVerKeyUseFile fp -> do
+    vkey <- readPaymentVerificationKey fp
+    return $ pubKeyHash vkey
 
 ----- :parsing Message: -----
 
