@@ -62,8 +62,7 @@ We now describe each command.  The eager reader can jump to [section "End-to-end
 
 Initializes the protocol for a specific client.  A set of valid relayers is provided at this point.  The command posts at the blockchain, as datum, a list of policy-id's associated to the valid relayer's.  We call this list "the Registry".  A specific reference to an arbitrary UTxO to be consumed needs to be provided, as it is needed to generate the nft (thread token) that will identify the Registry.
 
-A directory `./assets` will be created this command.
-
+A directory `./assets` will be created by this command.
 
 ```shell
 cabal run zkfold-cli:asterizm -- init --help
@@ -292,4 +291,4 @@ Client's messages on-chain:
 B "Hello, Asterizm!"
 ```
 
-*Note:*  You can reproduce this workflow using the shell files provided in directory `./e2e-test/asterizm`.  (Make this directory your active directory.)  It is assumed that you have independently generated .addr, .skey and .vkey files for users "someone", "asterizm", "alice", "bob", "charlie" and "dylan" in directory `./e2e-test/asterizm/keys` and that you have funded "someone", "alice" and "bob".
+*Note:*  You can reproduce this workflow using the shell files provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  It is assumed that you have independently generated .addr, .skey and .vkey files for users "someone", "asterizm", "alice", "bob", "charlie" and "dylan" in directory `./e2e-test/asterizm/keys` and that you have funded "someone", "alice" and "bob".
