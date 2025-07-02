@@ -1,5 +1,3 @@
-{-# LANGUAGE InstanceSigs #-}
-
 module ZkFold.Cardano.CLI.Parsers where
 
 import           Cardano.Api                        (parseAddressAny)

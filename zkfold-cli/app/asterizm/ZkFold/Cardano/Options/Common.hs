@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Options.Common where
 
 import qualified Cardano.Api                        as Api
-import           Cardano.CLI.EraBased.Common.Option (parseFilePath)
+import           Cardano.CLI.EraBased.Common.Option (parseFilePath, readerFromParsecParser)
 import           Control.Exception                  (throwIO)
 import qualified Data.ByteString.Base16             as B16
 import qualified Data.ByteString.Char8              as BS
@@ -31,6 +31,17 @@ fromPubKeyHashAltIO pkha = case pkha of
   PaymentVerKeyUseFile fp -> do
     vkey <- readPaymentVerificationKey fp
     return $ pubKeyHash vkey
+
+----- :parsing Registry Address: -----
+
+pRegistryAddress :: Parser GYAddress
+pRegistryAddress =
+    Opt.option (readerFromParsecParser $ fmap GY.addressFromApi Api.parseAddressAny) $
+        mconcat
+            [ Opt.long "registry-address"
+            , Opt.metavar "ADDRESS"
+            , Opt.help "Address to park relayer's registry at."
+            ]
 
 ----- :parsing Message: -----
 

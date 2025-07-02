@@ -86,7 +86,7 @@ Subcommands:
 zkfold-cardano$ cabal run zkfold-cli:asterizm -- init \
 > --signing-key-file ../tests/keys/alice.skey \
 > --tx-oref ec083d219f2d3f8d0dab367c8fab827462ae0d57e1248f0f583fa1a5dd9888eb#1 \
-> --beneficiary-address $(cat ../tests/keys/asterizm.addr) \
+> --registry-address $(cat ../tests/keys/asterizm.addr) \
 > --client-pkh 5a5acb3bc00d3e7471d54b5c788b3f38f1b2a0eb2e2a259a027f5d07 \
 > --relayer-pkh 1b9e19486b86bc8bb54dda6878b62e67144fa1e64bf3d4ca937ad9ac \
 > --relayer-pkh 32c21126b8b3abf751d8d0a0d0c0e476143290cf764fc007a70a3155 \

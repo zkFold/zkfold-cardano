@@ -25,12 +25,11 @@ main = toplevelExceptionHandler $ do
 
   currentDir <- getCurrentDirectory
   let path = case takeFileName currentDir of
-          "e2e-test" -> ".."
-          _          -> "."
-  let testData = path </> "test-data"
-      assets   = path </> "assets"
+        "asterizm" -> "../.."
+        "e2e-test" -> ".."
+        _          -> "."
+  let assets = path </> "assets"
 
-  createDirectoryIfMissing True testData
   createDirectoryIfMissing True assets
 
   co <- Opt.customExecParser pref (opts path mCoreCfg)

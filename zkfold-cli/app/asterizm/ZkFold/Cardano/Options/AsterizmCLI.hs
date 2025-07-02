@@ -57,7 +57,7 @@ pTransactionAsterizmInit path mcfg = do
             <$> pGYCoreConfig mcfg
             <*> pSigningKeyAlt
             <*> pTxInOref
-            <*> pBenefOutAddress
+            <*> pRegistryAddress
             <*> pPubKeyHashAlt Client
             <*> many (pPubKeyHashAlt Relayer)
             <*> pOutFile AsterizmInit
