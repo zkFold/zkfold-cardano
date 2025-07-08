@@ -62,7 +62,7 @@ We now describe each command.  The eager reader can jump to [section "End-to-end
 
 Initializes the protocol for a specific client.  A set of valid relayers is provided at this point.  The command posts at the blockchain, as datum, a list of policy-id's associated to the valid relayer's.  We call this list "the Registry".  A specific reference to an arbitrary UTxO to be consumed needs to be provided, as it is needed to generate the nft (thread token) that will identify the Registry.
 
-A directory `./assets` will be created by this command.
+A directory `./assets` is created if abscent, in which command `init` writes file *asterizm-setup.json*.  It contains the client's pub-key-hash and the thread-token's policy ID; these parameterize the client's *minting policy*.
 
 ```shell
 cabal run zkfold-cli:asterizm -- init --help
@@ -164,9 +164,9 @@ Available options:
 
 ### client
 
-Command used by client to post (reveal) original message to the blockchain, as datum accompanying token minted by the client.  Transaction references UTxO with relayer's token.  Client's minting policy validates *a)* the relayer's policy ID against the Registry (identified by thread-token) and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
+Command used by client to post (reveal) original message to the blockchain, as datum accompanying a token minted this command.
 
-Note that client's *minting policy* is parameterized by the client's pub-key-hash and the thread-token's policy ID.
+Transaction references UTxO with relayer's token.  Client's minting policy validates *a)* the relayer's policy ID against the Registry (identified by the thread-token) and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client --help
@@ -222,7 +222,11 @@ Available options:
 
 ## End-to-end test
 
-What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.
+What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.  (Diagrams look best with your browser in *light mode*.)
+
+![workflow](figures/00-flow.svg)
+
+**Figure:** process flow
 
 ### Initialization
 
@@ -274,7 +278,7 @@ Transaction Id: 34b5073da5da6869dddc24b3b2d75c3a1c3ea90769d944c2170ec6aee99af5e1
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 
-**Figure:** Relayer Tx
+**Figure:** Relayer's Tx
 
 (Note: Bob is "relayer1".)
 
@@ -293,9 +297,9 @@ Transaction Id: bde3ddf213cb648f66b7c0ed5242d825263cd2fe2a842679b2d990ddcf4ec37b
 
 ![client Tx](figures/04-client-tx.svg)
 
-**Figure:** Client Tx
+**Figure:** Client's Tx
 
-(Note: Alice plays the role of the Client.)
+(Note: Alice plays the role of Client.)
 
 ### Retrieve Messages
 
@@ -308,5 +312,7 @@ Client's messages on-chain:
 
 B "Hello, Asterizm!"
 ```
+
+---
 
 *Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  It is assumed that you have independently generated .addr, .skey and .vkey files for users "someone", "asterizm", "alice", "bob", "charlie" and "dylan" in directory `./e2e-test/asterizm/keys` and that you have funded "someone", "alice" and "bob".
