@@ -263,10 +263,6 @@ Saving message hash (public file: message-hash.public)...
 Done.
 ```
 
-![message files](figures/02-message.svg)
-
-**Figure:** Generating private/public files
-
 ### Relayer
 
 ```shell
@@ -316,10 +312,6 @@ Client's messages on-chain:
 
 B "Hello, Asterizm!"
 ```
-
-![reveal messages](figures/05-reveal.svg)
-
-**Figure:** retrieve Client's messages
 
 ---
 
