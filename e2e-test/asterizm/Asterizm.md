@@ -164,7 +164,9 @@ Available options:
 
 ### client
 
-Command used by client to post (reveal) original message to the blockchain.
+Command used by client to post (reveal) original message to the blockchain, as datum accompanying token minted by the client.  Transaction references UTxO with relayer's token.  Client's minting policy validates *a)* the relayer's policy ID against the Registry (identified by thread-token) and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
+
+Note that client's *minting policy* is parameterized by the client's pub-key-hash and the thread-token's policy ID.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client --help
@@ -240,6 +242,10 @@ Estimated transaction fee: 397683 Lovelace
 Transaction Id: 9f17b5d93780c7a7149e53cbde2747515a868748259235554917635c41304472
 ```
 
+![init Tx](figures/01-init-tx.svg)
+
+**Figure:** Initialization Tx
+
 ### Message
 
 ```shell
@@ -266,6 +272,12 @@ Estimated transaction fee: 884420 Lovelace
 Transaction Id: 34b5073da5da6869dddc24b3b2d75c3a1c3ea90769d944c2170ec6aee99af5e1
 ```
 
+![relayer Tx](figures/03-relayer-tx.svg)
+
+**Figure:** Relayer Tx
+
+(Note: Bob is "relayer1".)
+
 ### Client
 
 ```shell
@@ -279,6 +291,12 @@ Estimated transaction fee: 1383689 Lovelace
 Transaction Id: bde3ddf213cb648f66b7c0ed5242d825263cd2fe2a842679b2d990ddcf4ec37b
 ```
 
+![client Tx](figures/04-client-tx.svg)
+
+**Figure:** Client Tx
+
+(Note: Alice plays the role of the Client.)
+
 ### Retrieve Messages
 
 ```shell
@@ -291,4 +309,4 @@ Client's messages on-chain:
 B "Hello, Asterizm!"
 ```
 
-*Note:*  You can reproduce this workflow using the shell files provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  It is assumed that you have independently generated .addr, .skey and .vkey files for users "someone", "asterizm", "alice", "bob", "charlie" and "dylan" in directory `./e2e-test/asterizm/keys` and that you have funded "someone", "alice" and "bob".
+*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  It is assumed that you have independently generated .addr, .skey and .vkey files for users "someone", "asterizm", "alice", "bob", "charlie" and "dylan" in directory `./e2e-test/asterizm/keys` and that you have funded "someone", "alice" and "bob".
