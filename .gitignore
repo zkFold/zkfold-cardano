@@ -24,7 +24,6 @@ cabal.sandbox.config
 cabal.project.local
 compiled_scripts/*
 logs
-*.svg
 
 e2e-test/*/keys
 local-testnet/example
