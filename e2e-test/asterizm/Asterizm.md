@@ -317,7 +317,7 @@ Client's messages on-chain:
 B "Hello, Asterizm!"
 ```
 
-![reveal messages](figures/05-reveal-tx.svg)
+![reveal messages](figures/05-reveal.svg)
 
 **Figure:** retrieve Client's messages
 
