@@ -1,59 +1,52 @@
-{-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE BlockArguments    #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Main where
 
-import Codec.CBOR.Decoding qualified as CBOR
-import Codec.CBOR.Read qualified as CBOR
-import Control.Applicative (
-  Applicative,
-  asum,
-  pure,
-  some,
-  (<**>),
-  (<*>),
- )
-import Control.Exception (displayException, throwIO)
-import Control.Monad ((>>), (>>=))
-import Data.Aeson qualified as Aeson
-import Data.Bifunctor (first)
-import Data.Bool (otherwise)
-import Data.ByteString (ByteString)
-import Data.ByteString.Lazy qualified as BS
-import Data.Either (either)
-import Data.Eq (Eq, (==))
-import Data.Foldable (fold, toList)
-import Data.Function (($), (.))
-import Data.Functor ((<$>))
-import Data.List.NonEmpty (NonEmpty (..), fromList)
-import Data.Maybe (Maybe (..))
-import Data.Monoid (Last (..), Monoid, mempty)
-import Data.Semigroup ((<>))
-import Data.Traversable (traverse)
-import Flat qualified
-import Options.Applicative qualified as O
-import System.IO (IO)
-import System.IO qualified as IO
-import System.IO.Temp qualified as Temp
-import System.OsPath (OsPath, (<.>))
-import System.OsPath qualified as OS
-import System.Process qualified as P
-import ZkFold.Algebra.Class (zero)
-import ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point, BLS12_381_Scalar)
-import ZkFold.Algebra.Field (Zp)
-import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
-import ZkFold.Protocol.NonInteractiveProof (setupProve)
-import ZkFold.Protocol.Plonkup (Plonkup (..))
-import ZkFold.Protocol.Plonkup.Utils (getParams, getSecretParams)
-import Prelude (error)
+import qualified Codec.CBOR.Decoding                    as CBOR
+import qualified Codec.CBOR.Read                        as CBOR
+import           Control.Applicative                    (Applicative, asum, pure, some, (<**>), (<*>))
+import           Control.Exception                      (displayException, throwIO)
+import           Control.Monad                          ((>>), (>>=))
+import qualified Data.Aeson                             as Aeson
+import           Data.Bifunctor                         (first)
+import           Data.Bool                              (otherwise)
+import           Data.ByteString                        (ByteString)
+import qualified Data.ByteString.Lazy                   as BS
+import           Data.Either                            (either)
+import           Data.Eq                                (Eq, (==))
+import           Data.Foldable                          (fold, toList)
+import           Data.Function                          (($), (.))
+import           Data.Functor                           ((<$>))
+import           Data.List.NonEmpty                     (NonEmpty (..), fromList)
+import           Data.Maybe                             (Maybe (..))
+import           Data.Monoid                            (Last (..), Monoid, mempty)
+import           Data.Semigroup                         ((<>))
+import           Data.Traversable                       (traverse)
+import qualified Debug.Trace                            as Debug
+import qualified Flat
+import qualified Options.Applicative                    as O
+import           Prelude                                (error)
+import           System.IO                              (IO)
+import qualified System.IO                              as IO
+import qualified System.IO.Temp                         as Temp
+import           System.OsPath                          (OsPath, (<.>))
+import qualified System.OsPath                          as OS
+import qualified System.Process                         as P
 
-import ZkFold.Symbolic.UPLC.Converter (ScriptType (..), SomeCircuit (..), convert)
-import ZkFold.UPLC.Term (VersionedProgram (..), getProgram)
-import qualified Debug.Trace as Debug
+import           ZkFold.Algebra.Class                   (zero)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point, BLS12_381_Scalar)
+import           ZkFold.Algebra.Field                   (Zp)
+import           ZkFold.Algebra.Polynomial.Univariate   (PolyVec)
+import           ZkFold.Protocol.NonInteractiveProof    (setupProve)
+import           ZkFold.Protocol.Plonkup                (Plonkup (..))
+import           ZkFold.Protocol.Plonkup.Utils          (getParams, getSecretParams)
+import           ZkFold.Symbolic.UPLC.Converter         (ScriptType (..), SomeCircuit (..), convert)
+import           ZkFold.UPLC.Term                       (VersionedProgram (..), getProgram)
 
 data InputType = UPLC | TPLC | PIR | UPLC'Flat | UPLC'CBOR deriving Eq
 
@@ -119,9 +112,9 @@ withBinaryOutput planned = \case
   _ -> \_ -> pure ()
 
 data Action = Act
-  { actInput :: Input
+  { actInput      :: Input
   , actScriptType :: ScriptType
-  , actOutput :: Output
+  , actOutput     :: Output
   }
 
 pathRead :: O.ReadM OsPath
