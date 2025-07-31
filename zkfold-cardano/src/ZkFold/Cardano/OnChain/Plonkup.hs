@@ -14,7 +14,7 @@ import           PlutusTx.Builtins                   (BuiltinByteString, ByteOrd
                                                       consByteString, emptyByteString, integerToByteString,
                                                       subtractInteger, addInteger)
 import           PlutusTx.Prelude                    (Bool (..), length, (!!), ($), (&&), (.), (<>), (==))
-import           Prelude                             (undefined, Ord)
+import           Prelude                             (undefined)
 
 import           ZkFold.Algebra.Class
 import           ZkFold.Algebra.Number               (KnownNat, type (*), type (+))
@@ -210,7 +210,6 @@ instance
         ( Representable i
         , Representable o
         , Foldable o
-        , Ord (Rep i)
         , Binary (Rep i)
         , KnownNat n
         , KnownNat (4 * n + 6)

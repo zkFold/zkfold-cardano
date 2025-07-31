@@ -13,7 +13,7 @@ import           ZkFold.Algebra.Field                   (toZp)
 import           ZkFold.Cardano.OffChain.BLS12_381      (convertZp)
 import           ZkFold.Cardano.OnChain.BLS12_381.F     (F (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.G1    (G1)
-import           ZkFold.Data.ByteString                 (toByteString)
+import           ZkFold.Data.Binary                 (toByteString)
 import           ZkFold.Protocol.NonInteractiveProof    (FromTranscript (..), ToTranscript (..))
 
 instance ToTranscript BuiltinByteString Word8 where

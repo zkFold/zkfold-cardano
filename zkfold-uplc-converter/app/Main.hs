@@ -12,8 +12,8 @@ module Main where
 import qualified Cardano.Api                              as Cardano
 import qualified Cardano.Api.Shelley                      as Cardano
 import           Control.Applicative                      (Applicative, asum, pure, some, (<**>), (<*>))
-import           Control.Exception                        (displayException)
-import           Control.Monad                            ((>=>), (>>), (>>=))
+import           Control.Exception                        (displayException, throwIO)
+import           Control.Monad                            ((>>), (>>=))
 import qualified Data.Aeson                               as Aeson
 import           Data.Bifunctor                           (first)
 import           Data.Bool                                (otherwise)
@@ -39,7 +39,6 @@ import qualified Options.Applicative                      as O
 import qualified PlutusLedgerApi.V3                       as Plutus
 import qualified PlutusTx                                 as Plutus
 import qualified PlutusTx.Prelude                         as Plutus
-import           Prelude                                  (error)
 import           System.IO                                (IO)
 import qualified System.IO                                as IO
 import qualified System.IO.Temp                           as Temp
@@ -57,7 +56,7 @@ import           ZkFold.ArithmeticCircuit.Context         (acLookup)
 import           ZkFold.ArithmeticCircuit.Lookup          (LookupTable (..), LookupType (LookupType))
 import           ZkFold.Cardano.OffChain.Plonkup          (mkSetup)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
-import           ZkFold.Data.ByteString                   (Binary)
+import           ZkFold.Data.Binary                   (Binary)
 import           ZkFold.Prelude                           (length)
 import           ZkFold.Protocol.NonInteractiveProof      (setupProve, setupVerify)
 import           ZkFold.Protocol.Plonkup                  (Plonkup (..))
@@ -65,6 +64,9 @@ import           ZkFold.Protocol.Plonkup.Utils            (getParams, getSecretP
 import           ZkFold.Symbolic.Class                    (Arithmetic)
 import           ZkFold.Symbolic.UPLC.Converter           (ScriptType (..), SomeCircuit (..), convert)
 import           ZkFold.UPLC.Term                         (VersionedProgram (..))
+import Data.String (String)
+import TermParser (parseProgram)
+import Data.Either (Either(..))
 
 data InputType = UPLC | TPLC | PIR | UPLC'Flat | UPLC'CBOR deriving Eq
 
@@ -84,7 +86,10 @@ main :: IO ()
 main = do
   Act {..} <- O.execParser $
     O.info (actionParser <**> O.helper) (O.fullDesc <> O.progDesc "UPLC converter!")
-  Program _ term <- withBinaryInput UPLC actInput \_bs -> error "TODO: UPLC parser"
+  Program _ term <- withBinaryInput UPLC actInput \name bs ->
+    case parseProgram name bs of
+      Left err -> throwIO err
+      Right !ok -> pure ok
   case convert term actScriptType of
     SomeCircuit !circuit -> do
       withBinaryOutput Circuit actOutput (Aeson.encode circuit)
@@ -142,10 +147,10 @@ withBinaryOutput planned = \case
 
 -- Maybe worth using Plutus API directly since we already depend on it.
 
-withBinaryInput :: InputType -> Input -> (BS.ByteString -> IO r) -> IO r
+withBinaryInput :: InputType -> Input -> (String -> BS.ByteString -> IO r) -> IO r
 withBinaryInput expected = \case
   StdIn actual
-    | actual == expected -> (BS.getContents >>=)
+    | actual == expected -> (BS.getContents >>=) . ($ "<stdin>")
     | actual == UPLC -> withNeededFile \neededPath ->
         IO.getContents >>= P.readProcess "plutus" ["--stdin", "-o", neededPath]
     | otherwise -> withNeededFile \neededPath ->
@@ -153,7 +158,10 @@ withBinaryInput expected = \case
           BS.getContents >>= BS.hPut inputHandle
           P.callProcess "plutus" [inputPath, "-o", neededPath]
   FileInput (single :| []) | OS.takeExtension single == inputExt expected ->
-    (OS.decodeUtf single >>=) . (BS.readFile >=>)
+    \continue -> do
+      name <- OS.decodeUtf single
+      content <- BS.readFile name
+      continue name content
   FileInput paths -> withNeededFile \neededPath -> do
     inputPaths <- traverse OS.decodeUtf paths
     P.callProcess "plutus" $ toList inputPaths <> ["-o", neededPath]
@@ -177,10 +185,10 @@ withBinaryInput expected = \case
     templateResult <- template
     Temp.withSystemTempFile templateResult continue
 
-  withNeededFile :: (IO.FilePath -> IO a) -> (BS.ByteString -> IO r) -> IO r
+  withNeededFile :: (IO.FilePath -> IO a) -> (String -> BS.ByteString -> IO r) -> IO r
   withNeededFile onPath onData =
     withTempFile ("preprocessed" <.?> inputExt expected) \fp h ->
-      onPath fp >> BS.hGetContents h >>= onData
+      onPath fp >> BS.hGetContents h >>= onData fp
 
 -- Smart contract serialization. Maybe worth moving to zkfold-scripts-common
 

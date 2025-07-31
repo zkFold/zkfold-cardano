@@ -32,6 +32,18 @@ common options
       ghc-options:
         -Werror
 
+library
+    import:             options
+    hs-source-dirs:     src
+    exposed-modules:    TermParser
+    build-depends:
+      base         ,
+      bytestring   ,
+      megaparsec   ,
+      symbolic-base,
+      symbolic-uplc,
+      text         ,
+
 executable zkfold-uplc-converter
     import:             options
     main-is:            Main.hs
@@ -44,7 +56,6 @@ executable zkfold-uplc-converter
       cardano-api           ,
       constraints           ,
       filepath              ,
-      megaparsec            ,
       monoidal-containers   ,
       optparse-applicative  ,
       plutus-ledger-api     ,
@@ -55,3 +66,4 @@ executable zkfold-uplc-converter
       temporary             ,
       zkfold-cardano        ,
       zkfold-cardano-scripts,
+      zkfold-uplc-converter ,
