@@ -1,76 +1,70 @@
-{-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE BlockArguments     #-}
+{-# LANGUAGE DataKinds          #-}
 {-# LANGUAGE ExplicitNamespaces #-}
-{-# LANGUAGE NoStarIsType #-}
-{-# LANGUAGE MonoLocalBinds #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE MonoLocalBinds     #-}
+{-# LANGUAGE NoStarIsType       #-}
+{-# LANGUAGE RecordWildCards    #-}
+{-# LANGUAGE ViewPatterns       #-}
 
 module Main where
 
-import Control.Applicative (
-  Applicative,
-  asum,
-  pure,
-  some,
-  (<**>),
-  (<*>),
- )
-import Control.Exception (displayException)
-import Control.Monad ((>>), (>>=), (>=>))
-import Data.Aeson qualified as Aeson
-import Data.Bifunctor (first)
-import Data.Bool (otherwise)
-import Data.ByteString (ByteString)
-import Data.ByteString.Lazy qualified as BS
-import Data.Eq (Eq, (==))
-import Data.Foldable (fold, toList, Foldable)
-import Data.Function (($), (.), id, flip)
-import Data.Functor ((<$>))
-import Data.Functor.Rep (Representable, tabulate, Rep)
-import Data.List.NonEmpty (NonEmpty (..), fromList)
-import Data.Maybe (Maybe (..))
-import Data.Monoid (Last (..), Monoid, mempty)
-import Data.Semigroup ((<>))
-import Data.Traversable (traverse)
-import Options.Applicative qualified as O
-import System.IO (IO)
-import System.IO qualified as IO
-import System.IO.Temp qualified as Temp
-import System.OsPath (OsPath, (<.>))
-import System.OsPath qualified as OS
-import System.Process qualified as P
-import ZkFold.Algebra.Class
-import ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
-import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
-import ZkFold.Protocol.NonInteractiveProof (setupProve, setupVerify)
-import ZkFold.Protocol.Plonkup (Plonkup (..))
-import ZkFold.Protocol.Plonkup.Utils (getParams, getSecretParams)
-import ZkFold.Prelude (length)
-import Prelude (error)
+import qualified Cardano.Api                              as Cardano
+import qualified Cardano.Api.Shelley                      as Cardano
+import           Control.Applicative                      (Applicative, asum, pure, some, (<**>), (<*>))
+import           Control.Exception                        (displayException)
+import           Control.Monad                            ((>=>), (>>), (>>=))
+import qualified Data.Aeson                               as Aeson
+import           Data.Bifunctor                           (first)
+import           Data.Bool                                (otherwise)
+import           Data.ByteString                          (ByteString)
+import qualified Data.ByteString.Lazy                     as BS
+import           Data.Constraint                          (withDict)
+import           Data.Constraint.Nat                      (plusNat, timesNat)
+import           Data.Eq                                  (Eq, (==))
+import           Data.Foldable                            (Foldable, fold, toList)
+import           Data.Function                            (flip, id, ($), (.))
+import           Data.Functor                             ((<$>))
+import           Data.Functor.Rep                         (Rep, Representable, tabulate)
+import           Data.List.NonEmpty                       (NonEmpty (..), fromList)
+import           Data.Map.Monoidal                        (keys)
+import           Data.Maybe                               (Maybe (..))
+import           Data.Monoid                              (Last (..), Monoid, mempty)
+import           Data.Ord                                 (max)
+import           Data.Semigroup                           ((<>))
+import           Data.Traversable                         (traverse)
+import           GHC.TypeNats                             (KnownNat, Natural, SNat, fromSNat, type (*), type (+),
+                                                           withKnownNat, withSomeSNat)
+import qualified Options.Applicative                      as O
+import qualified PlutusLedgerApi.V3                       as Plutus
+import qualified PlutusTx                                 as Plutus
+import qualified PlutusTx.Prelude                         as Plutus
+import           Prelude                                  (error)
+import           System.IO                                (IO)
+import qualified System.IO                                as IO
+import qualified System.IO.Temp                           as Temp
+import qualified System.IO.Unsafe                         as Unsafe
+import           System.OsPath                            (OsPath, (<.>))
+import qualified System.OsPath                            as OS
+import qualified System.Process                           as P
 
-import ZkFold.Symbolic.UPLC.Converter (ScriptType (..), SomeCircuit (..), convert)
-import ZkFold.UPLC.Term (VersionedProgram (..))
-import qualified System.IO.Unsafe as Unsafe
-import ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
-import qualified Cardano.Api as Cardano
-import qualified Cardano.Api.Shelley as Cardano
-import qualified PlutusLedgerApi.V3 as Plutus
-import qualified PlutusTx as Plutus
-import ZkFold.Cardano.OffChain.Plonkup (mkSetup)
-import ZkFold.ArithmeticCircuit (ArithmeticCircuit, acContext, acSizeN, acSizeL)
-import GHC.TypeNats (withSomeSNat, SNat, fromSNat, KnownNat, type (+), type (*), withKnownNat, Natural)
-import Data.Constraint (withDict)
-import Data.Constraint.Nat (plusNat, timesNat)
-import ZkFold.ArithmeticCircuit.Context (acLookup)
-import Data.Map.Monoidal (keys)
-import ZkFold.ArithmeticCircuit.Lookup (LookupTable(..), LookupType (LookupType))
-import ZkFold.Symbolic.Class (Arithmetic)
-import Data.Ord (max)
-import ZkFold.Algebra.EllipticCurve.Class (ScalarFieldOf, CyclicGroup)
-import qualified PlutusTx.Prelude as Plutus
-import ZkFold.Data.ByteString (Binary)
+import           ZkFold.Algebra.Class
+import           ZkFold.Algebra.EllipticCurve.BLS12_381   (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
+import           ZkFold.Algebra.EllipticCurve.Class       (CyclicGroup, ScalarFieldOf)
+import           ZkFold.Algebra.Polynomial.Univariate     (PolyVec)
+import           ZkFold.ArithmeticCircuit                 (ArithmeticCircuit, acContext, acSizeL, acSizeN)
+import           ZkFold.ArithmeticCircuit.Context         (acLookup)
+import           ZkFold.ArithmeticCircuit.Lookup          (LookupTable (..), LookupType (LookupType))
+import           ZkFold.Cardano.OffChain.Plonkup          (mkSetup)
+import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
+import           ZkFold.Data.ByteString                   (Binary)
+import           ZkFold.Prelude                           (length)
+import           ZkFold.Protocol.NonInteractiveProof      (setupProve, setupVerify)
+import           ZkFold.Protocol.Plonkup                  (Plonkup (..))
+import           ZkFold.Protocol.Plonkup.Utils            (getParams, getSecretParams)
+import           ZkFold.Symbolic.Class                    (Arithmetic)
+import           ZkFold.Symbolic.UPLC.Converter           (ScriptType (..), SomeCircuit (..), convert)
+import           ZkFold.UPLC.Term                         (VersionedProgram (..))
 
 data InputType = UPLC | TPLC | PIR | UPLC'Flat | UPLC'CBOR deriving Eq
 
@@ -130,9 +124,9 @@ withPlonkup circuit k =
     sum [ lookupSize lt | LookupType lt <- keys $ acLookup (acContext circuit) ]
 
   lookupSize :: Arithmetic a => LookupTable a f -> Natural
-  lookupSize (Ranges s) = sum [ toConstant (hi - lo) + 1 | (lo, hi) <- toList s ]
+  lookupSize (Ranges s)      = sum [ toConstant (hi - lo) + 1 | (lo, hi) <- toList s ]
   lookupSize (Product lt mt) = lookupSize lt * lookupSize mt
-  lookupSize (Plot _ lt) = lookupSize lt
+  lookupSize (Plot _ lt)     = lookupSize lt
 
 acSizeO :: forall a i o. (Foldable o, Representable o) => ArithmeticCircuit a i o -> Natural
 acSizeO _ = length (tabulate @o id)
