@@ -17,9 +17,9 @@ import           ZkFold.Protocol.Plonkup.Utils              (getParams, getSecre
 import           ZkFold.Protocol.Plonkup.Witness            (PlonkupWitnessInput (..))
 import           ZkFold.Symbolic.Class                      (Symbolic (..))
 import           ZkFold.Symbolic.Compiler                   (compileWith)
-import           ZkFold.Symbolic.Compiler.ArithmeticCircuit (ArithmeticCircuit (..), solder)
+import           ZkFold.ArithmeticCircuit (ArithmeticCircuit (..), solder)
 import           ZkFold.Symbolic.Data.Bool                  (Bool (..))
-import           ZkFold.Symbolic.Data.Eq                    (Eq (..))
+import           ZkFold.Data.Eq                    (Eq (..))
 import           ZkFold.Symbolic.Data.FieldElement          (FieldElement)
 
 data EqualityCheckContract = EqualityCheckContract {

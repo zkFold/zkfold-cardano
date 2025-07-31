@@ -5,7 +5,6 @@ synopsis:           zkFold's CLI for UPLC converter from Plutus Core to arithmet
 -- description:
 homepage:           https://zkfold.io/
 license:            MIT
-license-file:       LICENSE
 author:
     Vladimir Sinyakov, Pavel Sokolov, Vladimir Morozov, Eitan Chatav, Ilya Baryshnikov, Anna Hovanskaya, Evgenii Samodelov, Maxim Churilov
 
@@ -38,13 +37,21 @@ executable zkfold-uplc-converter
     main-is:            Main.hs
     hs-source-dirs:     app
     build-depends:
-      aeson               ,
-      base                ,
-      bytestring          ,
-      cborg               ,
-      filepath            ,
-      optparse-applicative,
-      process             ,
-      symbolic-base       ,
-      symbolic-uplc       ,
-      temporary           ,
+      adjunctions           ,
+      aeson                 ,
+      base                  ,
+      bytestring            ,
+      cardano-api           ,
+      constraints           ,
+      filepath              ,
+      megaparsec            ,
+      monoidal-containers   ,
+      optparse-applicative  ,
+      plutus-ledger-api     ,
+      plutus-tx             ,
+      process               ,
+      symbolic-base         ,
+      symbolic-uplc         ,
+      temporary             ,
+      zkfold-cardano        ,
+      zkfold-cardano-scripts,

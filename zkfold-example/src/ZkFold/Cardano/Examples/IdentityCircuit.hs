@@ -17,7 +17,7 @@ import           ZkFold.Protocol.Plonkup                    (Plonkup (..))
 import           ZkFold.Protocol.Plonkup.Prover.Secret      (PlonkupProverSecret)
 import           ZkFold.Protocol.Plonkup.Utils              (getParams, getSecretParams)
 import           ZkFold.Protocol.Plonkup.Witness            (PlonkupWitnessInput (..))
-import           ZkFold.Symbolic.Compiler.ArithmeticCircuit (ArithmeticCircuit (..), eval, idCircuit)
+import           ZkFold.ArithmeticCircuit (ArithmeticCircuit (..), eval, idCircuit)
 
 data IdentityCircuitContract = IdentityCircuitContract {
     x'  :: Fr
