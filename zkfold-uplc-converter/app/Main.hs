@@ -21,6 +21,7 @@ import           Data.ByteString                          (ByteString)
 import qualified Data.ByteString.Lazy                     as BS
 import           Data.Constraint                          (withDict)
 import           Data.Constraint.Nat                      (plusNat, timesNat)
+import           Data.Either                              (Either (..))
 import           Data.Eq                                  (Eq, (==))
 import           Data.Foldable                            (Foldable, fold, toList)
 import           Data.Function                            (flip, id, ($), (.))
@@ -32,6 +33,7 @@ import           Data.Maybe                               (Maybe (..))
 import           Data.Monoid                              (Last (..), Monoid, mempty)
 import           Data.Ord                                 (max)
 import           Data.Semigroup                           ((<>))
+import           Data.String                              (String)
 import           Data.Traversable                         (traverse)
 import           GHC.TypeNats                             (KnownNat, Natural, SNat, fromSNat, type (*), type (+),
                                                            withKnownNat, withSomeSNat)
@@ -39,13 +41,14 @@ import qualified Options.Applicative                      as O
 import qualified PlutusLedgerApi.V3                       as Plutus
 import qualified PlutusTx                                 as Plutus
 import qualified PlutusTx.Prelude                         as Plutus
-import           System.IO                                (IO)
 import qualified System.IO                                as IO
+import           System.IO                                (IO)
 import qualified System.IO.Temp                           as Temp
 import qualified System.IO.Unsafe                         as Unsafe
-import           System.OsPath                            (OsPath, (<.>))
 import qualified System.OsPath                            as OS
+import           System.OsPath                            (OsPath, (<.>))
 import qualified System.Process                           as P
+import           TermParser                               (parseProgram)
 
 import           ZkFold.Algebra.Class
 import           ZkFold.Algebra.EllipticCurve.BLS12_381   (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
@@ -56,7 +59,7 @@ import           ZkFold.ArithmeticCircuit.Context         (acLookup)
 import           ZkFold.ArithmeticCircuit.Lookup          (LookupTable (..), LookupType (LookupType))
 import           ZkFold.Cardano.OffChain.Plonkup          (mkSetup)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
-import           ZkFold.Data.Binary                   (Binary)
+import           ZkFold.Data.Binary                       (Binary)
 import           ZkFold.Prelude                           (length)
 import           ZkFold.Protocol.NonInteractiveProof      (setupProve, setupVerify)
 import           ZkFold.Protocol.Plonkup                  (Plonkup (..))
@@ -64,9 +67,6 @@ import           ZkFold.Protocol.Plonkup.Utils            (getParams, getSecretP
 import           ZkFold.Symbolic.Class                    (Arithmetic)
 import           ZkFold.Symbolic.UPLC.Converter           (ScriptType (..), SomeCircuit (..), convert)
 import           ZkFold.UPLC.Term                         (VersionedProgram (..))
-import Data.String (String)
-import TermParser (parseProgram)
-import Data.Either (Either(..))
 
 data InputType = UPLC | TPLC | PIR | UPLC'Flat | UPLC'CBOR deriving Eq
 
@@ -88,7 +88,7 @@ main = do
     O.info (actionParser <**> O.helper) (O.fullDesc <> O.progDesc "UPLC converter!")
   Program _ term <- withBinaryInput UPLC actInput \name bs ->
     case parseProgram name bs of
-      Left err -> throwIO err
+      Left err  -> throwIO err
       Right !ok -> pure ok
   case convert term actScriptType of
     SomeCircuit !circuit -> do

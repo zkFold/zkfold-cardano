@@ -1,35 +1,36 @@
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE MonoLocalBinds    #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MonoLocalBinds #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module TermParser where
 
-import qualified Text.Megaparsec as P
-import Data.ByteString.Lazy (ByteString, pack)
-import ZkFold.UPLC.Term (VersionedProgram (..), Term (..))
-import Control.Applicative ((<*>), (<*), (<|>), (*>), asum)
-import Data.Functor ((<$>), (<$), fmap)
-import qualified Text.Megaparsec.Byte.Lexer as L
-import qualified Text.Megaparsec.Byte as B
-import Data.Function (($), (.))
-import Data.List (zip, foldl1')
-import ZkFold.UPLC.BuiltinType (demoted, BuiltinType (..), DemotedType (..))
-import Control.Monad ((>>=))
-import ZkFold.UPLC.Constant (Constant (..))
-import Data.Bool (Bool(..))
-import Prelude (error)
-import ZkFold.UPLC.Data (Data (..), ConstructorTag)
-import ZkFold.Data.Binary (toByteString, fromByteString, Binary)
-import Numeric.Natural (Natural)
-import Data.Text.Encoding (decodeUtf8)
-import ZkFold.UPLC.BuiltinFunction
-import ZkFold.Algebra.EllipticCurve.Class (decompress, Compressed, Compressible)
-import Data.Maybe (fromJust)
-import Data.String (String)
-import Data.Either (Either)
-import Data.Void (Void)
-import qualified Data.ByteString as Strict
+import           Control.Applicative                (asum, (*>), (<*), (<*>), (<|>))
+import           Control.Monad                      ((>>=))
+import           Data.Bool                          (Bool (..))
+import qualified Data.ByteString                    as Strict
+import           Data.ByteString.Lazy               (ByteString, pack)
+import           Data.Either                        (Either)
+import           Data.Function                      (($), (.))
+import           Data.Functor                       (fmap, (<$), (<$>))
+import           Data.List                          (foldl1', zip)
+import           Data.Maybe                         (fromJust)
+import           Data.String                        (String)
+import           Data.Text.Encoding                 (decodeUtf8)
+import           Data.Void                          (Void)
+import           Numeric.Natural                    (Natural)
+import           Prelude                            (error)
+import qualified Text.Megaparsec                    as P
+import qualified Text.Megaparsec.Byte               as B
+import qualified Text.Megaparsec.Byte.Lexer         as L
+
+import           ZkFold.Algebra.EllipticCurve.Class (Compressed, Compressible, decompress)
+import           ZkFold.Data.Binary                 (Binary, fromByteString, toByteString)
+import           ZkFold.UPLC.BuiltinFunction
+import           ZkFold.UPLC.BuiltinType            (BuiltinType (..), DemotedType (..), demoted)
+import           ZkFold.UPLC.Constant               (Constant (..))
+import           ZkFold.UPLC.Data                   (ConstructorTag, Data (..))
+import           ZkFold.UPLC.Term                   (Term (..), VersionedProgram (..))
 
 type CustomError = Void
 type Stream = ByteString

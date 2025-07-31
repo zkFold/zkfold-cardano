@@ -7,7 +7,7 @@ import           PlutusTx.Prelude                       ((.))
 import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point)
 import           ZkFold.Algebra.EllipticCurve.Class     (compress)
 import           ZkFold.Algebra.Field                   (Zp, fromZp)
-import           ZkFold.Data.Binary                 (toByteString)
+import           ZkFold.Data.Binary                     (toByteString)
 
 convertZp :: Zp p -> Integer
 convertZp = naturalToInteger . fromZp
