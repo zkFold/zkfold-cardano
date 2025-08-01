@@ -128,3 +128,9 @@ cradle:
 
     - path: "zkfold-example/src"
       component: "lib:zkfold-example"
+
+    - path: "zkfold-uplc-converter/src"
+      component: "lib:zkfold-uplc-converter"
+
+    - path: "zkfold-uplc-converter/app/Main.hs"
+      component: "zkfold-uplc-converter:exe:zkfold-uplc-converter"

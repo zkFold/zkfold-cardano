@@ -1,0 +1,69 @@
+cabal-version:      3.0
+name:               zkfold-uplc-converter
+version:            0.1.0.0
+synopsis:           zkFold's CLI for UPLC converter from Plutus Core to arithmetic circuits
+-- description:
+homepage:           https://zkfold.io/
+license:            MIT
+author:
+    Vladimir Sinyakov, Pavel Sokolov, Vladimir Morozov, Eitan Chatav, Ilya Baryshnikov, Anna Hovanskaya, Evgenii Samodelov, Maxim Churilov
+
+maintainer:         vlasin@zkfold.io
+-- copyright:
+category:           Blockchain, Cryptography, DSL, Math, Symbolic Computation
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+Flag Pedantic
+    Description: Enable pedantic build with -Werror
+    Manual: True
+    Default: False
+
+common options
+    default-language:   GHC2021
+    default-extensions:
+      NoImplicitPrelude
+    ghc-options:
+      -Wall
+      -O2
+      -threaded
+    if flag(Pedantic)
+      ghc-options:
+        -Werror
+
+library
+    import:             options
+    hs-source-dirs:     src
+    exposed-modules:    TermParser
+    build-depends:
+      base         ,
+      bytestring   ,
+      megaparsec   ,
+      symbolic-base,
+      symbolic-uplc,
+      text         ,
+
+executable zkfold-uplc-converter
+    import:             options
+    main-is:            Main.hs
+    hs-source-dirs:     app
+    build-depends:
+      adjunctions           ,
+      aeson                 ,
+      base                  ,
+      bytestring            ,
+      cardano-api           ,
+      constraints           ,
+      filepath              ,
+      monoidal-containers   ,
+      optparse-applicative  ,
+      plutus-ledger-api     ,
+      plutus-tx             ,
+      process               ,
+      symbolic-base         ,
+      symbolic-uplc         ,
+      temporary             ,
+      zkfold-cardano        ,
+      zkfold-cardano-scripts,
+      zkfold-uplc-converter ,
