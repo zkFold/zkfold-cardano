@@ -5,14 +5,15 @@
 module TermParser where
 
 import           Control.Applicative                (asum, (*>), (<*), (<*>), (<|>))
-import           Control.Monad                      ((>>=), return)
+import           Control.Monad                      (return, (>>=))
+import           Data.Bifunctor                     (Bifunctor (first))
 import           Data.Bool                          (Bool (..))
 import qualified Data.ByteString                    as Strict
 import           Data.ByteString.Lazy               (ByteString, pack)
 import           Data.Either                        (Either)
 import           Data.Function                      (($), (.))
 import           Data.Functor                       (fmap, (<$), (<$>))
-import           Data.List                          (foldl1', elemIndex)
+import           Data.List                          (elemIndex, foldl1')
 import           Data.Maybe                         (fromJust)
 import           Data.String                        (String)
 import           Data.Text.Encoding                 (decodeUtf8)
@@ -30,7 +31,6 @@ import           ZkFold.UPLC.BuiltinType            (BuiltinType (..), DemotedTy
 import           ZkFold.UPLC.Constant               (Constant (..))
 import           ZkFold.UPLC.Data                   (ConstructorTag, Data (..))
 import           ZkFold.UPLC.Term                   (Term (..), VersionedProgram (..))
-import Data.Bifunctor (Bifunctor(first))
 
 type Parser = P.Parsec Void ByteString
 

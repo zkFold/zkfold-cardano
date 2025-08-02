@@ -41,6 +41,7 @@ import qualified Options.Applicative                      as O
 import qualified PlutusLedgerApi.V3                       as Plutus
 import qualified PlutusTx                                 as Plutus
 import qualified PlutusTx.Prelude                         as Plutus
+import           System.Exit                              (exitFailure)
 import qualified System.IO                                as IO
 import           System.IO                                (IO)
 import qualified System.IO.Temp                           as Temp
@@ -67,7 +68,6 @@ import           ZkFold.Protocol.Plonkup.Utils            (getParams, getSecretP
 import           ZkFold.Symbolic.Class                    (Arithmetic)
 import           ZkFold.Symbolic.UPLC.Converter           (ScriptType (..), SomeCircuit (..), convert)
 import           ZkFold.UPLC.Term                         (VersionedProgram (..))
-import System.Exit (exitFailure)
 
 data InputType = UPLC | TPLC | PIR | UPLC'Flat | UPLC'CBOR deriving Eq
 
