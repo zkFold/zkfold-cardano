@@ -12,7 +12,7 @@ module Main where
 import qualified Cardano.Api                              as Cardano
 import qualified Cardano.Api.Shelley                      as Cardano
 import           Control.Applicative                      (Applicative, asum, pure, some, (<**>), (<*>))
-import           Control.Exception                        (displayException, throwIO)
+import           Control.Exception                        (displayException)
 import           Control.Monad                            ((>>), (>>=))
 import qualified Data.Aeson                               as Aeson
 import           Data.Bifunctor                           (first)
@@ -41,6 +41,7 @@ import qualified Options.Applicative                      as O
 import qualified PlutusLedgerApi.V3                       as Plutus
 import qualified PlutusTx                                 as Plutus
 import qualified PlutusTx.Prelude                         as Plutus
+import           System.Exit                              (exitFailure)
 import qualified System.IO                                as IO
 import           System.IO                                (IO)
 import qualified System.IO.Temp                           as Temp
@@ -88,7 +89,7 @@ main = do
     O.info (actionParser <**> O.helper) (O.fullDesc <> O.progDesc "UPLC converter!")
   Program _ term <- withBinaryInput UPLC actInput \name bs ->
     case parseProgram name bs of
-      Left err  -> throwIO err
+      Left err  -> IO.putStrLn err >> exitFailure
       Right !ok -> pure ok
   case convert term actScriptType of
     SomeCircuit !circuit -> do
@@ -125,7 +126,7 @@ withPlonkup circuit k =
           k (Plonkup omega k1 k2 circuit h1 gs)
  where
   plonkupCircuitSize =
-    (acSizeN circuit + acSizeL circuit + acSizeO circuit) `max`
+    32 `max` (acSizeN circuit + acSizeL circuit + acSizeO circuit) `max`
     sum [ lookupSize lt | LookupType lt <- keys $ acLookup (acContext circuit) ]
 
   lookupSize :: Arithmetic a => LookupTable a f -> Natural
@@ -169,11 +170,11 @@ withBinaryInput expected = \case
   inputExt :: InputType -> OsPath
   inputExt =
     Unsafe.unsafePerformIO . OS.encodeUtf . \case
-      UPLC -> "uplc"
-      TPLC -> "tplc"
-      PIR -> "pir"
-      UPLC'Flat -> "uplc-flat"
-      UPLC'CBOR -> "uplc-cbor"
+      UPLC -> ".uplc"
+      TPLC -> ".tplc"
+      PIR -> ".pir"
+      UPLC'Flat -> ".uplc-flat"
+      UPLC'CBOR -> ".uplc-cbor"
 
   (<.?>) :: IO.FilePath -> OS.OsString -> IO IO.FilePath
   root <.?> ext = do
