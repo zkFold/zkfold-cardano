@@ -1,25 +1,24 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE MonoLocalBinds    #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns      #-}
 
 module TermParser where
 
 import           Control.Applicative                (asum, (*>), (<*), (<*>), (<|>))
-import           Control.Monad                      ((>>=))
+import           Control.Monad                      ((>>=), return)
 import           Data.Bool                          (Bool (..))
 import qualified Data.ByteString                    as Strict
 import           Data.ByteString.Lazy               (ByteString, pack)
 import           Data.Either                        (Either)
 import           Data.Function                      (($), (.))
 import           Data.Functor                       (fmap, (<$), (<$>))
-import           Data.List                          (foldl1', zip)
+import           Data.List                          (foldl1', elemIndex)
 import           Data.Maybe                         (fromJust)
 import           Data.String                        (String)
 import           Data.Text.Encoding                 (decodeUtf8)
 import           Data.Void                          (Void)
 import           Numeric.Natural                    (Natural)
-import           Prelude                            (error)
+import           Prelude                            (error, fromIntegral)
 import qualified Text.Megaparsec                    as P
 import qualified Text.Megaparsec.Byte               as B
 import qualified Text.Megaparsec.Byte.Lexer         as L
@@ -31,19 +30,18 @@ import           ZkFold.UPLC.BuiltinType            (BuiltinType (..), DemotedTy
 import           ZkFold.UPLC.Constant               (Constant (..))
 import           ZkFold.UPLC.Data                   (ConstructorTag, Data (..))
 import           ZkFold.UPLC.Term                   (Term (..), VersionedProgram (..))
+import Data.Bifunctor (Bifunctor(first))
 
-type CustomError = Void
-type Stream = ByteString
-type Parser = P.Parsec CustomError Stream
-type ParseError = P.ParseErrorBundle Stream CustomError
+type Parser = P.Parsec Void ByteString
 
-parseProgram :: String -> ByteString -> Either ParseError VersionedProgram
-parseProgram = P.runParser programParser
+parseProgram :: String -> ByteString -> Either String VersionedProgram
+parseProgram fileName =
+  first P.errorBundlePretty . P.runParser programParser fileName
 
 programParser :: Parser VersionedProgram
 programParser =
   P.between (B.space <* sym "(" <* sym "program") (sym ")" *> P.eof) $
-    Program <$> version <*> termIn []
+    Program <$> version <* B.space <*> termIn []
  where
   version =
     (,,) <$> L.decimal <* B.string "." <*> L.decimal <* B.string "." <*> L.decimal
@@ -57,12 +55,15 @@ programParser =
       , TDelay <$ sym "delay" <*> termIn ctx
       , TError <$ sym "error"
       , TForce <$ sym "force" <*> termIn ctx
-      , TLam <$ sym "lam" <*> do
-          (pack -> x) <- P.some B.alphaNumChar
-          termIn (x:ctx)
+      , TLam <$ sym "lam" <*> (var >>= \x -> termIn (x:ctx))
       ])
     <|> brackets (foldl1' TApp <$> P.some (termIn ctx))
-    <|> asum [ TVariable ix <$ sym var | (ix, var) <- zip [0..] ctx ]
+    <|> do
+        x <- var
+        let i = fromIntegral $ fromJust $ elemIndex x ctx
+        return (TVariable i)
+
+  var = lexeme (pack <$> P.some B.alphaNumChar)
 
   constant :: DemotedType t -> Parser (Constant t)
   constant = \case
@@ -109,9 +110,10 @@ programParser =
   tag = L.decimal
   bsLiteral :: Parser Strict.ByteString
   bsLiteral = toByteString @Natural <$ B.string "#" <*> L.hexadecimal
-  sym = L.symbol B.space1
-  brackets, parens :: Parser a -> Parser a
+  sym = L.symbol B.space
+  brackets, lexeme, parens :: Parser a -> Parser a
   brackets = P.between (sym "[") (sym "]")
+  lexeme = L.lexeme B.space
   parens = P.between (sym "(") (sym ")")
 
 builtins :: [(ByteString, Term)]
