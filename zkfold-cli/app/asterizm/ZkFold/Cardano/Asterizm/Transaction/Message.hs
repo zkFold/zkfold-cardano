@@ -2,11 +2,12 @@ module ZkFold.Cardano.Asterizm.Transaction.Message where
 
 import           Data.Aeson                    (encodeFile)
 import qualified Data.ByteString               as BS
-import           PlutusCore.Crypto.Hash        (blake2b_256)
+import           PlutusLedgerApi.V3            (fromBuiltin, toBuiltin)
 import           Prelude
 import           System.FilePath               ((</>))
 
 import           ZkFold.Cardano.Asterizm.Types (HexByteString (..))
+import           ZkFold.Cardano.UPLC.Asterizm  (buildCrosschainHash)
 
 
 data Transaction = Transaction
@@ -20,7 +21,7 @@ clientMessage :: Transaction -> IO ()
 clientMessage (Transaction path msg privFile pubFile) = do
   let assetsPath = path </> "assets"
 
-  let msgHash = blake2b_256 msg
+  let msgHash = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
 
   putStrLn $ "\nSaving Asterizm message (private file: " ++ privFile ++ ")..."
   encodeFile (assetsPath </> privFile) $ HexByteString msg

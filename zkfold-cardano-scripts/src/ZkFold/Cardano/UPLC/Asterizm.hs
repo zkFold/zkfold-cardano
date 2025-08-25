@@ -16,10 +16,11 @@ import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
                                               unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
+import           PlutusTx.Builtins           (lengthOfByteString, sha2_256, sliceByteString)
 import           PlutusTx.Foldable           (foldMap)
 import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), blake2b_256, check,
-                                              elem, find, fmapDefault, head, lengthOfByteString, ($), (&&), (.), (/=),
-                                              (<$>), (==), (||))
+                                              elem, find, fmapDefault, head, ($), (&&), (.), (/=), (<$>), (==), (||),
+                                              (<>), (+), (-))
 import           PlutusTx.Trace              (traceError)
 
 
@@ -34,6 +35,28 @@ data AsterizmSetup = AsterizmSetup
 makeLift ''AsterizmSetup
 makeIsDataIndexed ''AsterizmSetup [('AsterizmSetup,0)]
 
+
+{-# INLINABLE buildCrosschainHash #-}
+buildCrosschainHash :: BuiltinByteString -> BuiltinByteString
+buildCrosschainHash bs =
+  let headerLen = 112
+      chunkLen  = 127
+      len       = lengthOfByteString bs
+
+      go :: BuiltinByteString -> Integer -> Integer -> BuiltinByteString
+      go h off remLen =
+        if remLen == 0 then h
+        else
+          let takeN = if remLen < chunkLen then remLen else chunkLen
+              chunk = sliceByteString (headerLen + off) takeN bs
+              h'    = sha2_256 (h <> sha2_256 chunk)
+          in  go h' (off + takeN) (remLen - takeN)
+
+  in  if len < headerLen then traceError "short"
+      else
+        let h0      = sha2_256 (sliceByteString 0 headerLen bs)
+            payLen  = len - headerLen
+        in go h0 0 payLen
 
 -- | Plutus script (minting policy) for posting signed messages on-chain.
 {-# INLINABLE untypedAsterizmRelayer #-}
@@ -110,7 +133,7 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
       Just cs -> cs
       Nothing -> traceError "Unrecognized relayer"
 
-    tokenName = TokenName $ blake2b_256 message
+    tokenName = TokenName $ buildCrosschainHash message
 
     conditionSigned = txSignedBy info acsClientPKH
 
@@ -126,7 +149,6 @@ asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUni
 asterizmRelayerCompiled pkh =
     $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
-
 
 asterizmClientCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmClientCompiled setup =
