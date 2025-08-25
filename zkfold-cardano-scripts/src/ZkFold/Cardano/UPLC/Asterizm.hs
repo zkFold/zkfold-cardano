@@ -19,8 +19,8 @@ import           PlutusTx.AssocMap           (keys, lookup, toList)
 import           PlutusTx.Builtins           (lengthOfByteString, sha2_256, sliceByteString)
 import           PlutusTx.Foldable           (foldMap)
 import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), blake2b_256, check,
-                                              elem, find, fmapDefault, head, ($), (&&), (.), (/=), (<$>), (==), (||),
-                                              (<>), (+), (-))
+                                              elem, find, fmapDefault, head, ($), (&&), (+), (-), (.), (/=), (<$>),
+                                              (<>), (==), (||))
 import           PlutusTx.Trace              (traceError)
 
 
