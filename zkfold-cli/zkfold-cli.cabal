@@ -121,7 +121,6 @@ executable asterizm
         http-conduit                   ,
         optparse-applicative-fork      ,
         parsec                         ,
-        plutus-core                    ,
         plutus-ledger-api              ,
         plutus-tx                      ,
         QuickCheck                     ,

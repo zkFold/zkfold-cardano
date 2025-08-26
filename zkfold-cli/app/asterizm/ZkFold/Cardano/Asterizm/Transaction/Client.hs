@@ -8,7 +8,6 @@ import           Data.String                   (fromString)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusCore.Crypto.Hash        (blake2b_256)
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
@@ -16,7 +15,7 @@ import           System.FilePath               ((</>))
 import           ZkFold.Cardano.Asterizm.Types (HexByteString (..), fromAsterizmParams)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
-import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmClientCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmClientCompiled, buildCrosschainHash)
 
 
 data Transaction = Transaction
@@ -61,7 +60,7 @@ clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
   let plutusPolicy       = asterizmClientCompiled asterizmSetup
       (policy, policyId) = policyFromPlutus plutusPolicy
 
-  let msgHash    = blake2b_256 msg
+  let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
