@@ -4,6 +4,7 @@
 module ZkFold.Cardano.UPLC.Wallet.Types (
   Web2Creds (..),
   JWTParts (..),
+  KeyId (..),
   Web2Auth (..),
   Signature (..),
 ) where
@@ -35,7 +36,15 @@ data JWTParts = JWTParts
 
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''JWTParts [('JWTParts, 0)]
 
-data Web2Auth = Web2Auth JWTParts ProofBytes TokenName
+newtype KeyId = KeyId
+  { keyId :: BuiltinByteString
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass HasBlueprintDefinition
+
+PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''KeyId [('KeyId, 0)]
+
+data Web2Auth = Web2Auth JWTParts ProofBytes TokenName KeyId
   deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
 

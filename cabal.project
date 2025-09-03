@@ -12,7 +12,6 @@ repository cardano-haskell-packages
 packages:
     zkfold-cardano
     zkfold-cardano-scripts
-    zkfold-cardano-scripts-common
     zkfold-cli
     zkfold-example
     zkfold-uplc-converter

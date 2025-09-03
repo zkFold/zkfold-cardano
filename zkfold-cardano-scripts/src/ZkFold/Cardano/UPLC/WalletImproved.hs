@@ -6,7 +6,7 @@
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-module ZkFold.Cardano.UPLC.Wallet (
+module ZkFold.Cardano.UPLC.WalletImproved (
   module ZkFold.Cardano.UPLC.Wallet.Types,
   web2Auth,
   checkSig,
@@ -16,6 +16,8 @@ module ZkFold.Cardano.UPLC.Wallet (
 import           Data.Function                       ((&))
 import           PlutusLedgerApi.V1.Value            (valueOf)
 import           PlutusLedgerApi.V3
+import PlutusLedgerApi.V3.Contexts
+import PlutusTx.Trace
 import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
@@ -47,14 +49,12 @@ Beacon токен должен иметь one-shot minting policy, то есть
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
-  -- | 'SetupBytes'.
-  BuiltinData ->
   -- | 'Web2Creds'.
   BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBuiltinData -> Web2Creds {..}) sc =
+web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
@@ -68,10 +68,29 @@ web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBui
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
  where
+  ctx = unsafeFromBuiltinData sc :: ScriptContext
+  -- tx reference inputs
+  refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
+  
+  -- find beacon datum  TODO: beacon name and currency symbol?
+  beaconDatum = fmap txOutDatum $ find (\ri -> valueOf (txOutValue ri) (ownCurrencySymbol ctx) (TokenName "beacon") > 0) refInputs
+  
+  -- decode beacon datum
+  setupBytesMap = 
+      case beaconDatum of
+        Just (OutputDatum datum) -> unsafeFromBuiltinData $ getDatum datum
+        Nothing -> traceError "Missing beacon token."
+        _ -> traceError "Incorrect datum. Should be inline datum with a Map of key ids and SetupBytes."
+
+  Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap
+
+  expModCircuit :: SetupBytes
+  expModCircuit = unsafeFromBuiltinData setupBytes
+
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
   redL = txInfoL & BI.tail
-  Web2Auth JWTParts {..} proof tn@(TokenName bs) _ = redL & BI.head & unsafeFromBuiltinData
+  Web2Auth JWTParts {..} proof tn@(TokenName bs) (KeyId kid) = redL & BI.head & unsafeFromBuiltinData
   (MintingScript symb) = redL & BI.tail & BI.head & unsafeFromBuiltinData
   txInfoMintL =
     txInfo
