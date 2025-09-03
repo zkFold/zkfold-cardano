@@ -16,11 +16,11 @@ module ZkFold.Cardano.UPLC.WalletImproved (
 import           Data.Function                       ((&))
 import           PlutusLedgerApi.V1.Value            (valueOf)
 import           PlutusLedgerApi.V3
-import PlutusLedgerApi.V3.Contexts
-import PlutusTx.Trace
+import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
+import           PlutusTx.Trace
 
 import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
@@ -71,12 +71,12 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   ctx = unsafeFromBuiltinData sc :: ScriptContext
   -- tx reference inputs
   refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
-  
+
   -- find beacon datum  TODO: beacon name and currency symbol?
   beaconDatum = fmap txOutDatum $ find (\ri -> valueOf (txOutValue ri) (ownCurrencySymbol ctx) (TokenName "beacon") > 0) refInputs
-  
+
   -- decode beacon datum
-  setupBytesMap = 
+  setupBytesMap =
       case beaconDatum of
         Just (OutputDatum datum) -> unsafeFromBuiltinData $ getDatum datum
         Nothing -> traceError "Missing beacon token."
