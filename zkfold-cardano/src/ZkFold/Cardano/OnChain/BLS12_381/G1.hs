@@ -20,8 +20,10 @@ instance ZkFold.FromConstant Natural G1 where
 instance ZkFold.Scale Natural G1 where
     scale n = ZkFold.scale (naturalToInteger n)
 
-instance ZkFold.AdditiveMonoid G1 where
+instance ZkFold.Zero G1 where
     zero = bls12_381_G1_uncompress bls12_381_G1_compressed_zero
+
+instance ZkFold.AdditiveMonoid G1 where
 
 instance ZkFold.FromConstant Integer G1 where
     fromConstant = traceError "not supported on on-chain"

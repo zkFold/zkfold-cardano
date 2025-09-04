@@ -62,9 +62,11 @@ instance ZkFold.Scale Integer F where
     {-# INLINABLE scale #-}
     scale = (ZkFold.*) . F
 
-instance ZkFold.AdditiveMonoid F where
+instance ZkFold.Zero F where
     {-# INLINABLE zero #-}
     zero = F 0
+
+instance ZkFold.AdditiveMonoid F where
 
 instance ZkFold.AdditiveGroup F where
     {-# INLINABLE (-) #-}
