@@ -2,18 +2,18 @@
 
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
-import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, ToJSON)
-import GHC.Generics (Generic)
-import GHC.Natural (Natural, naturalToInteger)
-import PlutusTx (makeLift)
-import PlutusTx.Blueprint
-import PlutusTx.Blueprint.TH qualified
-import PlutusTx.Builtins
-import PlutusTx.Prelude
-import Prelude qualified as Haskell
+import           Control.DeepSeq       (NFData)
+import           Data.Aeson            (FromJSON, ToJSON)
+import           GHC.Generics          (Generic)
+import           GHC.Natural           (Natural, naturalToInteger)
+import           PlutusTx              (makeLift)
+import           PlutusTx.Blueprint
+import qualified PlutusTx.Blueprint.TH
+import           PlutusTx.Builtins
+import           PlutusTx.Prelude
+import qualified Prelude               as Haskell
 
-import ZkFold.Algebra.Class qualified as ZkFold
+import qualified ZkFold.Algebra.Class  as ZkFold
 
 bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513

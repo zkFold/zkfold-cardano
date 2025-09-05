@@ -1,8 +1,8 @@
 module ZkFold.Cardano.OnChain.Utils where
 
-import PlutusLedgerApi.V3 (BuiltinByteString, Credential, CurrencySymbol, ScriptPurpose (..), ToData (..))
-import PlutusTx.Builtins (Integer, blake2b_224, serialiseData)
-import PlutusTx.Prelude (Bool (..), Eq (..), (.))
+import           PlutusLedgerApi.V3 (BuiltinByteString, Credential, CurrencySymbol, ScriptPurpose (..), ToData (..))
+import           PlutusTx.Builtins  (Integer, blake2b_224, serialiseData)
+import           PlutusTx.Prelude   (Bool (..), Eq (..), (.))
 
 type ScriptLabel = Integer -- Implements distinct addresses for scripts
 
@@ -15,10 +15,10 @@ dataToBlake = blake2b_224 . serialiseData . toBuiltinData
 {-# INLINEABLE eqRewardingPurpose #-}
 eqRewardingPurpose :: Credential -> ScriptPurpose -> Bool
 eqRewardingPurpose a (Rewarding b) = a == b
-eqRewardingPurpose _ _ = False
+eqRewardingPurpose _ _             = False
 
 -- https://github.com/IntersectMBO/plutus/issues/6273
 {-# INLINEABLE eqMintingPurpose #-}
 eqMintingPurpose :: CurrencySymbol -> ScriptPurpose -> Bool
 eqMintingPurpose a (Minting b) = a == b
-eqMintingPurpose _ _ = False
+eqMintingPurpose _ _           = False

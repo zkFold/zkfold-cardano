@@ -1,18 +1,13 @@
 module ZkFold.Cardano.OnChain.Plonkup.Update where
 
-import PlutusTx.Builtins (
-    BuiltinByteString,
-    Integer,
-    bls12_381_G1_add,
-    bls12_381_G1_compress,
-    bls12_381_G1_scalarMul,
-    bls12_381_G1_uncompress,
- )
-import PlutusTx.Prelude (($), (+))
+import           PlutusTx.Builtins                   (BuiltinByteString, Integer, bls12_381_G1_add,
+                                                      bls12_381_G1_compress, bls12_381_G1_scalarMul,
+                                                      bls12_381_G1_uncompress)
+import           PlutusTx.Prelude                    (($), (+))
 
-import ZkFold.Algebra.Class ((*))
-import ZkFold.Cardano.OnChain.Orphans ()
-import ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes (..))
+import           ZkFold.Algebra.Class                ((*))
+import           ZkFold.Cardano.OnChain.Orphans      ()
+import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes (..))
 
 {-# INLINEABLE updateSetupBytes #-}
 updateSetupBytes :: SetupBytes -> Integer -> BuiltinByteString -> SetupBytes

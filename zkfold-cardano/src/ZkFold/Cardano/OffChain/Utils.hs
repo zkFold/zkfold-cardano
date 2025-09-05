@@ -1,22 +1,18 @@
 module ZkFold.Cardano.OffChain.Utils where
 
-import Cardano.Api hiding (Lovelace)
-import Cardano.Api.Ledger (toCBOR)
-import Cardano.Api.Shelley (
-    PlutusScript (..),
-    fromPlutusData,
-    scriptDataToJsonDetailedSchema,
-    shelleyPayAddrToPlutusPubKHash,
- )
-import Codec.CBOR.Write (toStrictByteString)
-import Control.Monad (void)
-import Data.Aeson.Types as Aeson (Value (..))
-import Data.ByteString qualified as BS
-import Data.Text qualified as T
-import PlutusLedgerApi.V3 as V3
-import PlutusTx (CompiledCode)
-import Text.Printf (printf)
-import Prelude hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import           Cardano.Api         hiding (Lovelace)
+import           Cardano.Api.Ledger  (toCBOR)
+import           Cardano.Api.Shelley (PlutusScript (..), fromPlutusData, scriptDataToJsonDetailedSchema,
+                                      shelleyPayAddrToPlutusPubKHash)
+import           Codec.CBOR.Write    (toStrictByteString)
+import           Control.Monad       (void)
+import           Data.Aeson.Types    as Aeson (Value (..))
+import qualified Data.ByteString     as BS
+import qualified Data.Text           as T
+import           PlutusLedgerApi.V3  as V3
+import           PlutusTx            (CompiledCode)
+import           Prelude             hiding (Bool, Eq (..), Fractional (..), Num (..), length)
+import           Text.Printf         (printf)
 
 -- | Write serialized script to a file.
 writePlutusScriptToFile :: (IsPlutusScriptLanguage lang) => FilePath -> PlutusScript lang -> IO ()
@@ -88,5 +84,5 @@ scriptHashOf =
 outRefCompare :: TxOutRef -> TxOutRef -> Ordering
 outRefCompare o1 o2 =
     case compare (txOutRefId o1) (txOutRefId o2) of
-        EQ -> compare (txOutRefIdx o1) (txOutRefIdx o2)
+        EQ  -> compare (txOutRefIdx o1) (txOutRefIdx o2)
         ord -> ord

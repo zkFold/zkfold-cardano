@@ -2,25 +2,19 @@
 
 module ZkFold.Cardano.OffChain.Transcript where
 
-import Data.Word (Word8)
-import PlutusTx.Builtins (
-    BuiltinByteString,
-    ByteOrder (..),
-    blake2b_224,
-    bls12_381_G1_compress,
-    byteStringToInteger,
-    integerToByteString,
-    toBuiltin,
- )
-import PlutusTx.Prelude ((.))
+import           Data.Word                              (Word8)
+import           PlutusTx.Builtins                      (BuiltinByteString, ByteOrder (..), blake2b_224,
+                                                         bls12_381_G1_compress, byteStringToInteger,
+                                                         integerToByteString, toBuiltin)
+import           PlutusTx.Prelude                       ((.))
 
-import ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_CompressedPoint, Fr)
-import ZkFold.Algebra.Field (toZp)
-import ZkFold.Cardano.OffChain.BLS12_381 (convertZp)
-import ZkFold.Cardano.OnChain.BLS12_381.F (F (..))
-import ZkFold.Cardano.OnChain.BLS12_381.G1 (G1)
-import ZkFold.Data.Binary (toByteString)
-import ZkFold.Protocol.NonInteractiveProof (FromTranscript (..), ToTranscript (..))
+import           ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_CompressedPoint, Fr)
+import           ZkFold.Algebra.Field                   (toZp)
+import           ZkFold.Cardano.OffChain.BLS12_381      (convertZp)
+import           ZkFold.Cardano.OnChain.BLS12_381.F     (F (..))
+import           ZkFold.Cardano.OnChain.BLS12_381.G1    (G1)
+import           ZkFold.Data.Binary                     (toByteString)
+import           ZkFold.Protocol.NonInteractiveProof    (FromTranscript (..), ToTranscript (..))
 
 instance ToTranscript BuiltinByteString Word8 where
     toTranscript = toBuiltin . toByteString

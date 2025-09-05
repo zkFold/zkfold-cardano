@@ -2,25 +2,25 @@
 
 module ZkFold.Cardano.OffChain.Plonkup where
 
-import PlutusTx.Builtins (BuiltinByteString)
-import PlutusTx.Prelude (($), (.))
-import Prelude (fromIntegral, map)
+import           PlutusTx.Builtins                            (BuiltinByteString)
+import           PlutusTx.Prelude                             (($), (.))
+import           Prelude                                      (fromIntegral, map)
 
-import ZkFold.Algebra.Class ((+), (^))
-import ZkFold.Algebra.EllipticCurve.BLS12_381 (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
-import ZkFold.Algebra.Number (KnownNat, value)
-import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
-import ZkFold.Cardano.OffChain.BLS12_381 (convertG1, convertG2, convertZp)
-import ZkFold.Cardano.OnChain.BLS12_381.F (F (..))
-import ZkFold.Cardano.OnChain.Plonkup.Data (InputBytes, ProofBytes (..), SetupBytes (..))
-import ZkFold.Prelude (log2ceiling)
-import ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-import ZkFold.Protocol.Plonkup (Plonkup)
-import ZkFold.Protocol.Plonkup.Input (PlonkupInput (..))
-import ZkFold.Protocol.Plonkup.Proof
-import ZkFold.Protocol.Plonkup.Relation (PlonkupRelation (..))
-import ZkFold.Protocol.Plonkup.Verifier.Commitments
-import ZkFold.Protocol.Plonkup.Verifier.Setup
+import           ZkFold.Algebra.Class                         ((+), (^))
+import           ZkFold.Algebra.EllipticCurve.BLS12_381       (BLS12_381_G1_Point, BLS12_381_G2_Point, Fr)
+import           ZkFold.Algebra.Number                        (KnownNat, value)
+import           ZkFold.Algebra.Polynomial.Univariate         (PolyVec)
+import           ZkFold.Cardano.OffChain.BLS12_381            (convertG1, convertG2, convertZp)
+import           ZkFold.Cardano.OnChain.BLS12_381.F           (F (..))
+import           ZkFold.Cardano.OnChain.Plonkup.Data          (InputBytes, ProofBytes (..), SetupBytes (..))
+import           ZkFold.Prelude                               (log2ceiling)
+import           ZkFold.Protocol.NonInteractiveProof          (NonInteractiveProof (..))
+import           ZkFold.Protocol.Plonkup                      (Plonkup)
+import           ZkFold.Protocol.Plonkup.Input                (PlonkupInput (..))
+import           ZkFold.Protocol.Plonkup.Proof
+import           ZkFold.Protocol.Plonkup.Relation             (PlonkupRelation (..))
+import           ZkFold.Protocol.Plonkup.Verifier.Commitments
+import           ZkFold.Protocol.Plonkup.Verifier.Setup
 
 --------------- Transform Plonk Base to Plonk BuiltinByteString ----------------
 
