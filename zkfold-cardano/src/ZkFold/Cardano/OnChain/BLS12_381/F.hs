@@ -2,123 +2,127 @@
 
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
-import           Data.Aeson            (FromJSON, ToJSON)
-import           GHC.Generics          (Generic)
-import           GHC.Natural           (Natural, naturalToInteger)
-import           PlutusTx              (makeLift)
-import           PlutusTx.Blueprint
-import qualified PlutusTx.Blueprint.TH
-import           PlutusTx.Builtins
-import           PlutusTx.Prelude
-import qualified Prelude               as Haskell
+import Control.DeepSeq (NFData)
+import Data.Aeson (FromJSON, ToJSON)
+import GHC.Generics (Generic)
+import GHC.Natural (Natural, naturalToInteger)
+import PlutusTx (makeLift)
+import PlutusTx.Blueprint
+import PlutusTx.Blueprint.TH qualified
+import PlutusTx.Builtins
+import PlutusTx.Prelude
+import Prelude qualified as Haskell
 
-import qualified ZkFold.Algebra.Class  as ZkFold
+import ZkFold.Algebra.Class qualified as ZkFold
 
 bls12_381_field_prime :: Integer
 bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 
 newtype F = F Integer
-  deriving stock (Haskell.Show, Generic)
-  deriving newtype (ToJSON, FromJSON)
-  deriving anyclass HasBlueprintDefinition
+    deriving stock (Haskell.Show, Generic)
+    deriving newtype (ToJSON, FromJSON)
+    deriving anyclass (HasBlueprintDefinition, NFData)
 makeLift ''F
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''F [('F,0)]
+PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''F [('F, 0)]
 
-{-# INLINABLE toF #-}
+{-# INLINEABLE toF #-}
 toF :: Integer -> F
 toF = F . (`modulo` bls12_381_field_prime)
 
 -- | convert hash into Zp BLS12_381_Scalar
-{-# INLINABLE toInput #-}
+{-# INLINEABLE toInput #-}
 toInput :: BuiltinByteString -> F
 toInput = toF . byteStringToInteger BigEndian
 
 -- | convert Zp BLS12_381_Scalar into hash
-{-# INLINABLE fromInput #-}
+{-# INLINEABLE fromInput #-}
 fromInput :: F -> BuiltinByteString
 fromInput (F input) = integerToByteString BigEndian 32 input
 
 instance Eq F where
-    {-# INLINABLE (==) #-}
+    {-# INLINEABLE (==) #-}
     (F a) == (F b) = a == b
 
 instance ZkFold.AdditiveSemigroup F where
-    {-# INLINABLE (+) #-}
+    {-# INLINEABLE (+) #-}
     (F a) + (F b) = F $ (a + b) `modulo` bls12_381_field_prime
 
 instance ZkFold.FromConstant Natural F where
-    {-# INLINABLE fromConstant #-}
+    {-# INLINEABLE fromConstant #-}
     fromConstant = ZkFold.fromConstant . naturalToInteger
 
 instance ZkFold.Scale Natural F where
-    {-# INLINABLE scale #-}
+    {-# INLINEABLE scale #-}
     scale = (ZkFold.*) . ZkFold.fromConstant
 
 instance ZkFold.FromConstant Integer F where
-    {-# INLINABLE fromConstant #-}
+    {-# INLINEABLE fromConstant #-}
     fromConstant = F . (`modulo` bls12_381_field_prime)
 
 instance ZkFold.Scale Integer F where
-    {-# INLINABLE scale #-}
+    {-# INLINEABLE scale #-}
     scale = (ZkFold.*) . F
 
 instance ZkFold.Zero F where
-    {-# INLINABLE zero #-}
+    {-# INLINEABLE zero #-}
     zero = F 0
 
-instance ZkFold.AdditiveMonoid F where
+instance ZkFold.AdditiveMonoid F
 
 instance ZkFold.AdditiveGroup F where
-    {-# INLINABLE (-) #-}
+    {-# INLINEABLE (-) #-}
     (F a) - (F b) = F $ (a - b) `modulo` bls12_381_field_prime
 
 instance ZkFold.MultiplicativeSemigroup F where
-    {-# INLINABLE (*) #-}
+    {-# INLINEABLE (*) #-}
     (F a) * (F b) = F $ (a * b) `modulo` bls12_381_field_prime
 
 instance ZkFold.Exponent F Natural where
-    {-# INLINABLE (^) #-}
+    {-# INLINEABLE (^) #-}
     (^) f n = powMod f (naturalToInteger n)
 
 instance ZkFold.MultiplicativeMonoid F where
-    {-# INLINABLE one #-}
+    {-# INLINEABLE one #-}
     one = F 1
 
 -- Extended Euclidean algorithm.
-{-# INLINABLE eea #-}
+{-# INLINEABLE eea #-}
 eea :: Integer -> Integer -> (Integer, Integer, Integer)
 eea a b =
-    if a == zero then (b, zero, one)
-    else let (gcd, x1, y1) = eea (b `modulo` a) a
-         in (gcd, y1 - b `divide` a * x1, x1)
+    if a == zero
+        then (b, zero, one)
+        else
+            let (gcd, x1, y1) = eea (b `modulo` a) a
+             in (gcd, y1 - b `divide` a * x1, x1)
 
-{-# INLINABLE powMod #-}
+{-# INLINEABLE powMod #-}
 powMod :: F -> Integer -> F
 powMod b e
-    | e < 0     = error ()
-    | e == 0    = ZkFold.one
-    | even e    = powMod (b ZkFold.* b) (e `divide` 2)
+    | e < 0 = error ()
+    | e == 0 = ZkFold.one
+    | even e = powMod (b ZkFold.* b) (e `divide` 2)
     | otherwise = b ZkFold.* powMod (b ZkFold.* b) ((e - 1) `divide` 2)
 
-{-# INLINABLE powTwo #-}
+{-# INLINEABLE powTwo #-}
 powTwo :: F -> Integer -> F
 powTwo x k
-    | k == 0    = x
+    | k == 0 = x
     | otherwise = powTwo (x ZkFold.* x) (k - 1)
 
 instance ZkFold.Exponent F Integer where
-    {-# INLINABLE (^) #-}
+    {-# INLINEABLE (^) #-}
     (^) = powMod
 
 instance ZkFold.MultiplicativeGroup F where
-    {-# INLINABLE invert #-}
+    {-# INLINEABLE invert #-}
     invert (F a)
-        | gcd == 1  = F $ ((x `modulo` m) + m) `modulo` m
+        | gcd == 1 = F $ ((x `modulo` m) + m) `modulo` m
         | otherwise = error ()
-      where m = bls12_381_field_prime
-            (gcd, x, _) = eea a m
+      where
+        m = bls12_381_field_prime
+        (gcd, x, _) = eea a m
 
-    {-# INLINABLE (/) #-}
+    {-# INLINEABLE (/) #-}
     a / b = a ZkFold.* ZkFold.invert b
 
 --------------------------------------------------------------------------------
