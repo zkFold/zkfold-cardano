@@ -21,7 +21,7 @@ import           ZkFold.Symbolic.Class                  (Symbolic (..))
 import           ZkFold.Symbolic.Compiler               (compileWith)
 import           ZkFold.Symbolic.Data.Bool              (Bool (..))
 import           ZkFold.Symbolic.Data.FieldElement      (FieldElement)
-import ZkFold.Symbolic.Data.Vec (Vec (..), runVec)
+import           ZkFold.Symbolic.Data.Vec               (Vec (..), runVec)
 
 data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr
