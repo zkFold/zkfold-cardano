@@ -20,7 +20,7 @@ import qualified PlutusTx.Prelude                    as PlutusTx (BuiltinUnit)
 import           Prelude                             (FilePath, IO, ($))
 
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
-import           ZkFold.Cardano.UPLC.Wallet
+import           ZkFold.Cardano.UPLC.WalletImproved
 
 smartWalletBP :: ContractBlueprint
 smartWalletBP =
@@ -124,7 +124,7 @@ writeSmartWalletBP fp = writeBlueprint fp smartWalletBP
 web2AuthSerialisedScript :: ByteString
 web2AuthSerialisedScript = serialiseCompiledCode web2AuthCompiledCode & fromShort
 
-web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 
 walletSerialisedScript :: ByteString

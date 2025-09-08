@@ -28,16 +28,6 @@ import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
-{--
-Vladimir Sinyakov, [26.08.2025 20:43]
-У minting скрипта всё то же самое, кроме:
-1) Мы должны найти reference input, в котором лежим beacon токен.
-2) В датуме этого инпута должен лежать SetupBytes, которые мы используем.
-3) Саму цепь нужно параметризовать гугл ключом, а не передавать его в качестве входа цепи (как сейчас).
-
-Vladimir Sinyakov, [26.08.2025 20:45]
-Beacon токен должен иметь one-shot minting policy, то есть в скрипте мы должны проверять, что тратится какой-то конкретный инпут (у нас уже такой скрипт реализован, см. zkfold-cardano).
---}
 
 -- TODO: Account for rotation of public keys
 -- TODO: Check the client Id
