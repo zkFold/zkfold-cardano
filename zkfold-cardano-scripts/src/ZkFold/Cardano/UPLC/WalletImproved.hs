@@ -21,6 +21,7 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
 import           PlutusTx.Trace
+import           PlutusTx.Show
 
 import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
@@ -82,7 +83,10 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
         Nothing -> traceError "Missing beacon token."
         _ -> traceError "Incorrect datum. Should be inline datum with a Map of key ids and SetupBytes."
 
-  Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap
+  setupBytes = 
+      case AssocMap.lookup (toBuiltinData kid) setupBytesMap of
+        Just res -> res
+        Nothing -> traceError $ "No key with id " <> show kid <> " found in the map. Known key ids are " <> show (AssocMap.keys setupBytesMap) 
 
   expModCircuit :: SetupBytes
   expModCircuit = unsafeFromBuiltinData setupBytes
