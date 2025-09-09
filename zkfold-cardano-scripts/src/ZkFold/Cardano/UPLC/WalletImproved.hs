@@ -19,7 +19,7 @@ import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
-import           PlutusTx.Prelude                    hiding (toList, (*), (+))
+import           PlutusTx.Prelude                    hiding (toList, (*), (+), show)
 import           PlutusTx.Trace
 import           PlutusTx.Show
 
@@ -69,12 +69,12 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
  where
-  ctx = unsafeFromBuiltinData sc :: ScriptContext
+  ctx = trace "Context parsed" $ unsafeFromBuiltinData sc :: ScriptContext
   -- tx reference inputs
-  refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
+  refInputs = trace "Ref inputs" . map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
   -- find beacon datum  TODO: beacon name and currency symbol?
-  beaconDatum = fmap txOutDatum $ find (\ri -> valueOf (txOutValue ri) (ownCurrencySymbol ctx) (TokenName "beacon") > 0) refInputs
+  beaconDatum = fmap txOutDatum $ find (\ri -> valueOf (txOutValue ri) (ownCurrencySymbol ctx) (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
 
   -- decode beacon datum
   setupBytesMap =
