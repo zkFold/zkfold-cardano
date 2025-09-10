@@ -70,17 +70,13 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   -- tx reference inputs
   refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
-  symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs
-  tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
-
   correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
   correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
 
   beaconInput = find (\ri -> valueOf (txOutValue ri) correctCurrencySymbol correctTokenName > 0) refInputs
 
   -- find beacon datum
-  beaconDatum = trace ("Beacon input: " <> show (symbols, unCurrencySymbol correctCurrencySymbol, tokens, unTokenName correctTokenName)) $ fmap txOutDatum beaconInput
-  --beaconDatum = fmap txOutDatum beaconInput
+  beaconDatum = fmap txOutDatum beaconInput
 
   -- decode beacon datum
   setupBytesMap =
@@ -89,6 +85,7 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
                                       Nothing -> traceError "Decoding datum failed"
                                       Just m  -> m
         Nothing -> traceError "Missing beacon token."
+        Just NoOutputDatum -> traceError "No datum incuded."
         _ -> traceError "Incorrect datum."
 
   setupBytes =
