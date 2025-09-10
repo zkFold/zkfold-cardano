@@ -16,6 +16,7 @@ module ZkFold.Cardano.UPLC.WalletImproved (
 import           Data.Function                       ((&))
 import           PlutusLedgerApi.V1.Value            (currencySymbol, valueOf)
 import           PlutusLedgerApi.V3
+import PlutusLedgerApi.Data.V2 (toSOPList) 
 import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
@@ -64,7 +65,7 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
         -- verify @PlonkupPlutus expModCircuit [publicInput] proof
-         isJust beaconInput
+         isJust beaconDatum
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
@@ -77,10 +78,13 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   -- tx reference inputs
   refInputs = trace "Ref inputs" . map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
+  symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> beaconInput
+  tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> beaconInput
+
   beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
 
-  -- find beacon datum  TODO: beacon name and currency symbol?
-  beaconDatum = fmap txOutDatum beaconInput
+  -- find beacon datum  
+  beaconDatum = trace ("Beacon imput: " <> show (symbols, tokens)) $ fmap txOutDatum beaconInput
 
   -- decode beacon datum
   setupBytesMap =
