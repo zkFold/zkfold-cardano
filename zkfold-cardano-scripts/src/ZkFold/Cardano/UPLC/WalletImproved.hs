@@ -14,9 +14,9 @@ module ZkFold.Cardano.UPLC.WalletImproved (
 ) where
 
 import           Data.Function                       ((&))
+import           PlutusLedgerApi.Data.V2             (toSOPList)
 import           PlutusLedgerApi.V1.Value            (currencySymbol, valueOf)
 import           PlutusLedgerApi.V3
-import PlutusLedgerApi.Data.V2 (toSOPList) 
 import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
@@ -83,7 +83,7 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
 
   beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
 
-  -- find beacon datum  
+  -- find beacon datum
   beaconDatum = trace ("Beacon imput: " <> show (symbols, tokens)) $ fmap txOutDatum beaconInput
 
   -- decode beacon datum
