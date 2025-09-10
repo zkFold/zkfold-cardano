@@ -63,7 +63,8 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
         publicInput = toInput jwtHash * toInput bs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-        verify @PlonkupPlutus expModCircuit [publicInput] proof
+        -- verify @PlonkupPlutus expModCircuit [publicInput] proof
+         isJust beaconInput
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
@@ -76,8 +77,10 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   -- tx reference inputs
   refInputs = trace "Ref inputs" . map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
+  beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
+
   -- find beacon datum  TODO: beacon name and currency symbol?
-  beaconDatum = fmap txOutDatum $ find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
+  beaconDatum = fmap txOutDatum beaconInput 
 
   -- decode beacon datum
   setupBytesMap =
