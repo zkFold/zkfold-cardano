@@ -34,18 +34,7 @@ import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
-{--
-Vladimir Sinyakov, [26.08.2025 20:43]
-У minting скрипта всё то же самое, кроме:
-1) Мы должны найти reference input, в котором лежим beacon токен.
-2) В датуме этого инпута должен лежать SetupBytes, которые мы используем.
-3) Саму цепь нужно параметризовать гугл ключом, а не передавать его в качестве входа цепи (как сейчас).
 
-Vladimir Sinyakov, [26.08.2025 20:45]
-Beacon токен должен иметь one-shot minting policy, то есть в скрипте мы должны проверять, что тратится какой-то конкретный инпут (у нас уже такой скрипт реализован, см. zkfold-cardano).
---}
-
--- TODO: Account for rotation of public keys
 -- TODO: Check the client Id
 -- TODO: Check the suffix length (must be a predefined size)
 -- TODO: Do we need to split bytestrings further due to ledger rules?
@@ -81,16 +70,17 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   -- tx reference inputs
   refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
-  symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs
-  tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
+--  symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs
+--  tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
 
   correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
   correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
 
-  beaconInput = find (\ri -> valueOf (txOutValue ri) correctCurrencySymbol correctTokenName > 0) $ trace (show $ length refInputs) refInputs
+  beaconInput = find (\ri -> valueOf (txOutValue ri) correctCurrencySymbol correctTokenName > 0) refInputs
 
   -- find beacon datum
-  beaconDatum = trace ("Beacon input: " <> show (symbols, unCurrencySymbol correctCurrencySymbol, tokens, unTokenName correctTokenName)) $ fmap txOutDatum beaconInput
+  -- beaconDatum = trace ("Beacon input: " <> show (symbols, unCurrencySymbol correctCurrencySymbol, tokens, unTokenName correctTokenName)) $ fmap txOutDatum beaconInput
+  beaconDatum = fmap txOutDatum beaconInput
 
   -- decode beacon datum
   setupBytesMap =
