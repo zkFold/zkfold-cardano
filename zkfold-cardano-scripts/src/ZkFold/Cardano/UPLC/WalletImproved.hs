@@ -14,7 +14,7 @@ module ZkFold.Cardano.UPLC.WalletImproved (
 ) where
 
 import           Data.Function                       ((&))
-import           PlutusLedgerApi.V1.Value            (valueOf, currencySymbol)
+import           PlutusLedgerApi.V1.Value            (currencySymbol, valueOf)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
@@ -72,7 +72,7 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
  where
   ctx = case trace "Context parsed" $ fromBuiltinData sc :: Maybe ScriptContext of
           Nothing -> traceError "Decoding ScriptContext failed"
-          Just c -> c
+          Just c  -> c
 
   -- tx reference inputs
   refInputs = trace "Ref inputs" . map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
@@ -80,14 +80,14 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
 
   -- find beacon datum  TODO: beacon name and currency symbol?
-  beaconDatum = fmap txOutDatum beaconInput 
+  beaconDatum = fmap txOutDatum beaconInput
 
   -- decode beacon datum
   setupBytesMap =
       case beaconDatum of
         Just (OutputDatum datum) -> case fromBuiltinData $ getDatum datum of
                                       Nothing -> traceError "Decoding datum failed"
-                                      Just m -> m
+                                      Just m  -> m
         Nothing -> traceError "Missing beacon token."
         _ -> traceError "Incorrect datum. Should be inline datum with a Map of key ids and SetupBytes."
 
@@ -99,7 +99,7 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   expModCircuit :: SetupBytes
   expModCircuit = case fromBuiltinData setupBytes of
                     Nothing -> traceError "Decoding SetupBytes failed"
-                    Just s -> s
+                    Just s  -> s
 
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
