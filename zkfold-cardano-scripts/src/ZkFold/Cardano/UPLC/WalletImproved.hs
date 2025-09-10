@@ -19,9 +19,9 @@ import           PlutusLedgerApi.V1.Value            (currencySymbol, valueOf)
 import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
+import qualified PlutusTx.Builtins                   as B
+import qualified PlutusTx.Builtins.HasOpaque         as BH
 import qualified PlutusTx.Builtins.Internal          as BI
-import qualified PlutusTx.Builtins          as B
-import qualified PlutusTx.Builtins.HasOpaque as BH
 import           PlutusTx.Prelude                    hiding (show, toList, (*), (+))
 import           PlutusTx.Show
 import           PlutusTx.Trace
@@ -53,9 +53,9 @@ Beacon токен должен иметь one-shot minting policy, то есть
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
-  -- | Beacon token Currency Symbol (or minting policy id) 
+  -- | Beacon token Currency Symbol (or minting policy id)
   BuiltinData ->
-  -- | Beacon token name 
+  -- | Beacon token name
   BuiltinData ->
   -- | 'Web2Creds'.
   BuiltinData ->
@@ -85,7 +85,7 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
 
   correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
-  correctTokenName = TokenName $ unsafeFromBuiltinData beaconName 
+  correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
 
   beaconInput = find (\ri -> valueOf (txOutValue ri) correctCurrencySymbol correctTokenName > 0) $ trace (show $ length refInputs) refInputs
 
@@ -104,7 +104,7 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   setupBytes =
       case AssocMap.lookup (toBuiltinData kid) setupBytesMap of
         Just res -> res
-        Nothing -> traceError $ "No key id " <> show kid <> " found. Known ids " <> show (AssocMap.keys setupBytesMap)
+        Nothing  -> traceError $ "No key id " <> show kid <> " found. Known ids " <> show (AssocMap.keys setupBytesMap)
 
   expModCircuit :: SetupBytes
   expModCircuit = unsafeFromBuiltinData setupBytes
