@@ -78,8 +78,8 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   -- tx reference inputs
   refInputs = trace "Ref inputs" . map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
-  symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> beaconInput
-  tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> beaconInput
+  symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs 
+  tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
 
   beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
 
