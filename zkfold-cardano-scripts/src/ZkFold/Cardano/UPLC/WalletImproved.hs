@@ -81,7 +81,7 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs
   tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
 
-  beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "zkFold") > 0) $ trace (show $ length refInputs) refInputs
+  beaconInput = find (\ri -> valueOf (txOutValue ri) (CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a") (TokenName "7a6b466f6c64") > 0) $ trace (show $ length refInputs) refInputs
 
   -- find beacon datum
   beaconDatum = trace ("Beacon imput: " <> show (symbols, tokens)) $ fmap txOutDatum beaconInput
