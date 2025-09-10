@@ -77,13 +77,6 @@
       },
       "parameters": [
         {
-          "title": "SetupBytes",
-          "purpose": "mint",
-          "schema": {
-            "$ref": "#/definitions/SetupBytes"
-          }
-        },
-        {
           "title": "Web2Creds",
           "purpose": "mint",
           "schema": {
@@ -242,72 +235,6 @@
     "ScriptHash": {
       "title": "ScriptHash",
       "dataType": "bytes"
-    },
-    "SetupBytes": {
-      "dataType": "constructor",
-      "fields": [
-        {
-          "$ref": "#/definitions/Integer"
-        },
-        {
-          "$ref": "#/definitions/Integer"
-        },
-        {
-          "$ref": "#/definitions/Integer"
-        },
-        {
-          "$ref": "#/definitions/F"
-        },
-        {
-          "$ref": "#/definitions/F"
-        },
-        {
-          "$ref": "#/definitions/F"
-        },
-        {
-          "$ref": "#/definitions/F"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        },
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        }
-      ],
-      "index": 0
     },
     "Signature": {
       "dataType": "constructor",
