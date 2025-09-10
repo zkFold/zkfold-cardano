@@ -70,12 +70,10 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
  where
-  ctx = case trace "Context parsed" $ fromBuiltinData sc :: Maybe ScriptContext of
-          Nothing -> traceError "Decoding ScriptContext failed"
-          Just c  -> c
+  ctx = unsafeFromBuiltinData sc :: ScriptContext
 
   -- tx reference inputs
-  refInputs = trace "Ref inputs" . map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
+  refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
 
   symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs
   tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
@@ -95,17 +93,15 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
                                       Nothing -> traceError "Decoding datum failed"
                                       Just m  -> m
         Nothing -> traceError "Missing beacon token."
-        _ -> traceError "Incorrect datum. Should be inline datum with a Map of key ids and SetupBytes."
+        _ -> traceError "Incorrect datum."
 
   setupBytes =
       case AssocMap.lookup (toBuiltinData kid) setupBytesMap of
         Just res -> res
-        Nothing -> traceError $ "No key with id " <> show kid <> " found in the map. Known key ids are " <> show (AssocMap.keys setupBytesMap)
+        Nothing -> traceError $ "No key id " <> show kid <> " found. Known ids " <> show (AssocMap.keys setupBytesMap)
 
   expModCircuit :: SetupBytes
-  expModCircuit = case fromBuiltinData setupBytes of
-                    Nothing -> traceError "Decoding SetupBytes failed"
-                    Just s  -> s
+  expModCircuit = unsafeFromBuiltinData setupBytes
 
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
