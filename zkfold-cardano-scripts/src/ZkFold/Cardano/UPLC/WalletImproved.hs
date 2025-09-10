@@ -20,6 +20,8 @@ import           PlutusLedgerApi.V3
 import           PlutusLedgerApi.V3.Contexts
 import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
+import qualified PlutusTx.Builtins          as B
+import qualified PlutusTx.Builtins.HasOpaque as BH
 import           PlutusTx.Prelude                    hiding (show, toList, (*), (+))
 import           PlutusTx.Show
 import           PlutusTx.Trace
@@ -51,12 +53,16 @@ Beacon токен должен иметь one-shot minting policy, то есть
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
+  -- | Beacon token Currency Symbol (or minting policy id) 
+  BuiltinData ->
+  -- | Beacon token name 
+  BuiltinData ->
   -- | 'Web2Creds'.
   BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
+web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
@@ -78,8 +84,8 @@ web2Auth (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   symbols = (fmap unCurrencySymbol . AssocMap.keys . getValue . txOutValue) <$> refInputs
   tokens = (fmap (fmap unTokenName . AssocMap.keys) . AssocMap.elems . getValue . txOutValue) <$> refInputs
 
-  correctCurrencySymbol = CurrencySymbol "982beb80d155358fad5c3b0015c4b13f7d7341835246af037009d73a"
-  correctTokenName = TokenName "7a6b466f6c64"
+  correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
+  correctTokenName = TokenName $ unsafeFromBuiltinData beaconName 
 
   beaconInput = find (\ri -> valueOf (txOutValue ri) correctCurrencySymbol correctTokenName > 0) $ trace (show $ length refInputs) refInputs
 
