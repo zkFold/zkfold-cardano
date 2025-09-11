@@ -87,7 +87,6 @@ library
     ZkFold.Cardano.UPLC.Wallet.CompiledScript
     ZkFold.Cardano.UPLC.Wallet.Internal
     ZkFold.Cardano.UPLC.Wallet.Types
-    ZkFold.Cardano.UPLC.WalletImproved
   hs-source-dirs:   src
   build-depends:
     base                >=4.9 && <5,

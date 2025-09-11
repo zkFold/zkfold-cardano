@@ -19,8 +19,7 @@ import           PlutusTx.Blueprint
 import qualified PlutusTx.Prelude                    as PlutusTx 
 import           Prelude                             (FilePath, IO, ($))
 
-import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
-import           ZkFold.Cardano.UPLC.WalletImproved
+import           ZkFold.Cardano.UPLC.Wallet
 
 smartWalletBP :: ContractBlueprint
 smartWalletBP =
