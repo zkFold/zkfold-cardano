@@ -76,11 +76,11 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   setupBytesMap =
       case beaconDatum of
         Just (OutputDatum datum) -> unsafeFromBuiltinData $ getDatum datum
-        Nothing -> traceError "Missing beacon token."
-        Just NoOutputDatum -> traceError "No datum incuded."
-        _ -> traceError "Incorrect datum."
+        Nothing                  -> traceError "Missing beacon token."
+        Just NoOutputDatum       -> traceError "No datum incuded."
+        _                        -> traceError "Incorrect datum."
 
-  Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap 
+  Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap
 
   expModCircuit :: SetupBytes
   expModCircuit = unsafeFromBuiltinData setupBytes
