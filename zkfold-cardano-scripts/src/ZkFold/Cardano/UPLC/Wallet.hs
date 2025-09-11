@@ -30,7 +30,6 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 
 -- TODO: Check the client Id
--- TODO: Check the suffix length (must be a predefined size)
 -- TODO: Do we need to split bytestrings further due to ledger rules?
 {-# INLINEABLE web2Auth #-}
 
@@ -48,12 +47,15 @@ web2Auth ::
 web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
+        payloadLen = lengthOfByteString jwtPrefix
+        emailFieldName = sliceByteString (payloadLen - 10) 9 jwtPrefix
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = toInput jwtHash * toInput bs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         verify @PlonkupPlutus expModCircuit [publicInput] proof
+         trace (decodeUtf8 emailFieldName) (verify @PlonkupPlutus expModCircuit [publicInput] proof)
+          && emailFieldName == "\"email\":\""
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
