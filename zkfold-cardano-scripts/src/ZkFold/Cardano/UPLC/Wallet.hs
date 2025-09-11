@@ -48,7 +48,7 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
         payloadLen = lengthOfByteString jwtPrefix
-        emailFieldName = sliceByteString (payloadLen - 10) 9 jwtPrefix
+        emailFieldName = sliceByteString (payloadLen - 9) 9 jwtPrefix
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = toInput jwtHash * toInput bs
