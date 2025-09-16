@@ -30,7 +30,6 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 
 -- TODO: Check the client Id
--- TODO: Do we need to split bytestrings further due to ledger rules?
 {-# INLINEABLE web2Auth #-}
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
