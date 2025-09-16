@@ -39,6 +39,7 @@ common lang
     RecordWildCards
     ScopedTypeVariables
     StandaloneDeriving
+    Strict
     TemplateHaskell
     TypeApplications
     ViewPatterns
