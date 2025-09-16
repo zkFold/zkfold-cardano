@@ -61,26 +61,27 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
  where
-  ctx = unsafeFromBuiltinData sc :: ScriptContext
-
   -- tx reference inputs
-  refInputs = map txInInfoResolved . txInfoReferenceInputs . scriptContextTxInfo $ ctx
+  refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
+  refInputResolved = refInput & BI.unsafeDataAsConstr & BI.snd & BI.tail & BI.head -- TxOut 
+  txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
+  txValue = txOutL & BI.head & unsafeFromBuiltinData
 
   correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
   correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
 
-  beaconInput = find (\ri -> valueOf (txOutValue ri) correctCurrencySymbol correctTokenName > 0) refInputs
-
   -- find beacon datum
-  beaconDatum = fmap txOutDatum beaconInput
+  beaconDatum = 
+      if   valueOf txValue correctCurrencySymbol correctTokenName == 0
+      then traceError "no token"
+      else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
   -- decode beacon datum
   setupBytesMap =
       case beaconDatum of
-        Just (OutputDatum datum) -> unsafeFromBuiltinData $ getDatum datum
-        Nothing                  -> traceError "Missing beacon token."
-        Just NoOutputDatum       -> traceError "No datum incuded."
-        _                        -> traceError "Incorrect datum."
+        OutputDatum datum -> unsafeFromBuiltinData $ getDatum datum
+        NoOutputDatum     -> traceError "No datum incuded."
+        _                 -> traceError "Incorrect datum."
 
   Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap
 
