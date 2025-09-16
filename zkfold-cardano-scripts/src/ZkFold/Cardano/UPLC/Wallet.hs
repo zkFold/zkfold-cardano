@@ -63,7 +63,7 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
-  refInputResolved = refInput & BI.unsafeDataAsConstr & BI.snd & BI.tail & BI.head -- TxOut 
+  refInputResolved = refInput & BI.unsafeDataAsConstr & BI.snd & BI.tail & BI.head -- TxOut
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
   txValue = txOutL & BI.head & unsafeFromBuiltinData
 
@@ -71,7 +71,7 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
 
   -- find beacon datum
-  beaconDatum = 
+  beaconDatum =
       if   valueOf txValue correctCurrencySymbol correctTokenName == 0
       then traceError "no token"
       else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
