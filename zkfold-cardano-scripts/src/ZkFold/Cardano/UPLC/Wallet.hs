@@ -73,15 +73,14 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   -- find beacon datum
   beaconDatum =
       if   valueOf txValue correctCurrencySymbol correctTokenName == 0
-      then traceError "no token"
+      then error () 
       else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
   -- decode beacon datum
   setupBytesMap =
       case beaconDatum of
         OutputDatum datum -> unsafeFromBuiltinData $ getDatum datum
-        NoOutputDatum     -> traceError "No datum incuded."
-        _                 -> traceError "Incorrect datum."
+        _                 -> error () 
 
   Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap
 
