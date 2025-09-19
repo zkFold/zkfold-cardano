@@ -29,7 +29,6 @@ import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 
--- TODO: Check the client Id
 {-# INLINEABLE web2Auth #-}
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.

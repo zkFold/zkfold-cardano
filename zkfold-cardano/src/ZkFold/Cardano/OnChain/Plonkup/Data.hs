@@ -1,6 +1,5 @@
 module ZkFold.Cardano.OnChain.Plonkup.Data where
 
-import           Control.DeepSeq                    (NFData)
 import           Data.Aeson                         (FromJSON, ToJSON)
 import           GHC.Generics                       (Generic)
 import           PlutusTx                           (makeLift)
@@ -35,7 +34,7 @@ data SetupBytes = SetupBytes
     , cmT3_bytes :: BuiltinByteString
     }
     deriving stock (Show, Generic)
-    deriving anyclass (HasBlueprintDefinition, NFData)
+    deriving anyclass (HasBlueprintDefinition)
 
 makeLift ''SetupBytes
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''SetupBytes [('SetupBytes, 0)]
@@ -72,7 +71,7 @@ data ProofBytes = ProofBytes
     , l_xi          :: [F]
     }
     deriving stock (Show, Generic)
-    deriving anyclass (FromJSON, ToJSON, HasBlueprintDefinition, NFData)
+    deriving anyclass (FromJSON, ToJSON, HasBlueprintDefinition)
 
 makeLift ''ProofBytes
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''ProofBytes [('ProofBytes, 0)]

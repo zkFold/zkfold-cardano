@@ -80,7 +80,6 @@ library
     base64-bytestring              ,
     cardano-api                    ,
     cborg                          ,
-    deepseq                        ,
     parsec                         ,
     plutus-ledger-api       ^>=1.43,
     plutus-tx               ^>=1.43,

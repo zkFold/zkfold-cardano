@@ -2,7 +2,6 @@
 
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
-import           Control.DeepSeq       (NFData)
 import           Data.Aeson            (FromJSON, ToJSON)
 import           GHC.Generics          (Generic)
 import           GHC.Natural           (Natural, naturalToInteger)
@@ -21,7 +20,7 @@ bls12_381_field_prime = 52435875175126190479447740508185965837690552500527637822
 newtype F = F Integer
     deriving stock (Haskell.Show, Generic)
     deriving newtype (ToJSON, FromJSON)
-    deriving anyclass (HasBlueprintDefinition, NFData)
+    deriving anyclass (HasBlueprintDefinition)
 makeLift ''F
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''F [('F, 0)]
 

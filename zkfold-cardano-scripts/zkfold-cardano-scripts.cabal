@@ -7,9 +7,6 @@ author:             Vladimir Sinyakov, Ilya Baryshnikov, Antonio Hernandez
 maintainer:         info@zkfold.io
 license:            MIT
 build-type:         Simple
-data-dir: data
-data-files:
-  compiled-scripts/smart-wallet.blueprint
 
 common lang
   default-language: Haskell2010
@@ -85,9 +82,7 @@ library
     ZkFold.Cardano.UPLC.UtxoAccumulator
     ZkFold.Cardano.UPLC.Wallet
     ZkFold.Cardano.UPLC.Wallet.Compile
-    ZkFold.Cardano.UPLC.Wallet.CompiledScript
     ZkFold.Cardano.UPLC.Wallet.Internal
-    ZkFold.Cardano.UPLC.Wallet.Types
   hs-source-dirs:   src
   build-depends:
     base                >=4.9 && <5,
@@ -101,6 +96,7 @@ library
     symbolic-base                  ,
     symbolic-examples              ,
     zkfold-cardano                 ,
+    zkfold-cardano-scripts-common  ,
 
 library zkfold-benchmark
   import:           lang
