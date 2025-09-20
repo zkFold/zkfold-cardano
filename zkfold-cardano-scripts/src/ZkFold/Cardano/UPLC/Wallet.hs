@@ -28,39 +28,67 @@ import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
 import           ZkFold.Cardano.UPLC.Wallet.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
--- TODO: Account for rotation of public keys
--- TODO: Check the client Id
--- TODO: Check the suffix length (must be a predefined size)
--- TODO: Do we need to split bytestrings further due to ledger rules?
+
 {-# INLINEABLE web2Auth #-}
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
-  -- | 'SetupBytes'.
+  -- | Beacon token Currency Symbol (or minting policy id)
+  BuiltinData ->
+  -- | Beacon token name
   BuiltinData ->
   -- | 'Web2Creds'.
   BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth (unsafeFromBuiltinData -> (expModCircuit :: SetupBytes)) (unsafeFromBuiltinData -> Web2Creds {..}) sc =
+web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   check
     $ let
+        payloadLen = lengthOfByteString jwtPrefix
+        emailFieldName = sliceByteString (payloadLen - 9) 9 jwtPrefix
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = toInput jwtHash * toInput bs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-        verify @PlonkupPlutus expModCircuit [publicInput] proof
+         verify @PlonkupPlutus expModCircuit [publicInput] proof
+          && emailFieldName == "\"email\":\""
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
  where
+  -- tx reference inputs
+  refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
+  refInputResolved = refInput & BI.unsafeDataAsConstr & BI.snd & BI.tail & BI.head -- TxOut
+  txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
+  txValue = txOutL & BI.head & unsafeFromBuiltinData
+
+  correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
+  correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
+
+  -- find beacon datum
+  beaconDatum =
+      if   valueOf txValue correctCurrencySymbol correctTokenName == 0
+      then error ()
+      else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
+
+  -- decode beacon datum
+  setupBytesMap =
+      case beaconDatum of
+        OutputDatum datum -> unsafeFromBuiltinData $ getDatum datum
+        _                 -> error ()
+
+  Just setupBytes = AssocMap.lookup (toBuiltinData kid) setupBytesMap
+
+  expModCircuit :: SetupBytes
+  expModCircuit = unsafeFromBuiltinData setupBytes
+
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
   redL = txInfoL & BI.tail
-  Web2Auth JWTParts {..} proof tn@(TokenName bs) = redL & BI.head & unsafeFromBuiltinData
+  Web2Auth JWTParts {..} proof tn@(TokenName bs) (KeyId kid) = redL & BI.head & unsafeFromBuiltinData
   (MintingScript symb) = redL & BI.tail & BI.head & unsafeFromBuiltinData
   txInfoMintL =
     txInfo

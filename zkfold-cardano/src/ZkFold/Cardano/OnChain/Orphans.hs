@@ -11,12 +11,11 @@ import           PlutusTx.Builtins      (BuiltinByteString)
 import qualified PlutusTx.Builtins      as PlutusTx
 import           Prelude                (Either (..), MonadFail (fail), pure, ($), (++))
 
-
 instance ToJSON BuiltinByteString where
-  toJSON = PlutusTx.fromBuiltin >>> B64.encode >>> TE.decodeUtf8 >>> String
+    toJSON = PlutusTx.fromBuiltin >>> B64.encode >>> TE.decodeUtf8 >>> String
 
 instance FromJSON BuiltinByteString where
-  parseJSON = withText "BuiltinByteString" $ \t ->
-    case B64.decode (TE.encodeUtf8 t) of
-      Left err -> fail $ "Invalid base64: " ++ err
-      Right bs -> pure $ PlutusTx.toBuiltin bs
+    parseJSON = withText "BuiltinByteString" $ \t ->
+        case B64.decode (TE.encodeUtf8 t) of
+            Left err -> fail $ "Invalid base64: " ++ err
+            Right bs -> pure $ PlutusTx.toBuiltin bs

@@ -21,6 +21,7 @@ import           ZkFold.Symbolic.Class                  (Symbolic (..))
 import           ZkFold.Symbolic.Compiler               (compileWith)
 import           ZkFold.Symbolic.Data.Bool              (Bool (..))
 import           ZkFold.Symbolic.Data.FieldElement      (FieldElement)
+import           ZkFold.Symbolic.Data.Vec               (Vec (..), runVec)
 
 data EqualityCheckContract = EqualityCheckContract {
     x           :: Fr
@@ -34,7 +35,7 @@ equalityCheckContract targetValue inputValue = inputValue == fromConstant target
 
 equalityCheckVerificationBytes :: Fr -> PlonkupProverSecret BLS12_381_G1_Point -> Fr -> (SetupBytes, InputBytes, ProofBytes)
 equalityCheckVerificationBytes x ps targetValue =
-    let ac = compileWith @Fr solder (\i -> (U1 :*: U1, i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
+    let ac = runVec $ compileWith @Fr solder (\i -> (U1 :*: U1, i :*: U1)) (equalityCheckContract @Fr targetValue) :: ArithmeticCircuit Fr Par1 Par1
 
         (omega, k1, k2) = getParams 32
         witnessInputs   = Par1 targetValue
