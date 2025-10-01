@@ -49,10 +49,10 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
         emailFieldName = sliceByteString (payloadLen - 9) 9 jwtPrefix
         encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
-        publicInput = toInput jwtHash * toInput bs
+        publicInput = [toInput jwtHash, toInput bs]
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         verify @PlonkupPlutus expModCircuit [publicInput] proof
+         verify @PlonkupPlutus expModCircuit publicInput proof
           && emailFieldName == "\"email\":\""
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
