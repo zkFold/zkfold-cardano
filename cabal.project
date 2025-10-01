@@ -28,7 +28,7 @@ benchmarks: true
 source-repository-package
   type: git
   location: https://github.com/zkFold/symbolic.git
-  tag: 2f513daa5d4e9de083adc602e5f9c22922f25221 
+  tag: 5b548b8a29d425a5761b3f9f5c058b14fd88cb75 
   subdir:
     symbolic-base
     symbolic-examples
