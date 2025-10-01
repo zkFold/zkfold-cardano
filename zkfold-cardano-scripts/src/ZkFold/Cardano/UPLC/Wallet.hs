@@ -20,7 +20,6 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
 
-import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
