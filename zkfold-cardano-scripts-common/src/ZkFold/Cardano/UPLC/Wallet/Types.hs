@@ -2,11 +2,11 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module ZkFold.Cardano.UPLC.Wallet.Types (
-  Web2Creds (..),
   JWTParts (..),
   KeyId (..),
   Web2Auth (..),
   Signature (..),
+  WalletConfig (..),
 ) where
 
 import           GHC.Generics                        (Generic)
@@ -17,14 +17,6 @@ import           PlutusTx.Prelude                    hiding (toList, (*), (+))
 import           Prelude                             (Show)
 
 import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes)
-
-newtype Web2Creds = Web2Creds
-  { w2cEmail :: BuiltinByteString
-  }
-  deriving stock (Show, Generic)
-  deriving anyclass HasBlueprintDefinition
-
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''Web2Creds [('Web2Creds, 0)]
 
 data JWTParts = JWTParts
   { jwtHeader :: BuiltinByteString
@@ -55,3 +47,23 @@ data Signature = Signature Integer Integer
   deriving anyclass HasBlueprintDefinition
 
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''Signature [('Signature, 0)]
+
+data WalletConfig = WalletConfig
+  { wcBeaconPolicyId :: BuiltinByteString
+  -- ^ Beacon token minting policy
+  , wcBeaconName :: BuiltinByteString
+  -- ^ Beacon token name
+  , wcUidPrefix :: BuiltinByteString
+  -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user: 
+  -- "email" for Google or "sub" for Epic Games
+  , wcUid :: BuiltinByteString
+  -- ^ User ID from the JWT
+  , wcFeeAddress :: Address
+  -- ^ zkFold address where an additional fee will be sent
+  , wcFee :: Integer
+  -- ^ The additional fee amount
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass HasBlueprintDefinition
+
+PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''WalletConfig [('WalletConfig, 0)]

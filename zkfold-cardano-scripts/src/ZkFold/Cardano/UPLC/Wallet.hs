@@ -32,27 +32,20 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
-  -- | Beacon token Currency Symbol (or minting policy id)
-  BuiltinData ->
-  -- | Beacon token name
-  BuiltinData ->
-  -- | 'Web2Creds'.
+  -- | Wallet config 
   BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
+web2Auth (unsafeFromBuiltinData -> WalletConfig {..}) sc =
   check
     $ let
-        payloadLen = lengthOfByteString jwtPrefix
-        emailFieldName = sliceByteString (payloadLen - 9) 9 jwtPrefix
-        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
+        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> wcUidPrefix <> wcUid <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = [toInput jwtHash, toInput bs]
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
          verify @PlonkupPlutus expModCircuit publicInput proof
-          && emailFieldName == "\"email\":\""
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
@@ -64,8 +57,8 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
   txValue = txOutL & BI.head & unsafeFromBuiltinData
 
-  correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
-  correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
+  correctCurrencySymbol = CurrencySymbol $ wcBeaconPolicyId
+  correctTokenName = TokenName $ wcBeaconName
 
   -- find beacon datum
   beaconDatum =
