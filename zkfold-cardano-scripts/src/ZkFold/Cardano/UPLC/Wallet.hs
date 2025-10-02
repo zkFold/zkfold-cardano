@@ -32,7 +32,7 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
-  -- | Wallet config 
+  -- | Wallet config
   BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
@@ -106,11 +106,11 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   adaFee = singleton adaSymbol adaToken ocwcFee
 
   txInfoOuts :: [TxOut]
-  txInfoOuts = 
-    txInfo 
-      & BI.tail 
-      & BI.tail 
-      & BI.head 
+  txInfoOuts =
+    txInfo
+      & BI.tail
+      & BI.tail
+      & BI.head
       & unsafeFromBuiltinData
 
   hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOuts

@@ -51,16 +51,16 @@ PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''Signature [('Signature, 0)]
 data OnChainWalletConfig = OnChainWalletConfig
   { ocwcBeaconPolicyId :: BuiltinByteString
   -- ^ Beacon token minting policy
-  , ocwcBeaconName :: BuiltinByteString
+  , ocwcBeaconName     :: BuiltinByteString
   -- ^ Beacon token name
-  , ocwcUidPrefix :: BuiltinByteString
-  -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user: 
+  , ocwcUidPrefix      :: BuiltinByteString
+  -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user:
   -- "email" for Google or "sub" for Epic Games
-  , ocwcUid :: BuiltinByteString
+  , ocwcUid            :: BuiltinByteString
   -- ^ User ID from the JWT
-  , ocwcFeeAddress :: Address
+  , ocwcFeeAddress     :: Address
   -- ^ zkFold address where an additional fee will be sent
-  , ocwcFee :: Integer
+  , ocwcFee            :: Integer
   -- ^ The additional fee amount
   }
   deriving stock (Show, Generic)
