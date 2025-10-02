@@ -105,15 +105,14 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   adaFee :: Value
   adaFee = singleton adaSymbol adaToken ocwcFee
 
-  txInfoOuts :: [TxOut]
-  txInfoOuts =
+  txInfoOutputsL =
     txInfo
       & BI.tail
       & BI.tail
-      & BI.head
-      & unsafeFromBuiltinData
+  txInfoOutputs :: [TxOut]
+  txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
 
-  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOuts
+  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOutputs
 
 {-# INLINEABLE checkSig #-}
 checkSig ::
