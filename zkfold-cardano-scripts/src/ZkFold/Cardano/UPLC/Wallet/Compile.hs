@@ -47,7 +47,7 @@ smartWalletBP =
               , validatorParameters =
                   [ MkParameterBlueprint
                       { parameterTitle = Just "Wallet config"
-                      , parameterSchema = definitionRef @WalletConfig
+                      , parameterSchema = definitionRef @OnChainWalletConfig
                       , parameterPurpose = Set.singleton Mint
                       , parameterDescription = Nothing
                       }
@@ -106,7 +106,7 @@ smartWalletBP =
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion checkSigSerialisedScript
               }
           ]
-    , contractDefinitions = deriveDefinitions @'[Web2Auth, WalletConfig, PlutusTx.BuiltinByteString, (), ScriptHash, PlutusTx.BuiltinData, Signature, CurrencySymbol]
+    , contractDefinitions = deriveDefinitions @'[Web2Auth, OnChainWalletConfig, PlutusTx.BuiltinByteString, (), ScriptHash, PlutusTx.BuiltinData, Signature, CurrencySymbol]
     }
  where
   commonPlutusVersion = PlutusV3

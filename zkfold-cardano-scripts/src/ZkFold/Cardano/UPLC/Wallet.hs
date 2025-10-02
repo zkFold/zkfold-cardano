@@ -37,10 +37,10 @@ web2Auth ::
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth (unsafeFromBuiltinData -> WalletConfig {..}) sc =
+web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   check
     $ let
-        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> wcUidPrefix <> wcUid <> jwtSuffix)
+        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> ocwcUidPrefix <> ocwcUid <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = [toInput jwtHash, toInput bs]
        in
@@ -50,6 +50,7 @@ web2Auth (unsafeFromBuiltinData -> WalletConfig {..}) sc =
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
+          && hasZkFoldFee
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
@@ -57,8 +58,8 @@ web2Auth (unsafeFromBuiltinData -> WalletConfig {..}) sc =
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
   txValue = txOutL & BI.head & unsafeFromBuiltinData
 
-  correctCurrencySymbol = CurrencySymbol $ wcBeaconPolicyId
-  correctTokenName = TokenName $ wcBeaconName
+  correctCurrencySymbol = CurrencySymbol $ ocwcBeaconPolicyId
+  correctTokenName = TokenName $ ocwcBeaconName
 
   -- find beacon datum
   beaconDatum =
@@ -100,6 +101,19 @@ web2Auth (unsafeFromBuiltinData -> WalletConfig {..}) sc =
       & BI.tail
       & BI.head
       & unsafeFromBuiltinData
+
+  adaFee :: Value
+  adaFee = singleton adaSymbol adaToken ocwcFee
+
+  txInfoOuts :: [TxOut]
+  txInfoOuts = 
+    txInfo 
+      & BI.tail 
+      & BI.tail 
+      & BI.head 
+      & unsafeFromBuiltinData
+
+  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOuts
 
 {-# INLINEABLE checkSig #-}
 checkSig ::
