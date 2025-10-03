@@ -51,6 +51,12 @@ smartWalletBP =
                       , parameterPurpose = Set.singleton Mint
                       , parameterDescription = Nothing
                       }
+                  , MkParameterBlueprint
+                      { parameterTitle = Just "User ID"
+                      , parameterSchema = definitionRef @BuiltinByteString
+                      , parameterPurpose = Set.singleton Mint
+                      , parameterDescription = Nothing
+                      }
                   ]
               , validatorDescription = Just "Smart wallet web2 authentication minting policy"
               , validatorDatum = Nothing
@@ -117,7 +123,7 @@ writeSmartWalletBP fp = writeBlueprint fp smartWalletBP
 web2AuthSerialisedScript :: ByteString
 web2AuthSerialisedScript = serialiseCompiledCode web2AuthCompiledCode & fromShort
 
-web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 
 walletSerialisedScript :: ByteString

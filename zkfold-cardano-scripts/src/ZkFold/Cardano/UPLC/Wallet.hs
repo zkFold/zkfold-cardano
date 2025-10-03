@@ -34,13 +34,15 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 web2Auth ::
   -- | Wallet config
   BuiltinData ->
+  -- | User ID
+  BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
+web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinData -> uid) sc =
   check
     $ let
-        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> ocwcUidPrefix <> ocwcUid <> jwtSuffix)
+        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> ocwcUidPrefix <> uid <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
         publicInput = [toInput jwtHash, toInput bs]
        in

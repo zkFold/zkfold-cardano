@@ -56,8 +56,6 @@ data OnChainWalletConfig = OnChainWalletConfig
   , ocwcUidPrefix      :: BuiltinByteString
   -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user:
   -- "email" for Google or "sub" for Epic Games
-  , ocwcUid            :: BuiltinByteString
-  -- ^ User ID from the JWT
   , ocwcFeeAddress     :: Address
   -- ^ zkFold address where an additional fee will be sent
   , ocwcFee            :: Integer
