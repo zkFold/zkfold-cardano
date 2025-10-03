@@ -61,7 +61,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   -- find beacon datum
   beaconDatum =
       if   valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 0
-      then error ()
+      then traceError "No beacon token" -- error ()
       else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
   -- decode beacon datum
