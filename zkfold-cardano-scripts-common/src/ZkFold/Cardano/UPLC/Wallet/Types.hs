@@ -49,9 +49,9 @@ data Signature = Signature Integer Integer
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''Signature [('Signature, 0)]
 
 data OnChainWalletConfig = OnChainWalletConfig
-  { ocwcBeaconPolicyId :: BuiltinByteString
+  { ocwcBeaconPolicyId :: CurrencySymbol 
   -- ^ Beacon token minting policy
-  , ocwcBeaconName     :: BuiltinByteString
+  , ocwcBeaconName     :: TokenName
   -- ^ Beacon token name
   , ocwcUidPrefix      :: BuiltinByteString
   -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user:

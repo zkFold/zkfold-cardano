@@ -58,12 +58,9 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
   txValue = txOutL & BI.head & unsafeFromBuiltinData
 
-  correctCurrencySymbol = CurrencySymbol $ ocwcBeaconPolicyId
-  correctTokenName = TokenName $ ocwcBeaconName
-
   -- find beacon datum
   beaconDatum =
-      if   valueOf txValue correctCurrencySymbol correctTokenName == 0
+      if   valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 0
       then error ()
       else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
