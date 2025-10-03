@@ -50,7 +50,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
-          && hasZkFoldFee
+--          && hasZkFoldFee
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
@@ -101,7 +101,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
       & BI.tail
       & BI.head
       & unsafeFromBuiltinData
-
+          {--
   adaFee :: Value
   adaFee = singleton adaSymbol adaToken ocwcFee
 
@@ -113,6 +113,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
 
   hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOutputs
+--}
 
 {-# INLINEABLE checkSig #-}
 checkSig ::
