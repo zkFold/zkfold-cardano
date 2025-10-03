@@ -49,7 +49,7 @@ data Signature = Signature Integer Integer
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''Signature [('Signature, 0)]
 
 data OnChainWalletConfig = OnChainWalletConfig
-  { ocwcBeaconPolicyId :: CurrencySymbol 
+  { ocwcBeaconPolicyId :: CurrencySymbol
   -- ^ Beacon token minting policy
   , ocwcBeaconName     :: TokenName
   -- ^ Beacon token name
