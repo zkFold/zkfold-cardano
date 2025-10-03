@@ -46,7 +46,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
          --verify @PlonkupPlutus expModCircuit publicInput proof
-         True 
+         True
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
@@ -99,7 +99,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
       & BI.tail
       & BI.head
       & unsafeFromBuiltinData
-          
+
   adaFee :: Value
   adaFee = singleton adaSymbol adaToken ocwcFee
 
