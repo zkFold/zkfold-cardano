@@ -45,8 +45,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         publicInput = [toInput jwtHash, toInput bs]
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         --verify @PlonkupPlutus expModCircuit publicInput proof
-         True
+         verify @PlonkupPlutus expModCircuit publicInput proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
