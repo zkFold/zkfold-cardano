@@ -20,7 +20,6 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
 
-import           ZkFold.Algebra.Class                (MultiplicativeSemigroup (..))
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
@@ -33,31 +32,27 @@ import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 -- | Mints tokens paramterized by the user's email and a public key selected by the user.
 web2Auth ::
-  -- | Beacon token Currency Symbol (or minting policy id)
+  -- | Wallet config
   BuiltinData ->
-  -- | Beacon token name
-  BuiltinData ->
-  -- | 'Web2Creds'.
+  -- | User ID
   BuiltinData ->
   -- | 'ScriptContext'.
   BuiltinData ->
   BuiltinUnit
-web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
+web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinData -> uid) sc =
   check
     $ let
-        payloadLen = lengthOfByteString jwtPrefix
-        emailFieldName = sliceByteString (payloadLen - 9) 9 jwtPrefix
-        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> w2cEmail <> jwtSuffix)
+        encodedJwt = base64urlEncode jwtHeader <> "." <> base64urlEncode (jwtPrefix <> ocwcUidPrefix <> uid <> jwtSuffix)
         jwtHash = sha2_256 encodedJwt
-        publicInput = toInput jwtHash * toInput bs
+        publicInput = [toInput jwtHash, toInput bs]
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         verify @PlonkupPlutus expModCircuit [publicInput] proof
-          && emailFieldName == "\"email\":\""
+         verify @PlonkupPlutus expModCircuit publicInput proof
           -- Check that we mint a token with the correct name
           && AssocMap.lookup (toBuiltinData symb) txInfoMint
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
+          && hasZkFoldFee
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
@@ -65,12 +60,9 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
   txValue = txOutL & BI.head & unsafeFromBuiltinData
 
-  correctCurrencySymbol = CurrencySymbol $ unsafeFromBuiltinData beaconSymbol
-  correctTokenName = TokenName $ unsafeFromBuiltinData beaconName
-
   -- find beacon datum
   beaconDatum =
-      if   valueOf txValue correctCurrencySymbol correctTokenName == 0
+      if   valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 0
       then error ()
       else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
@@ -108,6 +100,19 @@ web2Auth beaconSymbol beaconName (unsafeFromBuiltinData -> Web2Creds {..}) sc =
       & BI.tail
       & BI.head
       & unsafeFromBuiltinData
+
+  adaFee :: Value
+  adaFee = singleton adaSymbol adaToken ocwcFee
+
+  txInfoOutputsL =
+    txInfo
+      & BI.tail
+      & BI.tail
+  txInfoOutputs :: [TxOut]
+  txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
+
+  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOutputs
+
 
 {-# INLINEABLE checkSig #-}
 checkSig ::
