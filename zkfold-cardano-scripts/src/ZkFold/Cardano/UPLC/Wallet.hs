@@ -53,6 +53,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinD
           == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
           && elem (PubKeyHash bs) txInfoSignatories
           && hasZkFoldFee
+          && valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 1
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
@@ -61,10 +62,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinD
   txValue = txOutL & BI.head & unsafeFromBuiltinData
 
   -- find beacon datum
-  beaconDatum =
-      if   valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 0
-      then error ()
-      else txOutL & BI.tail & BI.head & unsafeFromBuiltinData
+  beaconDatum = txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
   -- decode beacon datum
   setupBytesMap =
@@ -101,9 +99,6 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinD
       & BI.head
       & unsafeFromBuiltinData
 
-  adaFee :: Value
-  adaFee = singleton adaSymbol adaToken ocwcFee
-
   txInfoOutputsL =
     txInfo
       & BI.tail
@@ -111,7 +106,7 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinD
   txInfoOutputs :: [TxOut]
   txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
 
-  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && val == adaFee) txInfoOutputs
+  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
 
 
 {-# INLINEABLE checkSig #-}
