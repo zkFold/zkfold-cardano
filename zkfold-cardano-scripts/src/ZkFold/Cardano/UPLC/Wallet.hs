@@ -48,9 +48,8 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinD
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
          verify @PlonkupPlutus expModCircuit publicInput proof
-          -- Check that we mint a token with the correct name
-          && AssocMap.lookup (toBuiltinData symb) txInfoMint
-          == Just (toBuiltinData $ AssocMap.singleton tn (1 :: Integer))
+          -- Check that we mint tokens with the correct name
+          && hasExpectedTokenName
           && elem (PubKeyHash bs) txInfoSignatories
           && hasZkFoldFee
           && valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 1
@@ -105,6 +104,10 @@ web2Auth (unsafeFromBuiltinData -> OnChainWalletConfig {..}) (unsafeFromBuiltinD
       & BI.tail
   txInfoOutputs :: [TxOut]
   txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
+
+  Just mintedActivationTokens = AssocMap.lookup (toBuiltinData symb) txInfoMint
+  expectedTokenName = AssocMap.lookup (toBuiltinData tn) (unsafeFromBuiltinData mintedActivationTokens) :: Maybe Integer
+  hasExpectedTokenName = isJust expectedTokenName
 
   hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
 
