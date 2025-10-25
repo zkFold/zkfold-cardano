@@ -56,8 +56,7 @@ import           ZkFold.Algebra.EllipticCurve.BLS12_381   (BLS12_381_G1_Point, B
 import           ZkFold.Algebra.EllipticCurve.Class       (CyclicGroup, ScalarFieldOf)
 import           ZkFold.Algebra.Polynomial.Univariate     (PolyVec)
 import           ZkFold.ArithmeticCircuit                 (ArithmeticCircuit, acContext, acSizeL, acSizeN)
-import           ZkFold.ArithmeticCircuit.Context         (acLookup)
-import           ZkFold.ArithmeticCircuit.Lookup          (LookupTable (..), LookupType (LookupType))
+import           ZkFold.ArithmeticCircuit.Context         (LookupType (..), acLookup)
 import           ZkFold.Cardano.OffChain.Plonkup          (mkSetup)
 import           ZkFold.Cardano.UPLC.PlonkupVerifierToken (plonkupVerifierTokenCompiled)
 import           ZkFold.Data.Binary                       (Binary)
@@ -127,12 +126,12 @@ withPlonkup circuit k =
  where
   plonkupCircuitSize =
     32 `max` (acSizeN circuit + acSizeL circuit + acSizeO circuit) `max`
-    sum [ lookupSize lt | LookupType lt <- keys $ acLookup (acContext circuit) ]
+    sum [ lookupSize lt | lt <- keys $ acLookup (acContext circuit) ]
 
-  lookupSize :: Arithmetic a => LookupTable a f -> Natural
-  lookupSize (Ranges s)      = sum [ toConstant (hi - lo) + 1 | (lo, hi) <- toList s ]
-  lookupSize (Product lt mt) = lookupSize lt * lookupSize mt
-  lookupSize (Plot _ lt)     = lookupSize lt
+  lookupSize :: Arithmetic a => LookupType a -> Natural
+  lookupSize (LTRanges s)      = sum [ toConstant (hi - lo) + 1 | (lo, hi) <- toList s ]
+  lookupSize (LTProduct lt mt) = lookupSize lt * lookupSize mt
+  lookupSize (LTPlot _ lt)     = lookupSize lt
 
 acSizeO :: forall a i o. (Foldable o, Representable o) => ArithmeticCircuit a i o -> Natural
 acSizeO _ = length (tabulate @o id)
