@@ -1,18 +1,18 @@
 module Main (main) where
 
-import Data.Bits (shiftR, (.&.))
-import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base16 as B16
-import Test.Tasty
-import Test.Tasty.HUnit
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import Numeric.Natural (Natural)
-import PlutusTx.Builtins (BuiltinByteString, fromBuiltin, toBuiltin, lengthOfByteString)
-import Prelude
+import           Data.Bits                    (shiftR, (.&.))
+import           Data.ByteString              (ByteString)
+import qualified Data.ByteString              as BS
+import qualified Data.ByteString.Base16       as B16
+import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as TE
+import           Numeric.Natural              (Natural)
+import           PlutusTx.Builtins            (BuiltinByteString, fromBuiltin, lengthOfByteString, toBuiltin)
+import           Prelude
+import           Test.Tasty
+import           Test.Tasty.HUnit
 
-import ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash)
+import           ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash)
 
 ------------- :Helpers: -------------
 
