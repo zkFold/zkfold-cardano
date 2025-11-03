@@ -36,7 +36,6 @@ common lang
     RecordWildCards
     ScopedTypeVariables
     StandaloneDeriving
-    Strict
     TemplateHaskell
     TypeApplications
     ViewPatterns
@@ -88,7 +87,6 @@ library
     base                >=4.9 && <5,
     bytestring                     ,
     containers                     ,
-    file-embed                     ,
     plutus-core                    ,
     plutus-ledger-api              ,
     plutus-tx                      ,
@@ -177,3 +175,20 @@ executable zkfold-cardano-scripts-compiler
     base,
     filepath,
     zkfold-cardano-scripts,
+
+test-suite buildCrosschainHash-test
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test/asterizm
+  build-depends:
+      base >=4.18 && <5
+    , base16-bytestring
+    , bytestring
+    , plutus-core
+    , plutus-ledger-api
+    , plutus-tx
+    , plutus-tx-plugin
+    , tasty
+    , tasty-hunit
+    , text
+    , zkfold-cardano-scripts
