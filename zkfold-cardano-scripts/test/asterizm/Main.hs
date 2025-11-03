@@ -66,7 +66,7 @@ t1 = srcChainId <> srcAddress <> dstChainId <> dstAddress <> txId <> payload1
 t2 = srcChainId <> srcAddress <> dstChainId <> dstAddress <> txId <> payload2
 
 
--- | Values from Solidity code
+-- | Solidity results
 v0, v1, v2 :: String
 
 '0':'x' : v0 = "0x1f9d6a75afd516c4cc249e2a28e30e0b51f93915dc7ff0ce74b0e5c8b4dd831a"
