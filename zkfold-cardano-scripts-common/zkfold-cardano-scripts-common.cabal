@@ -8,6 +8,7 @@ license: MIT
 build-type: Simple
 data-dir: data
 data-files:
+  compiled-scripts/rollup-simple.blueprint
   compiled-scripts/smart-wallet.blueprint
 
 common lang
@@ -56,10 +57,10 @@ library
   import: lang
   default-language: Haskell2010
   exposed-modules:
+    ZkFold.Cardano.UPLC.RollupSimple.CompiledScript
+    ZkFold.Cardano.UPLC.RollupSimple.Types
     ZkFold.Cardano.UPLC.Wallet.CompiledScript
     ZkFold.Cardano.UPLC.Wallet.Types
-    ZkFold.Cardano.UPLC.RollupSimple.Types
-    ZkFold.Cardano.UPLC.RollupSimple.CompiledScript
 
   hs-source-dirs: src
   build-depends:
@@ -69,4 +70,3 @@ library
     plutus-ledger-api,
     plutus-tx,
     zkfold-cardano,
-
