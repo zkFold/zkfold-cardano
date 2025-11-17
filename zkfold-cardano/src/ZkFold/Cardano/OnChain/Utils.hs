@@ -1,8 +1,10 @@
+{-# LANGUAGE NamedFieldPuns #-}
 module ZkFold.Cardano.OnChain.Utils where
 
-import           PlutusLedgerApi.V3 (BuiltinByteString, Credential, CurrencySymbol, ScriptPurpose (..), ToData (..))
+import           PlutusLedgerApi.V3 (BuiltinByteString, Credential, CurrencySymbol, ScriptPurpose (..), ToData (..),
+                                     TxInInfo (..), TxOutRef)
 import           PlutusTx.Builtins  (Integer, blake2b_224, serialiseData)
-import           PlutusTx.Prelude   (Bool (..), Eq (..), (.))
+import           PlutusTx.Prelude   (Bool (..), Eq (..), Maybe, find, (.))
 
 type ScriptLabel = Integer -- Implements distinct addresses for scripts
 
@@ -22,3 +24,7 @@ eqRewardingPurpose _ _             = False
 eqMintingPurpose :: CurrencySymbol -> ScriptPurpose -> Bool
 eqMintingPurpose a (Minting b) = a == b
 eqMintingPurpose _ _           = False
+
+{-# INLINABLE findOwnInput' #-}
+findOwnInput' :: [TxInInfo] -> TxOutRef -> Maybe TxInInfo
+findOwnInput' txInfoInputs txOutRef = find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
