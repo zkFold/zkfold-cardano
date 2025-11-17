@@ -9,40 +9,20 @@
 
 module ZkFold.Cardano.UPLC.RollupSimple (
   rollupSimple,
+  module ZkFold.Cardano.UPLC.RollupSimple.Types,
 ) where
-import           Data.Function                       ((&))
-import           GHC.Generics                        (Generic)
-import           PlutusLedgerApi.V1                  (valueOf)
+import           Data.Function                          ((&))
+import           PlutusLedgerApi.V1                     (valueOf)
 import           PlutusLedgerApi.V3
-import           PlutusTx.Blueprint
-import qualified PlutusTx.Blueprint.TH
-import qualified PlutusTx.Builtins.Internal          as BI
-import           PlutusTx.Prelude                    hiding (toList, (*), (+))
-import           Prelude                             (Show)
+import qualified PlutusTx.Builtins.Internal             as BI
+import           PlutusTx.Prelude                       hiding (toList, (*), (+))
 
-import           ZkFold.Cardano.OnChain.BLS12_381    (toF)
-import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
-import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.OnChain.Utils        (findOwnInput')
-import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
-
-data RollupState = RollupState
-  { previousStateHash   :: Integer
-  , utxoTreeRoot        :: Integer
-  , chainLength         :: Integer
-  , bridgeInCommitment  :: Integer
-  , bridgeOutCommitment :: Integer
-  }
-  deriving stock (Show, Generic)
-  deriving anyclass HasBlueprintDefinition
-
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RollupState [('RollupState, 0)]
-
-newtype RollupSimpleRed = RollupSimpleRed ProofBytes
-  deriving stock (Show, Generic)
-  deriving anyclass HasBlueprintDefinition
-
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RollupSimpleRed [('RollupSimpleRed, 0)]
+import           ZkFold.Cardano.OnChain.BLS12_381       (toF)
+import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
+import           ZkFold.Cardano.OnChain.Plonkup.Data    (SetupBytes)
+import           ZkFold.Cardano.OnChain.Utils           (findOwnInput')
+import           ZkFold.Cardano.UPLC.RollupSimple.Types (RollupSimpleRed (..), RollupState (..))
+import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 
 {-# INLINEABLE rollupSimple #-}
 rollupSimple ::

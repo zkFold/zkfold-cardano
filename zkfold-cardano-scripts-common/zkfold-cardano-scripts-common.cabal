@@ -58,6 +58,8 @@ library
   exposed-modules:
     ZkFold.Cardano.UPLC.Wallet.CompiledScript
     ZkFold.Cardano.UPLC.Wallet.Types
+    ZkFold.Cardano.UPLC.RollupSimple.Types
+    ZkFold.Cardano.UPLC.RollupSimple.CompiledScript
 
   hs-source-dirs: src
   build-depends:

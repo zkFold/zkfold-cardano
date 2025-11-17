@@ -78,6 +78,7 @@ library
     ZkFold.Cardano.UPLC.RollupData
     ZkFold.Cardano.UPLC.RollupDeposit
     ZkFold.Cardano.UPLC.RollupSimple
+    ZkFold.Cardano.UPLC.RollupSimple.Compile
     ZkFold.Cardano.UPLC.PlonkupVerifierTx
     ZkFold.Cardano.UPLC.UtxoAccumulator
     ZkFold.Cardano.UPLC.Wallet
