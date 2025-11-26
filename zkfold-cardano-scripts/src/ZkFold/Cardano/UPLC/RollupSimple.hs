@@ -38,7 +38,7 @@ rollupSimple ::
 rollupSimple (unsafeFromBuiltinData -> (setupBytes :: SetupBytes)) (unsafeFromBuiltinData -> (nftCurrencySymbol :: CurrencySymbol)) (unsafeFromBuiltinData -> (nftTokenName :: TokenName)) scData = check $
   trySpend == 1
   && valueOf (txOutValue ownInputOutput) nftCurrencySymbol nftTokenName == 1
-  && verify @PlonkupPlutus setupBytes (toF <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]) proofBytes
+  && if verify @PlonkupPlutus setupBytes (toF <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]) proofBytes then True else traceError "Rollup proof verification failed"
   where
 
     txInfoL = BI.unsafeDataAsConstr scData & BI.snd
