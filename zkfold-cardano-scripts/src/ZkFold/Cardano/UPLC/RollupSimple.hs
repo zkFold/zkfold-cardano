@@ -21,7 +21,7 @@ import           ZkFold.Cardano.OnChain.BLS12_381       (toF)
 import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data    (SetupBytes)
 import           ZkFold.Cardano.OnChain.Utils           (findOwnInput')
-import           ZkFold.Cardano.UPLC.RollupSimple.Types (RollupSimpleRed (..), RollupState (..))
+import           ZkFold.Cardano.UPLC.RollupSimple.Types (RollupSimpleRed, RollupState (..))
 import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 
 {-# INLINEABLE rollupSimple #-}
@@ -46,7 +46,7 @@ rollupSimple (unsafeFromBuiltinData -> (setupBytes :: SetupBytes)) (unsafeFromBu
     txInfoInputs  = BI.head txInfo & unsafeFromBuiltinData @[TxInInfo]
     txInfoOutputs = txInfo & BI.tail & BI.tail & BI.head & unsafeFromBuiltinData @[TxOut]
     redL = txInfoL & BI.tail
-    RollupSimpleRed proofBytes = redL & BI.head & unsafeFromBuiltinData
+    proofBytes = redL & BI.head & unsafeFromBuiltinData
     -- Extracting ScriptInfo
     scriptInfo = redL & BI.tail & BI.head & BI.unsafeDataAsConstr
     trySpend   = BI.fst scriptInfo

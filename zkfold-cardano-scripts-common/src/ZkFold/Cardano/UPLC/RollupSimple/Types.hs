@@ -3,7 +3,7 @@
 
 module ZkFold.Cardano.UPLC.RollupSimple.Types (
   RollupState (..),
-  RollupSimpleRed (..),
+  RollupSimpleRed,
 ) where
 
 import           GHC.Generics                        (Generic)
@@ -26,8 +26,4 @@ data RollupState = RollupState
 
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RollupState [('RollupState, 0)]
 
-newtype RollupSimpleRed = RollupSimpleRed ProofBytes
-  deriving stock (Show, Generic)
-  deriving anyclass HasBlueprintDefinition
-
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RollupSimpleRed [('RollupSimpleRed, 0)]
+type RollupSimpleRed = ProofBytes
