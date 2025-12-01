@@ -23,7 +23,7 @@ import           Prelude                             (Show)
 import           ZkFold.Cardano.OnChain.BLS12_381.F  (F (..), toF)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
-import           ZkFold.Cardano.OnChain.Utils        (dataToBlake)
+import           ZkFold.Cardano.OnChain.Utils        (dataToBlake, findOwnInput')
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 data RollupSetup = RollupSetup
@@ -60,10 +60,6 @@ data RollupInfo = RollupInfo
     } deriving stock (Show, Generic)
 
 makeIsDataIndexed ''RollupInfo [('RollupInfo,0)]
-
-{-# INLINABLE findOwnInput' #-}
-findOwnInput' :: [TxInInfo] -> TxOutRef -> Maybe TxInInfo
-findOwnInput' txInfoInputs txOutRef = find (\TxInInfo{txInInfoOutRef} -> txInInfoOutRef == txOutRef) txInfoInputs
 
 -- | Plutus script for verifying a rollup state transition.
 {-# INLINABLE untypedRollup #-}
