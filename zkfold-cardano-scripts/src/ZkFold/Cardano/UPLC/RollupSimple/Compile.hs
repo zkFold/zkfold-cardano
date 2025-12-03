@@ -1,22 +1,20 @@
-
 module ZkFold.Cardano.UPLC.RollupSimple.Compile (
   writeRollupSimpleBP,
   rollupSimpleSerialisedScript,
   rollupSimpleCompiledCode,
 ) where
 
-import           Data.ByteString                     (ByteString)
-import           Data.ByteString.Short               (fromShort)
-import           Data.Function                       ((&))
-import           Data.Maybe                          (Maybe (..))
-import qualified Data.Set                            as Set
+import           Data.ByteString                  (ByteString)
+import           Data.ByteString.Short            (fromShort)
+import           Data.Function                    ((&))
+import           Data.Maybe                       (Maybe (..))
+import qualified Data.Set                         as Set
 import           PlutusLedgerApi.V3
 import qualified PlutusTx
 import           PlutusTx.Blueprint
-import qualified PlutusTx.Prelude                    as PlutusTx
-import           Prelude                             (FilePath, IO, ($))
+import qualified PlutusTx.Prelude                 as PlutusTx
+import           Prelude                          (FilePath, IO, ($))
 
-import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
 import           ZkFold.Cardano.UPLC.RollupSimple
 
 rollupSimpleBP :: ContractBlueprint
@@ -37,37 +35,47 @@ rollupSimpleBP =
               { validatorTitle = "rollupSimple"
               , validatorRedeemer =
                   MkArgumentBlueprint
-                    { argumentTitle = Just "RollupSimpleRed"
-                    , argumentSchema = definitionRef @RollupSimpleRed
+                    { argumentTitle = Just "BuiltinData"
+                    , argumentSchema = definitionRef @BuiltinData
                     , argumentPurpose = Set.singleton Spend
-                    , argumentDescription = Nothing
+                    , argumentDescription = Just "No redeemer is required."
                     }
               , validatorParameters =
                   [ MkParameterBlueprint
-                      { parameterTitle = Just "SetupBytes"
-                      , parameterSchema = definitionRef @SetupBytes
-                      , parameterPurpose = Set.singleton Spend
-                      , parameterDescription = Nothing
-                      }
-                  , MkParameterBlueprint
-                      { parameterTitle = Just "CurrencySymbol"
-                      , parameterSchema = definitionRef @CurrencySymbol
-                      , parameterPurpose = Set.singleton Spend
-                      , parameterDescription = Nothing
-                      }
-                  , MkParameterBlueprint
-                      { parameterTitle = Just "TokenName"
-                      , parameterSchema = definitionRef @TokenName
+                      { parameterTitle = Just "ScriptHash"
+                      , parameterSchema = definitionRef @ScriptHash
                       , parameterPurpose = Set.singleton Spend
                       , parameterDescription = Nothing
                       }
                   ]
-              , validatorDescription = Just "Rollup Simple validator"
-              , validatorDatum = Nothing
+              , validatorDescription = Just "Rollup Simple spend validator"
+              , validatorDatum = Nothing -- Omitting information about datum as it is not straightforward.
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion rollupSimpleSerialisedScript
               }
+          , MkValidatorBlueprint
+              { validatorTitle = "rollupSimpleStake"
+              , validatorRedeemer =
+                  MkArgumentBlueprint
+                    { argumentTitle = Just "RollupSimpleRed"
+                    , argumentSchema = definitionRef @RollupSimpleRed
+                    , argumentPurpose = Set.singleton Withdraw
+                    , argumentDescription = Nothing
+                    }
+              , validatorParameters =
+                  [ MkParameterBlueprint
+                      { parameterTitle = Just "RollupConfiguration"
+                      , parameterSchema = definitionRef @RollupConfiguration
+                      , parameterPurpose = Set.singleton Withdraw
+                      , parameterDescription = Nothing
+                      }
+                  ]
+              , validatorDescription = Just "Rollup Simple stake validator"
+              , validatorDatum = Nothing
+              , validatorCompiled = Just $ compiledValidator commonPlutusVersion rollupSimpleStakeSerialisedScript
+              }
           ]
-    , contractDefinitions = deriveDefinitions @'[SetupBytes, CurrencySymbol, TokenName, RollupState, RollupSimpleRed] }
+    , contractDefinitions = deriveDefinitions @'[BuiltinData, ScriptHash, RollupSimpleRed, RollupConfiguration]
+    }
  where
   commonPlutusVersion = PlutusV3
 
@@ -77,5 +85,11 @@ writeRollupSimpleBP fp = writeBlueprint fp rollupSimpleBP
 rollupSimpleSerialisedScript :: ByteString
 rollupSimpleSerialisedScript = serialiseCompiledCode rollupSimpleCompiledCode & fromShort
 
-rollupSimpleCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+rollupSimpleCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 rollupSimpleCompiledCode = $$(PlutusTx.compile [||rollupSimple||])
+
+rollupSimpleStakeSerialisedScript :: ByteString
+rollupSimpleStakeSerialisedScript = serialiseCompiledCode rollupSimpleStakeCompiledCode & fromShort
+
+rollupSimpleStakeCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+rollupSimpleStakeCompiledCode = $$(PlutusTx.compile [||rollupSimpleStake||])
