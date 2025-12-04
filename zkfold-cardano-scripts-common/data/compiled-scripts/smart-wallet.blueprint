@@ -63,17 +63,17 @@
           }
         },
         {
-          "title": "ScriptHash",
-          "purpose": "spend",
-          "schema": {
-            "$ref": "#/definitions/ScriptHash"
-          }
-        },
-        {
           "title": "CurrencySymbol",
           "purpose": "spend",
           "schema": {
             "$ref": "#/definitions/CurrencySymbol"
+          }
+        },
+        {
+          "title": "ScriptHash",
+          "purpose": "spend",
+          "schema": {
+            "$ref": "#/definitions/ScriptHash"
           }
         }
       ],

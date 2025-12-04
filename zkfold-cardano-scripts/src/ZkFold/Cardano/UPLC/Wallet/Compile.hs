@@ -79,15 +79,15 @@ smartWalletBP =
                       , parameterDescription = Just "Dummy parameter to generate extra addresses for the same wallet"
                       }
                   , MkParameterBlueprint
-                      { parameterTitle = Just "ScriptHash"
-                      , parameterSchema = definitionRef @ScriptHash
-                      , parameterPurpose = Set.singleton Spend
-                      , parameterDescription = Nothing
-                      }
-                  , MkParameterBlueprint
                       { parameterTitle = Just "CurrencySymbol"
                       , parameterSchema = definitionRef @CurrencySymbol
                       , parameterPurpose = Set.singleton Spend 
+                      , parameterDescription = Nothing
+                      }
+                  , MkParameterBlueprint
+                      { parameterTitle = Just "ScriptHash"
+                      , parameterSchema = definitionRef @ScriptHash
+                      , parameterPurpose = Set.singleton Spend
                       , parameterDescription = Nothing
                       }
                   ]
