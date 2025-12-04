@@ -73,9 +73,21 @@ smartWalletBP =
                     }
               , validatorParameters =
                   [ MkParameterBlueprint
+                      { parameterTitle = Just "Script index"
+                      , parameterSchema = definitionRef @PlutusTx.Integer
+                      , parameterPurpose = Set.singleton Spend
+                      , parameterDescription = Just "Dummy parameter to generate extra addresses for the same wallet"
+                      }
+                  , MkParameterBlueprint
                       { parameterTitle = Just "ScriptHash"
                       , parameterSchema = definitionRef @ScriptHash
                       , parameterPurpose = Set.singleton Spend
+                      , parameterDescription = Nothing
+                      }
+                  , MkParameterBlueprint
+                      { parameterTitle = Just "CurrencySymbol"
+                      , parameterSchema = definitionRef @CurrencySymbol
+                      , parameterPurpose = Set.singleton Spend 
                       , parameterDescription = Nothing
                       }
                   ]
@@ -112,7 +124,7 @@ smartWalletBP =
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion checkSigSerialisedScript
               }
           ]
-    , contractDefinitions = deriveDefinitions @'[Web2Auth, OnChainWalletConfig, PlutusTx.BuiltinByteString, (), ScriptHash, PlutusTx.BuiltinData, Signature, CurrencySymbol]
+    , contractDefinitions = deriveDefinitions @'[PlutusTx.Integer, Web2Auth, OnChainWalletConfig, PlutusTx.BuiltinByteString, (), ScriptHash, PlutusTx.BuiltinData, Signature, CurrencySymbol]
     }
  where
   commonPlutusVersion = PlutusV3
@@ -129,7 +141,7 @@ web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 walletSerialisedScript :: ByteString
 walletSerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
 
-walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 walletCompiledCode = $$(PlutusTx.compile [||wallet||])
 
 checkSigSerialisedScript :: ByteString
