@@ -2,6 +2,8 @@ module ZkFold.Cardano.UPLC.Wallet.Compile (
   writeSmartWalletBP,
   web2AuthSerialisedScript,
   web2AuthCompiledCode,
+  wallet'SerialisedScript,
+  wallet'CompiledCode,
   walletSerialisedScript,
   walletCompiledCode,
   checkSigSerialisedScript,
@@ -63,7 +65,7 @@ smartWalletBP =
               , validatorCompiled = Just $ compiledValidator commonPlutusVersion web2AuthSerialisedScript
               }
           , MkValidatorBlueprint
-              { validatorTitle = "wallet"
+              { validatorTitle = "wallet'"
               , validatorRedeemer =
                   MkArgumentBlueprint
                     { argumentTitle = Just "Unit"
@@ -79,6 +81,40 @@ smartWalletBP =
                       , parameterDescription = Just "Dummy parameter to generate extra addresses for the same wallet"
                       }
                   , MkParameterBlueprint
+                      { parameterTitle = Just "CurrencySymbol"
+                      , parameterSchema = definitionRef @CurrencySymbol
+                      , parameterPurpose = Set.singleton Spend 
+                      , parameterDescription = Nothing
+                      }
+                  , MkParameterBlueprint
+                      { parameterTitle = Just "ScriptHash"
+                      , parameterSchema = definitionRef @ScriptHash
+                      , parameterPurpose = Set.singleton Spend
+                      , parameterDescription = Nothing
+                      }
+                  ]
+              , validatorDescription = Just "Smart wallet spending validator"
+              , validatorDatum =
+                  Just $
+                    MkArgumentBlueprint
+                      { argumentTitle = Nothing
+                      , argumentSchema = definitionRef @PlutusTx.BuiltinData
+                      , argumentPurpose = Set.singleton Spend
+                      , argumentDescription = Nothing
+                      }
+              , validatorCompiled = Just $ compiledValidator commonPlutusVersion walletSerialisedScript
+              }
+          , MkValidatorBlueprint
+              { validatorTitle = "wallet"
+              , validatorRedeemer =
+                  MkArgumentBlueprint
+                    { argumentTitle = Just "Unit"
+                    , argumentSchema = definitionRef @()
+                    , argumentPurpose = Set.singleton Spend
+                    , argumentDescription = Nothing
+                    }
+              , validatorParameters =
+                  [ MkParameterBlueprint
                       { parameterTitle = Just "CurrencySymbol"
                       , parameterSchema = definitionRef @CurrencySymbol
                       , parameterPurpose = Set.singleton Spend 
@@ -138,10 +174,16 @@ web2AuthSerialisedScript = serialiseCompiledCode web2AuthCompiledCode & fromShor
 web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 
+wallet'SerialisedScript :: ByteString
+wallet'SerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
+
+wallet'CompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+wallet'CompiledCode = $$(PlutusTx.compile [||wallet'||])
+
 walletSerialisedScript :: ByteString
 walletSerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
 
-walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 walletCompiledCode = $$(PlutusTx.compile [||wallet||])
 
 checkSigSerialisedScript :: ByteString
