@@ -10,6 +10,7 @@ module ZkFold.Cardano.UPLC.Wallet (
   module ZkFold.Cardano.UPLC.Wallet.Types,
   web2Auth,
   checkSig,
+  wallet',
   wallet,
 ) where
 
@@ -142,6 +143,52 @@ checkSig (unsafeFromBuiltinData -> (symb :: CurrencySymbol)) sc =
       & BI.tail
       & BI.head
       & unsafeFromBuiltinData
+
+{-# INLINEABLE wallet' #-}
+wallet' ::
+  -- | Dummy parameter for extra addresses
+  BuiltinData ->
+  -- | Currency symbol of user's minting script.
+  BuiltinData ->
+  -- | Script hash of stake validator.
+  BuiltinData ->
+  -- | Script context.
+  BuiltinData ->
+  BuiltinUnit
+wallet' _ cs (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
+  check
+    $ if red == 0
+      then
+        -- We require the minting script.
+        let txInfoMint :: Map BuiltinData BuiltinData =
+              txInfo
+                & BI.tail
+                & BI.tail
+                & BI.tail
+                & BI.tail
+                & BI.head
+                & unsafeFromBuiltinData
+         in AssocMap.member cs txInfoMint
+      -- We require the withdrawal script.
+      else
+        (red == 1)
+          && ( let txInfoWrdl :: Map BuiltinData BuiltinData =
+                    txInfo
+                      & BI.tail
+                      & BI.tail
+                      & BI.tail
+                      & BI.tail
+                      & BI.tail
+                      & BI.tail
+                      & BI.head
+                      & unsafeFromBuiltinData
+                in AssocMap.member (toBuiltinData $ ScriptCredential sh) txInfoWrdl
+             )
+ where
+  txInfoL = BI.unsafeDataAsConstr sc & BI.snd
+  txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
+  -- Note that 'BuiltinInteger' is a type synonym for 'Integer' so there is no extra cost here.
+  red :: Integer = txInfoL & BI.tail & BI.head & unsafeFromBuiltinData
 
 {-# INLINEABLE wallet #-}
 wallet ::
