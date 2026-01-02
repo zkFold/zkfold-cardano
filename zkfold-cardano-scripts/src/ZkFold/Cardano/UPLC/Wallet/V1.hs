@@ -38,12 +38,12 @@ data RewardingRedeemer = RewardingRedeemer JWTParts UserId ProofBytes KeyId
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RewardingRedeemer [('RewardingRedeemer, 0)]
 
 data V1WalletConfig = V1WalletConfig
-  { ocwcUidPrefix      :: BuiltinByteString
+  { ocwcUidPrefix  :: BuiltinByteString
   -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user:
   -- "email" for Google or "sub" for Epic Games
-  , ocwcFeeAddress     :: Address
+  , ocwcFeeAddress :: Address
   -- ^ zkFold address where an additional fee will be sent
-  , ocwcFee            :: Integer
+  , ocwcFee        :: Integer
   -- ^ The additional fee amount
   }
   deriving stock (Show, Generic)
@@ -54,7 +54,7 @@ PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''OnChainWalletConfig [('OnChainWa
 
 {-# INLINEABLE rewardingZKP #-}
 
--- | Verifies that the JWT is properly signed 
+-- | Verifies that the JWT is properly signed
 rewardingZKP ::
   -- | Wallet config
   BuiltinData ->
