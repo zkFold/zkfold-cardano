@@ -8,6 +8,8 @@ import           PlutusTx.Prelude     (traceError)
 
 import qualified ZkFold.Algebra.Class as ZkFold
 
+import ZkFold.Cardano.OnChain.BLS12_381.F (F (..))
+
 type G1 = BuiltinBLS12_381_G1_Element
 
 instance ZkFold.AdditiveSemigroup G1 where
@@ -19,6 +21,9 @@ instance ZkFold.FromConstant Natural G1 where
 
 instance ZkFold.Scale Natural G1 where
     scale n = ZkFold.scale (naturalToInteger n)
+
+instance ZkFold.Scale F G1 where
+    scale (F n) = ZkFold.scale n
 
 instance ZkFold.Zero G1 where
     zero = bls12_381_G1_uncompress bls12_381_G1_compressed_zero
