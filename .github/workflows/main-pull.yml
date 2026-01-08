@@ -165,7 +165,7 @@ jobs:
         cabal run zkfold-cardano-scripts-compiler
         diff=$(git diff | wc -l)
         if [ "$diff" -gt "0" ]; then
-          echo "Compiled scripts in the commit do not correspond to the code in `zkfold-cardano-scripts`. Did you forget to run `cabal run zkfold-cardano-scripts-compiler`?"
+          echo "Compiled scripts in the commit do not correspond to the code in zkfold-cardano-scripts. Did you forget to run cabal run zkfold-cardano-scripts-compiler?"
           exit 1
         fi
 
