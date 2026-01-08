@@ -160,6 +160,17 @@ jobs:
       run: |
         cabal build all -f Pedantic
 
+    - name: Check compiled scripts
+      run: |
+        cabal run zkfold-cardano-scripts-compiler
+        diff=$(git diff | wc -l)
+        if [ "$diff" -gt "0"]; then
+          echo "Compiled scripts in the commit do not correspond to the code in `zkfold-cardano-scripts`. Did you forget to run `cabal run zkfold-cardano-scripts-compiler`?"
+          exit 1
+        fi
+
+
+
     # - name: Test
     #   run: cabal test all
 

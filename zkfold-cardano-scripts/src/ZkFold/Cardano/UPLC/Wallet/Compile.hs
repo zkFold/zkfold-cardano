@@ -102,7 +102,7 @@ smartWalletBP =
                       , argumentPurpose = Set.singleton Spend
                       , argumentDescription = Nothing
                       }
-              , validatorCompiled = Just $ compiledValidator commonPlutusVersion walletSerialisedScript
+              , validatorCompiled = Just $ compiledValidator commonPlutusVersion wallet'SerialisedScript
               }
           , MkValidatorBlueprint
               { validatorTitle = "wallet"
@@ -175,7 +175,7 @@ web2AuthCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.
 web2AuthCompiledCode = $$(PlutusTx.compile [||web2Auth||])
 
 wallet'SerialisedScript :: ByteString
-wallet'SerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
+wallet'SerialisedScript = serialiseCompiledCode wallet'CompiledCode & fromShort
 
 wallet'CompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 wallet'CompiledCode = $$(PlutusTx.compile [||wallet'||])
