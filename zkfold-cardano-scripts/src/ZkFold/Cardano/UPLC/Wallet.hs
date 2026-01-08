@@ -155,7 +155,7 @@ wallet' ::
   -- | Script context.
   BuiltinData ->
   BuiltinUnit
-wallet' _ = wallet 
+wallet' _ = wallet
 
 {-# INLINEABLE wallet #-}
 wallet ::
