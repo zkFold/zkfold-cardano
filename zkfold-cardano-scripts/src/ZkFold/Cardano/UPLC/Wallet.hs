@@ -155,40 +155,7 @@ wallet' ::
   -- | Script context.
   BuiltinData ->
   BuiltinUnit
-wallet' _ cs (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
-  check
-    $ if red == 0
-      then
-        -- We require the minting script.
-        let txInfoMint :: Map BuiltinData BuiltinData =
-              txInfo
-                & BI.tail
-                & BI.tail
-                & BI.tail
-                & BI.tail
-                & BI.head
-                & unsafeFromBuiltinData
-         in AssocMap.member cs txInfoMint
-      -- We require the withdrawal script.
-      else
-        (red == 1)
-          && ( let txInfoWrdl :: Map BuiltinData BuiltinData =
-                    txInfo
-                      & BI.tail
-                      & BI.tail
-                      & BI.tail
-                      & BI.tail
-                      & BI.tail
-                      & BI.tail
-                      & BI.head
-                      & unsafeFromBuiltinData
-                in AssocMap.member (toBuiltinData $ ScriptCredential sh) txInfoWrdl
-             )
- where
-  txInfoL = BI.unsafeDataAsConstr sc & BI.snd
-  txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
-  -- Note that 'BuiltinInteger' is a type synonym for 'Integer' so there is no extra cost here.
-  red :: Integer = txInfoL & BI.tail & BI.head & unsafeFromBuiltinData
+wallet' _ = wallet 
 
 {-# INLINEABLE wallet #-}
 wallet ::
