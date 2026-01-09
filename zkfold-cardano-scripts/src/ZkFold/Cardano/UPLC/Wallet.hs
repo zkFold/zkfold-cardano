@@ -10,6 +10,7 @@ module ZkFold.Cardano.UPLC.Wallet (
   module ZkFold.Cardano.UPLC.Wallet.Types,
   web2Auth,
   checkSig,
+  wallet',
   wallet,
 ) where
 
@@ -142,6 +143,19 @@ checkSig (unsafeFromBuiltinData -> (symb :: CurrencySymbol)) sc =
       & BI.tail
       & BI.head
       & unsafeFromBuiltinData
+
+{-# INLINEABLE wallet' #-}
+wallet' ::
+  -- | Dummy parameter for extra addresses
+  BuiltinData ->
+  -- | Currency symbol of user's minting script.
+  BuiltinData ->
+  -- | Script hash of stake validator.
+  BuiltinData ->
+  -- | Script context.
+  BuiltinData ->
+  BuiltinUnit
+wallet' _ = wallet
 
 {-# INLINEABLE wallet #-}
 wallet ::

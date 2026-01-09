@@ -36,6 +36,7 @@ common lang
     RecordWildCards
     ScopedTypeVariables
     StandaloneDeriving
+    Strict
     TemplateHaskell
     TypeApplications
     ViewPatterns
@@ -180,6 +181,7 @@ executable zkfold-cardano-scripts-compiler
     zkfold-cardano-scripts,
 
 test-suite buildCrosschainHash-test
+  import: lang
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs: test/asterizm
