@@ -95,7 +95,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
 {-# INLINEABLE wallet #-}
 wallet ::
-  -- | Dummy parameter for extra addresses 
+  -- | Dummy parameter for extra addresses
   BuiltinData ->
   -- | Currency symbol of user's minting script.
   BuiltinData ->
