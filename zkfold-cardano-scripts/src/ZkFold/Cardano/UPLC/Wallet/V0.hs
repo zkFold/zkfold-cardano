@@ -6,8 +6,8 @@
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-module ZkFold.Cardano.UPLC.Wallet (
-  module ZkFold.Cardano.UPLC.Wallet.Types,
+module ZkFold.Cardano.UPLC.Wallet.V0 (
+  module ZkFold.Cardano.UPLC.Wallet.V0.Types,
   web2Auth,
   checkSig,
   wallet',
@@ -25,7 +25,7 @@ import           ZkFold.Cardano.OnChain.BLS12_381.F  (toInput)
 import           ZkFold.Cardano.OnChain.Plonkup      (PlonkupPlutus)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (SetupBytes)
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
-import           ZkFold.Cardano.UPLC.Wallet.Types
+import           ZkFold.Cardano.UPLC.Wallet.V0.Types
 import           ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 
