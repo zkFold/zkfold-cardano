@@ -15,17 +15,17 @@ import           Data.Function                       ((&))
 import           PlutusLedgerApi.V1.Value            (valueOf)
 import           PlutusLedgerApi.V3
 import qualified PlutusTx.AssocMap                   as AssocMap
+import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
-import PlutusTx.Builtins
-import PlutusTx.Show (show)
-import           PlutusTx.Prelude                    
+import           PlutusTx.Prelude
+import           PlutusTx.Show                       (show)
 
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
 import           ZkFold.Cardano.UPLC.Wallet.V1.Types
 
 {-# INLINEABLE pad  #-}
 
--- | As per RFC 3447 
+-- | As per RFC 3447
 -- https://datatracker.ietf.org/doc/html/rfc3447#section-9.2
 --
 -- In RSA, message hash is padded to 2048 bits with this value
@@ -35,7 +35,7 @@ pad = 0x1fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 {-# INLINEABLE rewardingZKP #-}
 
--- | Verifies that the JWT is properly signed 
+-- | Verifies that the JWT is properly signed
 rewardingZKP ::
   -- | Wallet config
   BuiltinData ->
@@ -53,7 +53,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         correctLengths = length v == 16 && length aut == 16
 
-        verified = and $ flip map (zip v aut) $ \(vi, auti) -> 
+        verified = and $ flip map (zip v aut) $ \(vi, auti) ->
             let i = (byteStringToInteger BigEndian $ sha2_256 (encodeUtf8 $ show c <> show aut)) `modulo` pubE
                 lhs = expMod vi pubE pubN
                 rhs = (auti * expMod paddedHash i pubN) `modulo` pubN
@@ -76,7 +76,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         OutputDatum datum -> unsafeFromBuiltinData $ getDatum datum
         _                 -> error ()
 
-  Just PubKey {..} = AssocMap.lookup (toBuiltinData kid) pubkeyMap 
+  Just PubKey {..} = AssocMap.lookup (toBuiltinData kid) pubkeyMap
 
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
