@@ -45,6 +45,12 @@ smartWalletBP =
                     }
               , validatorParameters =
                   [ MkParameterBlueprint
+                      { parameterTitle = Just "Dummy parameter"
+                      , parameterSchema = definitionRef @PlutusTx.Integer
+                      , parameterPurpose = Set.singleton Spend 
+                      , parameterDescription = Nothing
+                      }
+                  , MkParameterBlueprint
                       { parameterTitle = Just "CurrencySymbol"
                       , parameterSchema = definitionRef @CurrencySymbol
                       , parameterPurpose = Set.singleton Spend 
@@ -101,7 +107,7 @@ writeSmartWalletBP fp = writeBlueprint fp smartWalletBP
 walletSerialisedScript :: ByteString
 walletSerialisedScript = serialiseCompiledCode walletCompiledCode & fromShort
 
-walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
+walletCompiledCode :: PlutusTx.CompiledCode (PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinData -> PlutusTx.BuiltinUnit)
 walletCompiledCode = $$(PlutusTx.compile [||wallet||])
 
 rewardingZKPSerialisedScript :: ByteString
