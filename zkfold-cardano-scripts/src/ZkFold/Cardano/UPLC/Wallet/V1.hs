@@ -95,6 +95,8 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
 {-# INLINEABLE wallet #-}
 wallet ::
+  -- | Dummy parameter for extra addresses 
+  BuiltinData ->
   -- | Currency symbol of user's minting script.
   BuiltinData ->
   -- | Script hash of stake validator.
@@ -102,7 +104,7 @@ wallet ::
   -- | Script context.
   BuiltinData ->
   BuiltinUnit
-wallet cs (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
+wallet _ cs (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
   check
     $ if red == 0
       then
