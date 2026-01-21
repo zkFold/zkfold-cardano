@@ -11,13 +11,14 @@ module ZkFold.Cardano.UPLC.Wallet.V1.Types (
   OnChainWalletConfig (..),
 ) where
 
-import ZkFold.Cardano.UPLC.Wallet.V0.Types (JWTParts(..), KeyId(..))
 import           GHC.Generics                        (Generic)
-import Prelude (Show)
 import           PlutusLedgerApi.V3
 import           PlutusTx.Blueprint
 import qualified PlutusTx.Blueprint.TH
 import           PlutusTx.Prelude                    hiding (toList, (*), (+))
+import           Prelude                             (Show)
+
+import           ZkFold.Cardano.UPLC.Wallet.V0.Types (JWTParts (..), KeyId (..))
 
 data PubKey = PubKey { pubE :: Integer, pubN :: Integer }
   deriving stock (Show, Generic)
@@ -44,12 +45,12 @@ data RewardingRedeemer = RewardingRedeemer JWTParts UserId SigmaProof KeyId
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RewardingRedeemer [('RewardingRedeemer, 0)]
 
 data OnChainWalletConfig = OnChainWalletConfig
-  { ocwcUidPrefix      :: BuiltinByteString
+  { ocwcUidPrefix  :: BuiltinByteString
   -- ^ User ID prefix. It is the name of the field in the JWT that identifies the user:
   -- "email" for Google or "sub" for Epic Games
-  , ocwcFeeAddress     :: Address
+  , ocwcFeeAddress :: Address
   -- ^ zkFold address where an additional fee will be sent
-  , ocwcFee            :: Integer
+  , ocwcFee        :: Integer
   -- ^ The additional fee amount
   }
   deriving stock (Show, Generic)

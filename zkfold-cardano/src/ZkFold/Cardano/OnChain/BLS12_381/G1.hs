@@ -2,13 +2,12 @@
 
 module ZkFold.Cardano.OnChain.BLS12_381.G1 where
 
-import           GHC.Natural          (Natural, naturalToInteger)
+import           GHC.Natural                        (Natural, naturalToInteger)
 import           PlutusTx.Builtins
-import           PlutusTx.Prelude     (traceError)
+import           PlutusTx.Prelude                   (traceError)
 
-import qualified ZkFold.Algebra.Class as ZkFold
-
-import ZkFold.Cardano.OnChain.BLS12_381.F (F (..))
+import qualified ZkFold.Algebra.Class               as ZkFold
+import           ZkFold.Cardano.OnChain.BLS12_381.F (F (..))
 
 type G1 = BuiltinBLS12_381_G1_Element
 
