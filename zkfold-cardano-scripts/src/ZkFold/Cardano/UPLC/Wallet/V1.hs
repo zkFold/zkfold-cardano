@@ -97,7 +97,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 wallet ::
   -- | Dummy parameter for extra addresses
   BuiltinData ->
-  -- | User's email 
+  -- | User's email
   BuiltinData ->
   -- | Script context.
   BuiltinData ->
