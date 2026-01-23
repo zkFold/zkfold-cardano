@@ -34,6 +34,11 @@ import           ZkFold.Cardano.UPLC.Wallet.V1.Types
 pad :: Integer
 pad = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff003031300d060960864801650304020105000420000000000000000000000000000000000000000000000000000000000000000000
 
+
+{-# INLINEABLE sh  #-}
+sh :: Integer
+sh = 0x10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
 {-# INLINEABLE rewardingZKP #-}
 
 -- | Verifies that the JWT is properly signed
@@ -57,14 +62,14 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         -- verified = and $ flip map (zip v aut) $ \(vi, auti) ->
         verified = flip map (zip v aut) $ \(vi, auti) ->
             let autbs = integerToByteString BigEndian 256 auti
-                i = (byteStringToInteger BigEndian $ sha2_256 (c <> autbs)) `modulo` pubE
+                i = trace (show $ takeByteString 8 autbs) $ (byteStringToInteger BigEndian $ sha2_256 (c <> autbs)) `modulo` pubE
                 -- lhs = myExpMod vi pubE pubN
                 -- rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
              -- in lhs == rhs
              in i
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         correctLengths && traceError (show verified) && hasZkFoldFee
+         correctLengths && traceError (show verified <> show (takeByteString 8 c)) && hasZkFoldFee
  where
     {--
   -- tx reference inputs
