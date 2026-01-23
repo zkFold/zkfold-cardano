@@ -96,7 +96,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 {-# INLINEABLE myExpMod #-}
 -- TODO: replace with builtin expMod when it's available
 myExpMod :: Integer -> Integer -> Integer -> Integer
-myExpMod base power mod 
+myExpMod base power mod
   | power == 0 = 1
   | even power = (halfPow * halfPow) `modulo` mod
   | otherwise = (halfPow * halfPow * base) `modulo` mod
