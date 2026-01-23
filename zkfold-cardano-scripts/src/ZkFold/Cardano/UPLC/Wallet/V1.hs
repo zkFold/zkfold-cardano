@@ -56,7 +56,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         -- verified = and $ flip map (zip v aut) $ \(vi, auti) ->
         verified = flip map (zip (Plutus.tail v) (Plutus.tail aut)) $ \(vi, auti) ->
-            let i = (byteStringToInteger BigEndian $ sha2_256 (encodeUtf8 $ show paddedHash <> show aut)) `modulo` pubE
+            let i = (byteStringToInteger BigEndian $ sha2_256 (c <> integerToByteString BigEndian 2048 auti)) `modulo` pubE
                 -- lhs = myExpMod vi pubE pubN
                 -- rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
              -- in lhs == rhs
