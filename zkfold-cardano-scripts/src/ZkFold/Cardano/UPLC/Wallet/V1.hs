@@ -108,7 +108,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 myExpMod :: Integer -> Integer -> Integer -> Integer
 myExpMod base power mod
   | power == 0 = 1
-  | power == 1 = base `modulo` mod 
+  | power == 1 = base `modulo` mod
   | even power = halfPow2
   | otherwise = (halfPow2 * base) `modulo` mod
  where
