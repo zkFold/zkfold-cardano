@@ -18,6 +18,7 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude
+import qualified PlutusTx.Prelude as Plutus
 import           PlutusTx.Show                       (show)
 
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
@@ -54,7 +55,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         correctLengths = length v == 2 && length aut == 2
 
         -- verified = and $ flip map (zip v aut) $ \(vi, auti) ->
-        verified = flip map (zip v aut) $ \(vi, auti) ->
+        verified = flip map (zip (Plutus.tail v) (Plutus.tail aut)) $ \(vi, auti) ->
             let i = (byteStringToInteger BigEndian $ sha2_256 (encodeUtf8 $ show paddedHash <> show aut)) `modulo` pubE
                 -- lhs = myExpMod vi pubE pubN
                 -- rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
@@ -64,12 +65,12 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         -- Check that the user knows an RSA signature for a JWT containing the email
          correctLengths && traceError (show verified) && hasZkFoldFee
  where
+    {--
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
   refInputResolved = refInput & BI.unsafeDataAsConstr & BI.snd & BI.tail & BI.head -- TxOut
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
 
-    {--
   -- find beacon datum
   beaconDatum = txOutL & BI.tail & BI.head & unsafeFromBuiltinData
 
