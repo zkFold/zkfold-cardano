@@ -54,7 +54,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         correctLengths = length v == 2 && length aut == 2
 
-        verified = and $ flip map (zip v aut) $ \(vi, auti) ->
+        verified = and $ flip map (zip (Plutus.tail v) (Plutus.tail aut)) $ \(vi, auti) ->
             let autbs = integerToByteString BigEndian 256 auti
                 digest = sha2_256 (c <> autbs)
                 i = (byteStringToInteger BigEndian digest) `modulo` pubE
@@ -108,10 +108,12 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 myExpMod :: Integer -> Integer -> Integer -> Integer
 myExpMod base power mod
   | power == 0 = 1
-  | even power = (halfPow * halfPow) `modulo` mod
-  | otherwise = (halfPow * halfPow * base) `modulo` mod
+  | power == 1 = base `modulo` mod 
+  | even power = halfPow2
+  | otherwise = (halfPow2 * base) `modulo` mod
  where
   halfPow = myExpMod base (power `divide` 2) mod
+  halfPow2 = (halfPow * halfPow) `modulo` mod
 
 {-# INLINEABLE wallet #-}
 wallet ::
