@@ -50,13 +50,13 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         jwtHash = sha2_256 encodedJwt
         paddedHash = pad + byteStringToInteger BigEndian jwtHash
 
-        c = integerToByteString BigEndian 2048 paddedHash
+        c = integerToByteString BigEndian 256 paddedHash
 
         correctLengths = length v == 2 && length aut == 2
 
         -- verified = and $ flip map (zip v aut) $ \(vi, auti) ->
-        verified = flip map (zip (Plutus.tail v) (Plutus.tail aut)) $ \(vi, auti) ->
-            let i = (byteStringToInteger BigEndian $ sha2_256 (c <> integerToByteString BigEndian 2048 auti)) `modulo` pubE
+        verified = flip map (zip v aut) $ \(vi, auti) ->
+            let i = (byteStringToInteger BigEndian $ sha2_256 (c <> integerToByteString BigEndian 256 auti)) `modulo` pubE
                 -- lhs = myExpMod vi pubE pubN
                 -- rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
              -- in lhs == rhs
