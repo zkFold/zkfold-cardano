@@ -55,8 +55,8 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         verified = and $ flip map (zip v aut) $ \(vi, auti) ->
             let i = (byteStringToInteger BigEndian $ sha2_256 (encodeUtf8 $ show c <> show aut)) `modulo` pubE
-                lhs = expMod vi pubE pubN
-                rhs = (auti * expMod paddedHash i pubN) `modulo` pubN
+                lhs = myExpMod vi pubE pubN
+                rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
              in lhs == rhs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
@@ -92,6 +92,16 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
   hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
 
+
+{-# INLINEABLE myExpMod #-}
+-- TODO: replace with builtin expMod when it's available
+myExpMod :: Integer -> Integer -> Integer -> Integer
+myExpMod base power mod 
+  | power == 0 = 1
+  | even power = (halfPow * halfPow) `modulo` mod
+  | otherwise = (halfPow * halfPow * base) `modulo` mod
+ where
+  halfPow = myExpMod base (power `divide` 2) mod
 
 {-# INLINEABLE wallet #-}
 wallet ::
