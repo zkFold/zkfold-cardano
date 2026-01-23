@@ -64,7 +64,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
              in i
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         correctLengths && traceError (show verified <> show c) && hasZkFoldFee
+         correctLengths && traceError (show verified) && hasZkFoldFee
  where
     {--
   -- tx reference inputs
