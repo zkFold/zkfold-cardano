@@ -51,7 +51,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         c = integerToByteString BigEndian 2048 paddedHash
 
-        correctLengths = length v == 16 && length aut == 16
+        correctLengths = length v == 2 && length aut == 2
 
         verified = and $ flip map (zip v aut) $ \(vi, auti) ->
             let i = (byteStringToInteger BigEndian $ sha2_256 (encodeUtf8 $ show c <> show aut)) `modulo` pubE
