@@ -52,14 +52,12 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         c = integerToByteString BigEndian 256 paddedHash
 
-        c2 = consByteString 0 c
-
         correctLengths = length v == 2 && length aut == 2
 
         -- verified = and $ flip map (zip v aut) $ \(vi, auti) ->
         verified = flip map (zip v aut) $ \(vi, auti) ->
             let autbs = integerToByteString BigEndian 256 auti
-                digest = trace (show $ takeByteString 8 autbs) $ sha2_256 (c2 <> autbs)
+                digest = trace (show $ takeByteString 8 autbs) $ sha2_256 (c <> autbs)
                 i = trace (show digest) $ (byteStringToInteger BigEndian digest) `modulo` pubE
                 -- lhs = myExpMod vi pubE pubN
                 -- rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
