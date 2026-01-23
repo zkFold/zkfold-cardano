@@ -18,7 +18,7 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude
-import qualified PlutusTx.Prelude as Plutus
+import qualified PlutusTx.Prelude                    as Plutus
 import           PlutusTx.Show                       (show)
 
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
