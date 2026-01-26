@@ -10,19 +10,13 @@
 module ZkFold.Cardano.UPLC.Asterizm where
 
 import           PlutusLedgerApi.V1          (currencySymbolValueOf, symbols)
-import           PlutusLedgerApi.V1.Value    (withCurrencySymbol)
+import           PlutusLedgerApi.V1.Value    (lovelaceValueOf, valueOf, withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
                                               unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
-import           PlutusTx.Builtins           (lengthOfByteString, sha2_256, sliceByteString)
-import           PlutusTx.Foldable           (foldMap)
-import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), check, elem, find,
-                                              fmapDefault, head, ($), (&&), (+), (-), (.), (/=), (<$>), (<>), (==),
-                                              (||))
-import           PlutusTx.Trace              (traceError)
-
+import           PlutusTx.Prelude            hiding (toList)
 
 type RelayerPKH = PubKeyHash
 
@@ -30,11 +24,42 @@ type RelayerPKH = PubKeyHash
 data AsterizmSetup = AsterizmSetup
   { acsClientPKH    :: PubKeyHash
   , acsThreadSymbol :: CurrencySymbol
+  , acsClientSymbol :: CurrencySymbol
+  , acsClientFee    :: Integer
   }
 
 makeLift ''AsterizmSetup
 makeIsDataIndexed ''AsterizmSetup [('AsterizmSetup,0)]
 
+newtype ChainId = ChainId Integer
+newtype ChainAddress = ChainAddress BuiltinByteString
+newtype AsterizmTxId = AsterizmTxId BuiltinByteString
+newtype TransferHash = TransferHash BuiltinByteString
+
+data AsterizmTransferMeta = AsterizmTransferMeta
+  { atmSrcChainId   :: ChainId
+  , atmSrcAddress   :: ChainAddress
+  , atmDstChainId   :: ChainId
+  , atmDstAddress   :: ChainAddress
+  , atmTxId         :: AsterizmTxId
+  , atmNotifyFlag   :: Bool
+  , atmTransferHash :: TransferHash
+  }
+
+makeIsDataIndexed ''ChainId              [('ChainId, 0)]
+makeIsDataIndexed ''ChainAddress         [('ChainAddress, 0)]
+makeIsDataIndexed ''AsterizmTxId         [('AsterizmTxId, 0)]
+makeIsDataIndexed ''TransferHash         [('TransferHash, 0)]
+makeIsDataIndexed ''AsterizmTransferMeta [('AsterizmTransferMeta, 0)]
+
+data AsterizmClientRedeemer
+  = CollectFee
+  | Transfer AsterizmTransferMeta
+
+PlutusTx.makeIsDataIndexed ''AsterizmClientRedeemer
+  [ ('CollectFee, 0)
+  , ('Transfer,   1)
+  ]
 
 {-# INLINABLE buildCrosschainHash #-}
 buildCrosschainHash :: BuiltinByteString -> BuiltinByteString
@@ -144,6 +169,61 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
     conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
       head (keys tokensMap) == tokenName
 
+{-# INLINABLE mkAsterizmRelay #-}
+mkAsterizmRelay :: AsterizmSetup -> AsterizmClientRedeemer -> ScriptContext -> Bool
+mkAsterizmRelay AsterizmSetup{..} redeemer ctx =
+  case redeemer of
+    CollectFee -> traceIfFalse "not signed by client" $
+                    txSignedBy info acsClientPKH
+
+    Transfer meta ->
+      let tn  = txIdToTokenName (atmTxId meta)
+          cs  = acsClientSymbol
+          fee = acsClientFee
+          expectedDatum = toBuiltinData meta
+          out = head $ txInfoOutputs info
+          outOk = traceIfFalse "lovelace < fee" (lovelaceValueOf (txOutValue out) >= Lovelace fee)
+                  && traceIfFalse "missing thread token in output"
+                       (valueOf (txOutValue out) cs tn == 1)
+                  && traceIfFalse "wrong/missing inline datum"
+                       (mustHaveInlineDatumEqual expectedDatum out)
+          mintedOk = traceIfFalse "thread token not minted" $
+                       valueOf (mintValueMinted $ txInfoMint info) cs tn == 1
+      in outOk && mintedOk
+  where
+    info :: TxInfo
+    info = scriptContextTxInfo ctx
+
+    txIdToTokenName :: AsterizmTxId -> TokenName
+    txIdToTokenName (AsterizmTxId bs) = TokenName bs
+
+    mustHaveInlineDatumEqual :: BuiltinData -> TxOut -> Bool
+    mustHaveInlineDatumEqual expected out =
+      case txOutDatum out of
+        OutputDatum (Datum d) -> d == expected
+        _                     -> False
+
+{-# INLINABLE untypedAsterizmRelay #-}
+untypedAsterizmRelay :: AsterizmSetup -> BuiltinData -> BuiltinUnit
+untypedAsterizmRelay setup ctx' = check $ mkAsterizmRelay setup redeemer ctx
+  where
+    ctx :: ScriptContext
+    ctx = unsafeFromBuiltinData ctx'
+
+    redeemer :: AsterizmClientRedeemer
+    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+
+type AsterizmClient = PubKeyHash
+
+{-# INLINABLE untypedRelayThreadPolicy #-}
+untypedRelayThreadPolicy :: AsterizmClient -> BuiltinData -> BuiltinUnit
+untypedRelayThreadPolicy clientPkh ctx' = check $ txSignedBy info clientPkh
+  where
+    ctx :: ScriptContext
+    ctx = unsafeFromBuiltinData ctx'
+
+    info :: TxInfo
+    info   = scriptContextTxInfo ctx
 
 asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmRelayerCompiled pkh =
@@ -154,3 +234,13 @@ asterizmClientCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinU
 asterizmClientCompiled setup =
     $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef setup
+
+asterizmRelayCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmRelayCompiled setup =
+    $$(compile [|| untypedAsterizmRelay ||])
+    `unsafeApplyCode` liftCodeDef setup
+
+asterizmRelayThreadPolicy :: AsterizmClient -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmRelayThreadPolicy pkh =
+    $$(compile [|| untypedRelayThreadPolicy ||])
+    `unsafeApplyCode` liftCodeDef pkh
