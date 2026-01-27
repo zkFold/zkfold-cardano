@@ -119,9 +119,52 @@ myExpMod base power mod
 wallet ::
   -- | Dummy parameter for extra addresses
   BuiltinData ->
-  -- | User's email
+  -- | User ID
+  BuiltinData ->
+  -- | Script hash of the stake validator 
   BuiltinData ->
   -- | Script context.
   BuiltinData ->
   BuiltinUnit
-wallet _ email sc = check True
+wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
+    -- Check that there is a withdrawal and that the correct user ID was provided to the rewarding script in the redeemer
+    check $ trace (show rewardingUserId <> show userId <> show [hasWithdrawal, userIdMatches]) $ hasWithdrawal && userIdMatches 
+  where
+    txInfoL = BI.unsafeDataAsConstr sc & BI.snd
+    txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
+
+    txInfoWrdlL = 
+        txInfo
+          & BI.tail
+          & BI.tail
+          & BI.tail
+          & BI.tail
+          & BI.tail
+          & BI.tail
+
+    txInfoWrdl :: Map BuiltinData BuiltinData
+    txInfoWrdl = txInfoWrdlL 
+                   & BI.head
+                   & unsafeFromBuiltinData
+
+    redeemerMap :: Map BuiltinData BuiltinData
+    redeemerMap = 
+        txInfoWrdlL
+          & BI.tail
+          & BI.tail
+          & BI.tail
+          & BI.head
+          & unsafeFromBuiltinData
+
+    rewardingRedeemer :: BuiltinData
+    Just rewardingRedeemer = AssocMap.lookup (toBuiltinData $ Rewarding $ ScriptCredential sh) redeemerMap
+
+    rewardingUserId = 
+        BI.unsafeDataAsConstr rewardingRedeemer
+          & BI.snd
+          & BI.tail
+          & BI.head
+
+    hasWithdrawal = AssocMap.member (toBuiltinData $ ScriptCredential sh) txInfoWrdl
+    
+    userIdMatches = rewardingUserId == userId
