@@ -121,19 +121,19 @@ wallet ::
   BuiltinData ->
   -- | User ID
   BuiltinData ->
-  -- | Script hash of the stake validator 
+  -- | Script hash of the stake validator
   BuiltinData ->
   -- | Script context.
   BuiltinData ->
   BuiltinUnit
 wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     -- Check that there is a withdrawal and that the correct user ID was provided to the rewarding script in the redeemer
-    check $ trace (show rewardingUserId <> show userId <> show [hasWithdrawal, userIdMatches]) $ hasWithdrawal && userIdMatches 
+    check $ trace (show rewardingUserId <> show userId <> show [hasWithdrawal, userIdMatches]) $ hasWithdrawal && userIdMatches
   where
     txInfoL = BI.unsafeDataAsConstr sc & BI.snd
     txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
 
-    txInfoWrdlL = 
+    txInfoWrdlL =
         txInfo
           & BI.tail
           & BI.tail
@@ -143,12 +143,12 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
           & BI.tail
 
     txInfoWrdl :: Map BuiltinData BuiltinData
-    txInfoWrdl = txInfoWrdlL 
+    txInfoWrdl = txInfoWrdlL
                    & BI.head
                    & unsafeFromBuiltinData
 
     redeemerMap :: Map BuiltinData BuiltinData
-    redeemerMap = 
+    redeemerMap =
         txInfoWrdlL
           & BI.tail
           & BI.tail
@@ -159,12 +159,12 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     rewardingRedeemer :: BuiltinData
     Just rewardingRedeemer = AssocMap.lookup (toBuiltinData $ Rewarding $ ScriptCredential sh) redeemerMap
 
-    rewardingUserId = 
+    rewardingUserId =
         BI.unsafeDataAsConstr rewardingRedeemer
           & BI.snd
           & BI.tail
           & BI.head
 
     hasWithdrawal = AssocMap.member (toBuiltinData $ ScriptCredential sh) txInfoWrdl
-    
+
     userIdMatches = rewardingUserId == userId
