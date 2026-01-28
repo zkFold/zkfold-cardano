@@ -83,7 +83,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
   pubkeyMap = AssocMap.safeFromList
                 [ (toBuiltinData ("7bf595489a0bb158b085e23e7b52bf9891e04538" :: BuiltinByteString), PubKey 65537 0xC4E4A4DD6B8EE5487D08C672C6A124894630294999C991B60BA384117E43639A0F2EC004458B3F5CAFD1EFBC0E48C4A7DEDE55E8386AC7DC140ACD2AFF2C619EB2B5983B84BCC524E407953D4A9960CF41810F21AD6389DC6AE4C2F89646F84A40733620DCEE1930EB9AE101D4645F7007AFC4AE59587DDEE8AA5627CC8E74893D00B239ECC77542582CE002DE293DC5EC7F84008517C86B6B7255FA3DA8DD2346AF1CD30B7ED6F27A1380483281B67D65E955D70D0F94FB5C731ED59B323F89234A79253BEEA90C9F7E87833852B797679B23893D6DC168BB83B6005F9027880C0B12EF9F6AE364D8880C104BE2DB420A60E20C2C5FBC516AFCB7AEA95A2EE1)
-                , (toBuiltinData ("9544d0ff0590f025301643f3275bf68776765822" :: BuiltinByteString), PubKey 65537 0x9FFEBD1039D821B46D6051A96FB65AEB79E065CC77153DEB848506267A4BDD3A5F92A23F7EDBC25742D92091F1DB5FA0EF48FD0E76F128EEA4C0218A15FC1FC6DB3A2F518DBF3288D55A8CF7727C22DEFDFCCD2C489BE8BF0F52C0233B8466B16AD7483AC63BDAE21670632EA062CD9CFD0C12A000C8BED73E9BF5561A1626109B76ECF38D684BC201ED08052AEC610D6F25A90E69B63E18C2F8307CD0A7C89C8A5ABF8B516FE5BF9434E3C3E558C7B0FC96FD351422F3FEE488F6A2B6BBFBB8236AB122650D17C510C2BAFDCB50504BD3C7538708E9911789C4F53692A9978293D5FE467EF8A0E4D17805480F4C1AC562D08187898D5E7C3235A467D50A35F7)
+                , (toBuiltinData ("8630a71bd6ec1c61257a27ff2efd91872ecab1f6" :: BuiltinByteString), PubKey 65537 0xaac9dc0ae5dbbe1acec26608bead70ecf2061cea56b908597b84de2281e59c98a7884daec870bbf88b405b97f73e0c34596e87defe0726d44a1f21eb9044048b739f3f45cb427dabb7acf863a576a753fe30e6aaaecfb0bf407a0223e8dc7bf6f650c453aac535225fd2a640b2d845667509bb3bdb63cacb84e5bc0b0ac82ab48779d0108ddfc647f99c71140a78911b2925cee26f9cf4fa1a3ce9e4c8eefd94ad80ba7cb9c28b5befe1dbdfba0f1713cf94a34ea0765a9ddd10403ccacd77c19ba5c2215e696c7dd8e9d1fa3de2f72ffeda473d6a4dd74f91720d82bbcf423638f1cf9a8dc94f25e4d5ff32efe8d416569af74b1e55dffe98af2d74f51b219f)
                 ]
 
   Just PubKey {..} = AssocMap.lookup (toBuiltinData kid) pubkeyMap
@@ -128,7 +128,7 @@ wallet ::
   BuiltinUnit
 wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     -- Check that there is a withdrawal and that the correct user ID was provided to the rewarding script in the redeemer
-    check $ trace (show rewardingUserId <> show userId <> show [hasWithdrawal, userIdMatches]) $ hasWithdrawal && userIdMatches
+    check $ trace (show [show rewardingUserId, show userId, show hasWithdrawal, show userIdMatches]) $ hasWithdrawal && userIdMatches 
   where
     txInfoL = BI.unsafeDataAsConstr sc & BI.snd
     txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
@@ -156,8 +156,13 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
           & BI.head
           & unsafeFromBuiltinData
 
+    redeemerType :: BuiltinData
+    redeemerType = toBuiltinData $ Rewarding $ ScriptCredential sh
+
     rewardingRedeemer :: BuiltinData
-    Just rewardingRedeemer = AssocMap.lookup (toBuiltinData $ Rewarding $ ScriptCredential sh) redeemerMap
+    rewardingRedeemer = case AssocMap.lookup redeemerType redeemerMap of
+                          Nothing -> traceError (show (AssocMap.keys redeemerMap) <> " :: " <> show redeemerType)
+                          Just r -> r
 
     rewardingUserId =
         BI.unsafeDataAsConstr rewardingRedeemer
