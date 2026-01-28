@@ -128,7 +128,7 @@ wallet ::
   BuiltinUnit
 wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     -- Check that there is a withdrawal and that the correct user ID was provided to the rewarding script in the redeemer
-    check $ trace (show [show rewardingUserId, show userId, show hasWithdrawal, show userIdMatches]) $ hasWithdrawal && userIdMatches 
+    check $ trace (show [show rewardingUserId, show userId, show hasWithdrawal, show userIdMatches]) $ hasWithdrawal && userIdMatches
   where
     txInfoL = BI.unsafeDataAsConstr sc & BI.snd
     txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
@@ -162,7 +162,7 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     rewardingRedeemer :: BuiltinData
     rewardingRedeemer = case AssocMap.lookup redeemerType redeemerMap of
                           Nothing -> traceError (show (AssocMap.keys redeemerMap) <> " :: " <> show redeemerType)
-                          Just r -> r
+                          Just r  -> r
 
     rewardingUserId =
         BI.unsafeDataAsConstr rewardingRedeemer
