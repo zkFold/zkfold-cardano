@@ -129,8 +129,10 @@ wallet ::
 wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     -- Check that there is a withdrawal and that the correct user ID was provided to the rewarding script in the redeemer
     -- check $ trace (show [show rewardingUserId, show userId, show hasWithdrawal, show userIdMatches]) $ hasWithdrawal && userIdMatches 
-    check $ trace (show [show userId, show hasWithdrawal, show userIdMatches]) $ hasWithdrawal && userIdMatches 
+    -- check $ trace (show [show userId, show hasWithdrawal, show userIdMatches]) $ hasWithdrawal && userIdMatches 
+    check $ traceError (show [userId]) 
   where
+{--
     txInfoL = BI.unsafeDataAsConstr sc & BI.snd
     txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
 
@@ -150,7 +152,6 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
 
     hasWithdrawal = AssocMap.member (toBuiltinData $ ScriptCredential sh) txInfoWrdl
 
-{--
     redeemerMap :: Map BuiltinData BuiltinData
     redeemerMap =
         txInfoWrdlL
