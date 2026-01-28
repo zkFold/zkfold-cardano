@@ -56,7 +56,7 @@ data AsterizmClientRedeemer
   = CollectFee
   | Transfer AsterizmTransferMeta
 
-PlutusTx.makeIsDataIndexed ''AsterizmClientRedeemer
+makeIsDataIndexed ''AsterizmClientRedeemer
   [ ('CollectFee, 0)
   , ('Transfer,   1)
   ]
@@ -169,9 +169,9 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
     conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
       head (keys tokensMap) == tokenName
 
-{-# INLINABLE mkAsterizmRelay #-}
-mkAsterizmRelay :: AsterizmSetup -> AsterizmClientRedeemer -> ScriptContext -> Bool
-mkAsterizmRelay AsterizmSetup{..} redeemer ctx =
+{-# INLINABLE mkAsterizmInit #-}
+mkAsterizmInit :: AsterizmSetup -> AsterizmClientRedeemer -> ScriptContext -> Bool
+mkAsterizmInit AsterizmSetup{..} redeemer ctx =
   case redeemer of
     CollectFee -> traceIfFalse "not signed by client" $
                     txSignedBy info acsClientPKH
@@ -203,9 +203,9 @@ mkAsterizmRelay AsterizmSetup{..} redeemer ctx =
         OutputDatum (Datum d) -> d == expected
         _                     -> False
 
-{-# INLINABLE untypedAsterizmRelay #-}
-untypedAsterizmRelay :: AsterizmSetup -> BuiltinData -> BuiltinUnit
-untypedAsterizmRelay setup ctx' = check $ mkAsterizmRelay setup redeemer ctx
+{-# INLINABLE untypedAsterizmInit #-}
+untypedAsterizmInit :: AsterizmSetup -> BuiltinData -> BuiltinUnit
+untypedAsterizmInit setup ctx' = check $ mkAsterizmInit setup redeemer ctx
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -215,9 +215,9 @@ untypedAsterizmRelay setup ctx' = check $ mkAsterizmRelay setup redeemer ctx
 
 type AsterizmClient = PubKeyHash
 
-{-# INLINABLE untypedRelayThreadPolicy #-}
-untypedRelayThreadPolicy :: AsterizmClient -> BuiltinData -> BuiltinUnit
-untypedRelayThreadPolicy clientPkh ctx' = check $ txSignedBy info clientPkh
+{-# INLINABLE untypedInitThreadPolicy #-}
+untypedInitThreadPolicy :: AsterizmClient -> BuiltinData -> BuiltinUnit
+untypedInitThreadPolicy clientPkh ctx' = check $ txSignedBy info clientPkh
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -235,12 +235,12 @@ asterizmClientCompiled setup =
     $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef setup
 
-asterizmRelayCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmRelayCompiled setup =
-    $$(compile [|| untypedAsterizmRelay ||])
+asterizmInitCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmInitCompiled setup =
+    $$(compile [|| untypedAsterizmInit ||])
     `unsafeApplyCode` liftCodeDef setup
 
-asterizmRelayThreadPolicy :: AsterizmClient -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmRelayThreadPolicy pkh =
-    $$(compile [|| untypedRelayThreadPolicy ||])
+asterizmInitThreadPolicy :: AsterizmClient -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmInitThreadPolicy pkh =
+    $$(compile [|| untypedInitThreadPolicy ||])
     `unsafeApplyCode` liftCodeDef pkh

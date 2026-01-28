@@ -9,7 +9,7 @@ import qualified PlutusLedgerApi.V3            as V3
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (bsToHex, hexToBS, policyFromPlutus)
-import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmRelayThreadPolicy)
+import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmInitThreadPolicy)
 
 
 data AsterizmParams = AsterizmParams
@@ -43,7 +43,7 @@ fromAsterizmParams (AsterizmParams pkh cs) = AsterizmSetup
   }
   where
     clientPKH      = V3.PubKeyHash $ V3.toBuiltin pkh
-    clientPolicyId = snd . policyFromPlutus $ asterizmRelayThreadPolicy clientPKH
+    clientPolicyId = snd . policyFromPlutus $ asterizmInitThreadPolicy clientPKH
 
 
 -- | Hex-encoded ByteString wrapper.
