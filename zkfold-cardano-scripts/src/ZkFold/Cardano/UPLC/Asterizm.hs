@@ -9,23 +9,32 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
-import           PlutusLedgerApi.V1          (currencySymbolValueOf, symbols)
-import           PlutusLedgerApi.V1.Value    (lovelaceValueOf, valueOf, withCurrencySymbol)
+-- import           PlutusLedgerApi.V1          (symbols)
+import           PlutusLedgerApi.V1.Value    (currencySymbolValueOf, lovelaceValueOf, valueOf, withCurrencySymbol, symbols)
 import           PlutusLedgerApi.V3          as V3
-import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
+import           PlutusLedgerApi.V3.Contexts (findOwnInput, getContinuingOutputs, ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
                                               unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
+-- import qualified PlutusTx.Foldable           as F
+-- import qualified PlutusTx.Data.List          as L
 import           PlutusTx.Prelude            hiding (toList)
 
 type RelayerPKH = PubKeyHash
+
+-- | Setup parameters for Asterizm's admin
+data AsterizmAdmin = AsterizmAdmin
+  { aaAsterizmPKH :: PubKeyHash
+  , aaAsterizmFee :: Lovelace
+  }
+
+makeLift ''AsterizmAdmin
+makeIsDataIndexed ''AsterizmAdmin [('AsterizmAdmin,0)]
 
 -- | Setup parameters for @asterizmClient@
 data AsterizmSetup = AsterizmSetup
   { acsClientPKH    :: PubKeyHash
   , acsThreadSymbol :: CurrencySymbol
-  , acsClientSymbol :: CurrencySymbol
-  , acsClientFee    :: Integer
   }
 
 makeLift ''AsterizmSetup
@@ -52,13 +61,13 @@ makeIsDataIndexed ''AsterizmTxId         [('AsterizmTxId, 0)]
 makeIsDataIndexed ''TransferHash         [('TransferHash, 0)]
 makeIsDataIndexed ''AsterizmTransferMeta [('AsterizmTransferMeta, 0)]
 
-data AsterizmClientRedeemer
-  = CollectFee
-  | Transfer AsterizmTransferMeta
+data InitThreadRedeemer
+  = Init
+  | Clear
 
-makeIsDataIndexed ''AsterizmClientRedeemer
-  [ ('CollectFee, 0)
-  , ('Transfer,   1)
+makeIsDataIndexed ''InitThreadRedeemer
+  [ ('Init, 0)
+  , ('Clear, 1)
   ]
 
 {-# INLINABLE buildCrosschainHash #-}
@@ -169,61 +178,87 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
     conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
       head (keys tokensMap) == tokenName
 
+-- | Asterizm administrator can consume a UTxO with a thread token only if returned to the
+-- script with its attached datum intact, or if the thread token is burned.
 {-# INLINABLE mkAsterizmInit #-}
-mkAsterizmInit :: AsterizmSetup -> AsterizmClientRedeemer -> ScriptContext -> Bool
-mkAsterizmInit AsterizmSetup{..} redeemer ctx =
-  case redeemer of
-    CollectFee -> traceIfFalse "not signed by client" $
-                    txSignedBy info acsClientPKH
+mkAsterizmInit :: AsterizmAdmin -> CurrencySymbol -> ScriptContext -> Bool
+mkAsterizmInit admin threadSymbol ctx
+  | Just TxInInfo { txInInfoResolved  } <- findOwnInput ctx
+  , [(tn, m)] <- withCurrencySymbol threadSymbol (txOutValue txInInfoResolved) [] toList
+  , m > 0
+  , OutputDatum d <- txOutDatum txInInfoResolved
+  = signedByAdmin && (datumContinued tn d || threadTokenBurned tn)
+  | otherwise = signedByAdmin
+ where
+  info :: TxInfo
+  info = scriptContextTxInfo ctx
 
-    Transfer meta ->
-      let tn  = txIdToTokenName (atmTxId meta)
-          cs  = acsClientSymbol
-          fee = acsClientFee
-          expectedDatum = toBuiltinData meta
-          out = head $ txInfoOutputs info
-          outOk = traceIfFalse "lovelace < fee" (lovelaceValueOf (txOutValue out) >= Lovelace fee)
-                  && traceIfFalse "missing thread token in output"
-                       (valueOf (txOutValue out) cs tn == 1)
-                  && traceIfFalse "wrong/missing inline datum"
-                       (mustHaveInlineDatumEqual expectedDatum out)
-          mintedOk = traceIfFalse "thread token not minted" $
-                       valueOf (mintValueMinted $ txInfoMint info) cs tn == 1
-      in outOk && mintedOk
-  where
-    info :: TxInfo
-    info = scriptContextTxInfo ctx
+  datumContinued :: TokenName -> Datum -> Bool
+  datumContinued tn oldDat
+    | [TxOut { txOutValue = contValue, txOutDatum = contDatum }] <- getContinuingOutputs ctx
+    , valueOf contValue threadSymbol tn == 1
+    , OutputDatum newDat <- contDatum
+    = newDat == oldDat
+    | otherwise = False
 
-    txIdToTokenName :: AsterizmTxId -> TokenName
-    txIdToTokenName (AsterizmTxId bs) = TokenName bs
-
-    mustHaveInlineDatumEqual :: BuiltinData -> TxOut -> Bool
-    mustHaveInlineDatumEqual expected out =
-      case txOutDatum out of
-        OutputDatum (Datum d) -> d == expected
-        _                     -> False
+  threadTokenBurned ::TokenName -> Bool
+  threadTokenBurned tn = valueOf (mintValueBurned $ txInfoMint info) threadSymbol tn == 1
+  
+  signedByAdmin = txSignedBy info (aaAsterizmPKH admin)
 
 {-# INLINABLE untypedAsterizmInit #-}
-untypedAsterizmInit :: AsterizmSetup -> BuiltinData -> BuiltinUnit
-untypedAsterizmInit setup ctx' = check $ mkAsterizmInit setup redeemer ctx
+untypedAsterizmInit :: AsterizmAdmin -> CurrencySymbol -> BuiltinData -> BuiltinUnit
+untypedAsterizmInit admin threadSymbol ctx' = check $ mkAsterizmInit admin threadSymbol ctx
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
 
-    redeemer :: AsterizmClientRedeemer
-    redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
-
-type AsterizmClient = PubKeyHash
-
-{-# INLINABLE untypedInitThreadPolicy #-}
-untypedInitThreadPolicy :: AsterizmClient -> BuiltinData -> BuiltinUnit
-untypedInitThreadPolicy clientPkh ctx' = check $ txSignedBy info clientPkh
+-- | Mint or burn thread token for @asterizmInit@. Minting requires well structured datum
+-- (payload for Asterizm's Relay Contract) and sending the transfer fee.
+{-# INLINABLE mkInitThreadPolicy #-}
+mkInitThreadPolicy :: AsterizmAdmin -> AsterizmSetup -> InitThreadRedeemer -> ScriptContext -> Bool
+mkInitThreadPolicy admin setup redeemer ctx =
+  case redeemer of
+    Init  -> signedByClient && validMintAndDatum && payedTransferFee
+    Clear -> signedByAdmin && validBurn
   where
-    ctx :: ScriptContext
-    ctx = unsafeFromBuiltinData ctx'
-
     info :: TxInfo
     info   = scriptContextTxInfo ctx
+
+    initOut :: TxOut
+    initOut = head $ txInfoOutputs info
+
+    minted :: [(TokenName, Integer)]
+    minted = case lookup (ownCurrencySymbol ctx) (mintValueToMap $ txInfoMint info) of
+      Just ownTokens -> toList ownTokens
+      _ -> traceError "NM"
+
+    signedByClient = txSignedBy info (acsClientPKH setup)
+    signedByAdmin  = txSignedBy info (aaAsterizmPKH admin)
+
+    validMintAndDatum
+      | [(TokenName tn, 1)] <- minted
+      , OutputDatum (Datum d) <- txOutDatum initOut
+      , Just meta <- fromBuiltinData @AsterizmTransferMeta d
+      , let AsterizmTxId tid = atmTxId meta
+      = tid == tn
+      | otherwise = False
+
+    validBurn = case minted of
+      [(_, m)] -> m < 0
+      _        -> False
+
+    payedTransferFee = lovelaceValueOf (txOutValue initOut) >= aaAsterizmFee admin
+
+{-# INLINABLE untypedInitThreadPolicy #-}
+untypedInitThreadPolicy :: AsterizmAdmin -> AsterizmSetup -> BuiltinData -> BuiltinUnit
+untypedInitThreadPolicy admin setup ctx' = check $ mkInitThreadPolicy admin setup redeemer ctx
+ where
+  ctx :: ScriptContext
+  ctx = unsafeFromBuiltinData ctx'
+
+  redeemer :: InitThreadRedeemer
+  redeemer = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
 
 asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmRelayerCompiled pkh =
@@ -235,12 +270,14 @@ asterizmClientCompiled setup =
     $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef setup
 
-asterizmInitCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmInitCompiled setup =
+asterizmInitCompiled :: AsterizmAdmin -> CurrencySymbol -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmInitCompiled admin threadSymbol =
     $$(compile [|| untypedAsterizmInit ||])
-    `unsafeApplyCode` liftCodeDef setup
+    `unsafeApplyCode` liftCodeDef admin
+    `unsafeApplyCode` liftCodeDef threadSymbol
 
-asterizmInitThreadPolicy :: AsterizmClient -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmInitThreadPolicy pkh =
+asterizmInitThreadPolicy :: AsterizmAdmin -> AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmInitThreadPolicy admin setup =
     $$(compile [|| untypedInitThreadPolicy ||])
-    `unsafeApplyCode` liftCodeDef pkh
+    `unsafeApplyCode` liftCodeDef admin
+    `unsafeApplyCode` liftCodeDef setup
