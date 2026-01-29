@@ -10,14 +10,13 @@
 module ZkFold.Cardano.UPLC.Asterizm where
 
 -- import           PlutusLedgerApi.V1          (symbols)
-import           PlutusLedgerApi.V1.Value    (currencySymbolValueOf, lovelaceValueOf, valueOf, withCurrencySymbol, symbols)
+import           PlutusLedgerApi.V1.Value    (currencySymbolValueOf, lovelaceValueOf, symbols, valueOf,
+                                              withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (findOwnInput, getContinuingOutputs, ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
                                               unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
--- import qualified PlutusTx.Foldable           as F
--- import qualified PlutusTx.Data.List          as L
 import           PlutusTx.Prelude            hiding (toList)
 
 type RelayerPKH = PubKeyHash
@@ -203,7 +202,7 @@ mkAsterizmInit admin threadSymbol ctx
 
   threadTokenBurned ::TokenName -> Bool
   threadTokenBurned tn = valueOf (mintValueBurned $ txInfoMint info) threadSymbol tn == 1
-  
+
   signedByAdmin = txSignedBy info (aaAsterizmPKH admin)
 
 {-# INLINABLE untypedAsterizmInit #-}
@@ -231,7 +230,7 @@ mkInitThreadPolicy admin setup redeemer ctx =
     minted :: [(TokenName, Integer)]
     minted = case lookup (ownCurrencySymbol ctx) (mintValueToMap $ txInfoMint info) of
       Just ownTokens -> toList ownTokens
-      _ -> traceError "NM"
+      _              -> traceError "NM"
 
     signedByClient = txSignedBy info (acsClientPKH setup)
     signedByAdmin  = txSignedBy info (aaAsterizmPKH admin)
