@@ -39,7 +39,6 @@ fromAsterizmParams (AsterizmParams pkh cs) = AsterizmSetup
   , acsThreadSymbol = V3.CurrencySymbol $ V3.toBuiltin cs
   }
 
-
 -- | Hex-encoded ByteString wrapper.
 newtype HexByteString = HexByteString ByteString
   deriving newtype (Show, Eq)
