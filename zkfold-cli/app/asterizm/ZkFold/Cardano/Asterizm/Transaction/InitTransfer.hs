@@ -32,7 +32,7 @@ initTransfer (Transaction path coreCfg' sig outFile) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
       adminFile  = assetsPath </> "asterizm-admin.json"
-      
+
   mAsterizmAdminParams  <- decodeFileStrict adminFile
   mAsterizmClientParams <- decodeFileStrict setupFile
 
