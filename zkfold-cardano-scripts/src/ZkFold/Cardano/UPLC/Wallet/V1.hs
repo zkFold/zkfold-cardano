@@ -164,7 +164,10 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     showScriptPurpose :: ScriptPurpose -> BuiltinString
     showScriptPurpose (Spending tx) = "Spending "
     showScriptPurpose (Rewarding scr) = "Rewarding " <> show scr
-    showScriptPurpose _ = "Other script"
+    showScriptPurpose (Minting scr) = "Minting "
+    showScriptPurpose (Certifying i scr) = "Certifying " <> show i
+    showScriptPurpose (Voting scr) = "Voting "
+    showScriptPurpose (Proposing i scr) = "Proposing " <> show i 
 
     rewardingRedeemer :: BuiltinData
     rewardingRedeemer = case AssocMap.lookup redeemerType redeemerMap of
