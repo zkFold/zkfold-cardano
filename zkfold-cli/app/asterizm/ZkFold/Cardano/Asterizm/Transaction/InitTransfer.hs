@@ -3,23 +3,22 @@
 module ZkFold.Cardano.Asterizm.Transaction.InitTransfer where
 
 import           Control.Exception             (throwIO)
-import           Control.Monad                 (forM)
 import           Data.Aeson                    (decodeFileStrict, encodeFile)
+import           Data.Coerce                   (coerce)
 import           Data.Maybe                    (fromJust)
-import           Data.String                   (fromString)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
+import           PlutusLedgerApi.V1.Value      (lovelaceValue)
 import           PlutusLedgerApi.V3            as V3
-import           PlutusTx                      (makeIsDataIndexed)
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (HexByteString (..), fromAsterizmParams)
+import           ZkFold.Cardano.Asterizm.Types (fromAsterizmAdminParams, fromAsterizmClientParams)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
-import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmInitCompiled)
-
+import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmAdmin (..), AsterizmTransferMeta (..), AsterizmTxId (..),
+                                                InitThreadRedeemer (..), asterizmInitCompiled, asterizmInitThreadPolicy)
 
 data Transaction = Transaction
   { curPath        :: !FilePath
@@ -28,47 +27,22 @@ data Transaction = Transaction
   , outFile        :: !FilePath
   }
 
-newtype ChainId = ChainId Integer
-newtype ChainAddress = ChainAddress BuiltinByteString
-newtype AsterizmTxId = AsterizmTxId BuiltinByteString
-newtype TransferHash = TransferHash BuiltinByteString
-
-data AsterizmTransferMeta = AsterizmTransferMeta
-  { atmSrcChainId   :: ChainId
-  , atmSrcAddress   :: ChainAddress
-  , atmDstChainId   :: ChainId
-  , atmDstAddress   :: ChainAddress
-  , atmTxId         :: AsterizmTxId
-  , atmNotifyFlag   :: Bool
-  , atmTransferHash :: TransferHash
-  }
-
-makeIsDataIndexed ''ChainId              [('ChainId, 0)]
-makeIsDataIndexed ''ChainAddress         [('ChainAddress, 0)]
-makeIsDataIndexed ''AsterizmTxId         [('AsterizmTxId, 0)]
-makeIsDataIndexed ''TransferHash         [('TransferHash, 0)]
-makeIsDataIndexed ''AsterizmTransferMeta [('AsterizmTransferMeta, 0)]
-
 initTransfer :: Transaction -> IO ()
 initTransfer (Transaction path coreCfg' sig outFile) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
+      adminFile  = assetsPath </> "asterizm-admin.json"
+      
+  mAsterizmAdminParams  <- decodeFileStrict adminFile
+  mAsterizmClientParams <- decodeFileStrict setupFile
 
-  mAsterizmParams <- decodeFileStrict setupFile
+  asterizmAdmin <- case mAsterizmAdminParams of
+    Just aap -> pure $ fromAsterizmAdminParams aap
+    Nothing  -> throwIO $ userError "Unable to decode Asterizm admin file."
 
-  asterizmSetup <- case mAsterizmParams of
-    Just ap -> pure $ fromAsterizmParams ap
-    Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
-
-  -- threadPolicyId <- case mintingPolicyIdFromCurrencySymbol $ acsThreadSymbol asterizmSetup of
-  --   Right pid -> pure pid
-  --   Left err  -> throwIO . userError $ "Thread-symbol error: " ++ (show err)
-
-  -- mMsg <- decodeFileStrict (assetsPath </> privFile)
-
-  -- msg <- case mMsg of
-  --   Just (HexByteString m) -> pure m
-  --   Nothing                -> throwIO $ userError "Unable to retrieve private Asterizm message."
+  asterizmSetup <- case mAsterizmClientParams of
+    Just acp -> pure $ fromAsterizmClientParams acp
+    Nothing  -> throwIO $ userError "Unable to decode Asterizm setup file."
 
   coreCfg <- CLI.fromCoreConfigAltIO coreCfg'
   skey    <- CLI.fromSigningKeyAltIO sig
@@ -79,48 +53,33 @@ initTransfer (Transaction path coreCfg' sig outFile) = do
       changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash pkh
       w1         = User' skey Nothing changeAddr
 
-  let plutusScript         = asterizmInitCompiled asterizmSetup
+  let plutusPolicy       = asterizmInitThreadPolicy asterizmAdmin asterizmSetup
+      (policy, policyId) = policyFromPlutus plutusPolicy
+
+  let plutusScript         = asterizmInitCompiled asterizmAdmin $
+                             mintingPolicyIdToCurrencySymbol policyId
       transferContract     = scriptFromPlutus @PlutusV3 plutusScript
       transferContractAddr = addressFromScript nid transferContract
 
-  -- let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
-  --     tokenName  = fromJust $ tokenNameFromBS msgHash
-  --     token      = GYToken policyId tokenName
-  --     tokenValue = valueSingleton token 1
-
-  let asterizmFee :: GYValue
-      asterizmFee = valueFromLovelace 10_000_000  --ToDo: make configurable.
-
   let asterizmTransferData :: AsterizmTransferMeta
-      asterizmTransferData = undefined
+      asterizmTransferData = undefined  --ToDo
+
+  let tokenName  = fromJust . tokenNameFromBS . fromBuiltin @BuiltinByteString . coerce $
+                   atmTxId asterizmTransferData
+      token      = GYToken policyId tokenName
+      tokenValue = valueSingleton token 1
+
+  let asterizmFee = either (const mempty) id . valueFromPlutus . lovelaceValue $
+                    aaAsterizmFee asterizmAdmin
+      initTransferValue = asterizmFee <> tokenValue
 
   let inlineDatum = Just (datumFromPlutusData asterizmTransferData, GYTxOutUseInlineDatum @PlutusV3)
 
+  let initRedeemer = redeemerFromPlutusData Init
+
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    -- threadUtxos <- runGYTxQueryMonadIO nid providers $
-    --   utxosWithAsset . GYNonAdaToken threadPolicyId $ fromString "Asterizm Registry"
-
-    -- -- | Assumption: whenever the thread-token is consumed, datum with Relayer's Registry
-    -- -- is updated correctly and pushed to the new UTxO where the thread-token is sent to.
-    -- (threadOref, threadDatum) <- case utxosToList threadUtxos of
-    --   [u] -> pure $ (utxoRef u, utxoOutDatum u)
-    --   _   -> throwIO $ userError "Thread-symbol error: unable to locate thread-token."
-
-    -- relayerCSs <- case threadDatum of
-    --   GYOutDatumInline dat -> pure $ unsafeFromBuiltinData $ datumToPlutus' dat
-    --   _                    -> throwIO $ userError "Unrecoverable relayers' registry."
-
-    -- relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
-    --   Right pids -> pure $ (\pid -> GYNonAdaToken pid tokenName) <$> pids
-    --   Left _     -> throwIO $ userError "Corrupted relayers' registry."
-
-    -- relayerUtxos <- forM relayerTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
-
-    -- relayerOref <- case concat $ map utxosToList relayerUtxos of
-    --   u : _ -> pure $ utxoRef u
-    --   _     -> throwIO $ userError "No relayer has validated client's message yet."
-
-    let skeleton = mustHaveOutput (GYTxOut transferContractAddr asterizmFee inlineDatum Nothing)
+    let skeleton = mustHaveOutput (GYTxOut transferContractAddr initTransferValue inlineDatum Nothing)
+                <> mustMint policy initRedeemer tokenName 1
                 <> mustBeSignedBy pkh
 
     txbody <- runGYTxGameMonadIO nid

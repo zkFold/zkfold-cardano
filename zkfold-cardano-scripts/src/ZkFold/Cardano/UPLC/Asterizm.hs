@@ -182,7 +182,7 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
 {-# INLINABLE mkAsterizmInit #-}
 mkAsterizmInit :: AsterizmAdmin -> CurrencySymbol -> ScriptContext -> Bool
 mkAsterizmInit admin threadSymbol ctx
-  | Just TxInInfo { txInInfoResolved  } <- findOwnInput ctx
+  | Just TxInInfo { txInInfoResolved } <- findOwnInput ctx
   , [(tn, m)] <- withCurrencySymbol threadSymbol (txOutValue txInInfoResolved) [] toList
   , m > 0
   , OutputDatum d <- txOutDatum txInInfoResolved

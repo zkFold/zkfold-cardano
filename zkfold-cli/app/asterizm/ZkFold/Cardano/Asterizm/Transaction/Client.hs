@@ -12,7 +12,7 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (HexByteString (..), fromAsterizmParams)
+import           ZkFold.Cardano.Asterizm.Types (HexByteString (..), fromAsterizmClientParams)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmClientCompiled, buildCrosschainHash)
@@ -35,7 +35,7 @@ clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
   mAsterizmParams <- decodeFileStrict setupFile
 
   asterizmSetup <- case mAsterizmParams of
-    Just ap -> pure $ fromAsterizmParams ap
+    Just ap -> pure $ fromAsterizmClientParams ap
     Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
   threadPolicyId <- case mintingPolicyIdFromCurrencySymbol $ acsThreadSymbol asterizmSetup of
