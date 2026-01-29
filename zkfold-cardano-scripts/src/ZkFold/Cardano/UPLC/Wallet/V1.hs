@@ -161,9 +161,14 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     redeemerType :: BuiltinData
     redeemerType = toBuiltinData $ Rewarding $ ScriptCredential sh
 
+    showScriptPurpose :: ScriptPurpose -> BuiltinString
+    showScriptPurpose (Spending tx) = "Spending "
+    showScriptPurpose (Rewarding scr) = "Rewarding " <> show scr
+    showScriptPurpose _ = "Other script"
+
     rewardingRedeemer :: BuiltinData
     rewardingRedeemer = case AssocMap.lookup redeemerType redeemerMap of
-                          Nothing -> traceError (show (AssocMap.keys redeemerMap) <> " :: " <> show redeemerType)
+                          Nothing -> traceError (show (map (showScriptPurpose . unsafeFromBuiltinData) $ AssocMap.keys redeemerMap) <> " :: " <> show redeemerType)
                           Just r  -> r
 
     rewardingUserId =
