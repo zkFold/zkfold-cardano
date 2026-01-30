@@ -165,7 +165,8 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     showScriptPurpose (Spending tx) = "Spending "
     showScriptPurpose (Rewarding scr) = "Rewarding " <> show scr
     showScriptPurpose (Minting scr) = "Minting "
-    showScriptPurpose (Certifying i scr) = "Certifying " <> show i
+    showScriptPurpose (Certifying i (TxCertRegStaking cred lovelace)) = "Certifying " <> show i <> " " <> show lovelace
+    showScriptPurpose (Certifying i _) = "Certifying OTHER " <> show i
     showScriptPurpose (Voting scr) = "Voting "
     showScriptPurpose (Proposing i scr) = "Proposing " <> show i 
 
