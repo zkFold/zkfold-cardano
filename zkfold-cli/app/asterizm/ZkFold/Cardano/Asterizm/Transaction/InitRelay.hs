@@ -1,9 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module ZkFold.Cardano.Asterizm.Transaction.InitTransfer where
+module ZkFold.Cardano.Asterizm.Transaction.InitRelay where
 
 import           Control.Exception             (throwIO)
 import           Data.Aeson                    (decodeFileStrict, encodeFile)
+import qualified Data.ByteString.Char8         as BS
 import           Data.Coerce                   (coerce)
 import           Data.Maybe                    (fromJust)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
@@ -18,17 +19,29 @@ import           ZkFold.Cardano.Asterizm.Types (fromAsterizmAdminParams, fromAst
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmAdmin (..), AsterizmTransferMeta (..), AsterizmTxId (..),
-                                                InitThreadRedeemer (..), asterizmInitCompiled, asterizmInitThreadPolicy)
+                                                ChainAddress (..), ChainId (..), InitThreadRedeemer (..),
+                                                TransferHash (..), asterizmInitCompiled, asterizmInitThreadPolicy)
 
 data Transaction = Transaction
   { curPath        :: !FilePath
   , coreCfgAlt     :: !CLI.CoreConfigAlt
   , requiredSigner :: !CLI.SigningKeyAlt
+  , srcChainId     :: !Integer
+  , srcAddress     :: !BS.ByteString
+  , dstChainId     :: !Integer
+  , dstAddress     :: !BS.ByteString
+  , asterizmTxId   :: !BS.ByteString
+  , notifyFlag     :: !Bool
+  , transferHash   :: !BS.ByteString
   , outFile        :: !FilePath
   }
 
-initTransfer :: Transaction -> IO ()
-initTransfer (Transaction path coreCfg' sig outFile) = do
+initRelay :: Transaction -> IO ()
+initRelay ( Transaction
+            path coreCfg' sig
+            srcChainId srcAddress dstChainId dstAddress asterizmTxId notifyFlag transferHash  -- Field values for 'AsterizmTransferMeta'
+            outFile
+          ) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
       adminFile  = assetsPath </> "asterizm-admin.json"
@@ -62,7 +75,15 @@ initTransfer (Transaction path coreCfg' sig outFile) = do
       transferContractAddr = addressFromScript nid transferContract
 
   let asterizmTransferData :: AsterizmTransferMeta
-      asterizmTransferData = undefined  --ToDo
+      asterizmTransferData = AsterizmTransferMeta
+        { atmSrcChainId   = ChainId srcChainId
+        , atmSrcAddress   = ChainAddress $ toBuiltin srcAddress
+        , atmDstChainId   = ChainId dstChainId
+        , atmDstAddress   = ChainAddress $ toBuiltin dstAddress
+        , atmTxId         = AsterizmTxId $ toBuiltin asterizmTxId
+        , atmNotifyFlag   = notifyFlag
+        , atmTransferHash = TransferHash $ toBuiltin transferHash
+        }
 
   let tokenName  = fromJust . tokenNameFromBS . fromBuiltin @BuiltinByteString . coerce $
                    atmTxId asterizmTransferData
@@ -71,14 +92,15 @@ initTransfer (Transaction path coreCfg' sig outFile) = do
 
   let asterizmFee = either (const mempty) id . valueFromPlutus . lovelaceValue $
                     aaAsterizmFee asterizmAdmin
-      initTransferValue = asterizmFee <> tokenValue
+
+  let initRelayValue = asterizmFee <> tokenValue
 
   let inlineDatum = Just (datumFromPlutusData asterizmTransferData, GYTxOutUseInlineDatum @PlutusV3)
 
   let initRedeemer = redeemerFromPlutusData Init
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    let skeleton = mustHaveOutput (GYTxOut transferContractAddr initTransferValue inlineDatum Nothing)
+    let skeleton = mustHaveOutput (GYTxOut transferContractAddr initRelayValue inlineDatum Nothing)
                 <> mustMint policy initRedeemer tokenName 1
                 <> mustBeSignedBy pkh
 

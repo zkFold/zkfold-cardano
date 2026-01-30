@@ -200,8 +200,8 @@ mkAsterizmInit admin threadSymbol ctx
     = newDat == oldDat
     | otherwise = False
 
-  threadTokenBurned ::TokenName -> Bool
-  threadTokenBurned tn = valueOf (mintValueBurned $ txInfoMint info) threadSymbol tn == 1
+  threadTokenBurned :: TokenName -> Bool
+  threadTokenBurned tn = valueOf (mintValueBurned $ txInfoMint info) threadSymbol tn > 0
 
   signedByAdmin = txSignedBy info (aaAsterizmPKH admin)
 
@@ -212,8 +212,9 @@ untypedAsterizmInit admin threadSymbol ctx' = check $ mkAsterizmInit admin threa
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
 
--- | Mint or burn thread token for @asterizmInit@. Minting requires well structured datum
--- (payload for Asterizm's Relay Contract) and sending the transfer fee.
+-- | Mint or burn thread token for @asterizmInit@. Checks that token name is "Asterizm's
+-- TxId".  Minting requires well structured datum (payload for Asterizm's Relay Contract)
+-- and sending the transfer fee.
 {-# INLINABLE mkInitThreadPolicy #-}
 mkInitThreadPolicy :: AsterizmAdmin -> AsterizmSetup -> InitThreadRedeemer -> ScriptContext -> Bool
 mkInitThreadPolicy admin setup redeemer ctx =
