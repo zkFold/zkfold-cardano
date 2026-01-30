@@ -18,8 +18,8 @@ import           ZkFold.Cardano.Options.Common
 
 
 data ClientCommand
-    = TransactionAsterizmInit    AsterizmInit.Transaction
-    | TransactionAsterizmClient  AsterizmClient.Transaction
+    = TransactionAsterizmInit AsterizmInit.Transaction
+    | TransactionAsterizmClient AsterizmClient.Transaction
     | TransactionAsterizmMessage AsterizmMessage.Transaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
     | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
@@ -133,7 +133,7 @@ runClientCommand = \case
     TransactionAsterizmMessage   cmd -> ExceptT (Right <$> AsterizmMessage.clientMessage cmd)
     TransactionAsterizmRelayer   cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint   cmd)
     TransactionAsterizmRetrieve  cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
-    TransactionAsterizmInitRelay cmd -> ExceptT (Right <$> AsterizmInitRelay.initRelay cmd)
+    TransactionAsterizmInitRelay cmd -> ExceptT (Right <$> AsterizmInitRelay.initRelay   cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined
