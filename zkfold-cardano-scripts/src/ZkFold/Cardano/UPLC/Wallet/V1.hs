@@ -159,7 +159,8 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
           & unsafeFromBuiltinData
 
     redeemerType :: BuiltinData
-    redeemerType = toBuiltinData $ Rewarding $ ScriptCredential sh
+    --redeemerType = toBuiltinData $ Rewarding $ ScriptCredential sh
+    redeemerType = toBuiltinData $ Certifying 0 $ TxCertRegStaking (ScriptCredential sh) (Just 400000)
 
     showScriptPurpose :: ScriptPurpose -> BuiltinString
     showScriptPurpose (Spending tx) = "Spending "
