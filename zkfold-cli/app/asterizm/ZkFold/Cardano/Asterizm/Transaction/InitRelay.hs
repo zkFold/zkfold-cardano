@@ -16,7 +16,8 @@ import           System.FilePath               ((</>))
 import           ZkFold.Cardano.Asterizm.Types (fromAsterizmAdminParams)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmAdmin (..), AsterizmTransferMeta (..), AsterizmTxId (..),
-                                                ChainAddress (..), ChainId (..), TransferHash (..), asterizmInitCompiled)
+                                                ChainAddress (..), ChainId (..), TransferHash (..),
+                                                asterizmInitCompiled)
 
 data Transaction = Transaction
   { curPath        :: !FilePath
