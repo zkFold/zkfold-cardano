@@ -204,4 +204,175 @@ A TS "operator script" (or backend service) can orchestrate the Asterizm flow as
 
 ## End-to-end Asterizm flow: Cardano (source) -> BSC
 
-(In progress...)
+This section explains how to integrate Cardano as a *source* chain into the Asterizm protocol. For concreteness, let us say that the destination chain is BSC.
+
+The key idea is to replace the usual EVM-side *event emission* (`SendMessageEvent`) with a *Cardano transaction that publishes relay metadata as a datum* at a known script address. A relayer then observes this transaction and performs the standard Asterizm flow on BSC.
+
+### 1. Conceptual mapping: EVM vs Cardano (source side)
+
+| EVM source chain                        | Cardano source chain                             |
+| --------------------------------------- | ------------------------------------------------ |
+| Smart contract emits `SendMessageEvent` | Client submits a transaction to a script address |
+| Event logs are indexed                  | UTxOs at a known script address are indexed      |
+| `txHash` identifies the event           | Cardano `txId` identifies the datum              |
+| Message authenticity often implicit     | Must be *explicitly attested* by relayer         |
+
+On Cardano, there is no *event log*. Instead, *data is published by creating a UTxO*. This UTxO plays the role of “message intent”.
+
+### 2. High-level architecture
+
+#### Components
+
+1. **Client off-chain module (Cardano)**
+   - Builds the relay payload.
+   - Computes a `messageId` (known *before* submission).
+   - Submits a Cardano transaction paying the transfer fee and attaching the payload as datum.
+
+2. **Fee vault validator (Cardano)**
+   - A minimal *Plutus script*.
+   - Accepts ADA from anyone.
+   - Can only be spent by an *Asterizm administrator* (parameterized by a payment key hash).
+   - Does not enforce a datum structure constraint (by design, for now).
+
+3. **Relayer (off-chain)**
+   - Monitors a Cardano chain indexer for outputs sent to the fee vault address.
+   - Extracts the datum.
+   - Attests that the message originated on Cardano.
+   - Executes the normal Asterizm flow on BSC.
+
+### 3. Relay payload (datum) structure
+
+When Cardano is the source chain, the relay payload contains:
+
+- `srcChainId` – Cardano chain id
+- `srcAddress` – *payment key hash* of the Cardano sender
+- `dstChainId` – BSC chain id
+- `dstAddress` – destination client contract on BSC
+- `messageId` – precomputed unique identifier (see below)
+- `transferResultNotifyFlag` – whether an acknowledgement is expected
+- `transferHash` – hash of the payload per Asterizm rules
+
+#### `srcAddress` on Cardano
+
+We recommend:
+
+- *Payment key hash (PKH)* of the wallet that submits the transaction.
+
+This gives a stable, chain-native sender identity analogous to an EVM address.
+
+### 4. Identifiers: `messageId` vs Cardano `txId`
+
+Introduce a `messageId` that is known up-front, and treat the Cardano `txId` as *transport metadata*, e.g. `messageId = blake2b_256(clientNonce || payloadHash || dstChainId || dstAddress || ...)`.
+
+- `messageId`
+  - Computed off-chain by the client.
+  - Used for replay protection on the destination chain.
+- Cardano `txId`
+  - Known only after submission.
+  - Recorded by the relayer when it observes the transaction.
+
+This avoids circular dependencies when building Cardano transactions and works well with wallet-based signing.
+
+### 5. Submitting the source transaction (`init-relay`)
+
+The client publishes the relay intent using **zkfold-cli**:
+
+```shell
+cabal run zkfold-cli:asterizm -- init-relay \
+  --signing-key-file payment.skey \
+  --init-src-chain-id <cardanoChainId> \
+  --init-src-address <payment-key-hash> \
+  --init-dst-chain-id 97 \
+  --init-dst-address <bsc-client-address> \
+  --init-message-id <hex-message-id> \
+  --init-notify-flag true \
+  --init-transfer-hash <hex-transfer-hash>
+```
+
+Note that `--init-src-chain-id` can have a default value equal to the Cardano chain id agreed upon in the Asterizm protocol.
+
+Note also that the transaction:
+- Pays the transfer fee in ADA.
+- Sends it to the *fee vault script address*.
+- Attaches the relay payload as an *inline datum*.
+
+At this point, Cardano has done its job: the “event” has been published.
+
+### 6. Relayer: monitoring Cardano
+
+The relayer continuously monitors a Cardano indexer (e.g. Maestro, Blockfrost, or a local node) for *outputs sent to the fee vault address*.
+
+For each matching UTxO, it:
+1. Reads the datum.
+2. Extracts `messageId`, routing info, and payload hash.
+3. Records the Cardano `txId` off-chain.
+
+> If a *marker token* is added in a later version, the relayer can additionally (or alternatively) monitor for outputs containing that token, which may improve robustness and indexing efficiency.
+
+### 7. Authenticity: why BSC should trust the message
+
+Current model — the relayer (or a small committee of relayers):
+
+- Attests: "observed a Cardano transaction with txId X at the Asterizm fee vault address, carrying datum D.”
+- Signs this statement.
+- Submits it to BSC as part of the Asterizm relay call.
+
+On BSC:
+
+- The relay / initializer contract verifies the relayer signature(s).
+- This establishes that the message genuinely originated on Cardano.
+
+A later version can combine:
+
+- Federation attestation, *plus*
+- Stronger on-chain replay protection and/or partial chain proofs.
+
+### 8. Destination chain (BSC): replay protection
+
+On BSC, the destination logic must:
+
+- Store `messageId -> consumed = true`.
+- Reject any attempt to process a `messageId` more than once.
+
+Note that if a marker token + nonce is introduced on Cardano (in a future version), this may further strengthen replay protection and enforce uniqueness already at the source.
+
+### 9. Full end-to-end flow (Cardano -> BSC)
+
+1. **Client prepares payload**
+   - Computes `messageId` and `transferHash`.
+   
+2. **Client submits Cardano transaction**
+   - Uses `init-relay`.
+   - Pays ADA fee.
+   - Attaches payload as datum.
+   
+3. **Relayer observes Cardano**
+   - Detects UTxO at fee vault address.
+   - Records Cardano `txId`.
+   
+4. **Relayer attests**
+   - Signs observation of Cardano message.
+   
+5. **Relayer calls BSC**
+   - Executes Asterizm relay / initializer flow.
+   
+6. **BSC client receives**
+   - Verifies relayer attestation.
+   - Checks `messageId` replay protection.
+   - Executes `asterizmIzReceive` / `asterizmCiReceive`.
+   
+7. **Optional notification**
+   - If `notifyFlag` is set, result can be reported back off-chain or on-chain.
+
+### 10. Design notes & future extensions
+
+- The fee vault validator does not enforce datum structure. This keeps the script minimal and flexible.
+
+- Marker token (future) — adding a marker/token-minting step could:
+  - Improve relayer indexing.
+  - Enable on-chain uniqueness constraints.
+  - Allow datum structure checks in the minting policy.
+
+- Symmetry with EVM flows — conceptually, this Cardano-source flow mirrors EVM-source Asterizm:
+  - *UTxO creation* replaces *event emission*.
+  - *Relayer attestation* replaces *implicit log trust*.

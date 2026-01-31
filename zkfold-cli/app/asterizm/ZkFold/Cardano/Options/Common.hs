@@ -131,7 +131,7 @@ instance HasPKHParser AsterizmAgent where
 
 ----- :parsing AsterizmTransferMeta : -----
 
-data AsterizmTransferFieldBS = ATFSrcAddress | ATFDstAddress | ATFTxId | ATFTransferHash
+data AsterizmTransferFieldBS = ATFSrcAddress | ATFDstAddress | ATFMsgId | ATFTransferHash
 data AsterizmChainId = ACISrc | ACIDst
 
 class HasBSParser a where
@@ -148,12 +148,12 @@ class HasBSParser a where
 instance HasBSParser AsterizmTransferFieldBS where
   bsParserFlag ATFSrcAddress   = "init-src-address"
   bsParserFlag ATFDstAddress   = "init-dst-address"
-  bsParserFlag ATFTxId         = "init-tx-id"
+  bsParserFlag ATFMsgId        = "init-message-id"
   bsParserFlag ATFTransferHash = "init-transfer-hash"
 
   bsParserHelp ATFSrcAddress   = "Hex-encoded source address."
   bsParserHelp ATFDstAddress   = "Hex-encoded destination address."
-  bsParserHelp ATFTxId         = "Hex-encoded TxId."
+  bsParserHelp ATFMsgId        = "Hex-encoded 'messageId'."
   bsParserHelp ATFTransferHash = "Hex-encoded transfer hash."
 
 class HasChainIdParser a where

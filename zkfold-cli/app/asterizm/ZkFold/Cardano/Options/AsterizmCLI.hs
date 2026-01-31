@@ -119,7 +119,7 @@ pTransactionAsterizmInitRelay path mcfg = do
             <*> pTransferFieldBS ATFSrcAddress
             <*> pTransferChainId ACIDst
             <*> pTransferFieldBS ATFDstAddress
-            <*> pTransferFieldBS ATFTxId
+            <*> pTransferFieldBS ATFMsgId
             <*> pTransferNotifyFlag
             <*> pTransferFieldBS ATFTransferHash
             <*> pOutFile AsterizmInitRelay
