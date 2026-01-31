@@ -17,7 +17,7 @@ import           Network.HTTP.Simple
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (fromAsterizmParams)
+import           ZkFold.Cardano.Asterizm.Types (fromAsterizmClientParams)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.CLI.Parsers    (CoreConfigAlt, fromCoreConfigAltIO)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
@@ -54,7 +54,7 @@ retrieveMsgs (Transaction path coreCfg') = do
       mAsterizmParams <- decodeFileStrict setupFile
 
       asterizmSetup <- case mAsterizmParams of
-        Just ap -> pure $ fromAsterizmParams ap
+        Just ap -> pure $ fromAsterizmClientParams ap
         Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
       let policyId  = snd . policyFromPlutus $ asterizmClientCompiled asterizmSetup
