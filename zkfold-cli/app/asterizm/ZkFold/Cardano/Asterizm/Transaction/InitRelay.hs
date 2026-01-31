@@ -5,8 +5,6 @@ module ZkFold.Cardano.Asterizm.Transaction.InitRelay where
 import           Control.Exception             (throwIO)
 import           Data.Aeson                    (decodeFileStrict, encodeFile)
 import qualified Data.ByteString.Char8         as BS
-import           Data.Coerce                   (coerce)
-import           Data.Maybe                    (fromJust)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
@@ -15,12 +13,10 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (fromAsterizmAdminParams, fromAsterizmClientParams)
-import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
+import           ZkFold.Cardano.Asterizm.Types (fromAsterizmAdminParams)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmAdmin (..), AsterizmTransferMeta (..), AsterizmTxId (..),
-                                                ChainAddress (..), ChainId (..), InitThreadRedeemer (..),
-                                                TransferHash (..), asterizmInitCompiled, asterizmInitThreadPolicy)
+                                                ChainAddress (..), ChainId (..), TransferHash (..), asterizmInitCompiled)
 
 data Transaction = Transaction
   { curPath        :: !FilePath
@@ -43,19 +39,13 @@ initRelay ( Transaction
             outFile
           ) = do
   let assetsPath = path </> "assets"
-      setupFile  = assetsPath </> "asterizm-setup.json"
       adminFile  = assetsPath </> "asterizm-admin.json"
 
   mAsterizmAdminParams  <- decodeFileStrict adminFile
-  mAsterizmClientParams <- decodeFileStrict setupFile
 
   asterizmAdmin <- case mAsterizmAdminParams of
     Just aap -> pure $ fromAsterizmAdminParams aap
     Nothing  -> throwIO $ userError "Unable to decode Asterizm admin file."
-
-  asterizmSetup <- case mAsterizmClientParams of
-    Just acp -> pure $ fromAsterizmClientParams acp
-    Nothing  -> throwIO $ userError "Unable to decode Asterizm setup file."
 
   coreCfg <- CLI.fromCoreConfigAltIO coreCfg'
   skey    <- CLI.fromSigningKeyAltIO sig
@@ -66,11 +56,7 @@ initRelay ( Transaction
       changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash pkh
       w1         = User' skey Nothing changeAddr
 
-  let plutusPolicy       = asterizmInitThreadPolicy asterizmAdmin asterizmSetup
-      (policy, policyId) = policyFromPlutus plutusPolicy
-
-  let plutusScript         = asterizmInitCompiled asterizmAdmin $
-                             mintingPolicyIdToCurrencySymbol policyId
+  let plutusScript         = asterizmInitCompiled asterizmAdmin
       transferContract     = scriptFromPlutus @PlutusV3 plutusScript
       transferContractAddr = addressFromScript nid transferContract
 
@@ -85,23 +71,13 @@ initRelay ( Transaction
         , atmTransferHash = TransferHash $ toBuiltin transferHash
         }
 
-  let tokenName  = fromJust . tokenNameFromBS . fromBuiltin @BuiltinByteString . coerce $
-                   atmTxId asterizmTransferData
-      token      = GYToken policyId tokenName
-      tokenValue = valueSingleton token 1
-
   let asterizmFee = either (const mempty) id . valueFromPlutus . lovelaceValue $
                     aaAsterizmFee asterizmAdmin
 
-  let initRelayValue = asterizmFee <> tokenValue
-
   let inlineDatum = Just (datumFromPlutusData asterizmTransferData, GYTxOutUseInlineDatum @PlutusV3)
 
-  let initRedeemer = redeemerFromPlutusData Init
-
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    let skeleton = mustHaveOutput (GYTxOut transferContractAddr initRelayValue inlineDatum Nothing)
-                <> mustMint policy initRedeemer tokenName 1
+    let skeleton = mustHaveOutput (GYTxOut transferContractAddr asterizmFee inlineDatum Nothing)
                 <> mustBeSignedBy pkh
 
     txbody <- runGYTxGameMonadIO nid
