@@ -54,7 +54,6 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         correctLengths = length v == 16 && length aut == 16
 
-    {--
         verified = and $ flip map (zip v aut) $ \(vi, auti) ->
             let autbs = integerToByteString BigEndian 256 auti
                 digest = sha2_256 (c <> autbs)
@@ -62,8 +61,6 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
                 lhs = myExpMod vi pubE pubN
                 rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
              in lhs == rhs
-    --}
-        verified = True
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
          trace (show [correctLengths, verified, hasZkFoldFee]) $ correctLengths && verified && hasZkFoldFee
