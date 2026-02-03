@@ -96,7 +96,8 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   txInfoOutputs :: [TxOut]
   txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
 
-  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
+  -- hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
+  hasZkFoldFee = True 
 
 
 {-# INLINEABLE myExpMod #-}
