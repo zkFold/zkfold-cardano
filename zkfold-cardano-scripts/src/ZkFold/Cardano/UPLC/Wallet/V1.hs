@@ -18,8 +18,6 @@ import qualified PlutusTx.AssocMap                   as AssocMap
 import           PlutusTx.Builtins
 import qualified PlutusTx.Builtins.Internal          as BI
 import           PlutusTx.Prelude
-import qualified PlutusTx.Prelude                    as Plutus
-import           PlutusTx.Show                       (show)
 
 import           ZkFold.Cardano.UPLC.Wallet.Internal (base64urlEncode)
 import           ZkFold.Cardano.UPLC.Wallet.V1.Types
@@ -63,7 +61,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
              in lhs == rhs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         trace (show [correctLengths, verified, hasZkFoldFee]) $ correctLengths && verified && hasZkFoldFee
+         correctLengths && verified && hasZkFoldFee
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
@@ -93,8 +91,7 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   txInfoOutputs :: [TxOut]
   txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
 
-  -- hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
-  hasZkFoldFee = True 
+  hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
 
 {-# INLINEABLE bits16 #-}
 bits16 :: [Integer]
@@ -103,13 +100,14 @@ bits16 = enumFromTo 0 15
 {-# INLINEABLE myExpMod #-}
 -- TODO: replace with builtin expMod when it's available
 myExpMod :: Integer -> Integer -> Integer -> Integer
-myExpMod base power mod 
-  | power == 65536 = foldl (\b _ -> (b * b) `modInteger` mod ) base bits16 
-  | otherwise = result
+myExpMod base power mod
+  | power == 0 = 1
+  | power == 1 = base `modulo` mod
+  | even power = halfPow2
+  | otherwise = (halfPow2 * base) `modulo` mod
  where
-  bits = integerToByteString BigEndian 2 power 
-  result = fst $ foldl step (1, base) bits16
-  step (acc, b) ix = (if readBit bits ix then (acc * b) `modInteger` mod else acc, (b * b) `modInteger` mod) 
+  halfPow = myExpMod base (power `divide` 2) mod
+  halfPow2 = (halfPow * halfPow) `modulo` mod
 
 {-# INLINEABLE myExp65537Mod #-}
 -- TODO: replace with builtin expMod when it's available
@@ -131,7 +129,7 @@ wallet ::
   BuiltinUnit
 wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     -- Check that there is a withdrawal and that the correct user ID was provided to the rewarding script in the redeemer
-    check $ trace (show [show rewardingUserId, show userId, show hasWithdrawal, show userIdMatches, show (ScriptCredential sh), show (AssocMap.keys txInfoWrdl)]) $ hasWithdrawal && userIdMatches
+    check $ hasWithdrawal && userIdMatches
   where
     txInfoL = BI.unsafeDataAsConstr sc & BI.snd
     txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
@@ -164,18 +162,9 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
     redeemerType :: BuiltinData
     redeemerType = toBuiltinData $ Rewarding $ ScriptCredential sh
 
-    showScriptPurpose :: ScriptPurpose -> BuiltinString
-    showScriptPurpose (Spending tx) = "Spending "
-    showScriptPurpose (Rewarding scr) = "Rewarding " <> show scr
-    showScriptPurpose (Minting scr) = "Minting "
-    showScriptPurpose (Certifying i (TxCertRegStaking cred lovelace)) = "Certifying " <> show i <> " " <> show lovelace
-    showScriptPurpose (Certifying i _) = "Certifying OTHER " <> show i
-    showScriptPurpose (Voting scr) = "Voting "
-    showScriptPurpose (Proposing i scr) = "Proposing " <> show i 
-
     rewardingRedeemer :: BuiltinData
     rewardingRedeemer = case AssocMap.lookup redeemerType redeemerMap of
-                          Nothing -> traceError (show (map (showScriptPurpose . unsafeFromBuiltinData) $ AssocMap.keys redeemerMap) <> " :: " <> show redeemerType)
+                          Nothing -> error () 
                           Just r  -> r
 
     rewardingUserId =
@@ -183,6 +172,5 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
           & BI.snd
           & BI.tail
           & BI.head
-
 
     userIdMatches = rewardingUserId == userId
