@@ -114,7 +114,7 @@ myExpMod base power mod
 myExp65537Mod :: Integer  -> Integer -> Integer
 myExp65537Mod base mod = (base * b65536) `modInteger` mod
  where
-  b65536 = foldl (\b _ -> (b * b) `modInteger` mod ) base bits16 
+  b65536 = foldl (\b _ -> (b * b) `modInteger` mod ) base bits16
 
 {-# INLINEABLE wallet #-}
 wallet ::
@@ -164,7 +164,7 @@ wallet _ userId (unsafeFromBuiltinData -> sh :: ScriptHash) sc =
 
     rewardingRedeemer :: BuiltinData
     rewardingRedeemer = case AssocMap.lookup redeemerType redeemerMap of
-                          Nothing -> error () 
+                          Nothing -> error ()
                           Just r  -> r
 
     rewardingUserId =
