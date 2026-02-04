@@ -57,9 +57,9 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
         verified = and $ flip map (zip v aut) $ \(vi, auti) ->
             let autbs = integerToByteString BigEndian 256 auti
                 digest = sha2_256 (c <> autbs)
-                i = (byteStringToInteger BigEndian digest) `modulo` pubE
-                lhs = myExpMod vi pubE pubN
-                rhs = (auti * myExpMod paddedHash i pubN) `modulo` pubN
+                i = (byteStringToInteger BigEndian digest) `modInteger` pubE
+                lhs = myExp65537Mod vi pubN
+                rhs = (auti * myExpMod paddedHash i pubN) `modInteger` pubN
              in lhs == rhs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
@@ -96,18 +96,27 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   -- hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
   hasZkFoldFee = True 
 
+{-# INLINEABLE bits16 #-}
+bits16 :: [Integer]
+bits16 = enumFromTo 0 15
 
 {-# INLINEABLE myExpMod #-}
 -- TODO: replace with builtin expMod when it's available
 myExpMod :: Integer -> Integer -> Integer -> Integer
-myExpMod base power mod
-  | power == 0 = 1
-  | power == 1 = base `modulo` mod
-  | even power = halfPow2
-  | otherwise = (halfPow2 * base) `modulo` mod
+myExpMod base power mod 
+  | power == 65536 = foldl (\b _ -> (b * b) `modInteger` mod ) base bits16 
+  | otherwise = result
  where
-  halfPow = myExpMod base (power `divide` 2) mod
-  halfPow2 = (halfPow * halfPow) `modulo` mod
+  bits = integerToByteString BigEndian 2 power 
+  result = fst $ foldl step (1, base) bits16
+  step (acc, b) ix = (if readBit bits ix then (acc * b) `modInteger` mod else acc, (b * b) `modInteger` mod) 
+
+{-# INLINEABLE myExp65537Mod #-}
+-- TODO: replace with builtin expMod when it's available
+myExp65537Mod :: Integer  -> Integer -> Integer
+myExp65537Mod base mod = (base * b65536) `modInteger` mod
+ where
+  b65536 = foldl (\b _ -> (b * b) `modInteger` mod ) base bits16 
 
 {-# INLINEABLE wallet #-}
 wallet ::
