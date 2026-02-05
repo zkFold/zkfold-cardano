@@ -11,7 +11,7 @@ import           Prelude
 import           System.Directory              (createDirectoryIfMissing, doesFileExist)
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (AsterizmParams (..))
+import           ZkFold.Cardano.Asterizm.Types (AsterizmClientParams (..))
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.CLI.Utils      (bumpTxOutRef)
@@ -58,12 +58,12 @@ asterizmInit (Transaction path coreCfg' sig nftOref sendTo clientPKHA relayerPKH
 
       clientPKH <- fromPubKeyHashAltIO clientPKHA
 
-      let asterizmParams = AsterizmParams
-            { apClientPKH    = fromBuiltin . getPubKeyHash $ pubKeyHashToPlutus clientPKH
-            , apThreadSymbol = fromBuiltin $ unCurrencySymbol nftCS
+      let asterizmClientParams = AsterizmClientParams
+            { acpClientPKH    = fromBuiltin . getPubKeyHash $ pubKeyHashToPlutus clientPKH
+            , acpThreadSymbol = fromBuiltin $ unCurrencySymbol nftCS
             }
 
-      BL.writeFile setupFile $ encode asterizmParams
+      BL.writeFile setupFile $ encode asterizmClientParams
 
       let nftName     = fromString "Asterizm Registry"
           threadValue = valueSingleton (GYToken nftPolicyId nftName) 1

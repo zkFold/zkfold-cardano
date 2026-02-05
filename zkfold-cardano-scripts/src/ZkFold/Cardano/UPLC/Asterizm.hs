@@ -9,22 +9,24 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
-import           PlutusLedgerApi.V1          (currencySymbolValueOf, symbols)
-import           PlutusLedgerApi.V1.Value    (withCurrencySymbol)
+import           PlutusLedgerApi.V1.Value    (currencySymbolValueOf, symbols, withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
                                               unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
-import           PlutusTx.Builtins           (lengthOfByteString, sha2_256, sliceByteString)
-import           PlutusTx.Foldable           (foldMap)
-import           PlutusTx.Prelude            (Bool (..), BuiltinUnit, Integer, Maybe (..), Ord (..), check, elem, find,
-                                              fmapDefault, head, ($), (&&), (+), (-), (.), (/=), (<$>), (<>), (==),
-                                              (||))
-import           PlutusTx.Trace              (traceError)
-
+import           PlutusTx.Prelude            hiding (toList)
 
 type RelayerPKH = PubKeyHash
+
+-- | Setup parameters for Asterizm's admin
+data AsterizmAdmin = AsterizmAdmin
+  { aaAsterizmPKH :: PubKeyHash
+  , aaAsterizmFee :: Lovelace
+  }
+
+makeLift ''AsterizmAdmin
+makeIsDataIndexed ''AsterizmAdmin [('AsterizmAdmin,0)]
 
 -- | Setup parameters for @asterizmClient@
 data AsterizmSetup = AsterizmSetup
@@ -35,6 +37,35 @@ data AsterizmSetup = AsterizmSetup
 makeLift ''AsterizmSetup
 makeIsDataIndexed ''AsterizmSetup [('AsterizmSetup,0)]
 
+newtype ChainId = ChainId Integer
+newtype ChainAddress = ChainAddress BuiltinByteString
+newtype AsterizmTxId = AsterizmTxId BuiltinByteString
+newtype TransferHash = TransferHash BuiltinByteString
+
+data AsterizmTransferMeta = AsterizmTransferMeta
+  { atmSrcChainId   :: ChainId
+  , atmSrcAddress   :: ChainAddress
+  , atmDstChainId   :: ChainId
+  , atmDstAddress   :: ChainAddress
+  , atmTxId         :: AsterizmTxId
+  , atmNotifyFlag   :: Bool
+  , atmTransferHash :: TransferHash
+  }
+
+makeIsDataIndexed ''ChainId              [('ChainId, 0)]
+makeIsDataIndexed ''ChainAddress         [('ChainAddress, 0)]
+makeIsDataIndexed ''AsterizmTxId         [('AsterizmTxId, 0)]
+makeIsDataIndexed ''TransferHash         [('TransferHash, 0)]
+makeIsDataIndexed ''AsterizmTransferMeta [('AsterizmTransferMeta, 0)]
+
+data InitThreadRedeemer
+  = Init
+  | Clear
+
+makeIsDataIndexed ''InitThreadRedeemer
+  [ ('Init, 0)
+  , ('Clear, 1)
+  ]
 
 {-# INLINABLE buildCrosschainHash #-}
 buildCrosschainHash :: BuiltinByteString -> BuiltinByteString
@@ -144,6 +175,22 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
     conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
       head (keys tokensMap) == tokenName
 
+{-# INLINABLE mkAsterizmInit #-}
+mkAsterizmInit :: AsterizmAdmin -> ScriptContext -> Bool
+mkAsterizmInit admin ctx = signedByAdmin
+ where
+  info :: TxInfo
+  info = scriptContextTxInfo ctx
+
+  signedByAdmin :: Bool
+  signedByAdmin = txSignedBy info (aaAsterizmPKH admin)
+
+{-# INLINABLE untypedAsterizmInit #-}
+untypedAsterizmInit :: AsterizmAdmin -> BuiltinData -> BuiltinUnit
+untypedAsterizmInit admin ctx' = check $ mkAsterizmInit admin ctx
+  where
+    ctx :: ScriptContext
+    ctx = unsafeFromBuiltinData ctx'
 
 asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmRelayerCompiled pkh =
@@ -154,3 +201,8 @@ asterizmClientCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinU
 asterizmClientCompiled setup =
     $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef setup
+
+asterizmInitCompiled :: AsterizmAdmin -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmInitCompiled admin =
+    $$(compile [|| untypedAsterizmInit ||])
+    `unsafeApplyCode` liftCodeDef admin
