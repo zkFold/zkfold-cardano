@@ -68,6 +68,74 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
   check
     $ if scriptInfoIx == 2
       then
+        let
+          (RollupSimpleRed {..}) = redL & BI.head & unsafeFromBuiltinData
+
+          goInputs remInputs availableBridgeValAcc bridgeInInitialAcc mownInput =
+            case remInputs of
+              [] -> (availableBridgeValAcc, bridgeInInitialAcc, mownInput)
+              (i' : is) ->
+                let i = txInInfoResolved i'
+                in -- Input is relevant.
+                    if txOutAddress i == rsrAddress
+                      then
+                        -- Whether it is state input or an input given to satisfy bridge-out requirement.
+                        if valueOf (txOutValue i) rcNftCurrencySymbol rcNftTokenName == 1
+                          then
+                            goInputs is availableBridgeValAcc bridgeInInitialAcc (Just i')
+                          else
+                            case txOutDatum i of
+                                OutputDatum (getDatum -> odatum) ->
+                                    let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
+                                    in case buiStatus odatum' of
+                                            BridgeInInitial l2Addr ->
+                                                goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
+                                            _ ->
+                                                goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                                _ ->
+                                    goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                      else goInputs is availableBridgeValAcc bridgeInInitialAcc mownInput
+
+          (availableBridgeVal, bridgeInInitialList, Just ownInputInfo) = goInputs txInfoInputs mempty [] Nothing
+          ownInputOutput = txInInfoResolved ownInputInfo
+          OutputDatum (unsafeFromBuiltinData . getDatum -> (oldState :: RollupState)) = txOutDatum ownInputOutput
+          ownInputRef = txInInfoOutRef ownInputInfo
+
+          goOutputs remOutputs bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput =
+            case remOutputs of
+              [] -> (bridgeOutReqValAcc, bridgeLeftoverValAcc, bridgeOutListAcc, bridgeInListAcc, mcontinuingOutput)
+              (o : os) ->
+                case txOutDatum o of
+                  NoOutputDatum -> goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
+                  OutputDatumHash _ -> goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
+                  OutputDatum (getDatum -> odatum) ->
+                    if txOutAddress o == rsrAddress
+                      then
+                        if valueOf (txOutValue o) rcNftCurrencySymbol rcNftTokenName == 1
+                          then
+                            goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc (Just o)
+                          else
+                            let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
+                            in if buiORef odatum' == ownInputRef
+                                  then case buiStatus odatum' of
+                                    BridgeIn layer2Address ->
+                                      goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc ((layer2Address : toSymbolicValue' (txOutValue o)) <> bridgeInListAcc) mcontinuingOutput
+                                    BridgeBalance ->
+                                      goOutputs os bridgeOutReqValAcc (txOutValue o <> bridgeLeftoverValAcc) bridgeOutListAcc bridgeInListAcc mcontinuingOutput
+                                    BridgeInInitial _ ->
+                                      traceError "rollupSimpleStake: bridge-in-initial output cannot be part of state update transaction"
+                                    BridgeOut -> traceError "rollupSimpleStake: bridge-out output cannot be to the rollup validator"
+                                  else
+                                    traceError "rollupSimpleStake: output to rollup validator must be either a bridge-in, bridge-balance or state UTxO"
+                      else
+                        if odatum == toBuiltinData (BridgeUtxoInfo ownInputRef BridgeOut)
+                          then
+                            goOutputs os (bridgeOutReqValAcc <> txOutValue o) bridgeLeftoverValAcc ((byteStringToInteger' (addressToBS (txOutAddress o)) : toSymbolicValue' (txOutValue o)) <> bridgeOutListAcc) bridgeInListAcc mcontinuingOutput
+                          else goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
+          (bridgeOutReqVal, bridgeLeftoverVal, bridgeOutList, bridgeInList, Just continuingOutput) = goOutputs txInfoOutputs mempty mempty mempty mempty Nothing
+          OutputDatum (unsafeFromBuiltinData . getDatum -> (newState :: RollupState)) = txOutDatum continuingOutput
+        in
+
         -- Remaining funds are securely returned to the validator.
         traceIfFalse
           "rollupSimpleStake: availableBridgeVal mismatch"
@@ -98,72 +166,10 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
   txInfoInputs = BI.head txInfo & unsafeFromBuiltinData @[TxInInfo]
   txInfoOutputs = txInfo & BI.tail & BI.tail & BI.head & unsafeFromBuiltinData @[TxOut]
   redL = txInfoL & BI.tail
-  RollupSimpleRed {..} = redL & BI.head & unsafeFromBuiltinData
   scriptInfo = redL & BI.tail & BI.head & BI.unsafeDataAsConstr
   scriptInfoIx = BI.fst scriptInfo
   txCertIx = BI.snd scriptInfo & BI.tail & BI.head & BI.unsafeDataAsConstr & BI.fst
   toSymbolicValue' = toSymbolicValue rcMaxOutputAssets
-  goInputs remInputs availableBridgeValAcc bridgeInInitialAcc mownInput =
-    case remInputs of
-      [] -> (availableBridgeValAcc, bridgeInInitialAcc, mownInput)
-      (i' : is) ->
-        let i = txInInfoResolved i'
-         in -- Input is relevant.
-            if txOutAddress i == rsrAddress
-              then
-                -- Whether it is state input or an input given to satisfy bridge-out requirement.
-                if valueOf (txOutValue i) rcNftCurrencySymbol rcNftTokenName == 1
-                  then
-                    goInputs is availableBridgeValAcc bridgeInInitialAcc (Just i')
-                  else
-                    case txOutDatum i of
-                        OutputDatum (getDatum -> odatum) ->
-                            let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
-                             in case buiStatus odatum' of
-                                    BridgeInInitial l2Addr ->
-                                        goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
-                                    _ ->
-                                        goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
-                        _ ->
-                             goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
-              else goInputs is availableBridgeValAcc bridgeInInitialAcc mownInput
-  (availableBridgeVal, bridgeInInitialList, Just ownInputInfo) = goInputs txInfoInputs mempty [] Nothing
-  ownInputOutput = txInInfoResolved ownInputInfo
-  OutputDatum (unsafeFromBuiltinData . getDatum -> (oldState :: RollupState)) = txOutDatum ownInputOutput
-  ownInputRef = txInInfoOutRef ownInputInfo
-  goOutputs remOutputs bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput =
-    case remOutputs of
-      [] -> (bridgeOutReqValAcc, bridgeLeftoverValAcc, bridgeOutListAcc, bridgeInListAcc, mcontinuingOutput)
-      (o : os) ->
-        case txOutDatum o of
-          NoOutputDatum -> goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
-          OutputDatumHash _ -> goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
-          OutputDatum (getDatum -> odatum) ->
-            if txOutAddress o == rsrAddress
-              then
-                if valueOf (txOutValue o) rcNftCurrencySymbol rcNftTokenName == 1
-                  then
-                    goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc (Just o)
-                  else
-                    let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
-                     in if buiORef odatum' == ownInputRef
-                          then case buiStatus odatum' of
-                            BridgeIn layer2Address ->
-                              goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc ((layer2Address : toSymbolicValue' (txOutValue o)) <> bridgeInListAcc) mcontinuingOutput
-                            BridgeBalance ->
-                              goOutputs os bridgeOutReqValAcc (txOutValue o <> bridgeLeftoverValAcc) bridgeOutListAcc bridgeInListAcc mcontinuingOutput
-                            BridgeInInitial _ ->
-                              traceError "rollupSimpleStake: bridge-in-initial output cannot be part of state update transaction"
-                            BridgeOut -> traceError "rollupSimpleStake: bridge-out output cannot be to the rollup validator"
-                          else
-                            traceError "rollupSimpleStake: output to rollup validator must be either a bridge-in, bridge-balance or state UTxO"
-              else
-                if odatum == toBuiltinData (BridgeUtxoInfo ownInputRef BridgeOut)
-                  then
-                    goOutputs os (bridgeOutReqValAcc <> txOutValue o) bridgeLeftoverValAcc ((byteStringToInteger' (addressToBS (txOutAddress o)) : toSymbolicValue' (txOutValue o)) <> bridgeOutListAcc) bridgeInListAcc mcontinuingOutput
-                  else goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
-  (bridgeOutReqVal, bridgeLeftoverVal, bridgeOutList, bridgeInList, Just continuingOutput) = goOutputs txInfoOutputs mempty mempty mempty mempty Nothing
-  OutputDatum (unsafeFromBuiltinData . getDatum -> (newState :: RollupState)) = txOutDatum continuingOutput
   -- Check if `p` is a prefix of `l`.
   checkPrefix p l =
     case p of
