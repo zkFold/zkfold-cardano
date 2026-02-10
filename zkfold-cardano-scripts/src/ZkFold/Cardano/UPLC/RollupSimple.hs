@@ -154,6 +154,9 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
             )
             && checkPrefix bridgeInInitialList bridgeInList
       else
+        let
+          txCertIx = BI.snd scriptInfo & BI.tail & BI.head & BI.unsafeDataAsConstr & BI.fst
+        in
         scriptInfoIx
           == 3
           && txCertIx
@@ -167,7 +170,6 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
   redL = txInfoL & BI.tail
   scriptInfo = redL & BI.tail & BI.head & BI.unsafeDataAsConstr
   scriptInfoIx = BI.fst scriptInfo
-  txCertIx = BI.snd scriptInfo & BI.tail & BI.head & BI.unsafeDataAsConstr & BI.fst
   toSymbolicValue' = toSymbolicValue rcMaxOutputAssets
   -- Check if `p` is a prefix of `l`.
   checkPrefix p l =
