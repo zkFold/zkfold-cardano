@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
@@ -13,20 +13,23 @@ module ZkFold.Cardano.UPLC.RollupSimple (
   module ZkFold.Cardano.UPLC.RollupSimple.Types,
 ) where
 
-import           Data.Function                          ((&))
-import           PlutusLedgerApi.V1                     (valueOf)
-import           PlutusLedgerApi.V3
-import qualified PlutusTx.AssocMap                      as AssocMap
-import qualified PlutusTx.Builtins.Internal             as BI
-import           PlutusTx.Prelude                       hiding (toList)
-
-import           ZkFold.Cardano.OnChain.BLS12_381       (toF)
-import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
-import           ZkFold.Cardano.UPLC.RollupSimple.Types (BridgeUtxoInfo (..), BridgeUtxoStatus (..),
-                                                         RollupConfiguration (..), RollupSimpleRed (..),
-                                                         RollupState (..))
-import           ZkFold.Cardano.UPLC.RollupSimple.Utils
-import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
+import Data.Function ((&))
+import PlutusLedgerApi.V1 (valueOf)
+import PlutusLedgerApi.V3
+import PlutusTx.AssocMap qualified as AssocMap
+import PlutusTx.Builtins.Internal qualified as BI
+import PlutusTx.Prelude hiding (toList)
+import ZkFold.Cardano.OnChain.BLS12_381 (toF)
+import ZkFold.Cardano.OnChain.Plonkup (PlonkupPlutus)
+import ZkFold.Cardano.UPLC.RollupSimple.Types (
+  BridgeUtxoInfo (..),
+  BridgeUtxoStatus (..),
+  RollupConfiguration (..),
+  RollupSimpleRed (..),
+  RollupState (..),
+ )
+import ZkFold.Cardano.UPLC.RollupSimple.Utils
+import ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
 
 {-# INLINEABLE rollupSimple #-}
 rollupSimple ::
@@ -76,23 +79,22 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
               [] -> (availableBridgeValAcc, bridgeInInitialAcc, mownInput)
               (i' : is) ->
                 let i = txInInfoResolved i'
-                in -- Input is relevant.
+                 in -- Input is relevant.
                     if txOutAddress i == rsrAddress
                       then
                         -- Whether it is state input or an input given to satisfy bridge-out requirement.
                         if valueOf (txOutValue i) rcNftCurrencySymbol rcNftTokenName == 1
                           then
                             goInputs is availableBridgeValAcc bridgeInInitialAcc (Just i')
-                          else
-                            case txOutDatum i of
-                                OutputDatum (getDatum -> odatum) ->
-                                  case fromBuiltinData odatum of
-                                          Just (BridgeInInitial l2Addr) ->
-                                              goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
-                                          _ ->
-                                              goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                          else case txOutDatum i of
+                            OutputDatum (getDatum -> odatum) ->
+                              case fromBuiltinData odatum of
+                                Just (BridgeInInitial l2Addr) ->
+                                  goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
                                 _ ->
-                                    goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                                  goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                            _ ->
+                              goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
                       else goInputs is availableBridgeValAcc bridgeInInitialAcc mownInput
 
           (availableBridgeVal, bridgeInInitialList, Just ownInputInfo) = goInputs txInfoInputs mempty [] Nothing
@@ -115,7 +117,7 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                             goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc (Just o)
                           else
                             let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
-                            in if buiORef odatum' == ownInputRef
+                             in if buiORef odatum' == ownInputRef
                                   then case buiStatus odatum' of
                                     BridgeIn layer2Address ->
                                       goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc ((layer2Address : toSymbolicValue' (txOutValue o)) <> bridgeInListAcc) mcontinuingOutput
@@ -133,34 +135,33 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                           else goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
           (bridgeOutReqVal, bridgeLeftoverVal, bridgeOutList, bridgeInList, Just continuingOutput) = goOutputs txInfoOutputs mempty mempty mempty mempty Nothing
           OutputDatum (unsafeFromBuiltinData . getDatum -> (newState :: RollupState)) = txOutDatum continuingOutput
-        in
-
-        -- Remaining funds are securely returned to the validator.
-        traceIfFalse
-          "rollupSimpleStake: availableBridgeVal mismatch"
-          ( availableBridgeVal
-              == (bridgeOutReqVal <> bridgeLeftoverVal)
-          )
-          && traceIfFalse
-            "rollupSimpleStake: proof verification failed"
-            ( verify @PlonkupPlutus
-                rcSetupBytes
-                ( toF
-                    <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
-                    <> (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
-                    <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
-                )
-                rsrProofBytes
+         in
+          -- Remaining funds are securely returned to the validator.
+          traceIfFalse
+            "rollupSimpleStake: availableBridgeVal mismatch"
+            ( availableBridgeVal
+                == (bridgeOutReqVal <> bridgeLeftoverVal)
             )
+            && traceIfFalse
+              "rollupSimpleStake: proof verification failed"
+              ( verify @PlonkupPlutus
+                  rcSetupBytes
+                  ( toF
+                      <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
+                      <> (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
+                      <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
+                  )
+                  rsrProofBytes
+              )
             && checkPrefix bridgeInInitialList bridgeInList
       else
         let
           txCertIx = BI.snd scriptInfo & BI.tail & BI.head & BI.unsafeDataAsConstr & BI.fst
-        in
-        scriptInfoIx
-          == 3
-          && txCertIx
-          == 0 -- Allow for registering of stake validator.
+         in
+          scriptInfoIx
+            == 3
+            && txCertIx
+            == 0 -- Allow for registering of stake validator.
  where
   quot = (`quotient` (1 + 3 * rcMaxOutputAssets))
   txInfoL = BI.unsafeDataAsConstr scData & BI.snd
@@ -177,5 +178,5 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
       [] -> True
       (x : xs) ->
         case l of
-          []       -> False
+          [] -> False
           (y : ys) -> (x == y) && checkPrefix xs ys
