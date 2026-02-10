@@ -85,6 +85,7 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                 )
                 rsrProofBytes
             )
+            && checkPrefix bridgeInInitialList bridgeInList
       else
         scriptInfoIx
           == 3
@@ -102,9 +103,9 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
   scriptInfoIx = BI.fst scriptInfo
   txCertIx = BI.snd scriptInfo & BI.tail & BI.head & BI.unsafeDataAsConstr & BI.fst
   toSymbolicValue' = toSymbolicValue rcMaxOutputAssets
-  goInputs remInputs availableBridgeValAcc mownInput =
+  goInputs remInputs availableBridgeValAcc bridgeInInitialAcc mownInput =
     case remInputs of
-      [] -> (availableBridgeValAcc, mownInput)
+      [] -> (availableBridgeValAcc, bridgeInInitialAcc, mownInput)
       (i' : is) ->
         let i = txInInfoResolved i'
          in -- Input is relevant.
@@ -113,10 +114,20 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                 -- Whether it is state input or an input given to satisfy bridge-out requirement.
                 if valueOf (txOutValue i) rcNftCurrencySymbol rcNftTokenName == 1
                   then
-                    goInputs is availableBridgeValAcc (Just i')
-                  else goInputs is (availableBridgeValAcc <> txOutValue i) mownInput
-              else goInputs is availableBridgeValAcc mownInput
-  (availableBridgeVal, Just ownInputInfo) = goInputs txInfoInputs mempty Nothing
+                    goInputs is availableBridgeValAcc bridgeInInitialAcc (Just i')
+                  else
+                    case txOutDatum i of
+                        OutputDatum (getDatum -> odatum) ->
+                            let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
+                             in case buiStatus odatum' of
+                                    BridgeInInitial l2Addr ->
+                                        goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
+                                    _ ->
+                                        goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                        _ ->
+                             goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+              else goInputs is availableBridgeValAcc bridgeInInitialAcc mownInput
+  (availableBridgeVal, bridgeInInitialList, Just ownInputInfo) = goInputs txInfoInputs mempty [] Nothing
   ownInputOutput = txInInfoResolved ownInputInfo
   OutputDatum (unsafeFromBuiltinData . getDatum -> (oldState :: RollupState)) = txOutDatum ownInputOutput
   ownInputRef = txInInfoOutRef ownInputInfo
@@ -141,6 +152,8 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                               goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc ((layer2Address : toSymbolicValue' (txOutValue o)) <> bridgeInListAcc) mcontinuingOutput
                             BridgeBalance ->
                               goOutputs os bridgeOutReqValAcc (txOutValue o <> bridgeLeftoverValAcc) bridgeOutListAcc bridgeInListAcc mcontinuingOutput
+                            BridgeInInitial _ ->
+                              traceError "rollupSimpleStake: bridge-in-initial output cannot be part of state update transaction"
                             BridgeOut -> traceError "rollupSimpleStake: bridge-out output cannot be to the rollup validator"
                           else
                             traceError "rollupSimpleStake: output to rollup validator must be either a bridge-in, bridge-balance or state UTxO"
@@ -151,3 +164,11 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                   else goOutputs os bridgeOutReqValAcc bridgeLeftoverValAcc bridgeOutListAcc bridgeInListAcc mcontinuingOutput
   (bridgeOutReqVal, bridgeLeftoverVal, bridgeOutList, bridgeInList, Just continuingOutput) = goOutputs txInfoOutputs mempty mempty mempty mempty Nothing
   OutputDatum (unsafeFromBuiltinData . getDatum -> (newState :: RollupState)) = txOutDatum continuingOutput
+  -- Check if `p` is a prefix of `l`.
+  checkPrefix p l =
+    case p of
+      [] -> True
+      (x : xs) ->
+        case l of
+          []       -> False
+          (y : ys) -> (x == y) && checkPrefix xs ys

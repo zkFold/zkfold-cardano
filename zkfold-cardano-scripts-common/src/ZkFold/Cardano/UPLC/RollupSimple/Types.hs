@@ -48,10 +48,12 @@ data BridgeUtxoStatus
     BridgeOut
   | -- | Already bridged in UTxO is getting updated, usually for satisfying bridge-out requirement.
     BridgeBalance
+  | -- | Initial bridge-in UTxO created by user, waiting to be processed by aggregator.
+    BridgeInInitial Integer
   deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
 
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''BridgeUtxoStatus [('BridgeIn, 0), ('BridgeOut, 1), ('BridgeBalance, 2)]
+PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''BridgeUtxoStatus [('BridgeIn, 0), ('BridgeOut, 1), ('BridgeBalance, 2), ('BridgeInInitial, 3)]
 
 data BridgeUtxoInfo = BridgeUtxoInfo
   { buiORef   :: TxOutRef
