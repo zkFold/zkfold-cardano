@@ -86,12 +86,11 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                           else
                             case txOutDatum i of
                                 OutputDatum (getDatum -> odatum) ->
-                                    let odatum' :: BridgeUtxoInfo = unsafeFromBuiltinData odatum
-                                    in case buiStatus odatum' of
-                                            BridgeInInitial l2Addr ->
-                                                goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
-                                            _ ->
-                                                goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
+                                  case fromBuiltinData odatum of
+                                          Just (BridgeInInitial l2Addr) ->
+                                              goInputs is availableBridgeValAcc ((l2Addr : toSymbolicValue' (txOutValue i)) <> bridgeInInitialAcc) mownInput
+                                          _ ->
+                                              goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
                                 _ ->
                                     goInputs is (availableBridgeValAcc <> txOutValue i) bridgeInInitialAcc mownInput
                       else goInputs is availableBridgeValAcc bridgeInInitialAcc mownInput
