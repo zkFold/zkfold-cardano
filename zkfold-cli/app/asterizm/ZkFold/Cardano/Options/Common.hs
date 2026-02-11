@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Options.Common where
 
 import qualified Cardano.Api                        as Api
-import           Cardano.CLI.EraBased.Common.Option (parseFilePath, readerFromParsecParser)
+import           Cardano.CLI.EraBased.Common.Option (parseFilePath)
 import           Control.Exception                  (throwIO)
 import qualified Data.ByteString.Base16             as B16
 import qualified Data.ByteString.Char8              as BS
@@ -31,17 +31,6 @@ fromPubKeyHashAltIO pkha = case pkha of
   PaymentVerKeyUseFile fp -> do
     vkey <- readPaymentVerificationKey fp
     return $ pubKeyHash vkey
-
------ :parsing Registry Address: -----
-
-pRegistryAddress :: Parser GYAddress
-pRegistryAddress =
-    Opt.option (readerFromParsecParser $ fmap GY.addressFromApi Api.parseAddressAny) $
-        mconcat
-            [ Opt.long "registry-address"
-            , Opt.metavar "ADDRESS"
-            , Opt.help "Address to park relayer's registry at."
-            ]
 
 ----- :read ByteString: -----
 
@@ -129,62 +118,9 @@ instance HasPKHParser AsterizmAgent where
   vkfParserHelp Client  = "Client's payment verification-key file."
   vkfParserHelp Relayer = "Relayer's payment verification-key file."
 
------ :parsing AsterizmTransferMeta : -----
-
-data AsterizmTransferFieldBS = ATFSrcAddress | ATFDstAddress | ATFMsgId | ATFTransferHash
-data AsterizmChainId = ACISrc | ACIDst
-
-class HasBSParser a where
-  bsParserFlag :: a -> String
-  bsParserHelp :: a -> String
-
-  pTransferFieldBS :: a -> Parser BS.ByteString
-  pTransferFieldBS x = Opt.option hexReader
-    ( Opt.long (bsParserFlag x)
-        <> Opt.metavar "HEX"
-        <> Opt.help (bsParserHelp x)
-    )
-
-instance HasBSParser AsterizmTransferFieldBS where
-  bsParserFlag ATFSrcAddress   = "init-src-address"
-  bsParserFlag ATFDstAddress   = "init-dst-address"
-  bsParserFlag ATFMsgId        = "init-message-id"
-  bsParserFlag ATFTransferHash = "init-transfer-hash"
-
-  bsParserHelp ATFSrcAddress   = "Hex-encoded source address."
-  bsParserHelp ATFDstAddress   = "Hex-encoded destination address."
-  bsParserHelp ATFMsgId        = "Hex-encoded 'messageId'."
-  bsParserHelp ATFTransferHash = "Hex-encoded transfer hash."
-
-class HasChainIdParser a where
-  chainIdFlag :: a -> String
-  chainIdHelp :: a -> String
-
-  pTransferChainId :: a -> Parser Integer
-  pTransferChainId x = Opt.option Opt.auto
-    ( Opt.long (chainIdFlag x)
-        <> Opt.metavar "INTEGER"
-        <> Opt.help (chainIdHelp x)
-    )
-
-instance HasChainIdParser AsterizmChainId where
-  chainIdFlag ACISrc = "init-src-chain-id"
-  chainIdFlag ACIDst = "init-dst-chain-id"
-
-  chainIdHelp ACISrc = "Source chain id (integer)."
-  chainIdHelp ACIDst = "Destination chain id (integer)."
-
-pTransferNotifyFlag :: Parser Bool
-pTransferNotifyFlag =
-  Opt.option Opt.auto
-      ( Opt.long "init-notify-flag"
-          <> Opt.metavar "BOOL"
-          <> Opt.help "Whether to notify (bool)."
-      )
-
 ----- :parsing OutFile: -----
 
-data StageTx = AsterizmInit | AsterizmRelayer | AsterizmClient | AsterizmInitRelay
+data StageTx = AsterizmInit | AsterizmRelayer | AsterizmClient
 
 class HasFileParser a where
   outFileName :: a -> String
@@ -201,17 +137,14 @@ class HasFileParser a where
     )
 
 instance HasFileParser StageTx where
-  outFileFlag AsterizmInit      = "init-out-file"
-  outFileFlag AsterizmRelayer   = "relayer-out-file"
-  outFileFlag AsterizmClient    = "client-out-file"
-  outFileFlag AsterizmInitRelay = "init-relay-out-file"
+  outFileFlag AsterizmInit    = "init-out-file"
+  outFileFlag AsterizmRelayer = "relayer-out-file"
+  outFileFlag AsterizmClient  = "client-out-file"
 
-  outFileName AsterizmInit      = "asterizm-init.tx"
-  outFileName AsterizmRelayer   = "asterizm-relayer-mint.tx"
-  outFileName AsterizmClient    = "asterizm-client-mint.tx"
-  outFileName AsterizmInitRelay = "asterizm-init-relay.tx"
+  outFileName AsterizmInit    = "asterizm-init.tx"
+  outFileName AsterizmRelayer = "asterizm-relayer-mint.tx"
+  outFileName AsterizmClient  = "asterizm-client-mint.tx"
 
-  outFileHelp AsterizmInit      = "Path (relative to 'assets/') for Asterizm initialization tx out-file."
-  outFileHelp AsterizmRelayer   = "Path (relative to 'assets/') for Asterizm relayer-mint tx out-file."
-  outFileHelp AsterizmClient    = "Path (relative to 'assets/') for Asterizm client-mint tx out-file."
-  outFileHelp AsterizmInitRelay = "Path (relative to 'assets/') for Asterizm init-relay tx out-file."
+  outFileHelp AsterizmInit    = "Path (relative to 'assets/') for Asterizm initialization tx out-file."
+  outFileHelp AsterizmRelayer = "Path (relative to 'assets/') for Asterizm relayer-mint tx out-file."
+  outFileHelp AsterizmClient  = "Path (relative to 'assets/') for Asterizm client-mint tx out-file."

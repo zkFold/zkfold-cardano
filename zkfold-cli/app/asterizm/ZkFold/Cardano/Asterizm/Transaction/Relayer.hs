@@ -10,7 +10,7 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (HexByteString (..))
+import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..))
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmRelayerCompiled)
@@ -41,8 +41,8 @@ relayerMint (Transaction path coreCfg' sig sendTo pubFile outFile) = do
   mMsgHash <- decodeFileStrict (assetsPath </> pubFile)
 
   msgHash <- case mMsgHash of
-    Just (HexByteString mh) -> pure mh
-    Nothing                 -> throwIO $ userError "Unable to retrieve public message hash."
+    Just (AsterizmMessage mh) -> pure mh
+    Nothing                   -> throwIO $ userError "Unable to retrieve public message hash."
 
   let redeemer = redeemerFromPlutusData $ toBuiltin msgHash
 

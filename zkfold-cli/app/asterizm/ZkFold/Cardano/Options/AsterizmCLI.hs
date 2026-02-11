@@ -1,18 +1,17 @@
 module ZkFold.Cardano.Options.AsterizmCLI where
 
-import           Cardano.Api                                   (Doc, ExceptT (..))
-import           Cardano.CLI.Parser                            (commandWithMetavar)
-import           GeniusYield.GYConfig                          (GYCoreConfig)
-import           Options.Applicative                           (Parser, ParserInfo, ParserPrefs, asum, many, (<**>))
-import qualified Options.Applicative                           as Opt
+import           Cardano.Api                                  (Doc, ExceptT (..))
+import           Cardano.CLI.Parser                           (commandWithMetavar)
+import           GeniusYield.GYConfig                         (GYCoreConfig)
+import           Options.Applicative                          (Parser, ParserInfo, ParserPrefs, asum, many, (<**>))
+import qualified Options.Applicative                          as Opt
 import           Prelude
 
-import qualified ZkFold.Cardano.Asterizm.Transaction.Client    as AsterizmClient
-import qualified ZkFold.Cardano.Asterizm.Transaction.Init      as AsterizmInit
-import qualified ZkFold.Cardano.Asterizm.Transaction.InitRelay as AsterizmInitRelay
-import qualified ZkFold.Cardano.Asterizm.Transaction.Message   as AsterizmMessage
-import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer   as AsterizmRelayer
-import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve  as AsterizmRetrieve
+import qualified ZkFold.Cardano.Asterizm.Transaction.Client   as AsterizmClient
+import qualified ZkFold.Cardano.Asterizm.Transaction.Init     as AsterizmInit
+import qualified ZkFold.Cardano.Asterizm.Transaction.Message  as AsterizmMessage
+import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer  as AsterizmRelayer
+import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve as AsterizmRetrieve
 import           ZkFold.Cardano.CLI.Parsers
 import           ZkFold.Cardano.Options.Common
 
@@ -23,7 +22,6 @@ data ClientCommand
     | TransactionAsterizmMessage AsterizmMessage.Transaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
     | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
-    | TransactionAsterizmInitRelay AsterizmInitRelay.Transaction
 
 opts :: FilePath -> Maybe GYCoreConfig -> ParserInfo ClientCommand
 opts path mcfg =
@@ -48,22 +46,16 @@ pCmds path mcfg = do
         , TransactionAsterizmMessage   <$> pTransactionAsterizmMessage path
         , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer path mcfg
         , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve path mcfg
-        , TransactionAsterizmInitRelay <$> pTransactionAsterizmInitRelay path mcfg
         ]
 
 pTransactionAsterizmInit :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmInit.Transaction
-pTransactionAsterizmInit path mcfg = do
+pTransactionAsterizmInit path _mcfg = do
     subParser "init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
         AsterizmInit.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
-            <*> pTxInOref
-            <*> pRegistryAddress
-            <*> pPubKeyHashAlt Client
+            <$> pPubKeyHashAlt Client
             <*> many (pPubKeyHashAlt Relayer)
-            <*> pOutFile AsterizmInit
 
 pTransactionAsterizmClient :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmClient.Transaction
 pTransactionAsterizmClient path mcfg = do
@@ -107,23 +99,6 @@ pTransactionAsterizmRetrieve path mcfg = do
         AsterizmRetrieve.Transaction path
             <$> pGYCoreConfig mcfg
 
-pTransactionAsterizmInitRelay :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmInitRelay.Transaction
-pTransactionAsterizmInitRelay path mcfg = do
-    subParser "init-relay" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        AsterizmInitRelay.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
-            <*> pTransferChainId ACISrc
-            <*> pTransferFieldBS ATFSrcAddress
-            <*> pTransferChainId ACIDst
-            <*> pTransferFieldBS ATFDstAddress
-            <*> pTransferFieldBS ATFMsgId
-            <*> pTransferNotifyFlag
-            <*> pTransferFieldBS ATFTransferHash
-            <*> pOutFile AsterizmInitRelay
-
 data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
@@ -133,7 +108,6 @@ runClientCommand = \case
     TransactionAsterizmMessage   cmd -> ExceptT (Right <$> AsterizmMessage.clientMessage cmd)
     TransactionAsterizmRelayer   cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint   cmd)
     TransactionAsterizmRetrieve  cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
-    TransactionAsterizmInitRelay cmd -> ExceptT (Right <$> AsterizmInitRelay.initRelay   cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

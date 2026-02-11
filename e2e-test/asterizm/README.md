@@ -22,7 +22,7 @@ In our current Cardano implementation, the destination-side has two key actions:
 
 - Relayer attestation on Cardano:  `asterizm relayer`.  A Cardano relayer mints a token that *certifies a message hash*.  The token name encodes the message hash.
 - Client reveal on Cardano: `asterizm client`.  The Cardano client consumes a UTxO containing the relayer token and creates an on-chain UTxO that contains the full plaintext message as datum, while validating:
-   - the relayer is in the on-chain *Registry* (set up by `init`).
+   - the relayer's policy ID is in the set of allowed relayers (embedded in the client's minting policy at setup time).
    - the plaintext message matches the certified hash in the relayer token-name.
 
 (Note that an Asterizm-style destination "receive" that consumes/processes the message and prevents replay should be part of the final implementation.)
@@ -66,32 +66,27 @@ If EVM-side Asterizm expects a relay confirmation on the source chain:  relayer 
 
 ##### (c2) Cardano: initialize destination protocol (one-time per client) — `init`
 
-Before any messages can be certified and revealed, we must initialize the *Registry* of trusted relayers on Cardano.  Command:  `asterizm init`.  What this does:
+Before any messages can be certified and revealed, we must configure the set of trusted relayers.  Command:  `asterizm init`.  What this does:
 
-- Creates a *Registry* UTxO on-chain that contains a datum listing allowed relayer policy IDs (whitelist).
-- Mints a thread token (NFT) used to uniquely identify the Registry UTxO.
-- Writes `./assets/asterizm-setup.json`, which contains parameters (client PKH + thread-token policy id) used by the client minting policy.  (Note that this bootstraps the destination client's minting policy so later `client` actions can validate relayers against the Registry.)
+- Computes the policy IDs for each allowed relayer based on their public key hash.
+- Writes `./assets/asterizm-setup.json`, which contains parameters (client PKH + list of allowed relayer policy IDs) used by the client minting policy.
+
+Note: This is an **off-chain** operation. The allowed relayers are embedded directly in the client's minting policy, eliminating the need for an on-chain registry.
 
 **Typical usage (once)**:
 ```shell
 cabal run zkfold-cli:asterizm -- init \
-  --signing-key-file payment.skey \
-  --tx-oref <TxId#TxIx> \
-  --registry-address <addr...> \
   --client-vkey-file client.vkey \
   --relayer-vkey-file relayer.vkey
 ```
 
 **Inputs to understand**:
-- `--tx-oref`: a UTxO reference used as entropy to mint the thread token (singleton).
-- `--registry-address`: where the Registry UTxO lives.
 - `--relayer-*`: defines the set of valid relayers (do not leave this empty).
 
 **Outputs**:
-- On-chain Registry UTxO + thread token.
 - Local `assets/asterizm-setup.json` (needed for later steps).
 
-At a high-level, we can view this as "deploy / configure destination contract + whitelist relayers".
+At a high-level, we can view this as "configure destination client + whitelist relayers".
 
 ##### (c3) Cardano: generate message artifacts — `message`
 
@@ -145,9 +140,9 @@ cabal run zkfold-cli:asterizm -- client \
 ```
 
 What it does:
-- Builds a tx that spends a UTxO containing the relayer token.
+- Builds a tx that references a UTxO containing the relayer token.
 - Validates:
-  1. relayer's policy id is in the on-chain Registry (thread-token points to it)
+  1. relayer's policy id is in the allowed set (embedded in client's minting policy)
   2. `hash(message) == hash in relayer token-name`
 - Mints a client token and creates an output containing the message as datum ("reveal").
 

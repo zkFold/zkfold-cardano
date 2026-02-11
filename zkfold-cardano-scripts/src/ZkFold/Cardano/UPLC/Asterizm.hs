@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
@@ -9,63 +10,14 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
-import           PlutusLedgerApi.V1.Value    (currencySymbolValueOf, symbols, withCurrencySymbol)
+import           PlutusLedgerApi.V1.Value    (symbols, withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
-import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, makeLift,
-                                              unsafeApplyCode)
+import           PlutusTx                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
 import           PlutusTx.Prelude            hiding (toList)
 
 type RelayerPKH = PubKeyHash
-
--- | Setup parameters for Asterizm's admin
-data AsterizmAdmin = AsterizmAdmin
-  { aaAsterizmPKH :: PubKeyHash
-  , aaAsterizmFee :: Lovelace
-  }
-
-makeLift ''AsterizmAdmin
-makeIsDataIndexed ''AsterizmAdmin [('AsterizmAdmin,0)]
-
--- | Setup parameters for @asterizmClient@
-data AsterizmSetup = AsterizmSetup
-  { acsClientPKH    :: PubKeyHash
-  , acsThreadSymbol :: CurrencySymbol
-  }
-
-makeLift ''AsterizmSetup
-makeIsDataIndexed ''AsterizmSetup [('AsterizmSetup,0)]
-
-newtype ChainId = ChainId Integer
-newtype ChainAddress = ChainAddress BuiltinByteString
-newtype AsterizmTxId = AsterizmTxId BuiltinByteString
-newtype TransferHash = TransferHash BuiltinByteString
-
-data AsterizmTransferMeta = AsterizmTransferMeta
-  { atmSrcChainId   :: ChainId
-  , atmSrcAddress   :: ChainAddress
-  , atmDstChainId   :: ChainId
-  , atmDstAddress   :: ChainAddress
-  , atmTxId         :: AsterizmTxId
-  , atmNotifyFlag   :: Bool
-  , atmTransferHash :: TransferHash
-  }
-
-makeIsDataIndexed ''ChainId              [('ChainId, 0)]
-makeIsDataIndexed ''ChainAddress         [('ChainAddress, 0)]
-makeIsDataIndexed ''AsterizmTxId         [('AsterizmTxId, 0)]
-makeIsDataIndexed ''TransferHash         [('TransferHash, 0)]
-makeIsDataIndexed ''AsterizmTransferMeta [('AsterizmTransferMeta, 0)]
-
-data InitThreadRedeemer
-  = Init
-  | Clear
-
-makeIsDataIndexed ''InitThreadRedeemer
-  [ ('Init, 0)
-  , ('Clear, 1)
-  ]
 
 {-# INLINABLE buildCrosschainHash #-}
 buildCrosschainHash :: BuiltinByteString -> BuiltinByteString
@@ -119,8 +71,8 @@ untypedAsterizmRelayer pkh ctx' = check $ conditionSigned && (conditionBurning |
 
 -- | Plutus script (minting policy) for posting actual messages on-chain.
 {-# INLINABLE untypedAsterizmClient #-}
-untypedAsterizmClient :: AsterizmSetup -> BuiltinData -> BuiltinUnit
-untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
+untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> BuiltinData -> BuiltinUnit
+untypedAsterizmClient clientPKH allowedRelayers ctx' = check $ conditionSigned &&
     (conditionBurning || conditionMinting && conditionVerifying)
   where
     ctx :: ScriptContext
@@ -131,12 +83,6 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
 
     refInputs :: [TxOut]
     refInputs = txInInfoResolved <$> txInfoReferenceInputs info
-
-    threadInput :: TxOut
-    threadInput = case find (\i -> currencySymbolValueOf (txOutValue i) acsThreadSymbol == 1)
-                       refInputs of
-      Just out -> out
-      Nothing  -> traceError "Missing thread token."
 
     valueReferenced :: Value
     valueReferenced = foldMap txOutValue refInputs
@@ -153,20 +99,15 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
       OutputDatum d -> unsafeFromBuiltinData $ getDatum d
       _             -> traceError "Expected output datum"
 
-    relayers :: [CurrencySymbol]
-    relayers = case txOutDatum threadInput of
-                 OutputDatum d -> unsafeFromBuiltinData $ getDatum d
-                 _             -> traceError "Missing registry"
-
     relayerCS :: CurrencySymbol
-    relayerCS = case find (\s -> s /= adaSymbol && s `elem` relayers) $ symbols
+    relayerCS = case find (\s -> s /= adaSymbol && s `elem` allowedRelayers) $ symbols
                      valueReferenced of
       Just cs -> cs
       Nothing -> traceError "Unrecognized relayer"
 
     tokenName = TokenName $ buildCrosschainHash message
 
-    conditionSigned = txSignedBy info acsClientPKH
+    conditionSigned = txSignedBy info clientPKH
 
     conditionBurning = amt < 0
 
@@ -175,34 +116,13 @@ untypedAsterizmClient AsterizmSetup{..} ctx' = check $ conditionSigned &&
     conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
       head (keys tokensMap) == tokenName
 
-{-# INLINABLE mkAsterizmInit #-}
-mkAsterizmInit :: AsterizmAdmin -> ScriptContext -> Bool
-mkAsterizmInit admin ctx = signedByAdmin
- where
-  info :: TxInfo
-  info = scriptContextTxInfo ctx
-
-  signedByAdmin :: Bool
-  signedByAdmin = txSignedBy info (aaAsterizmPKH admin)
-
-{-# INLINABLE untypedAsterizmInit #-}
-untypedAsterizmInit :: AsterizmAdmin -> BuiltinData -> BuiltinUnit
-untypedAsterizmInit admin ctx' = check $ mkAsterizmInit admin ctx
-  where
-    ctx :: ScriptContext
-    ctx = unsafeFromBuiltinData ctx'
-
 asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmRelayerCompiled pkh =
     $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
 
-asterizmClientCompiled :: AsterizmSetup -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmClientCompiled setup =
+asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmClientCompiled clientPKH allowedRelayers =
     $$(compile [|| untypedAsterizmClient ||])
-    `unsafeApplyCode` liftCodeDef setup
-
-asterizmInitCompiled :: AsterizmAdmin -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmInitCompiled admin =
-    $$(compile [|| untypedAsterizmInit ||])
-    `unsafeApplyCode` liftCodeDef admin
+    `unsafeApplyCode` liftCodeDef clientPKH
+    `unsafeApplyCode` liftCodeDef allowedRelayers

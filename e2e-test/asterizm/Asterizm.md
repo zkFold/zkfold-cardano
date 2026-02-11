@@ -60,48 +60,32 @@ We now describe each command.  The eager reader can jump to [section "End-to-end
 
 ### init
 
-Initializes the protocol for a specific client.  A set of valid relayers is provided at this point.  The command posts at the blockchain, as datum, a list of policy-id's associated to the valid relayer's.  We call this list "the Registry".  A specific reference to an arbitrary UTxO to be consumed needs to be provided, as it is needed to generate the nft (thread token) that will identify the Registry.
+Initializes the protocol for a specific client.  A set of valid relayers is provided at this point.  The command computes the policy IDs for each allowed relayer based on their public key hash and writes them to configuration.
 
-A directory `./assets` is created if abscent, in which command `init` writes file *asterizm-setup.json*.  It contains the client's pub-key-hash and the thread-token's policy ID; these parameterize the client's *minting policy*.
+A directory `./assets` is created if absent, in which command `init` writes file *asterizm-setup.json*.  It contains the client's pub-key-hash and the list of allowed relayer policy IDs; these parameterize the client's *minting policy*.
+
+Note: This is an **off-chain** operation only. No on-chain transaction is submitted.
 
 ```shell
 cabal run zkfold-cli:asterizm -- init --help
 ```
 
 ```output
-Usage: asterizm init [--core-config-file FILEPATH]
-  (--signing-key HEX | --signing-key-file FILEPATH)
-  --tx-oref TxId#TxIx
-  --registry-address ADDRESS
+Usage: asterizm init 
   (--client-pkh HEX | --client-vkey-file FILEPATH)
   [--relayer-pkh HEX | --relayer-vkey-file FILEPATH]
-  [--init-out-file FILEPATH]
 
 Available options:
-  --core-config-file FILEPATH
-                           Path to 'core config'. This overrides the
-                           CORE_CONFIG_PATH environment variable. The argument
-                           is optional if CORE_CONFIG_PATH is defined and
-                           mandatory otherwise.
-  --signing-key HEX        Hex-encoded signing key
-  --signing-key-file FILEPATH
-                           Payment signing key file.
-  --tx-oref TxId#TxIx      TxOutRef (reference to a Tx input) to be consumed at
-                           initialization.
-  --registry-address ADDRESS
-                           Address to park relayer's registry at.
   --client-pkh HEX         Hex-encoded client's pub-key-hash.
   --client-vkey-file FILEPATH
                            Client's payment verification-key file.
-  --relayer-pkh HEX        Hex-encodec relayer's pub-key-hash.
+  --relayer-pkh HEX        Hex-encoded relayer's pub-key-hash.
   --relayer-vkey-file FILEPATH
                            Relayer's payment verification-key file.
-  --init-out-file FILEPATH Path (relative to 'assets/') for Asterizm
-                           initialization tx out-file.
   -h,--help                Show this help text
 ```
 
-Note that, eventhough providing the relayers is optional, not providing any (an empty list) would render a useless protocol.
+Note that, even though providing the relayers is optional, not providing any (an empty list) would render a useless protocol.
 
 ### message
 
@@ -164,9 +148,9 @@ Available options:
 
 ### client
 
-Command used by client to post (reveal) original message to the blockchain, as datum accompanying a token minted this command.
+Command used by client to post (reveal) original message to the blockchain, as datum accompanying a token minted by this command.
 
-Transaction references UTxO with relayer's token.  Client's minting policy validates *a)* the relayer's policy ID against the Registry (identified by the thread-token) and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
+Transaction references UTxO with relayer's token.  Client's minting policy validates *a)* the relayer's policy ID against the allowed set (embedded at initialization) and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client --help
@@ -232,9 +216,6 @@ What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.
 
 ```shell
 asterizm$ cabal run zkfold-cli:asterizm -- init \
-  --signing-key-file ./keys/someone.skey \
-  --tx-oref 4e16927f137a748a1ac7f19c26166695cb8a0031f1fc16b098d793f357aeb13f#0 \
-  --registry-address $(cat ./keys/asterizm.addr) \
   --client-vkey-file ./keys/alice.vkey \
   --relayer-vkey-file ./keys/bob.vkey \
   --relayer-vkey-file ./keys/charlie.vkey \
@@ -242,8 +223,9 @@ asterizm$ cabal run zkfold-cli:asterizm -- init \
 ```
 
 ```output
-Estimated transaction fee: 397683 Lovelace
-Transaction Id: 9f17b5d93780c7a7149e53cbde2747515a868748259235554917635c41304472
+Setup file ./assets/asterizm-setup.json created.
+Client PKH: <client-pkh>
+Allowed relayers: 3 relayer(s)
 ```
 
 ![init Tx](figures/01-init-tx.svg)

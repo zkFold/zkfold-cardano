@@ -6,6 +6,24 @@ set -o pipefail
 
 keypath=./keys
 
+# Build an Asterizm message with 112-byte header + payload
+# Header structure (112 bytes total):
+#   srcChainId  (8 bytes):  0x01
+#   srcAddress  (32 bytes): 0x39d2ba91296029aFBE725436B4824cA803e27391
+#   dstChainId  (8 bytes):  0x38
+#   dstAddress  (32 bytes): 0x39d2ba91296029aFBE725436B4824cA803e27391
+#   txId        (32 bytes): 0x01
+# Payload: "Hello, Asterizm!" in hex
+
+srcChainId="0000000000000001"
+srcAddress="00000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
+dstChainId="0000000000000038"
+dstAddress="00000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
+txId="0000000000000000000000000000000000000000000000000000000000000001"
+payload=$(echo -n "Hello, Asterizm!" | xxd -p | tr -d '\n')
+
+message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
+
 cabal run zkfold-cli:asterizm -- message \
-  --message-text "Hello, Asterizm!"
+  --message-hex "$message"
 

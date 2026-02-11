@@ -17,10 +17,16 @@ import           Network.HTTP.Simple
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (fromAsterizmClientParams)
+import           ZkFold.Cardano.Asterizm.Types (AsterizmSetup (..))
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.CLI.Parsers    (CoreConfigAlt, fromCoreConfigAltIO)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
+
+-- | Convert AsterizmSetup to policy id for querying
+setupToPolicyId :: AsterizmSetup -> GYMintingPolicyId
+setupToPolicyId AsterizmSetup{..} = snd . policyFromPlutus $
+  asterizmClientCompiled (pubKeyHashToPlutus acsClientPKH)
+                         (mintingPolicyIdToCurrencySymbol <$> acsAllowedRelayers)
 
 
 -- Assumption: client's tokens are never consumed.
@@ -51,13 +57,13 @@ retrieveMsgs (Transaction path coreCfg') = do
       let assetsPath = path </> "assets"
           setupFile  = assetsPath </> "asterizm-setup.json"
 
-      mAsterizmParams <- decodeFileStrict setupFile
+      mAsterizmSetup <- decodeFileStrict setupFile
 
-      asterizmSetup <- case mAsterizmParams of
-        Just ap -> pure $ fromAsterizmClientParams ap
+      asterizmSetup <- case mAsterizmSetup of
+        Just as -> pure as
         Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
-      let policyId  = snd . policyFromPlutus $ asterizmClientCompiled asterizmSetup
+      let policyId  = setupToPolicyId asterizmSetup
       let policyId' = trimQuot $ show policyId
 
       let nid = cfgNetworkId coreCfg

@@ -10,7 +10,7 @@ import qualified Options.Applicative                as Opt
 import           Prelude
 import           System.Directory                   (createDirectoryIfMissing, getCurrentDirectory)
 import           System.Environment                 (lookupEnv)
-import           System.FilePath                    (takeFileName, (</>))
+import           System.FilePath                    ((</>))
 
 import           ZkFold.Cardano.Options.AsterizmCLI (opts, pref, renderClientCommandError, runClientCommand)
 
@@ -21,17 +21,13 @@ main = toplevelExceptionHandler $ do
   GHC.mkTextEncoding "UTF-8" >>= GHC.setLocaleEncoding
 
   coreCfgEnv <- lookupEnv "CORE_CONFIG_PATH"
-  mCoreCfg   <- maybe (pure Nothing) (\path -> Just <$> coreConfigIO path) coreCfgEnv
+  mCoreCfg   <- maybe (pure Nothing) (fmap Just . coreConfigIO) coreCfgEnv
 
   currentDir <- getCurrentDirectory
-  let path = case takeFileName currentDir of
-        "asterizm" -> "../.."
-        "e2e-test" -> ".."
-        _          -> "."
-  let assets = path </> "assets"
+  let assets = currentDir </> "assets"
 
   createDirectoryIfMissing True assets
 
-  co <- Opt.customExecParser pref (opts path mCoreCfg)
+  co <- Opt.customExecParser pref (opts currentDir mCoreCfg)
 
   orDie (docToText . renderClientCommandError) $ runClientCommand co

@@ -6,7 +6,7 @@ import           PlutusLedgerApi.V3            (fromBuiltin, toBuiltin)
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (HexByteString (..))
+import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..))
 import           ZkFold.Cardano.UPLC.Asterizm  (buildCrosschainHash)
 
 
@@ -24,9 +24,9 @@ clientMessage (Transaction path msg privFile pubFile) = do
   let msgHash = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
 
   putStrLn $ "\nSaving Asterizm message (private file: " ++ privFile ++ ")..."
-  encodeFile (assetsPath </> privFile) $ HexByteString msg
+  encodeFile (assetsPath </> privFile) $ AsterizmMessage msg
 
   putStrLn $ "\nSaving message hash (public file: " ++ pubFile ++ ")..."
-  encodeFile (assetsPath </> pubFile) $ HexByteString msgHash
+  encodeFile (assetsPath </> pubFile) $ AsterizmMessage msgHash
 
   putStrLn "\nDone."
