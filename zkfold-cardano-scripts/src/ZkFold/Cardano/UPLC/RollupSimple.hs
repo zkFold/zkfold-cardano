@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
@@ -13,23 +13,20 @@ module ZkFold.Cardano.UPLC.RollupSimple (
   module ZkFold.Cardano.UPLC.RollupSimple.Types,
 ) where
 
-import Data.Function ((&))
-import PlutusLedgerApi.V1 (valueOf)
-import PlutusLedgerApi.V3
-import PlutusTx.AssocMap qualified as AssocMap
-import PlutusTx.Builtins.Internal qualified as BI
-import PlutusTx.Prelude hiding (toList)
-import ZkFold.Cardano.OnChain.BLS12_381 (toF)
-import ZkFold.Cardano.OnChain.Plonkup (PlonkupPlutus)
-import ZkFold.Cardano.UPLC.RollupSimple.Types (
-  BridgeUtxoInfo (..),
-  BridgeUtxoStatus (..),
-  RollupConfiguration (..),
-  RollupSimpleRed (..),
-  RollupState (..),
- )
-import ZkFold.Cardano.UPLC.RollupSimple.Utils
-import ZkFold.Protocol.NonInteractiveProof (NonInteractiveProof (..))
+import           Data.Function                          ((&))
+import           PlutusLedgerApi.V1                     (valueOf)
+import           PlutusLedgerApi.V3
+import qualified PlutusTx.AssocMap                      as AssocMap
+import qualified PlutusTx.Builtins.Internal             as BI
+import           PlutusTx.Prelude                       hiding (toList)
+
+import           ZkFold.Cardano.OnChain.BLS12_381       (toF)
+import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
+import           ZkFold.Cardano.UPLC.RollupSimple.Types (BridgeUtxoInfo (..), BridgeUtxoStatus (..),
+                                                         RollupConfiguration (..), RollupSimpleRed (..),
+                                                         RollupState (..))
+import           ZkFold.Cardano.UPLC.RollupSimple.Utils
+import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 
 {-# INLINEABLE rollupSimple #-}
 rollupSimple ::
@@ -178,5 +175,5 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
       [] -> True
       (x : xs) ->
         case l of
-          [] -> False
+          []       -> False
           (y : ys) -> (x == y) && checkPrefix xs ys
