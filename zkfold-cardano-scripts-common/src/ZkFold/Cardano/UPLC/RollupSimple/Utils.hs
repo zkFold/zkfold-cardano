@@ -95,3 +95,4 @@ toSymbolicValue ::
 toSymbolicValue maxAssets v =
   let v' = flattenValue v
    in foldMap (\(cs, tn, amt) -> [byteStringToInteger' $ unCurrencySymbol cs, byteStringToInteger' $ unTokenName tn, amt]) v' <> fillWithZeros2 (maxAssets - length v') 3 []
+
