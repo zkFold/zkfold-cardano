@@ -23,6 +23,13 @@ cardano-cli address key-gen \
   --signing-key-file "$keypath/$name.skey" \
   --verification-key-file "$keypath/$name.vkey"
 
-echo "Generated key pair for '$name':"
+# Generate the address from the verification key (Preprod testnet)
+cardano-cli address build \
+  --payment-verification-key-file "$keypath/$name.vkey" \
+  --testnet-magic 1 \
+  --out-file "$keypath/$name.addr"
+
+echo "Generated key pair and address for '$name':"
 echo "  Signing key:      $keypath/$name.skey"
 echo "  Verification key: $keypath/$name.vkey"
+echo "  Address:          $keypath/$name.addr"

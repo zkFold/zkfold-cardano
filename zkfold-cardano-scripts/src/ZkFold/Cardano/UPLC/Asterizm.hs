@@ -41,10 +41,10 @@ buildCrosschainHash bs =
             payLen  = len - headerLen
         in go h0 0 payLen
 
--- | Plutus script (minting policy) for posting signed messages on-chain.
+-- | Plutus script (minting policy) for posting signed relayer messages (hashes) on-chain.
 {-# INLINABLE untypedAsterizmRelayer #-}
 untypedAsterizmRelayer :: RelayerPKH -> BuiltinData -> BuiltinUnit
-untypedAsterizmRelayer pkh ctx' = check $ conditionSigned && (conditionBurning || conditionVerifying)
+untypedAsterizmRelayer pkh ctx' = check conditionSigned
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -52,28 +52,13 @@ untypedAsterizmRelayer pkh ctx' = check $ conditionSigned && (conditionBurning |
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
-    minted :: Maybe [(TokenName, Integer)]
-    minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
-
-    (tn, amt) = case minted of
-      Just [x] -> x
-      _        -> traceError "Expected exactly one minting action"
-
-    messageHash :: BuiltinByteString
-    messageHash = unsafeFromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
-
     conditionSigned = txSignedBy info pkh
 
-    conditionBurning = amt < 0
-
-    conditionVerifying = lengthOfByteString messageHash == 32 && tn == TokenName messageHash
-
-
 -- | Plutus script (minting policy) for posting actual messages on-chain.
-{-# INLINABLE untypedAsterizmClient #-}
-untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> BuiltinData -> BuiltinUnit
-untypedAsterizmClient clientPKH allowedRelayers ctx' = check $ conditionSigned &&
-    (conditionBurning || conditionMinting && conditionVerifying)
+{-# INLINABLE untypedAsterizmClientIncoming #-}
+untypedAsterizmClientIncoming :: PubKeyHash -> [CurrencySymbol] -> BuiltinData -> BuiltinUnit
+untypedAsterizmClientIncoming clientPKH allowedRelayers ctx' = check $ conditionSigned &&
+    (conditionMinting && conditionVerifying)
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -90,7 +75,7 @@ untypedAsterizmClient clientPKH allowedRelayers ctx' = check $ conditionSigned &
     minted :: Maybe [(TokenName, Integer)]
     minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
 
-    (tn, amt) = case minted of
+    (tn, _) = case minted of
       Just [x] -> x
       _        -> traceError "Expected exactly one minting action"
 
@@ -109,8 +94,6 @@ untypedAsterizmClient clientPKH allowedRelayers ctx' = check $ conditionSigned &
 
     conditionSigned = txSignedBy info clientPKH
 
-    conditionBurning = amt < 0
-
     conditionMinting = tn == tokenName
 
     conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
@@ -121,8 +104,8 @@ asterizmRelayerCompiled pkh =
     $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
 
-asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmClientCompiled clientPKH allowedRelayers =
-    $$(compile [|| untypedAsterizmClient ||])
+asterizmClientIncomingCompiled :: PubKeyHash -> [CurrencySymbol] -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmClientIncomingCompiled clientPKH allowedRelayers =
+    $$(compile [|| untypedAsterizmClientIncoming ||])
     `unsafeApplyCode` liftCodeDef clientPKH
     `unsafeApplyCode` liftCodeDef allowedRelayers
