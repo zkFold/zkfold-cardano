@@ -3,6 +3,7 @@ module ZkFold.Cardano.Asterizm.Transaction.Client where
 import           Control.Exception             (throwIO)
 import           Control.Monad                 (forM)
 import           Data.Aeson                    (decodeFileStrict, encodeFile)
+import qualified Data.ByteString               as BS
 import           Data.Maybe                    (fromJust)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
@@ -11,7 +12,7 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (AsterizmSetup (..), toByteString)
+import           ZkFold.Cardano.Asterizm.Types (AsterizmSetup (..))
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientIncomingCompiled, buildCrosschainHash)
@@ -22,12 +23,12 @@ data Transaction = Transaction
   , coreCfgAlt     :: !CLI.CoreConfigAlt
   , requiredSigner :: !CLI.SigningKeyAlt
   , outAddress     :: !GYAddress
-  , privateFile    :: !FilePath
+  , message        :: !BS.ByteString
   , outFile        :: !FilePath
   }
 
 clientMint :: Transaction -> IO ()
-clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
+clientMint (Transaction path coreCfg' sig sendTo msg outFile) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
 
@@ -38,12 +39,6 @@ clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
     Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
   let relayerCSs = mintingPolicyIdToCurrencySymbol <$> acsAllowedRelayers asterizmSetup
-
-  mMsg <- decodeFileStrict (assetsPath </> privFile)
-
-  msg <- case mMsg of
-    Just m  -> pure $ toBuiltin . toByteString $ m
-    Nothing -> throwIO $ userError "Unable to retrieve private Asterizm message."
 
   coreCfg <- CLI.fromCoreConfigAltIO coreCfg'
   skey    <- CLI.fromSigningKeyAltIO sig
@@ -59,12 +54,12 @@ clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
       plutusPolicy     = asterizmClientIncomingCompiled clientPKH allowedRelayers
       (policy, policyId) = policyFromPlutus plutusPolicy
 
-  let msgHash    = fromBuiltin . buildCrosschainHash $ msg
+  let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
 
-  let inlineDatum = Just (datumFromPlutusData msg, GYTxOutUseInlineDatum @PlutusV3)
+  let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
     relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of

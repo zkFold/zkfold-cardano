@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Asterizm.Transaction.Relayer where
 
-import           Control.Exception             (throwIO)
-import           Data.Aeson                    (decodeFileStrict, encodeFile)
+import           Data.Aeson                    (encodeFile)
+import qualified Data.ByteString               as BS
 import           Data.Maybe                    (fromJust)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
 import           GeniusYield.TxBuilder
@@ -10,7 +10,6 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (AsterizmMessageHash (..))
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmRelayerCompiled)
@@ -21,12 +20,12 @@ data Transaction = Transaction
   , coreCfgAlt     :: !CLI.CoreConfigAlt
   , requiredSigner :: !CLI.SigningKeyAlt
   , outAddress     :: !GYAddress
-  , publicFile     :: !FilePath
+  , messageHash    :: !BS.ByteString
   , outFile        :: !FilePath
   }
 
 relayerMint :: Transaction -> IO ()
-relayerMint (Transaction path coreCfg' sig sendTo pubFile outFile) = do
+relayerMint (Transaction path coreCfg' sig sendTo msgHash outFile) = do
   let assetsPath = path </> "assets"
 
   coreCfg <- CLI.fromCoreConfigAltIO coreCfg'
@@ -37,12 +36,6 @@ relayerMint (Transaction path coreCfg' sig sendTo pubFile outFile) = do
   let pkh        = pubKeyHash $ paymentVerificationKey skey
       changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash pkh
       w1         = User' skey Nothing changeAddr
-
-  mMsgHash <- decodeFileStrict (assetsPath </> pubFile)
-
-  msgHash <- case mMsgHash of
-    Just (AsterizmMessageHash mh) -> pure mh
-    Nothing                       -> throwIO $ userError "Unable to retrieve public message hash."
 
   let redeemer = redeemerFromPlutusData $ toBuiltin msgHash
 

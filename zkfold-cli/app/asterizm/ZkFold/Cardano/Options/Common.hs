@@ -42,44 +42,19 @@ hexReader = Opt.eitherReader $ \s ->
 
 ----- :parsing Message: -----
 
-pMessageString :: Parser BS.ByteString
-pMessageString = BS.pack <$> Opt.strOption
-  ( Opt.long "message-text"
-      <> Opt.metavar "ASCII"
-      <> Opt.help "Asterizm message as string of ASCII characters."
-  )
-
-pMessageHex :: Parser BS.ByteString
-pMessageHex = Opt.option hexReader
-    ( Opt.long "message-hex"
+pMessageHash :: Parser BS.ByteString
+pMessageHash = Opt.option hexReader
+    ( Opt.long "message-hash"
         <> Opt.metavar "HEX"
-        <> Opt.help "Hex-encoded Asterizm message."
+        <> Opt.help "Hex-encoded Asterizm message hash (32 bytes)."
     )
 
 pMessage :: Parser BS.ByteString
-pMessage = Opt.asum [pMessageString, pMessageHex]
-
------ :parsing Message files: -----
-
-pMessageFile :: Parser FilePath
-pMessageFile = Opt.strOption
-  ( Opt.long "message-file"
-      <> Opt.value "message.private"
-      <> Opt.showDefault
-      <> Opt.metavar "FILEPATH"
-      <> Opt.help "Path (relative to 'assets/') for PRIVATE file storing message."
-      <> Opt.completer (Opt.bashCompleter "file")
-  )
-
-pMessageHashFile :: Parser FilePath
-pMessageHashFile = Opt.strOption
-  ( Opt.long "message-hash-file"
-      <> Opt.value "message-hash.public"
-      <> Opt.showDefault
-      <> Opt.metavar "FILEPATH"
-      <> Opt.help "Path (relative to 'assets/') for PUBLIC file storing message hash."
-      <> Opt.completer (Opt.bashCompleter "file")
-  )
+pMessage = Opt.option hexReader
+    ( Opt.long "message"
+        <> Opt.metavar "HEX"
+        <> Opt.help "Hex-encoded Asterizm structured message."
+    )
 
 ----- :parsing PubKeyHash: -----
 

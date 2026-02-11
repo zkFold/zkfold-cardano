@@ -8,8 +8,8 @@ import qualified Options.Applicative                          as Opt
 import           Prelude
 
 import qualified ZkFold.Cardano.Asterizm.Transaction.Client   as AsterizmClient
+import qualified ZkFold.Cardano.Asterizm.Transaction.Hash     as AsterizmHash
 import qualified ZkFold.Cardano.Asterizm.Transaction.Init     as AsterizmInit
-import qualified ZkFold.Cardano.Asterizm.Transaction.Message  as AsterizmMessage
 import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer  as AsterizmRelayer
 import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve as AsterizmRetrieve
 import           ZkFold.Cardano.CLI.Parsers
@@ -19,7 +19,7 @@ import           ZkFold.Cardano.Options.Common
 data ClientCommand
     = TransactionAsterizmInit AsterizmInit.Transaction
     | TransactionAsterizmClient AsterizmClient.Transaction
-    | TransactionAsterizmMessage AsterizmMessage.Transaction
+    | TransactionAsterizmHash AsterizmHash.Transaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
     | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
 
@@ -43,7 +43,7 @@ pCmds path mcfg = do
     asum $
         [ TransactionAsterizmInit      <$> pTransactionAsterizmInit path mcfg
         , TransactionAsterizmClient    <$> pTransactionAsterizmClient path mcfg
-        , TransactionAsterizmMessage   <$> pTransactionAsterizmMessage path
+        , TransactionAsterizmHash      <$> pTransactionAsterizmHash
         , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer path mcfg
         , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve path mcfg
         ]
@@ -66,18 +66,14 @@ pTransactionAsterizmClient path mcfg = do
             <$> pGYCoreConfig mcfg
             <*> pSigningKeyAlt
             <*> pBenefOutAddress
-            <*> pMessageFile
+            <*> pMessage
             <*> pOutFile AsterizmClient
 
-pTransactionAsterizmMessage :: FilePath -> Parser AsterizmMessage.Transaction
-pTransactionAsterizmMessage path = do
-    subParser "message" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionAsterizmHash :: Parser AsterizmHash.Transaction
+pTransactionAsterizmHash = do
+    subParser "hash" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
-    pCmd = do
-        AsterizmMessage.Transaction path
-            <$> pMessage
-            <*> pMessageFile
-            <*> pMessageHashFile
+    pCmd = AsterizmHash.Transaction <$> pMessage
 
 pTransactionAsterizmRelayer :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmRelayer.Transaction
 pTransactionAsterizmRelayer path mcfg = do
@@ -88,7 +84,7 @@ pTransactionAsterizmRelayer path mcfg = do
             <$> pGYCoreConfig mcfg
             <*> pSigningKeyAlt
             <*> pBenefOutAddress
-            <*> pMessageHashFile
+            <*> pMessageHash
             <*> pOutFile AsterizmRelayer
 
 pTransactionAsterizmRetrieve :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmRetrieve.Transaction
@@ -105,7 +101,7 @@ runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
     TransactionAsterizmInit      cmd -> ExceptT (Right <$> AsterizmInit.asterizmInit     cmd)
     TransactionAsterizmClient    cmd -> ExceptT (Right <$> AsterizmClient.clientMint     cmd)
-    TransactionAsterizmMessage   cmd -> ExceptT (Right <$> AsterizmMessage.clientMessage cmd)
+    TransactionAsterizmHash      cmd -> ExceptT (Right <$> AsterizmHash.computeHash      cmd)
     TransactionAsterizmRelayer   cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint   cmd)
     TransactionAsterizmRetrieve  cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
 
