@@ -22,17 +22,18 @@ import           PlutusTx                      (unsafeFromBuiltinData)
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), AsterizmSetup (..), fromByteString)
+import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), AsterizmSetup (..), MessageDirection (..),
+                                                directionToBool, fromByteString)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.CLI.Parsers    (CoreConfigAlt, fromCoreConfigAltIO)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
 
--- | Convert AsterizmSetup to policy id for querying (incoming messages).
-setupToPolicyId :: AsterizmSetup -> GYMintingPolicyId
-setupToPolicyId AsterizmSetup{..} = snd . policyFromPlutus $
+-- | Convert AsterizmSetup to policy id for querying.
+setupToPolicyId :: AsterizmSetup -> MessageDirection -> GYMintingPolicyId
+setupToPolicyId AsterizmSetup{..} dir = snd . policyFromPlutus $
   asterizmClientCompiled (pubKeyHashToPlutus acsClientPKH)
                          (mintingPolicyIdToCurrencySymbol <$> acsAllowedRelayers)
-                         True  -- Incoming messages
+                         (directionToBool dir)
 
 
 -- Assumption: client's tokens are never consumed.
@@ -40,6 +41,7 @@ setupToPolicyId AsterizmSetup{..} = snd . policyFromPlutus $
 data Transaction = Transaction
   { curPath    :: !FilePath
   , coreCfgAlt :: !CoreConfigAlt
+  , direction  :: !MessageDirection
   }
 
 fromNetworkIdIO :: GYNetworkId -> IO String
@@ -77,7 +79,7 @@ bsToAscii :: BS.ByteString -> String
 bsToAscii = map (\c -> if isPrint c then c else '.') . map (toEnum . fromIntegral) . BS.unpack
 
 retrieveMsgs :: Transaction -> IO ()
-retrieveMsgs (Transaction path coreCfg') = do
+retrieveMsgs (Transaction path coreCfg' dir) = do
   coreCfg <- fromCoreConfigAltIO coreCfg'
 
   case cfgCoreProvider coreCfg of
@@ -91,7 +93,7 @@ retrieveMsgs (Transaction path coreCfg') = do
         Just as -> pure as
         Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
 
-      let policyId  = setupToPolicyId asterizmSetup
+      let policyId  = setupToPolicyId asterizmSetup dir
       let policyId' = trimQuot $ show policyId
 
       let nid = cfgNetworkId coreCfg
@@ -123,8 +125,12 @@ retrieveMsgs (Transaction path coreCfg') = do
         msgUtxos' <- forM msgTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
         let msgUtxos = concat $ utxosToList <$> msgUtxos'
 
+        let dirLabel = case dir of
+              Incoming -> "incoming"
+              Outgoing -> "outgoing"
+
         putStr "\n"
-        putStr "Client's messages on-chain:\n\n"
+        putStr $ "Client's " ++ dirLabel ++ " messages on-chain:\n\n"
 
         mapM_ displayMsg $ utxoOutDatum <$> msgUtxos
 

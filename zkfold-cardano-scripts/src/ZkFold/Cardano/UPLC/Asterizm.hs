@@ -59,47 +59,42 @@ untypedAsterizmRelayer pkh ctx' = check conditionSigned
 -- When @isIncoming@ is False, skips relayer verification (outgoing cross-chain message).
 {-# INLINABLE untypedAsterizmClient #-}
 untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> Bool -> BuiltinData -> BuiltinUnit
-untypedAsterizmClient clientPKH allowedRelayers isIncoming ctx' = check $
-    conditionSigned && conditionMinting && (not isIncoming || conditionVerifying)
-  where
-    ctx :: ScriptContext
-    ctx = unsafeFromBuiltinData ctx'
+untypedAsterizmClient clientPKH allowedRelayers True ctx' =
+    let ctx = unsafeFromBuiltinData ctx'
+        info = scriptContextTxInfo ctx
+        refInputs = txInInfoResolved <$> txInfoReferenceInputs info
+        valueReferenced = foldMap txOutValue refInputs
+        minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
+        (tn, _) = case minted of
+          Just [x] -> x
+          _        -> traceError "Expected exactly one minting action"
+        message = case txOutDatum . head $ txInfoOutputs info of
+          OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+          _             -> traceError "Expected output datum"
+        tokenName = TokenName $ buildCrosschainHash message
+        conditionSigned = txSignedBy info clientPKH
+        conditionMinting = tn == tokenName
+        relayerCS = case find (\s -> s /= adaSymbol && s `elem` allowedRelayers) $ symbols valueReferenced of
+          Just cs -> cs
+          Nothing -> traceError "Unrecognized relayer"
+        conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
+           head (keys tokensMap) == tokenName
+    in check $ conditionSigned && conditionMinting && conditionVerifying
 
-    info :: TxInfo
-    info = scriptContextTxInfo ctx
-
-    refInputs :: [TxOut]
-    refInputs = txInInfoResolved <$> txInfoReferenceInputs info
-
-    valueReferenced :: Value
-    valueReferenced = foldMap txOutValue refInputs
-
-    minted :: Maybe [(TokenName, Integer)]
-    minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
-
-    (tn, _) = case minted of
-      Just [x] -> x
-      _        -> traceError "Expected exactly one minting action"
-
-    message :: BuiltinByteString
-    message = case txOutDatum . head $ txInfoOutputs info of
-      OutputDatum d -> unsafeFromBuiltinData $ getDatum d
-      _             -> traceError "Expected output datum"
-
-    relayerCS :: CurrencySymbol
-    relayerCS = case find (\s -> s /= adaSymbol && s `elem` allowedRelayers) $ symbols
-                     valueReferenced of
-      Just cs -> cs
-      Nothing -> traceError "Unrecognized relayer"
-
-    tokenName = TokenName $ buildCrosschainHash message
-
-    conditionSigned = txSignedBy info clientPKH
-
-    conditionMinting = tn == tokenName
-
-    conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
-      head (keys tokensMap) == tokenName
+untypedAsterizmClient clientPKH _ False ctx' =
+    let ctx = unsafeFromBuiltinData ctx'
+        info = scriptContextTxInfo ctx
+        minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
+        (tn, _) = case minted of
+          Just [x] -> x
+          _        -> traceError "Expected exactly one minting action"
+        message = case txOutDatum . head $ txInfoOutputs info of
+          OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+          _             -> traceError "Expected output datum"
+        tokenName = TokenName $ buildCrosschainHash message
+        conditionSigned = txSignedBy info clientPKH
+        conditionMinting = tn == tokenName
+    in check $ conditionSigned && conditionMinting
 
 asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmRelayerCompiled pkh =

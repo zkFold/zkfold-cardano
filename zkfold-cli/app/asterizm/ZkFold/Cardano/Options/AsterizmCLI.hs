@@ -95,6 +95,7 @@ pTransactionAsterizmRetrieve path mcfg = do
     pCmd = do
         AsterizmRetrieve.Transaction path
             <$> pGYCoreConfig mcfg
+            <*> pMessageDirection
 
 data ClientCommandErrors
 
