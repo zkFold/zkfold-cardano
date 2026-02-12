@@ -14,11 +14,11 @@ import           ZkFold.Cardano.UPLC.Asterizm  (asterizmRelayerCompiled)
 
 
 data Transaction = Transaction
-  { coreCfgFile      :: !FilePath
-  , signingKeyFile   :: !FilePath
-  , relayerVKeyFile  :: !FilePath
-  , outAddress       :: !GYAddress
-  , messageHash      :: !BS.ByteString
+  { coreCfgFile     :: !FilePath
+  , signingKeyFile  :: !FilePath
+  , relayerVKeyFile :: !FilePath
+  , outAddress      :: !GYAddress
+  , messageHash     :: !BS.ByteString
   }
 
 relayerMint :: Transaction -> IO ()

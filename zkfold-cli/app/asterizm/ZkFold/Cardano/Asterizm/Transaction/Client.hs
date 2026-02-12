@@ -17,21 +17,21 @@ import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizm
 
 -- | Transaction for sending an outgoing cross-chain message.
 data SendTransaction = SendTransaction
-  { stCoreCfgFile      :: !FilePath
-  , stSigningKeyFile   :: !FilePath
-  , stClientVKeyFile   :: !FilePath
-  , stOutAddress       :: !GYAddress
-  , stMessage          :: !BS.ByteString
+  { stCoreCfgFile    :: !FilePath
+  , stSigningKeyFile :: !FilePath
+  , stClientVKeyFile :: !FilePath
+  , stOutAddress     :: !GYAddress
+  , stMessage        :: !BS.ByteString
   }
 
 -- | Transaction for receiving an incoming cross-chain message.
 data ReceiveTransaction = ReceiveTransaction
-  { rtCoreCfgFile       :: !FilePath
-  , rtSigningKeyFile    :: !FilePath
-  , rtClientVKeyFile    :: !FilePath
-  , rtRelayerVKeyFiles  :: ![FilePath]
-  , rtOutAddress        :: !GYAddress
-  , rtMessage           :: !BS.ByteString
+  { rtCoreCfgFile      :: !FilePath
+  , rtSigningKeyFile   :: !FilePath
+  , rtClientVKeyFile   :: !FilePath
+  , rtRelayerVKeyFiles :: ![FilePath]
+  , rtOutAddress       :: !GYAddress
+  , rtMessage          :: !BS.ByteString
   }
 
 -- | Mint client token for outgoing message (no relayer verification).

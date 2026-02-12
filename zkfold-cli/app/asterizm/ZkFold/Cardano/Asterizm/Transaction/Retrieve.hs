@@ -21,18 +21,18 @@ import           PlutusLedgerApi.V3            (BuiltinByteString, fromBuiltin)
 import           PlutusTx                      (unsafeFromBuiltinData)
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), MessageDirection (..),
-                                                directionToBool, fromByteString)
+import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), MessageDirection (..), directionToBool,
+                                                fromByteString)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled)
 
 
 data Transaction = Transaction
-  { coreCfgFile       :: !FilePath
-  , clientVKeyFile    :: !FilePath
-  , relayerVKeyFiles  :: ![FilePath]
-  , direction         :: !MessageDirection
+  { coreCfgFile      :: !FilePath
+  , clientVKeyFile   :: !FilePath
+  , relayerVKeyFiles :: ![FilePath]
+  , direction        :: !MessageDirection
   }
 
 -- | Derive client policy ID from verification keys and direction.

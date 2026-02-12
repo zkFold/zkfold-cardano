@@ -191,7 +191,7 @@ What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.
 
 ![workflow](figures/00-flow.svg)
 
-**Figure:** process flow
+**Figure:** Process flows for incoming messages (Cardano as destination) and outgoing messages (Cardano as source)
 
 ### Generate Keys
 
@@ -265,6 +265,10 @@ asterizm$ cabal run zkfold-cli:asterizm -- client send \
 ```output
 "<transaction-id>"
 ```
+
+![client send Tx](figures/05-client-send-tx.svg)
+
+**Figure:** Client Send Tx
 
 ### Retrieve Messages
 
