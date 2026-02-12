@@ -8,18 +8,10 @@ import           Data.Aeson                    (FromJSON (..), ToJSON (..), obje
 import           Data.Bits                     (shiftL, shiftR)
 import qualified Data.ByteString               as BS
 import           Data.Word                     (Word64, Word8)
-import           GeniusYield.Types             (GYMintingPolicyId, GYPubKeyHash)
 import           GHC.Generics                  (Generic)
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (bsToHex, hexToBS)
-
--- | Setup parameters for @asterizmClient@
-data AsterizmSetup = AsterizmSetup
-  { acsClientPKH       :: GYPubKeyHash
-  , acsAllowedRelayers :: [GYMintingPolicyId]
-  } deriving stock (Show, Eq, Generic)
-    deriving anyclass (ToJSON, FromJSON)
 
 -- | Asterizm cross-chain message with structured header fields.
 -- Header is 112 bytes: srcChainId (8) + srcAddress (32) + dstChainId (8) + dstAddress (32) + txId (32)

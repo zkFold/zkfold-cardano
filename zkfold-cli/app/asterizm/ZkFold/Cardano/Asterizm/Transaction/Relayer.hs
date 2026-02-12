@@ -1,45 +1,42 @@
 module ZkFold.Cardano.Asterizm.Transaction.Relayer where
 
-import           Data.Aeson                    (encodeFile)
 import qualified Data.ByteString               as BS
 import           Data.Maybe                    (fromJust)
-import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
+import           GeniusYield.GYConfig          (GYCoreConfig (..), coreConfigIO, withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
-import           System.FilePath               ((</>))
 
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
-import qualified ZkFold.Cardano.CLI.Parsers    as CLI
+import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmRelayerCompiled)
 
 
 data Transaction = Transaction
-  { curPath        :: !FilePath
-  , coreCfgAlt     :: !CLI.CoreConfigAlt
-  , requiredSigner :: !CLI.SigningKeyAlt
-  , outAddress     :: !GYAddress
-  , messageHash    :: !BS.ByteString
-  , outFile        :: !FilePath
+  { coreCfgFile      :: !FilePath
+  , signingKeyFile   :: !FilePath
+  , relayerVKeyFile  :: !FilePath
+  , outAddress       :: !GYAddress
+  , messageHash      :: !BS.ByteString
   }
 
 relayerMint :: Transaction -> IO ()
-relayerMint (Transaction path coreCfg' sig sendTo msgHash outFile) = do
-  let assetsPath = path </> "assets"
-
-  coreCfg <- CLI.fromCoreConfigAltIO coreCfg'
-  skey    <- CLI.fromSigningKeyAltIO sig
+relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo msgHash) = do
+  coreCfg     <- coreConfigIO cfgFile
+  skey        <- readPaymentSigningKey skeyFile
+  relayerVkey <- readPaymentVerificationKey relayerVkeyFile
 
   let nid = cfgNetworkId coreCfg
 
-  let pkh        = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash pkh
+  let signerPkh = pubKeyHash $ paymentVerificationKey skey
+      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
       w1         = User' skey Nothing changeAddr
 
-  let redeemer = redeemerFromPlutusData $ toBuiltin msgHash
+  let relayerPkh = pubKeyHash relayerVkey
+      redeemer = redeemerFromPlutusData $ toBuiltin msgHash
 
-  let plutusPolicy       = asterizmRelayerCompiled $ pubKeyHashToPlutus pkh
+  let plutusPolicy       = asterizmRelayerCompiled $ pubKeyHashToPlutus relayerPkh
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let tokenName  = fromJust $ tokenNameFromBS msgHash
@@ -48,7 +45,7 @@ relayerMint (Transaction path coreCfg' sig sendTo msgHash outFile) = do
 
   let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue Nothing Nothing)
               <> mustMint policy redeemer tokenName 1
-              <> mustBeSignedBy pkh
+              <> mustBeSignedBy relayerPkh
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
     txbody <- runGYTxGameMonadIO nid
@@ -56,12 +53,9 @@ relayerMint (Transaction path coreCfg' sig sendTo msgHash outFile) = do
                                  asUser w1
                                  (buildTxBody skeleton)
 
-    putStr $ "\nEstimated transaction fee: " ++ show (txBodyFee txbody) ++ " Lovelace\n"
-
     txid <- runGYTxGameMonadIO nid
                                providers $
                                asUser w1
-                               (signAndSubmitConfirmed txbody)
+                               (signTxBody txbody >>= submitTx)
 
-    putStr $ "Transaction Id: " ++ show txid ++ "\n\n"
-    encodeFile (assetsPath </> outFile) txid
+    print txid

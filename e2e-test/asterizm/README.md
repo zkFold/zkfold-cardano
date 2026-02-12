@@ -64,79 +64,42 @@ This step bridges EVM concepts into Cardano; zkfold-cli commands are used here.
 
 If EVM-side Asterizm expects a relay confirmation on the source chain:  relayer calls `relay.translate(msgId)` or equivalent.  This can be part of the "proof/confirmation pipeline".
 
-##### (c2) Cardano: initialize destination protocol (one-time per client) — `init`
+##### (c2) Cardano: relayer certifies hash on-chain — `relayer`
 
-Before any messages can be certified and revealed, we must configure the set of trusted relayers.  Command:  `asterizm init`.  What this does:
-
-- Computes the policy IDs for each allowed relayer based on their public key hash.
-- Writes `./assets/asterizm-setup.json`, which contains parameters (client PKH + list of allowed relayer policy IDs) used by the client minting policy.
-
-Note: This is an **off-chain** operation. The allowed relayers are embedded directly in the client's minting policy, eliminating the need for an on-chain registry.
-
-**Typical usage (once)**:
-```shell
-cabal run zkfold-cli:asterizm -- init \
-  --client-vkey-file client.vkey \
-  --relayer-vkey-file relayer.vkey
-```
-
-**Inputs to understand**:
-- `--relayer-*`: defines the set of valid relayers (do not leave this empty).
-
-**Outputs**:
-- Local `assets/asterizm-setup.json` (needed for later steps).
-
-At a high-level, we can view this as "configure destination client + whitelist relayers".
-
-##### (c3) Cardano: generate message artifacts — `message`
-
-We need two artifacts:
-- private message payload file (plaintext)
-- public message-hash file
-
-**Command**: `asterizm message`
-```shell
-cabal run zkfold-cli:asterizm -- message \
-  --message-text "Hello from BSC to Cardano"
-```
-
-This writes by default:
-- `assets/message.private` (payload bytes, private)
-- `assets/message-hash.public` (hash, public)
-
-Note that: a) the Cardano relayer only needs the hash (public); b) the Cardano client needs the plaintext (private) to reveal it on-chain.  In TypeScript integration, the TS code can produce payload bytes (from BSC event/log or from original input), then call this CLI step to generate consistent files.
-
-##### (c4) Cardano: relayer certifies hash on-chain — `relayer`
-
-This is the Carddano equivalent of "relay translation confirmation", implemented as *minting a certification token*.
+This is the Cardano equivalent of "relay translation confirmation", implemented as *minting a certification token*.
 
 **Command**: `asterizm relayer`
 ```shell
 cabal run zkfold-cli:asterizm -- relayer \
+  --core-config-file config.json \
   --signing-key-file relayer-payment.skey \
+  --relayer-vkey-file relayer.vkey \
   --beneficiary-address <addr...> \
-  --message-hash-file message-hash.public
+  --message-hash <hex-encoded-hash>
 ```
 
 What it does:
-- Mints a relayer token under that relayer's policy.
+- Mints a relayer token under that relayer's policy (derived from relayer vkey).
 - Token-name encodes the message hash.
 - Places the token at `--beneficiary-address` (an address the protocol controls or monitors).
 
 This is the destination-side *attestation object* proving "a trusted relayer says this hash is valid".  This can be viewed as "relayer posts proof/confirmation to destination chain".
 
-##### (c5) Cardano: client reveals payload, validated agains Registry + hash — `client`
+##### (c3) Cardano: client receives payload, validated against relayer hash — `client receive`
 
 Now the destination client publishes the actual message payload on-chain, but only if:
 - it consumes the relayer token UTxO, and
 - validation passes.
 
-**Command**: `asterizm client`
+**Command**: `asterizm client receive`
 ```shell
-cabal run zkfold-cli:asterizm -- client \
+cabal run zkfold-cli:asterizm -- client receive \
+  --core-config-file config.json \
   --signing-key-file client-payment.skey \
+  --client-vkey-file client.vkey \
+  --relayer-vkey-file relayer.vkey \
   --beneficiary-address <addr...> \
-  --message-file message.private
+  --message <hex-encoded-message>
 ```
 
 What it does:
@@ -148,13 +111,43 @@ What it does:
 
 This is the destination "message arrival" moment.  The message is now publicly visible on Cardano and tied to a trusted relayer attestation.  Can be interpreted as "destination client has accepted the message".
 
+##### (c4) Cardano: client sends outgoing message — `client send`
+
+For outgoing messages (Cardano as source chain), no relayer verification is needed.
+
+**Command**: `asterizm client send`
+```shell
+cabal run zkfold-cli:asterizm -- client send \
+  --core-config-file config.json \
+  --signing-key-file client-payment.skey \
+  --client-vkey-file client.vkey \
+  --beneficiary-address <addr...> \
+  --message <hex-encoded-message>
+```
+
+What it does:
+- Mints a client token for the outgoing message.
+- Creates an output containing the message as datum.
+- No relayer reference input is required.
+
 #### Observability: retrieve messages — `retrieve-messages`
 
 This is for indexing/debugging and can be used in TypeScript code to poll.
 
 **Command**: `asterizm retrieve-messages`
 ```shell
-cabal run zkfold-cli:asterizm -- retrieve-messages
+# For incoming messages (require relayer vkey)
+cabal run zkfold-cli:asterizm -- retrieve-messages \
+  --core-config-file config.json \
+  --client-vkey-file client.vkey \
+  --relayer-vkey-file relayer.vkey \
+  --incoming
+
+# For outgoing messages
+cabal run zkfold-cli:asterizm -- retrieve-messages \
+  --core-config-file config.json \
+  --client-vkey-file client.vkey \
+  --outgoing
 ```
 
 This gives a way to list/recover the revealed messages posted on-chain.  Can be though of like a lightweight "destination event reader".
@@ -167,10 +160,9 @@ A TS "operator script" (or backend service) can orchestrate the Asterizm flow as
    - send txs for (a) and (b)
    - listen to events `(msgId, msgHash, payload, dstParams...)`
 2. On Cardano
-   - ensure `init` already ran (bootstrap)
-   - call `message` to derive `message.private` + `message-hash.public`
+   - call `hash` to derive the message hash from the payload
    - call `relayer` to mint attestation token
-   - call `client` to reveal payload datum
+   - call `client receive` to reveal payload datum
    - call `retrieve-messages` to confirm arrival/for debugging
    - Finalize processing (receive).
 
@@ -178,10 +170,10 @@ A TS "operator script" (or backend service) can orchestrate the Asterizm flow as
 
 1. Cardano is UTxO-based.
    - In account (EVM) chains you "update storage".
-   - In Cardano you "spend UTxOs and create new ones".  So the `init` step requires `--tx-oref` because minting the thread token and establishing singleton state uses a specific UTxO as input/entropy.
+   - In Cardano you "spend UTxOs and create new ones".
 
 2. "Policy ID" is like "token contract id".
-   Our *Registry* stores policy IDs of approved relayers.  So, on Cardano, "which relayers are trusted?" is expressed as "which minting policies are trusted to mint certification tokens".
+   The minting policies of approved relayers are embedded at compile time in the client's minting policy.  So, on Cardano, "which relayers are trusted?" is expressed as "which minting policies are trusted to mint certification tokens".
 
 3. The destination does not "call a contract" in the same way as in EVM chains.
    The  "receive" step will likely be a transaction that:
@@ -190,10 +182,10 @@ A TS "operator script" (or backend service) can orchestrate the Asterizm flow as
    - mints/burns token under policies
 
 4. Where each *zkfold-cli* command fits in the Asterizm flow:
-   - `init`: destination bootstrap: establish Registry + trusted relayers; generate stup file.
-   - `message`: produce payload + hash artifacts used by the destination steps.
+   - `hash`: compute the message hash from the payload.
    - `relayer`: destination "relay translation/attestation"; mints certification token encoding message hash.
-   - `client`: destination acceptance: validates relayer agains Registry; reveal payload datum on-chain.
+   - `client receive`: destination acceptance: validates relayer; reveal payload datum on-chain.
+   - `client send`: source initiation: mints client token for outgoing messages.
    - `retrieve-messages`: destination read/indexing; confirm the message was revealed.
 
 

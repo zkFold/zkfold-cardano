@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-export CORE_CONFIG_PATH=./assets/config.json
+configpath=./assets/config.json
 keypath=./keys
 
 # Build an outgoing Asterizm message (Cardano -> other chain)
@@ -28,8 +28,9 @@ message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
 echo "Message: $message"
 echo "Submitting outgoing message..."
 
-cabal run zkfold-cli:asterizm -- client \
+cabal run zkfold-cli:asterizm -- client send \
+  --core-config-file $configpath \
   --signing-key-file $keypath/client.skey \
+  --client-vkey-file $keypath/client.vkey \
   --beneficiary-address $(cat $keypath/client.addr) \
-  --message "$message" \
-  --outgoing
+  --message "$message"

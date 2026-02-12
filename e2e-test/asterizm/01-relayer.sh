@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-export CORE_CONFIG_PATH=./assets/config.json
+configpath=./assets/config.json
 keypath=./keys
 
 # Build an Asterizm message with 112-byte header + payload
@@ -35,6 +35,8 @@ echo "Message hash: $messageHash"
 echo "$message" > ./assets/message-incoming.hex
 
 cabal run zkfold-cli:asterizm -- relayer \
+  --core-config-file $configpath \
   --signing-key-file $keypath/relayer.skey \
+  --relayer-vkey-file $keypath/relayer.vkey \
   --beneficiary-address $(cat $keypath/relayer.addr) \
   --message-hash "$messageHash"
