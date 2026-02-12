@@ -67,6 +67,7 @@ pTransactionAsterizmClient path mcfg = do
             <*> pSigningKeyAlt
             <*> pBenefOutAddress
             <*> pMessage
+            <*> pMessageDirection
             <*> pOutFile AsterizmClient
 
 pTransactionAsterizmHash :: Parser AsterizmHash.Transaction

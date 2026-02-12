@@ -12,10 +12,10 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (AsterizmSetup (..))
+import           ZkFold.Cardano.Asterizm.Types (AsterizmSetup (..), MessageDirection (..), directionToBool)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import qualified ZkFold.Cardano.CLI.Parsers    as CLI
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientIncomingCompiled, buildCrosschainHash)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, buildCrosschainHash)
 
 
 data Transaction = Transaction
@@ -24,11 +24,12 @@ data Transaction = Transaction
   , requiredSigner :: !CLI.SigningKeyAlt
   , outAddress     :: !GYAddress
   , message        :: !BS.ByteString
+  , direction      :: !MessageDirection
   , outFile        :: !FilePath
   }
 
 clientMint :: Transaction -> IO ()
-clientMint (Transaction path coreCfg' sig sendTo msg outFile) = do
+clientMint (Transaction path coreCfg' sig sendTo msg dir outFile) = do
   let assetsPath = path </> "assets"
       setupFile  = assetsPath </> "asterizm-setup.json"
 
@@ -51,7 +52,8 @@ clientMint (Transaction path coreCfg' sig sendTo msg outFile) = do
 
   let clientPKH        = pubKeyHashToPlutus $ acsClientPKH asterizmSetup
       allowedRelayers  = mintingPolicyIdToCurrencySymbol <$> acsAllowedRelayers asterizmSetup
-      plutusPolicy     = asterizmClientIncomingCompiled clientPKH allowedRelayers
+      isIncoming       = directionToBool dir
+      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers isIncoming
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
@@ -62,20 +64,28 @@ clientMint (Transaction path coreCfg' sig sendTo msg outFile) = do
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
-      Right pids -> pure $ (`GYNonAdaToken` tokenName) <$> pids
-      Left _     -> throwIO $ userError "Corrupted relayers' registry."
+    -- For incoming messages, find and reference the relayer's token
+    mRelayerOref <- case dir of
+      Incoming -> do
+        relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
+          Right pids -> pure $ (`GYNonAdaToken` tokenName) <$> pids
+          Left _     -> throwIO $ userError "Corrupted relayers' registry."
 
-    relayerUtxos <- forM relayerTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
+        relayerUtxos <- forM relayerTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
 
-    relayerOref <- case concatMap utxosToList relayerUtxos of
-      u : _ -> pure $ utxoRef u
-      _     -> throwIO $ userError "No relayer has validated client's message yet."
+        case concatMap utxosToList relayerUtxos of
+          u : _ -> pure $ Just (utxoRef u)
+          _     -> throwIO $ userError "No relayer has validated client's message yet."
 
-    let skeleton = mustHaveRefInput relayerOref
-                <> mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-                <> mustMint policy unitRedeemer tokenName 1
-                <> mustBeSignedBy pkh
+      Outgoing -> pure Nothing
+
+    let baseSkeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
+                    <> mustMint policy unitRedeemer tokenName 1
+                    <> mustBeSignedBy pkh
+
+        skeleton = case mRelayerOref of
+          Just oref -> mustHaveRefInput oref <> baseSkeleton
+          Nothing   -> baseSkeleton
 
     txbody <- runGYTxGameMonadIO nid
                                  providers $

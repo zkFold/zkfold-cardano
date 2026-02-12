@@ -98,4 +98,16 @@ instance ToJSON AsterizmMessageHash where
 instance FromJSON AsterizmMessageHash where
   parseJSON = fmap AsterizmMessageHash . (hexToBS <=< parseJSON)
 
+-- | Direction of cross-chain message transfer.
+data MessageDirection
+  = Incoming  -- ^ Message received from another chain (requires relayer verification)
+  | Outgoing  -- ^ Message sent to another chain (no relayer verification needed)
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+-- | Convert direction to Bool for on-chain script parameter.
+directionToBool :: MessageDirection -> Bool
+directionToBool Incoming = True
+directionToBool Outgoing = False
+
 

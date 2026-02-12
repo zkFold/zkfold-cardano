@@ -25,13 +25,14 @@ import           System.FilePath               ((</>))
 import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), AsterizmSetup (..), fromByteString)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.CLI.Parsers    (CoreConfigAlt, fromCoreConfigAltIO)
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientIncomingCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
 
--- | Convert AsterizmSetup to policy id for querying
+-- | Convert AsterizmSetup to policy id for querying (incoming messages).
 setupToPolicyId :: AsterizmSetup -> GYMintingPolicyId
 setupToPolicyId AsterizmSetup{..} = snd . policyFromPlutus $
-  asterizmClientIncomingCompiled (pubKeyHashToPlutus acsClientPKH)
-                                 (mintingPolicyIdToCurrencySymbol <$> acsAllowedRelayers)
+  asterizmClientCompiled (pubKeyHashToPlutus acsClientPKH)
+                         (mintingPolicyIdToCurrencySymbol <$> acsAllowedRelayers)
+                         True  -- Incoming messages
 
 
 -- Assumption: client's tokens are never consumed.

@@ -55,10 +55,12 @@ untypedAsterizmRelayer pkh ctx' = check conditionSigned
     conditionSigned = txSignedBy info pkh
 
 -- | Plutus script (minting policy) for posting actual messages on-chain.
-{-# INLINABLE untypedAsterizmClientIncoming #-}
-untypedAsterizmClientIncoming :: PubKeyHash -> [CurrencySymbol] -> BuiltinData -> BuiltinUnit
-untypedAsterizmClientIncoming clientPKH allowedRelayers ctx' = check $ conditionSigned &&
-    (conditionMinting && conditionVerifying)
+-- When @isIncoming@ is True, validates relayer reference input (incoming cross-chain message).
+-- When @isIncoming@ is False, skips relayer verification (outgoing cross-chain message).
+{-# INLINABLE untypedAsterizmClient #-}
+untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> Bool -> BuiltinData -> BuiltinUnit
+untypedAsterizmClient clientPKH allowedRelayers isIncoming ctx' = check $
+    conditionSigned && conditionMinting && (not isIncoming || conditionVerifying)
   where
     ctx :: ScriptContext
     ctx = unsafeFromBuiltinData ctx'
@@ -104,8 +106,9 @@ asterizmRelayerCompiled pkh =
     $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
 
-asterizmClientIncomingCompiled :: PubKeyHash -> [CurrencySymbol] -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmClientIncomingCompiled clientPKH allowedRelayers =
-    $$(compile [|| untypedAsterizmClientIncoming ||])
+asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> Bool -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmClientCompiled clientPKH allowedRelayers isIncoming =
+    $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef clientPKH
     `unsafeApplyCode` liftCodeDef allowedRelayers
+    `unsafeApplyCode` liftCodeDef isIncoming

@@ -11,6 +11,8 @@ import           Options.Applicative                (Parser)
 import qualified Options.Applicative                as Opt
 import           Prelude
 
+import           ZkFold.Cardano.Asterizm.Types      (MessageDirection (..))
+
 ----- :Alternatives: -----
 
 -- | Sum type for 'GYPubKeyHash' input alternatives.
@@ -55,6 +57,20 @@ pMessage = Opt.option hexReader
         <> Opt.metavar "HEX"
         <> Opt.help "Hex-encoded Asterizm structured message."
     )
+
+----- :parsing MessageDirection: -----
+
+pMessageDirection :: Parser MessageDirection
+pMessageDirection = Opt.asum
+    [ Opt.flag' Incoming
+        ( Opt.long "incoming"
+            <> Opt.help "Incoming cross-chain message (requires relayer verification)."
+        )
+    , Opt.flag' Outgoing
+        ( Opt.long "outgoing"
+            <> Opt.help "Outgoing cross-chain message (no relayer verification needed)."
+        )
+    ]
 
 ----- :parsing PubKeyHash: -----
 
