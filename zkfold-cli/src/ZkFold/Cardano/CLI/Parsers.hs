@@ -64,6 +64,10 @@ pGYCoreConfig mcfg = Opt.option (CoreConfigUseFile <$> Opt.maybeReader Just)
       <> Opt.completer (Opt.bashCompleter "file")
   )
 
+-- | Required config file path parser (no default value).
+pGYCoreConfigFile :: Parser FilePath
+pGYCoreConfigFile = parseFilePath "core-config-file" "Path to core config file (required)."
+
 ----- :parsing GYPaymentSigningKey: -----
 
 pSigningKey :: Parser GYPaymentSigningKey
@@ -84,6 +88,10 @@ pSigningKeyAlt = Opt.asum
   [ SigningKeyUseGY <$> pSigningKey
   , SigningKeyUseFile <$> pSigningKeyFile
   ]
+
+-- | Parser for verification key file with custom prefix.
+pVerificationKeyFile :: String -> Parser FilePath
+pVerificationKeyFile prefix = parseFilePath (prefix ++ "-vkey-file") (prefix ++ "'s payment verification key file.")
 
 ----- :parsing GYTxOutRef: -----
 

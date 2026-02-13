@@ -1,33 +1,29 @@
 module ZkFold.Cardano.Options.AsterizmCLI where
 
-import           Cardano.Api                                   (Doc, ExceptT (..))
-import           Cardano.CLI.Parser                            (commandWithMetavar)
-import           GeniusYield.GYConfig                          (GYCoreConfig)
-import           Options.Applicative                           (Parser, ParserInfo, ParserPrefs, asum, many, (<**>))
-import qualified Options.Applicative                           as Opt
+import           Cardano.Api                                  (Doc, ExceptT (..))
+import           Cardano.CLI.Parser                           (commandWithMetavar)
+import           Options.Applicative                          (Parser, ParserInfo, ParserPrefs, asum, many, (<**>))
+import qualified Options.Applicative                          as Opt
 import           Prelude
 
-import qualified ZkFold.Cardano.Asterizm.Transaction.Client    as AsterizmClient
-import qualified ZkFold.Cardano.Asterizm.Transaction.Init      as AsterizmInit
-import qualified ZkFold.Cardano.Asterizm.Transaction.InitRelay as AsterizmInitRelay
-import qualified ZkFold.Cardano.Asterizm.Transaction.Message   as AsterizmMessage
-import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer   as AsterizmRelayer
-import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve  as AsterizmRetrieve
+import qualified ZkFold.Cardano.Asterizm.Transaction.Client   as AsterizmClient
+import qualified ZkFold.Cardano.Asterizm.Transaction.Hash     as AsterizmHash
+import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer  as AsterizmRelayer
+import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve as AsterizmRetrieve
 import           ZkFold.Cardano.CLI.Parsers
-import           ZkFold.Cardano.Options.Common
+import           ZkFold.Cardano.Options.Common                hiding (pVerificationKeyFile)
 
 
 data ClientCommand
-    = TransactionAsterizmInit AsterizmInit.Transaction
-    | TransactionAsterizmClient AsterizmClient.Transaction
-    | TransactionAsterizmMessage AsterizmMessage.Transaction
+    = TransactionAsterizmClientSend AsterizmClient.SendTransaction
+    | TransactionAsterizmClientReceive AsterizmClient.ReceiveTransaction
+    | TransactionAsterizmHash AsterizmHash.Transaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
     | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
-    | TransactionAsterizmInitRelay AsterizmInitRelay.Transaction
 
-opts :: FilePath -> Maybe GYCoreConfig -> ParserInfo ClientCommand
-opts path mcfg =
-    Opt.info (pCmds path mcfg <**> Opt.helper) $
+opts :: ParserInfo ClientCommand
+opts =
+    Opt.info (pCmds <**> Opt.helper) $
         mconcat
             [ Opt.fullDesc
             , Opt.header $
@@ -40,100 +36,84 @@ opts path mcfg =
 pref :: ParserPrefs
 pref = Opt.prefs $ mconcat [] -- no help
 
-pCmds :: FilePath -> Maybe GYCoreConfig -> Parser ClientCommand
-pCmds path mcfg = do
+pCmds :: Parser ClientCommand
+pCmds = do
     asum $
-        [ TransactionAsterizmInit      <$> pTransactionAsterizmInit path mcfg
-        , TransactionAsterizmClient    <$> pTransactionAsterizmClient path mcfg
-        , TransactionAsterizmMessage   <$> pTransactionAsterizmMessage path
-        , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer path mcfg
-        , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve path mcfg
-        , TransactionAsterizmInitRelay <$> pTransactionAsterizmInitRelay path mcfg
+        [ pTransactionAsterizmClient
+        , TransactionAsterizmHash      <$> pTransactionAsterizmHash
+        , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer
+        , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve
         ]
 
-pTransactionAsterizmInit :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmInit.Transaction
-pTransactionAsterizmInit path mcfg = do
-    subParser "init" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        AsterizmInit.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
-            <*> pTxInOref
-            <*> pRegistryAddress
-            <*> pPubKeyHashAlt Client
-            <*> many (pPubKeyHashAlt Relayer)
-            <*> pOutFile AsterizmInit
-
-pTransactionAsterizmClient :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmClient.Transaction
-pTransactionAsterizmClient path mcfg = do
+-- | Parser for client subcommands (send/receive)
+pTransactionAsterizmClient :: Parser ClientCommand
+pTransactionAsterizmClient = do
     subParser "client" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
-    pCmd = do
-        AsterizmClient.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
-            <*> pBenefOutAddress
-            <*> pMessageFile
-            <*> pOutFile AsterizmClient
+    pCmd = asum
+        [ TransactionAsterizmClientSend <$> pClientSend
+        , TransactionAsterizmClientReceive <$> pClientReceive
+        ]
 
-pTransactionAsterizmMessage :: FilePath -> Parser AsterizmMessage.Transaction
-pTransactionAsterizmMessage path = do
-    subParser "message" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+    pClientSend = subParser "send" $ Opt.info pSendCmd $ Opt.progDescDoc Nothing
+      where
+        pSendCmd = do
+            AsterizmClient.SendTransaction
+                <$> pGYCoreConfigFile
+                <*> pSigningKeyFile
+                <*> pVerificationKeyFile "client"
+                <*> pBenefOutAddress
+                <*> pMessage
+
+    pClientReceive = subParser "receive" $ Opt.info pReceiveCmd $ Opt.progDescDoc Nothing
+      where
+        pReceiveCmd = do
+            AsterizmClient.ReceiveTransaction
+                <$> pGYCoreConfigFile
+                <*> pSigningKeyFile
+                <*> pVerificationKeyFile "client"
+                <*> many (pVerificationKeyFile "relayer")
+                <*> pBenefOutAddress
+                <*> pMessage
+
+pTransactionAsterizmHash :: Parser AsterizmHash.Transaction
+pTransactionAsterizmHash = do
+    subParser "hash" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
-    pCmd = do
-        AsterizmMessage.Transaction path
-            <$> pMessage
-            <*> pMessageFile
-            <*> pMessageHashFile
+    pCmd = AsterizmHash.Transaction <$> pMessage
 
-pTransactionAsterizmRelayer :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmRelayer.Transaction
-pTransactionAsterizmRelayer path mcfg = do
+pTransactionAsterizmRelayer :: Parser AsterizmRelayer.Transaction
+pTransactionAsterizmRelayer = do
     subParser "relayer" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        AsterizmRelayer.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
+        AsterizmRelayer.Transaction
+            <$> pGYCoreConfigFile
+            <*> pSigningKeyFile
+            <*> pVerificationKeyFile "relayer"
             <*> pBenefOutAddress
-            <*> pMessageHashFile
-            <*> pOutFile AsterizmRelayer
+            <*> pMessageHash
 
-pTransactionAsterizmRetrieve :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmRetrieve.Transaction
-pTransactionAsterizmRetrieve path mcfg = do
+pTransactionAsterizmRetrieve :: Parser AsterizmRetrieve.Transaction
+pTransactionAsterizmRetrieve = do
     subParser "retrieve-messages" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = do
-        AsterizmRetrieve.Transaction path
-            <$> pGYCoreConfig mcfg
-
-pTransactionAsterizmInitRelay :: FilePath -> Maybe GYCoreConfig -> Parser AsterizmInitRelay.Transaction
-pTransactionAsterizmInitRelay path mcfg = do
-    subParser "init-relay" $ Opt.info pCmd $ Opt.progDescDoc Nothing
-  where
-    pCmd = do
-        AsterizmInitRelay.Transaction path
-            <$> pGYCoreConfig mcfg
-            <*> pSigningKeyAlt
-            <*> pTransferChainId ACISrc
-            <*> pTransferFieldBS ATFSrcAddress
-            <*> pTransferChainId ACIDst
-            <*> pTransferFieldBS ATFDstAddress
-            <*> pTransferFieldBS ATFMsgId
-            <*> pTransferNotifyFlag
-            <*> pTransferFieldBS ATFTransferHash
-            <*> pOutFile AsterizmInitRelay
+        AsterizmRetrieve.Transaction
+            <$> pGYCoreConfigFile
+            <*> pVerificationKeyFile "client"
+            <*> many (pVerificationKeyFile "relayer")
+            <*> pMessageDirection
 
 data ClientCommandErrors
 
 runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
-    TransactionAsterizmInit      cmd -> ExceptT (Right <$> AsterizmInit.asterizmInit     cmd)
-    TransactionAsterizmClient    cmd -> ExceptT (Right <$> AsterizmClient.clientMint     cmd)
-    TransactionAsterizmMessage   cmd -> ExceptT (Right <$> AsterizmMessage.clientMessage cmd)
-    TransactionAsterizmRelayer   cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint   cmd)
-    TransactionAsterizmRetrieve  cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
-    TransactionAsterizmInitRelay cmd -> ExceptT (Right <$> AsterizmInitRelay.initRelay   cmd)
+    TransactionAsterizmClientSend    cmd -> ExceptT (Right <$> AsterizmClient.clientSend    cmd)
+    TransactionAsterizmClientReceive cmd -> ExceptT (Right <$> AsterizmClient.clientReceive cmd)
+    TransactionAsterizmHash          cmd -> ExceptT (Right <$> AsterizmHash.computeHash     cmd)
+    TransactionAsterizmRelayer       cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint  cmd)
+    TransactionAsterizmRetrieve      cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
 
 renderClientCommandError :: ClientCommandErrors -> Doc ann
 renderClientCommandError = undefined

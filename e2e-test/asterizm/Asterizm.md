@@ -4,26 +4,21 @@ This documents describes usage of our prototype implementation of the Asterizm p
 
 CLI commands are provided to
 
-- initialize the protocol
-- client's generation of private/public files associated with a specific message
+- compute the hash of a message
 - relayer's certification of the message's hash
-- client's sending of message to the blockchain following a valid relayer's certification
-- retrival of messages posted on the blockchain
+- client's sending of outgoing messages to the blockchain
+- client's receiving of incoming messages with relayer verification
+- retrieval of messages posted on the blockchain
 
-Message certification by a relayer is represented by minting of a token whose policy id is defined at initialization.  Its token-name is the hash of the message.  Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
+Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the hash of the message. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
 
 ## Generalities
 
 Our Asterizm CLI commands are implemented using the [Atlas](https://atlas-app.io/) framework.
 
-Environment variable `CORE_CONFIG_PATH` must be initialized with the path to the file containing your configuration for network and provider:
+A core configuration file is required for all commands that interact with the blockchain. This file contains your configuration for network and provider. (File `./config-template.json` provides a template configuration.)
 
-```shell
-export CORE_CONFIG_PATH=<path to your config file>
-```
-(File `./config-template.json` provides a template configuration.)
-
-After each transaction is executed, the estimated Tx fee and corresponding Tx ID will be displayed.
+After each transaction is executed, the Transaction ID will be displayed.
 
 ## Help documentation
 
@@ -43,87 +38,33 @@ cabal run zkfold-cli:asterizm -- --help
 zkfold-cli:asterizm - Command-line utility to interact with Cardano. Provides
 specific commands to manage the 'Asterizm' protocol.
 
-Usage: asterizm (init | client | message | relayer | retrieve-messages)
+Usage: asterizm (client | hash | relayer | retrieve-messages)
 
 Available options:
   -h,--help                Show this help text
 
 Available commands:
-  init                     
   client                   
-  message                  
+  hash                     
   relayer                  
   retrieve-messages        
 ```
 
 We now describe each command.  The eager reader can jump to [section "End-to-end test"](#end-to-end-test) below to see a sample workflow.
 
-### init
+### hash
 
-Initializes the protocol for a specific client.  A set of valid relayers is provided at this point.  The command posts at the blockchain, as datum, a list of policy-id's associated to the valid relayer's.  We call this list "the Registry".  A specific reference to an arbitrary UTxO to be consumed needs to be provided, as it is needed to generate the nft (thread token) that will identify the Registry.
-
-A directory `./assets` is created if abscent, in which command `init` writes file *asterizm-setup.json*.  It contains the client's pub-key-hash and the thread-token's policy ID; these parameterize the client's *minting policy*.
+Computes the hash of a given message. The message is provided as a HEX-encoded bytestring.
 
 ```shell
-cabal run zkfold-cli:asterizm -- init --help
+cabal run zkfold-cli:asterizm -- hash --help
 ```
 
 ```output
-Usage: asterizm init [--core-config-file FILEPATH]
-  (--signing-key HEX | --signing-key-file FILEPATH)
-  --tx-oref TxId#TxIx
-  --registry-address ADDRESS
-  (--client-pkh HEX | --client-vkey-file FILEPATH)
-  [--relayer-pkh HEX | --relayer-vkey-file FILEPATH]
-  [--init-out-file FILEPATH]
+Usage: asterizm hash --message HEX
 
 Available options:
-  --core-config-file FILEPATH
-                           Path to 'core config'. This overrides the
-                           CORE_CONFIG_PATH environment variable. The argument
-                           is optional if CORE_CONFIG_PATH is defined and
-                           mandatory otherwise.
-  --signing-key HEX        Hex-encoded signing key
-  --signing-key-file FILEPATH
-                           Payment signing key file.
-  --tx-oref TxId#TxIx      TxOutRef (reference to a Tx input) to be consumed at
-                           initialization.
-  --registry-address ADDRESS
-                           Address to park relayer's registry at.
-  --client-pkh HEX         Hex-encoded client's pub-key-hash.
-  --client-vkey-file FILEPATH
-                           Client's payment verification-key file.
-  --relayer-pkh HEX        Hex-encodec relayer's pub-key-hash.
-  --relayer-vkey-file FILEPATH
-                           Relayer's payment verification-key file.
-  --init-out-file FILEPATH Path (relative to 'assets/') for Asterizm
-                           initialization tx out-file.
-  -h,--help                Show this help text
-```
-
-Note that, eventhough providing the relayers is optional, not providing any (an empty list) would render a useless protocol.
-
-### message
-
-Generates the private/public files associated to a given message.  The message can be provided as either a plain ASCII string or as an HEX-encoded bytestring.
-
-```shell
-cabal run zkfold-cli:asterizm -- message --help
-```
-
-```output
-Usage: asterizm message (--message-text ASCII | --message-hex HEX)
-  [--message-file FILEPATH]
-  [--message-hash-file FILEPATH]
-
-Available options:
-  --message-text ASCII     Asterizm message as string of ASCII characters.
-  --message-hex HEX        Hex-encoded Asterizm message.
-  --message-file FILEPATH  Path (relative to 'assets/') for PRIVATE file storing
-                           message. (default: "message.private")
-  --message-hash-file FILEPATH
-                           Path (relative to 'assets/') for PUBLIC file storing
-                           message hash. (default: "message-hash.public")
+  --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
 
@@ -136,65 +77,83 @@ cabal run zkfold-cli:asterizm -- relayer --help
 ```
 
 ```output
-Usage: asterizm relayer [--core-config-file FILEPATH]
-  (--signing-key HEX | --signing-key-file FILEPATH)
+Usage: asterizm relayer --core-config-file FILEPATH
+  --signing-key-file FILEPATH
+  --relayer-vkey-file FILEPATH
   --beneficiary-address ADDRESS
-  [--message-hash-file FILEPATH]
-  [--relayer-out-file FILEPATH]
+  --message-hash HEX
 
 Available options:
   --core-config-file FILEPATH
-                           Path to 'core config'. This overrides the
-                           CORE_CONFIG_PATH environment variable. The argument
-                           is optional if CORE_CONFIG_PATH is defined and
-                           mandatory otherwise.
-  --signing-key HEX        Hex-encoded signing key
+                           Path to core config file (required).
   --signing-key-file FILEPATH
                            Payment signing key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
-  --message-hash-file FILEPATH
-                           Path (relative to 'assets/') for PUBLIC file storing
-                           message hash. (default: "message-hash.public")
-  --relayer-out-file FILEPATH
-                           Path (relative to 'assets/') for Asterizm
-                           relayer-mint tx out-file.
+  --message-hash HEX       Hex-encoded Asterizm message hash (32 bytes).
   -h,--help                Show this help text
 ```
 
-### client
+### client send
 
-Command used by client to post (reveal) original message to the blockchain, as datum accompanying a token minted this command.
-
-Transaction references UTxO with relayer's token.  Client's minting policy validates *a)* the relayer's policy ID against the Registry (identified by the thread-token) and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
+Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required.
 
 ```shell
-cabal run zkfold-cli:asterizm -- client --help
+cabal run zkfold-cli:asterizm -- client send --help
 ```
 
 ```output
-Usage: asterizm client [--core-config-file FILEPATH]
-  (--signing-key HEX | --signing-key-file FILEPATH)
+Usage: asterizm client send --core-config-file FILEPATH
+  --signing-key-file FILEPATH
+  --client-vkey-file FILEPATH
   --beneficiary-address ADDRESS
-  [--message-file FILEPATH]
-  [--client-out-file FILEPATH]
+  --message HEX
 
 Available options:
   --core-config-file FILEPATH
-                           Path to 'core config'. This overrides the
-                           CORE_CONFIG_PATH environment variable. The argument
-                           is optional if CORE_CONFIG_PATH is defined and
-                           mandatory otherwise.
-  --signing-key HEX        Hex-encoded signing key
+                           Path to core config file (required).
   --signing-key-file FILEPATH
                            Payment signing key file.
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
-  --message-file FILEPATH  Path (relative to 'assets/') for PRIVATE file storing
-                           message. (default: "message.private")
-  --client-out-file FILEPATH
-                           Path (relative to 'assets/') for Asterizm client-mint
-                           tx out-file.
+  --message HEX            Hex-encoded Asterizm structured message.
+  -h,--help                Show this help text
+```
+
+### client receive
+
+Command used by client to receive an incoming message (Cardano as destination chain). Requires relayer verification.
+
+Transaction references UTxO with relayer's token. Client's minting policy validates *a)* the relayer's policy ID against the allowed set and *b)* compatibility between the client's message and the message-hash contained in the relayer's token-name.
+
+```shell
+cabal run zkfold-cli:asterizm -- client receive --help
+```
+
+```output
+Usage: asterizm client receive --core-config-file FILEPATH
+  --signing-key-file FILEPATH
+  --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
+  --beneficiary-address ADDRESS
+  --message HEX
+
+Available options:
+  --core-config-file FILEPATH
+                           Path to core config file (required).
+  --signing-key-file FILEPATH
+                           Payment signing key file.
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
+  --beneficiary-address ADDRESS
+                           Address of beneficiary receiving token(s).
+  --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
 
@@ -207,18 +166,24 @@ cabal run zkfold-cli:asterizm -- retrieve-messages --help
 ```
 
 ```output
-Usage: asterizm retrieve-messages [--core-config-file FILEPATH]
+Usage: asterizm retrieve-messages --core-config-file FILEPATH
+  --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
+  (--incoming | --outgoing)
 
 Available options:
   --core-config-file FILEPATH
-                           Path to 'core config'. This overrides the
-                           CORE_CONFIG_PATH environment variable. The argument
-                           is optional if CORE_CONFIG_PATH is defined and
-                           mandatory otherwise.
+                           Path to core config file (required).
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
+  --incoming               Incoming cross-chain message (requires relayer
+                           verification).
+  --outgoing               Outgoing cross-chain message (no relayer verification
+                           needed).
   -h,--help                Show this help text
 ```
-
-(No options need to be given if `CORE_CONFIG_PATH` is already an environment variable.)
 
 ## End-to-end test
 
@@ -226,85 +191,100 @@ What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.
 
 ![workflow](figures/00-flow.svg)
 
-**Figure:** process flow
+**Figure:** Process flows for incoming messages (Cardano as destination) and outgoing messages (Cardano as source)
 
-### Initialization
-
-```shell
-asterizm$ cabal run zkfold-cli:asterizm -- init \
-  --signing-key-file ./keys/someone.skey \
-  --tx-oref 4e16927f137a748a1ac7f19c26166695cb8a0031f1fc16b098d793f357aeb13f#0 \
-  --registry-address $(cat ./keys/asterizm.addr) \
-  --client-vkey-file ./keys/alice.vkey \
-  --relayer-vkey-file ./keys/bob.vkey \
-  --relayer-vkey-file ./keys/charlie.vkey \
-  --relayer-vkey-file ./keys/dylan.vkey
-```
-
-```output
-Estimated transaction fee: 397683 Lovelace
-Transaction Id: 9f17b5d93780c7a7149e53cbde2747515a868748259235554917635c41304472
-```
-
-![init Tx](figures/01-init-tx.svg)
-
-**Figure:** Initialization Tx
-
-### Message
+### Generate Keys
 
 ```shell
-asterizm$ cabal run zkfold-cli:asterizm -- message \
-  --message-text "Hello, Asterizm!"
+asterizm$ ./00-keygen.sh client
+asterizm$ ./00-keygen.sh relayer
 ```
 
-```output
-Saving Asterizm message (private file: message.private)...
-Saving message hash (public file: message-hash.public)...
-Done.
-```
+This generates verification and signing keys for the client and relayer roles.
 
 ### Relayer
 
+The relayer mints a certification token for an incoming message:
+
 ```shell
+asterizm$ # Build message and compute hash
+asterizm$ message="0000000000000001...48656c6c6f2c20417374657269...<<hex message>>"
+asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- hash --message "$message" | tr -d '"')
+
 asterizm$ cabal run zkfold-cli:asterizm -- relayer \
-  --signing-key-file ./keys/bob.skey \
-  --beneficiary-address $(cat ./keys/bob.addr)
+  --core-config-file ./assets/config.json \
+  --signing-key-file ./keys/relayer.skey \
+  --relayer-vkey-file ./keys/relayer.vkey \
+  --beneficiary-address $(cat ./keys/relayer.addr) \
+  --message-hash "$messageHash"
 ```
 
 ```output
-Estimated transaction fee: 884420 Lovelace
-Transaction Id: 34b5073da5da6869dddc24b3b2d75c3a1c3ea90769d944c2170ec6aee99af5e1
+"<transaction-id>"
 ```
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 
 **Figure:** Relayer's Tx
 
-(Note: Bob is "relayer1".)
+### Client Receive (Incoming Message)
 
-### Client
+The client receives an incoming message by validating the relayer's certification:
 
 ```shell
-asterizm$ cabal run zkfold-cli:asterizm -- client \
-  --signing-key-file ./keys/alice.skey \
-  --beneficiary-address $(cat ./keys/alice.addr)
+asterizm$ cabal run zkfold-cli:asterizm -- client receive \
+  --core-config-file ./assets/config.json \
+  --signing-key-file ./keys/client.skey \
+  --client-vkey-file ./keys/client.vkey \
+  --relayer-vkey-file ./keys/relayer.vkey \
+  --beneficiary-address $(cat ./keys/client.addr) \
+  --message "$message"
 ```
 
 ```output
-Estimated transaction fee: 1383689 Lovelace
-Transaction Id: bde3ddf213cb648f66b7c0ed5242d825263cd2fe2a842679b2d990ddcf4ec37b
+"<transaction-id>"
 ```
 
 ![client Tx](figures/04-client-tx.svg)
 
 **Figure:** Client's Tx
 
-(Note: Alice plays the role of Client.)
+### Client Send (Outgoing Message)
+
+The client sends an outgoing message (no relayer verification needed):
+
+```shell
+asterizm$ cabal run zkfold-cli:asterizm -- client send \
+  --core-config-file ./assets/config.json \
+  --signing-key-file ./keys/client.skey \
+  --client-vkey-file ./keys/client.vkey \
+  --beneficiary-address $(cat ./keys/client.addr) \
+  --message "$outgoingMessage"
+```
+
+```output
+"<transaction-id>"
+```
+
+![client send Tx](figures/05-client-send-tx.svg)
+
+**Figure:** Client Send Tx
 
 ### Retrieve Messages
 
 ```shell
-asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages
+asterizm$ # Retrieve incoming messages
+asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages \
+  --core-config-file ./assets/config.json \
+  --client-vkey-file ./keys/client.vkey \
+  --relayer-vkey-file ./keys/relayer.vkey \
+  --incoming
+
+asterizm$ # Retrieve outgoing messages
+asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages \
+  --core-config-file ./assets/config.json \
+  --client-vkey-file ./keys/client.vkey \
+  --outgoing
 ```
 
 ```output
@@ -315,4 +295,4 @@ B "Hello, Asterizm!"
 
 ---
 
-*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  It is assumed that you have independently generated .addr, .skey and .vkey files for users "someone", "asterizm", "alice", "bob", "charlie" and "dylan" in directory `./e2e-test/asterizm/keys` and that you have funded "someone", "alice" and "bob".
+*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client` and `./00-keygen.sh relayer`, then fund the client and relayer addresses before running the scripts.
