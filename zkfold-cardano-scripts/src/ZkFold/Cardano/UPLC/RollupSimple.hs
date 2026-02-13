@@ -143,16 +143,17 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
             &&
               (
 
-                let circuitOutput = [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
-                      <> (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
-                      <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
+                let bridgeInS =
+                      (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
                 in
                 traceIfFalse
-              ("rollupSimpleStake: proof verification failed, circuit output computed: " <> show circuitOutput)
+              ("rollupSimpleStake: proof verification failed, bridgeInS computed: " <> show bridgeInS)
               ( verify @PlonkupPlutus
                   rcSetupBytes
                   ( toF
-                      <$> circuitOutput
+                      <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
+                      <> bridgeInS
+                      <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
                   )
                   rsrProofBytes
               ))
