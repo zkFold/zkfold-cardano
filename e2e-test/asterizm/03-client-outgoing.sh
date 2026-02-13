@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-configpath=./assets/config.json
+configpath=./config.json
 keypath=./keys
 
 # Build an outgoing Asterizm message (Cardano -> other chain)

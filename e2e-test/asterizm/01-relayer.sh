@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-configpath=./assets/config.json
+configpath=./config.json
 keypath=./keys
 
 # Build an Asterizm message with 112-byte header + payload
