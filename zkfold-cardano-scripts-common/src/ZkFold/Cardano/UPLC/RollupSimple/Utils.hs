@@ -93,6 +93,5 @@ toSymbolicValue ::
   Value ->
   [Integer]
 toSymbolicValue maxAssets v =
-  let v' = flattenValue v
+  let v' = reverse $ flattenValue v  -- since `flattenValue` gives result in reverse order.
    in foldMap (\(cs, tn, amt) -> [byteStringToInteger' $ unCurrencySymbol cs, byteStringToInteger' $ unTokenName tn, amt]) v' <> fillWithZeros2 (maxAssets - length v') 3 []
-
