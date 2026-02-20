@@ -6,29 +6,43 @@ import           Control.Exception             (throwIO)
 import           Control.Monad                 (forM)
 import           Data.Aeson
 import           Data.Aeson.Types
+import qualified Data.ByteString               as BS
+import qualified Data.ByteString.Base16        as B16
+import           Data.Char                     (isPrint)
 import           Data.Coerce                   (coerce)
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 import           GeniusYield.GYConfig          (Confidential (..), GYCoreConfig (..), GYCoreProviderInfo (..),
-                                                withCfgProviders)
+                                                coreConfigIO, withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           Network.HTTP.Simple
+import           PlutusLedgerApi.V3            (BuiltinByteString, fromBuiltin)
+import           PlutusTx                      (unsafeFromBuiltinData)
 import           Prelude
-import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (fromAsterizmClientParams)
+import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), MessageDirection (..), directionToBool,
+                                                fromByteString)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
-import           ZkFold.Cardano.CLI.Parsers    (CoreConfigAlt, fromCoreConfigAltIO)
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled)
+import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled)
 
-
--- Assumption: client's tokens are never consumed.
 
 data Transaction = Transaction
-  { curPath    :: !FilePath
-  , coreCfgAlt :: !CoreConfigAlt
+  { coreCfgFile      :: !FilePath
+  , clientVKeyFile   :: !FilePath
+  , relayerVKeyFiles :: ![FilePath]
+  , direction        :: !MessageDirection
   }
+
+-- | Derive client policy ID from verification keys and direction.
+derivePolicyId :: GYPaymentVerificationKey -> [GYPaymentVerificationKey] -> MessageDirection -> GYMintingPolicyId
+derivePolicyId clientVkey relayerVkeys dir =
+  let clientPKH = pubKeyHashToPlutus $ pubKeyHash clientVkey
+      relayerCSs = case dir of
+        Incoming -> fmap (mintingPolicyIdToCurrencySymbol . snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
+        Outgoing -> []  -- Empty for outgoing
+  in snd . policyFromPlutus $ asterizmClientCompiled clientPKH relayerCSs (directionToBool dir)
 
 fromNetworkIdIO :: GYNetworkId -> IO String
 fromNetworkIdIO nid = case nid of
@@ -37,27 +51,42 @@ fromNetworkIdIO nid = case nid of
   GYTestnetPreview -> pure "preview"
   _                -> throwIO $ userError "Network not supported."
 
+-- | Display a structured Asterizm message from datum
 displayMsg :: GYOutDatum -> IO ()
 displayMsg od = case od of
-  GYOutDatumInline d -> print $ datumToPlutus' d
-  _                  -> putStrLn "Unexpected: no datum found."
+  GYOutDatumInline d -> do
+    let plutusDatum = datumToPlutus' d
+        rawBytes = fromBuiltin (unsafeFromBuiltinData plutusDatum :: BuiltinByteString)
+    case fromByteString rawBytes of
+      Just msg -> do
+        putStrLn $ "  Source Chain ID: " ++ show (amSrcChainId msg)
+        putStrLn $ "  Source Address:  " ++ bsToHexStr (amSrcAddress msg)
+        putStrLn $ "  Dest Chain ID:   " ++ show (amDstChainId msg)
+        putStrLn $ "  Dest Address:    " ++ bsToHexStr (amDstAddress msg)
+        putStrLn $ "  Tx ID:           " ++ bsToHexStr (amTxId msg)
+        putStrLn $ "  Payload (hex):   " ++ bsToHexStr (amPayload msg)
+        putStrLn $ "  Payload (ASCII): " ++ bsToAscii (amPayload msg)
+        putStrLn ""
+      Nothing -> putStrLn "  (Invalid message: header too short)"
+  _ -> putStrLn "  (Unexpected: no inline datum found)"
+
+-- | Convert ByteString to hex string
+bsToHexStr :: BS.ByteString -> String
+bsToHexStr = T.unpack . TE.decodeUtf8 . B16.encode
+
+-- | Convert ByteString to ASCII, replacing non-printable chars with '.'
+bsToAscii :: BS.ByteString -> String
+bsToAscii = map (\c -> if isPrint c then c else '.') . map (toEnum . fromIntegral) . BS.unpack
 
 retrieveMsgs :: Transaction -> IO ()
-retrieveMsgs (Transaction path coreCfg') = do
-  coreCfg <- fromCoreConfigAltIO coreCfg'
+retrieveMsgs (Transaction cfgFile clientVkeyFile relayerVkeyFiles dir) = do
+  coreCfg      <- coreConfigIO cfgFile
+  clientVkey   <- readPaymentVerificationKey clientVkeyFile
+  relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
 
   case cfgCoreProvider coreCfg of
     GYMaestro {} -> do
-      let assetsPath = path </> "assets"
-          setupFile  = assetsPath </> "asterizm-setup.json"
-
-      mAsterizmParams <- decodeFileStrict setupFile
-
-      asterizmSetup <- case mAsterizmParams of
-        Just ap -> pure $ fromAsterizmClientParams ap
-        Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
-
-      let policyId  = snd . policyFromPlutus $ asterizmClientCompiled asterizmSetup
+      let policyId  = derivePolicyId clientVkey relayerVkeys dir
       let policyId' = trimQuot $ show policyId
 
       let nid = cfgNetworkId coreCfg
@@ -89,15 +118,18 @@ retrieveMsgs (Transaction path coreCfg') = do
         msgUtxos' <- forM msgTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
         let msgUtxos = concat $ utxosToList <$> msgUtxos'
 
+        let dirLabel = case dir of
+              Incoming -> "incoming"
+              Outgoing -> "outgoing"
+
         putStr "\n"
-        putStr "Client's messages on-chain:\n\n"
+        putStr $ "Client's " ++ dirLabel ++ " messages on-chain:\n\n"
 
         mapM_ displayMsg $ utxoOutDatum <$> msgUtxos
 
         putStr "\n"
 
     _            -> throwIO $ userError "Only 'Maestro' is currently supported as provider."
-
 
 ------- :Helpers: -------
 

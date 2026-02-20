@@ -100,10 +100,8 @@ executable asterizm
     other-modules:
         ZkFold.Cardano.Asterizm.Types
         ZkFold.Cardano.Asterizm.Utils
-        ZkFold.Cardano.Asterizm.Transaction.Init
-        ZkFold.Cardano.Asterizm.Transaction.InitRelay
         ZkFold.Cardano.Asterizm.Transaction.Client
-        ZkFold.Cardano.Asterizm.Transaction.Message
+        ZkFold.Cardano.Asterizm.Transaction.Hash
         ZkFold.Cardano.Asterizm.Transaction.Relayer
         ZkFold.Cardano.Asterizm.Transaction.Retrieve
         ZkFold.Cardano.Options.Common

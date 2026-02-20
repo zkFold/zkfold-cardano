@@ -2,62 +2,55 @@ module ZkFold.Cardano.Asterizm.Transaction.Client where
 
 import           Control.Exception             (throwIO)
 import           Control.Monad                 (forM)
-import           Data.Aeson                    (decodeFileStrict, encodeFile)
+import qualified Data.ByteString               as BS
 import           Data.Maybe                    (fromJust)
-import           Data.String                   (fromString)
-import           GeniusYield.GYConfig          (GYCoreConfig (..), withCfgProviders)
+import           GeniusYield.GYConfig          (GYCoreConfig (..), coreConfigIO, withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
-import           System.FilePath               ((</>))
 
-import           ZkFold.Cardano.Asterizm.Types (HexByteString (..), fromAsterizmClientParams)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
-import qualified ZkFold.Cardano.CLI.Parsers    as CLI
-import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmSetup (..), asterizmClientCompiled, buildCrosschainHash)
+import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, buildCrosschainHash)
 
 
-data Transaction = Transaction
-  { curPath        :: !FilePath
-  , coreCfgAlt     :: !CLI.CoreConfigAlt
-  , requiredSigner :: !CLI.SigningKeyAlt
-  , outAddress     :: !GYAddress
-  , privateFile    :: !FilePath
-  , outFile        :: !FilePath
+-- | Transaction for sending an outgoing cross-chain message.
+data SendTransaction = SendTransaction
+  { stCoreCfgFile    :: !FilePath
+  , stSigningKeyFile :: !FilePath
+  , stClientVKeyFile :: !FilePath
+  , stOutAddress     :: !GYAddress
+  , stMessage        :: !BS.ByteString
   }
 
-clientMint :: Transaction -> IO ()
-clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
-  let assetsPath = path </> "assets"
-      setupFile  = assetsPath </> "asterizm-setup.json"
+-- | Transaction for receiving an incoming cross-chain message.
+data ReceiveTransaction = ReceiveTransaction
+  { rtCoreCfgFile      :: !FilePath
+  , rtSigningKeyFile   :: !FilePath
+  , rtClientVKeyFile   :: !FilePath
+  , rtRelayerVKeyFiles :: ![FilePath]
+  , rtOutAddress       :: !GYAddress
+  , rtMessage          :: !BS.ByteString
+  }
 
-  mAsterizmParams <- decodeFileStrict setupFile
-
-  asterizmSetup <- case mAsterizmParams of
-    Just ap -> pure $ fromAsterizmClientParams ap
-    Nothing -> throwIO $ userError "Unable to decode Asterizm setup file."
-
-  threadPolicyId <- case mintingPolicyIdFromCurrencySymbol $ acsThreadSymbol asterizmSetup of
-    Right pid -> pure pid
-    Left err  -> throwIO . userError $ "Thread-symbol error: " ++ (show err)
-
-  mMsg <- decodeFileStrict (assetsPath </> privFile)
-
-  msg <- case mMsg of
-    Just (HexByteString m) -> pure m
-    Nothing                -> throwIO $ userError "Unable to retrieve private Asterizm message."
-
-  coreCfg <- CLI.fromCoreConfigAltIO coreCfg'
-  skey    <- CLI.fromSigningKeyAltIO sig
+-- | Mint client token for outgoing message (no relayer verification).
+clientSend :: SendTransaction -> IO ()
+clientSend (SendTransaction cfgFile skeyFile clientVkeyFile sendTo msg) = do
+  coreCfg    <- coreConfigIO cfgFile
+  skey       <- readPaymentSigningKey skeyFile
+  clientVkey <- readPaymentVerificationKey clientVkeyFile
 
   let nid = cfgNetworkId coreCfg
 
-  let pkh        = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash pkh
+  let signerPkh = pubKeyHash $ paymentVerificationKey skey
+      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
       w1         = User' skey Nothing changeAddr
 
-  let plutusPolicy       = asterizmClientCompiled asterizmSetup
+  let clientPKH        = pubKeyHashToPlutus $ pubKeyHash clientVkey
+      allowedRelayers  = []  -- Empty for outgoing
+      isIncoming       = False
+      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers isIncoming
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
@@ -65,49 +58,81 @@ clientMint (Transaction path coreCfg' sig sendTo privFile outFile) = do
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
 
-  let inlineDatum = Just (datumFromPlutusData $ toBuiltin msg, GYTxOutUseInlineDatum @PlutusV3)
+  let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
+
+  let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
+              <> mustMint policy unitRedeemer tokenName 1
+              <> mustBeSignedBy (pubKeyHash clientVkey)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
-    threadUtxos <- runGYTxQueryMonadIO nid providers $
-      utxosWithAsset . GYNonAdaToken threadPolicyId $ fromString "Asterizm Registry"
+    txbody <- runGYTxGameMonadIO nid
+                                 providers $
+                                 asUser w1
+                                 (buildTxBody skeleton)
 
-    -- | Assumption: whenever the thread-token is consumed, datum with Relayer's Registry
-    -- is updated correctly and pushed to the new UTxO where the thread-token is sent to.
-    (threadOref, threadDatum) <- case utxosToList threadUtxos of
-      [u] -> pure $ (utxoRef u, utxoOutDatum u)
-      _   -> throwIO $ userError "Thread-symbol error: unable to locate thread-token."
+    txid <- runGYTxGameMonadIO nid
+                               providers $
+                               asUser w1
+                               (signTxBody txbody >>= submitTx)
 
-    relayerCSs <- case threadDatum of
-      GYOutDatumInline dat -> pure $ unsafeFromBuiltinData $ datumToPlutus' dat
-      _                    -> throwIO $ userError "Unrecoverable relayers' registry."
+    print txid
 
+-- | Mint client token for incoming message (requires relayer verification).
+clientReceive :: ReceiveTransaction -> IO ()
+clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles sendTo msg) = do
+  coreCfg      <- coreConfigIO cfgFile
+  skey         <- readPaymentSigningKey skeyFile
+  clientVkey   <- readPaymentVerificationKey clientVkeyFile
+  relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
+
+  let nid = cfgNetworkId coreCfg
+
+  let signerPkh = pubKeyHash $ paymentVerificationKey skey
+      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
+      w1         = User' skey Nothing changeAddr
+
+  -- Derive relayer policy IDs from their verification keys
+  let relayerPolicyIds = fmap (snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
+      relayerCSs       = mintingPolicyIdToCurrencySymbol <$> relayerPolicyIds
+
+  let clientPKH        = pubKeyHashToPlutus $ pubKeyHash clientVkey
+      allowedRelayers  = relayerCSs
+      isIncoming       = True
+      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers isIncoming
+      (policy, policyId) = policyFromPlutus plutusPolicy
+
+  let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
+      tokenName  = fromJust $ tokenNameFromBS msgHash
+      token      = GYToken policyId tokenName
+      tokenValue = valueSingleton token 1
+
+  let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
+
+  withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    -- Find relayer's token as reference input
     relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
-      Right pids -> pure $ (\pid -> GYNonAdaToken pid tokenName) <$> pids
+      Right pids -> pure $ (`GYNonAdaToken` tokenName) <$> pids
       Left _     -> throwIO $ userError "Corrupted relayers' registry."
 
     relayerUtxos <- forM relayerTokens $ runGYTxQueryMonadIO nid providers . utxosWithAsset
 
-    relayerOref <- case concat $ map utxosToList relayerUtxos of
+    relayerOref <- case concatMap utxosToList relayerUtxos of
       u : _ -> pure $ utxoRef u
       _     -> throwIO $ userError "No relayer has validated client's message yet."
 
-    let skeleton = mustHaveRefInput threadOref
-                <> mustHaveRefInput relayerOref
+    let skeleton = mustHaveRefInput relayerOref
                 <> mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
                 <> mustMint policy unitRedeemer tokenName 1
-                <> mustBeSignedBy pkh
+                <> mustBeSignedBy (pubKeyHash clientVkey)
 
     txbody <- runGYTxGameMonadIO nid
                                  providers $
                                  asUser w1
                                  (buildTxBody skeleton)
 
-    putStr $ "\nEstimated transaction fee: " ++ (show $ txBodyFee txbody) ++ " Lovelace\n"
-
     txid <- runGYTxGameMonadIO nid
                                providers $
                                asUser w1
-                               (signAndSubmitConfirmed txbody)
+                               (signTxBody txbody >>= submitTx)
 
-    putStr $ "Transaction Id: " ++ show txid ++ "\n\n"
-    encodeFile (assetsPath </> outFile) txid
+    print txid

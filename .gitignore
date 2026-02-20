@@ -26,6 +26,7 @@ compiled_scripts/*
 logs
 
 e2e-test/*/keys
+e2e-test/*/config.json
 local-testnet/example
 assets
 test-data
