@@ -19,7 +19,6 @@ import           PlutusLedgerApi.V3
 import qualified PlutusTx.AssocMap                      as AssocMap
 import qualified PlutusTx.Builtins.Internal             as BI
 import           PlutusTx.Prelude                       hiding (toList)
-import           PlutusTx.Show                          (Show (..))
 
 import           ZkFold.Cardano.OnChain.BLS12_381       (toF)
 import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
@@ -140,23 +139,20 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
             ( availableBridgeVal
                 == (bridgeOutReqVal <> bridgeLeftoverVal)
             )
-            &&
-              (
-
-                let bridgeInS =
-                      (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
-                in
-                traceIfFalse
-              ("rollupSimpleStake: proof verification failed, bridgeInS computed: " <> show bridgeInS)
-              ( verify @PlonkupPlutus
-                  rcSetupBytes
-                  ( toF
-                      <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
-                      <> bridgeInS
-                      <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
-                  )
-                  rsrProofBytes
-              ))
+            && ( let bridgeInS =
+                       (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
+                  in traceIfFalse
+                       "rollupSimpleStake: proof verification failed"
+                       ( verify @PlonkupPlutus
+                           rcSetupBytes
+                           ( toF
+                               <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
+                               <> bridgeInS
+                               <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
+                           )
+                           rsrProofBytes
+                       )
+               )
             && checkPrefix bridgeInInitialList bridgeInList
       else
         let
