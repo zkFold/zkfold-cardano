@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200" width="500" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 180" width="500" height="180">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
       <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
     </marker>
   </defs>
   <style>
-    .box { fill: #e8f4e8; stroke: #333; stroke-width: 1.5; }
+    .box { fill: #e8e8f4; stroke: #333; stroke-width: 1.5; }
     .utxo { fill: #fff8e0; stroke: #333; stroke-width: 1; }
     .label { font-family: sans-serif; font-size: 11px; text-anchor: middle; dominant-baseline: middle; }
     .small { font-family: sans-serif; font-size: 9px; text-anchor: middle; dominant-baseline: middle; }
@@ -13,23 +13,24 @@
   </style>
   
   <!-- Title -->
-  <text class="label" x="250" y="20" style="font-weight: bold; font-size: 14px;">Relayer Transaction</text>
+  <text class="label" x="250" y="20" style="font-weight: bold; font-size: 14px;">Client Send Transaction (Outgoing)</text>
   
   <!-- Input UTxO -->
   <rect class="utxo" x="30" y="70" width="120" height="60"/>
   <text class="label" x="90" y="90">Input UTxO</text>
-  <text class="small" x="90" y="110">relayer wallet</text>
+  <text class="small" x="90" y="110">client wallet</text>
   
   <!-- Transaction -->
   <rect class="box" x="190" y="60" width="120" height="80"/>
-  <text class="label" x="250" y="85">Relayer Tx</text>
-  <text class="small" x="250" y="105">mint: relayer token</text>
-  <text class="small" x="250" y="120">name: msgHash</text>
+  <text class="label" x="250" y="85">Client Send Tx</text>
+  <text class="small" x="250" y="105">mint: client token</text>
+  <text class="small" x="250" y="120">no relayer needed</text>
   
   <!-- Output UTxO -->
   <rect class="utxo" x="350" y="70" width="120" height="60"/>
   <text class="label" x="410" y="90">Output UTxO</text>
-  <text class="small" x="410" y="110">+ relayer token</text>
+  <text class="small" x="410" y="105">+ client token</text>
+  <text class="small" x="410" y="120">datum: message</text>
   
   <!-- Arrows -->
   <line class="arrow" x1="150" y1="100" x2="188" y2="100"/>

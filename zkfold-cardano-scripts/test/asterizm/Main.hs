@@ -7,7 +7,7 @@ import qualified Data.ByteString.Base16       as B16
 import qualified Data.Text                    as T
 import qualified Data.Text.Encoding           as TE
 import           Numeric.Natural              (Natural)
-import           PlutusTx.Builtins            (BuiltinByteString, fromBuiltin, lengthOfByteString, toBuiltin)
+import           PlutusTx.Builtins            (BuiltinByteString, fromBuiltin, toBuiltin)
 import           Prelude
 import           Test.Tasty
 import           Test.Tasty.HUnit
@@ -85,7 +85,7 @@ tests =
     [ testGroup "table"
         ( [ testCase ("case " ++ show i) $
               (toHex . buildCrosschainHash) t @?= v
-          | (i, (t, v)) <- zip [1..] cases
+          | (i, (t, v)) <- zip [1 :: Integer ..] cases
           ]
         )
     ]

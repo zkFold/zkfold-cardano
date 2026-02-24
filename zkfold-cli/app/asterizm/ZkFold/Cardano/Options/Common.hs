@@ -1,7 +1,7 @@
 module ZkFold.Cardano.Options.Common where
 
 import qualified Cardano.Api                        as Api
-import           Cardano.CLI.EraBased.Common.Option (parseFilePath, readerFromParsecParser)
+import           Cardano.CLI.EraBased.Common.Option (parseFilePath)
 import           Control.Exception                  (throwIO)
 import qualified Data.ByteString.Base16             as B16
 import qualified Data.ByteString.Char8              as BS
@@ -10,6 +10,8 @@ import           GeniusYield.Types                  as GY
 import           Options.Applicative                (Parser)
 import qualified Options.Applicative                as Opt
 import           Prelude
+
+import           ZkFold.Cardano.Asterizm.Types      (MessageDirection (..))
 
 ----- :Alternatives: -----
 
@@ -32,25 +34,7 @@ fromPubKeyHashAltIO pkha = case pkha of
     vkey <- readPaymentVerificationKey fp
     return $ pubKeyHash vkey
 
------ :parsing Registry Address: -----
-
-pRegistryAddress :: Parser GYAddress
-pRegistryAddress =
-    Opt.option (readerFromParsecParser $ fmap GY.addressFromApi Api.parseAddressAny) $
-        mconcat
-            [ Opt.long "registry-address"
-            , Opt.metavar "ADDRESS"
-            , Opt.help "Address to park relayer's registry at."
-            ]
-
------ :parsing Message: -----
-
-pMessageString :: Parser BS.ByteString
-pMessageString = BS.pack <$> Opt.strOption
-  ( Opt.long "message-text"
-      <> Opt.metavar "ASCII"
-      <> Opt.help "Asterizm message as string of ASCII characters."
-  )
+----- :read ByteString: -----
 
 hexReader :: Opt.ReadM BS.ByteString
 hexReader = Opt.eitherReader $ \s ->
@@ -58,37 +42,35 @@ hexReader = Opt.eitherReader $ \s ->
     Left err -> Left $ "Invalid hex string: " ++ err
     Right bs -> Right bs
 
-pMessageHex :: Parser BS.ByteString
-pMessageHex = Opt.option hexReader
-    ( Opt.long "message-hex"
+----- :parsing Message: -----
+
+pMessageHash :: Parser BS.ByteString
+pMessageHash = Opt.option hexReader
+    ( Opt.long "message-hash"
         <> Opt.metavar "HEX"
-        <> Opt.help "Hex-encoded Asterizm message."
+        <> Opt.help "Hex-encoded Asterizm message hash (32 bytes)."
     )
 
 pMessage :: Parser BS.ByteString
-pMessage = Opt.asum [pMessageString, pMessageHex]
+pMessage = Opt.option hexReader
+    ( Opt.long "message"
+        <> Opt.metavar "HEX"
+        <> Opt.help "Hex-encoded Asterizm structured message."
+    )
 
------ :parsing Message files: -----
+----- :parsing MessageDirection: -----
 
-pMessageFile :: Parser FilePath
-pMessageFile = Opt.strOption
-  ( Opt.long "message-file"
-      <> Opt.value "message.private"
-      <> Opt.showDefault
-      <> Opt.metavar "FILEPATH"
-      <> Opt.help "Path (relative to 'assets/') for PRIVATE file storing message."
-      <> Opt.completer (Opt.bashCompleter "file")
-  )
-
-pMessageHashFile :: Parser FilePath
-pMessageHashFile = Opt.strOption
-  ( Opt.long "message-hash-file"
-      <> Opt.value "message-hash.public"
-      <> Opt.showDefault
-      <> Opt.metavar "FILEPATH"
-      <> Opt.help "Path (relative to 'assets/') for PUBLIC file storing message hash."
-      <> Opt.completer (Opt.bashCompleter "file")
-  )
+pMessageDirection :: Parser MessageDirection
+pMessageDirection = Opt.asum
+    [ Opt.flag' Incoming
+        ( Opt.long "incoming"
+            <> Opt.help "Incoming cross-chain message (requires relayer verification)."
+        )
+    , Opt.flag' Outgoing
+        ( Opt.long "outgoing"
+            <> Opt.help "Outgoing cross-chain message (no relayer verification needed)."
+        )
+    ]
 
 ----- :parsing PubKeyHash: -----
 
