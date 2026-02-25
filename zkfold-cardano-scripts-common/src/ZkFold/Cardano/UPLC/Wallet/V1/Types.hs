@@ -28,9 +28,10 @@ PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''PubKey [('PubKey, 0)]
 
 newtype UserId = UserId { userId :: BuiltinByteString }
   deriving stock (Show, Generic)
+  deriving newtype (ToData, FromData, UnsafeFromData)
   deriving anyclass HasBlueprintDefinition
 
-PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''UserId [('UserId, 0)]
+PlutusTx.Blueprint.TH.makeHasSchemaInstance ''UserId [('UserId, 0)]
 
 data SigmaProof = SigmaProof { v :: [Integer], aut :: [Integer] }
   deriving stock (Show, Generic)
