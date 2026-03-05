@@ -50,23 +50,30 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         c = integerToByteString BigEndian 256 paddedHash
 
-        correctLengths = length v == 16 && length aut == 16
+        transcript = mconcat $ c : (integerToByteString BigEndian 256 <$> aut)
+        digest = sha2_256 transcript
 
-        verified = and $ flip map (zip v aut) $ \(vi, auti) ->
-            let autbs = integerToByteString BigEndian 256 auti
-                digest = sha2_256 (c <> autbs)
-                i = (byteStringToInteger BigEndian digest) `modInteger` pubE
-                lhs = myExp65537Mod vi pubN
+        slices = enumFromThenTo 0 2 30
+
+        is = fmap (\s -> byteStringToInteger BigEndian $ sliceByteString s (s + 2) digest) slices
+
+        correctLengths = length v == 16 && length aut == 16 && length is == 16
+
+        verified = and $ flip map (zip (zip v aut) is) $ \((vi, auti), i) ->
+            let lhs = myExp65537Mod vi pubN
                 rhs = (auti * myExpMod paddedHash i pubN) `modInteger` pubN
              in lhs == rhs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         correctLengths && verified && hasZkFoldFee
+         correctLengths && verified && hasZkFoldFee && hasCorrectBeacon
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
   refInputResolved = refInput & BI.unsafeDataAsConstr & BI.snd & BI.tail & BI.head -- TxOut
   txOutL = refInputResolved & BI.unsafeDataAsConstr & BI.snd & BI.tail
+  txValue = txOutL & BI.head & unsafeFromBuiltinData
+
+  hasCorrectBeacon = valueOf txValue ocwcBeaconPolicyId ocwcBeaconName == 1
 
   -- find beacon datum
   beaconDatum = txOutL & BI.tail & BI.head & unsafeFromBuiltinData
