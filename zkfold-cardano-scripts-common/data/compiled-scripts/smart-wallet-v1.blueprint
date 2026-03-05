@@ -271,13 +271,7 @@
       "index": 0
     },
     "UserId": {
-      "dataType": "constructor",
-      "fields": [
-        {
-          "$ref": "#/definitions/BuiltinByteString"
-        }
-      ],
-      "index": 0
+      "dataType": "bytes"
     }
   }
 }
