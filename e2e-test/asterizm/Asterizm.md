@@ -5,6 +5,7 @@ This documents describes usage of our prototype implementation of the Asterizm p
 CLI commands are provided to
 
 - compute the hash of a message
+- derive client and relayer policy IDs
 - relayer's certification of the message's hash
 - client's sending of outgoing messages to the blockchain
 - client's receiving of incoming messages with relayer verification
@@ -38,16 +39,17 @@ cabal run zkfold-cli:asterizm -- --help
 zkfold-cli:asterizm - Command-line utility to interact with Cardano. Provides
 specific commands to manage the 'Asterizm' protocol.
 
-Usage: asterizm (client | hash | relayer | retrieve-messages)
+Usage: asterizm (client | hash | policy | relayer | retrieve-messages)
 
 Available options:
   -h,--help                Show this help text
 
 Available commands:
-  client                   
-  hash                     
-  relayer                  
-  retrieve-messages        
+  client
+  hash
+  policy
+  relayer
+  retrieve-messages
 ```
 
 We now describe each command.  The eager reader can jump to [section "End-to-end test"](#end-to-end-test) below to see a sample workflow.
@@ -65,6 +67,48 @@ Usage: asterizm hash --message HEX
 
 Available options:
   --message HEX            Hex-encoded Asterizm structured message.
+  -h,--help                Show this help text
+```
+
+### policy client
+
+Derives and displays the client's policy ID. Does not interact with the blockchain.
+
+```shell
+cabal run zkfold-cli:asterizm -- policy client --help
+```
+
+```output
+Usage: asterizm policy client --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
+  (--incoming | --outgoing)
+
+Available options:
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
+  --incoming               Incoming cross-chain message (requires relayer
+                           verification).
+  --outgoing               Outgoing cross-chain message (no relayer verification
+                           needed).
+  -h,--help                Show this help text
+```
+
+### policy relayer
+
+Derives and displays a relayer's policy ID. Does not interact with the blockchain.
+
+```shell
+cabal run zkfold-cli:asterizm -- policy relayer --help
+```
+
+```output
+Usage: asterizm policy relayer --relayer-vkey-file FILEPATH
+
+Available options:
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
   -h,--help                Show this help text
 ```
 
@@ -201,6 +245,43 @@ asterizm$ ./00-keygen.sh relayer
 ```
 
 This generates verification and signing keys for the client and relayer roles.
+
+### Policy IDs
+
+Derive the client and relayer policy IDs:
+
+```shell
+asterizm$ # Client policy ID for incoming messages
+asterizm$ cabal run zkfold-cli:asterizm -- policy client \
+  --client-vkey-file ./keys/client.vkey \
+  --relayer-vkey-file ./keys/relayer.vkey \
+  --incoming
+```
+
+```output
+<policy-id>
+```
+
+```shell
+asterizm$ # Client policy ID for outgoing messages
+asterizm$ cabal run zkfold-cli:asterizm -- policy client \
+  --client-vkey-file ./keys/client.vkey \
+  --outgoing
+```
+
+```output
+<policy-id>
+```
+
+```shell
+asterizm$ # Relayer policy ID
+asterizm$ cabal run zkfold-cli:asterizm -- policy relayer \
+  --relayer-vkey-file ./keys/relayer.vkey
+```
+
+```output
+<policy-id>
+```
 
 ### Relayer
 

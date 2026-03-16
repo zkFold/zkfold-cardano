@@ -8,6 +8,7 @@ import           Prelude
 
 import qualified ZkFold.Cardano.Asterizm.Transaction.Client   as AsterizmClient
 import qualified ZkFold.Cardano.Asterizm.Transaction.Hash     as AsterizmHash
+import qualified ZkFold.Cardano.Asterizm.Transaction.Policy   as AsterizmPolicy
 import qualified ZkFold.Cardano.Asterizm.Transaction.Relayer  as AsterizmRelayer
 import qualified ZkFold.Cardano.Asterizm.Transaction.Retrieve as AsterizmRetrieve
 import           ZkFold.Cardano.CLI.Parsers
@@ -18,6 +19,8 @@ data ClientCommand
     = TransactionAsterizmClientSend AsterizmClient.SendTransaction
     | TransactionAsterizmClientReceive AsterizmClient.ReceiveTransaction
     | TransactionAsterizmHash AsterizmHash.Transaction
+    | TransactionAsterizmPolicyClient AsterizmPolicy.ClientTransaction
+    | TransactionAsterizmPolicyRelayer AsterizmPolicy.RelayerTransaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
     | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
 
@@ -41,6 +44,7 @@ pCmds = do
     asum $
         [ pTransactionAsterizmClient
         , TransactionAsterizmHash      <$> pTransactionAsterizmHash
+        , pTransactionAsterizmPolicy
         , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer
         , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve
         ]
@@ -94,6 +98,30 @@ pTransactionAsterizmRelayer = do
             <*> pBenefOutAddress
             <*> pMessageHash
 
+-- | Parser for policy subcommands (client/relayer)
+pTransactionAsterizmPolicy :: Parser ClientCommand
+pTransactionAsterizmPolicy = do
+    subParser "policy" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+  where
+    pCmd = asum
+        [ TransactionAsterizmPolicyClient <$> pPolicyClient
+        , TransactionAsterizmPolicyRelayer <$> pPolicyRelayer
+        ]
+
+    pPolicyClient = subParser "client" $ Opt.info pClientCmd $ Opt.progDescDoc Nothing
+      where
+        pClientCmd = do
+            AsterizmPolicy.ClientTransaction
+                <$> pVerificationKeyFile "client"
+                <*> many (pVerificationKeyFile "relayer")
+                <*> pMessageDirection
+
+    pPolicyRelayer = subParser "relayer" $ Opt.info pRelayerCmd $ Opt.progDescDoc Nothing
+      where
+        pRelayerCmd = do
+            AsterizmPolicy.RelayerTransaction
+                <$> pVerificationKeyFile "relayer"
+
 pTransactionAsterizmRetrieve :: Parser AsterizmRetrieve.Transaction
 pTransactionAsterizmRetrieve = do
     subParser "retrieve-messages" $ Opt.info pCmd $ Opt.progDescDoc Nothing
@@ -112,6 +140,8 @@ runClientCommand = \case
     TransactionAsterizmClientSend    cmd -> ExceptT (Right <$> AsterizmClient.clientSend    cmd)
     TransactionAsterizmClientReceive cmd -> ExceptT (Right <$> AsterizmClient.clientReceive cmd)
     TransactionAsterizmHash          cmd -> ExceptT (Right <$> AsterizmHash.computeHash     cmd)
+    TransactionAsterizmPolicyClient  cmd -> ExceptT (Right <$> AsterizmPolicy.printClientPolicy  cmd)
+    TransactionAsterizmPolicyRelayer cmd -> ExceptT (Right <$> AsterizmPolicy.printRelayerPolicy cmd)
     TransactionAsterizmRelayer       cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint  cmd)
     TransactionAsterizmRetrieve      cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
 
