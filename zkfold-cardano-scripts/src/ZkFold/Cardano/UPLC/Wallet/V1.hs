@@ -50,9 +50,9 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         c = integerToByteString BigEndian 256 paddedHash
 
-        ref = serialiseData (toBuiltinData txOutRef)
+        TxOutRef txId ix = txOutRef 
 
-        transcript = mconcat $ c : ref : (integerToByteString BigEndian 256 <$> aut)
+        transcript = mconcat $ c : (getTxId txId) : (integerToByteString BigEndian 32 ix) : (integerToByteString BigEndian 256 <$> aut)
         digest = sha2_256 transcript
 
         slices = enumFromThenTo 0 2 30
