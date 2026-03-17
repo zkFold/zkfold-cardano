@@ -39,7 +39,7 @@ data SigmaProof = SigmaProof { v :: [Integer], aut :: [Integer] }
 
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''SigmaProof [('SigmaProof, 0)]
 
-data RewardingRedeemer = RewardingRedeemer JWTParts UserId SigmaProof KeyId
+data RewardingRedeemer = RewardingRedeemer JWTParts UserId SigmaProof KeyId TxOutRef
   deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
 

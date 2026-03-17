@@ -50,22 +50,27 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         c = integerToByteString BigEndian 256 paddedHash
 
-        transcript = mconcat $ c : (integerToByteString BigEndian 256 <$> aut)
+        ref = serialiseData (toBuiltinData txOutRef)
+
+        transcript = mconcat $ c : ref : (integerToByteString BigEndian 256 <$> aut)
         digest = sha2_256 transcript
 
         slices = enumFromThenTo 0 2 30
 
-        is = fmap (\s -> byteStringToInteger BigEndian $ sliceByteString s (s + 2) digest) slices
+        -- FIXME `sliceByteString` 's documentation states that its second argument is the end index while its implementation implies that it is the length of the substring. 
+        -- Here, I trust the implementation.
+        -- We need to keep an eye on this function in case it changes behaviour in the future.
+        is = fmap (\s -> byteStringToInteger BigEndian $ sliceByteString s 2 digest) slices
 
         correctLengths = length v == 16 && length aut == 16 && length is == 16
 
         verified = and $ flip map (zip (zip v aut) is) $ \((vi, auti), i) ->
-            let lhs = myExp65537Mod vi pubN
+            let lhs = myExpMod vi pubE pubN
                 rhs = (auti * myExpMod paddedHash i pubN) `modInteger` pubN
              in lhs == rhs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         correctLengths && verified && hasZkFoldFee && hasCorrectBeacon
+         correctLengths && verified && hasZkFoldFee && hasCorrectBeacon && spendsInput
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
@@ -89,7 +94,10 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   txInfoL = BI.unsafeDataAsConstr sc & BI.snd
   txInfo = txInfoL & BI.head & BI.unsafeDataAsConstr & BI.snd
   redL = txInfoL & BI.tail
-  RewardingRedeemer JWTParts {..} UserId {..} SigmaProof {..} (KeyId kid) = redL & BI.head & unsafeFromBuiltinData
+  RewardingRedeemer JWTParts {..} UserId {..} SigmaProof {..} (KeyId kid) txOutRef = redL & BI.head & unsafeFromBuiltinData
+
+  txInfoInputs = txInfo & BI.head & unsafeFromBuiltinData & map txInInfoOutRef
+  spendsInput = txOutRef `elem` txInfoInputs
 
   txInfoOutputsL =
     txInfo
@@ -99,10 +107,6 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
   txInfoOutputs = txInfoOutputsL & BI.head & unsafeFromBuiltinData
 
   hasZkFoldFee = any (\(TxOut addr val _ _) -> addr == ocwcFeeAddress && valueOf val adaSymbol adaToken >= ocwcFee) txInfoOutputs
-
-{-# INLINEABLE bits16 #-}
-bits16 :: [Integer]
-bits16 = enumFromTo 0 15
 
 {-# INLINEABLE myExpMod #-}
 -- TODO: replace with builtin expMod when it's available
@@ -115,13 +119,6 @@ myExpMod base power mod
  where
   halfPow = myExpMod base (power `divide` 2) mod
   halfPow2 = (halfPow * halfPow) `modulo` mod
-
-{-# INLINEABLE myExp65537Mod #-}
--- TODO: replace with builtin expMod when it's available
-myExp65537Mod :: Integer  -> Integer -> Integer
-myExp65537Mod base mod = (base * b65536) `modInteger` mod
- where
-  b65536 = foldl (\b _ -> (b * b) `modInteger` mod ) base bits16
 
 {-# INLINEABLE wallet #-}
 wallet ::
