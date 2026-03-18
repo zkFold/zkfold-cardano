@@ -1,11 +1,11 @@
 module ZkFold.Cardano.Asterizm.Transaction.User where
 
-import qualified Data.ByteString              as BS
-import           Data.Maybe                   (fromJust)
-import           GeniusYield.GYConfig         (GYCoreConfig (..), coreConfigIO, withCfgProviders)
+import qualified Data.ByteString               as BS
+import           Data.Maybe                    (fromJust)
+import           GeniusYield.GYConfig          (GYCoreConfig (..), coreConfigIO, withCfgProviders)
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusLedgerApi.V3           as V3
+import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
