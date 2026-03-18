@@ -107,3 +107,25 @@ asterizmClientCompiled clientPKH allowedRelayers isIncoming =
     `unsafeApplyCode` liftCodeDef clientPKH
     `unsafeApplyCode` liftCodeDef allowedRelayers
     `unsafeApplyCode` liftCodeDef isIncoming
+
+-- | Plutus script (minting policy) for posting user messages on-chain.
+-- Unlike the client policy, this policy is not parameterized by any public key hash.
+-- It only validates that the token name matches the cross-chain hash of the message.
+{-# INLINABLE untypedAsterizmUser #-}
+untypedAsterizmUser :: BuiltinData -> BuiltinUnit
+untypedAsterizmUser ctx' =
+    let ctx = unsafeFromBuiltinData ctx'
+        info = scriptContextTxInfo ctx
+        minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
+        (tn, _) = case minted of
+          Just [x] -> x
+          _        -> traceError "Expected exactly one minting action"
+        message = case txOutDatum . head $ txInfoOutputs info of
+          OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+          _             -> traceError "Expected output datum"
+        tokenName = TokenName $ buildCrosschainHash message
+        conditionMinting = tn == tokenName
+    in check conditionMinting
+
+asterizmUserCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmUserCompiled = $$(compile [|| untypedAsterizmUser ||])

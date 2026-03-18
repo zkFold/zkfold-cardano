@@ -7,7 +7,7 @@ import           ZkFold.Cardano.Asterizm.Transaction.Retrieve (derivePolicyId)
 import           ZkFold.Cardano.Asterizm.Types                (MessageDirection (..))
 import           ZkFold.Cardano.Asterizm.Utils                (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common                (readPaymentVerificationKey)
-import           ZkFold.Cardano.UPLC.Asterizm                 (asterizmRelayerCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm                 (asterizmRelayerCompiled, asterizmUserCompiled)
 
 
 data ClientTransaction = ClientTransaction
@@ -19,6 +19,8 @@ data ClientTransaction = ClientTransaction
 data RelayerTransaction = RelayerTransaction
   { relayerVKeyFile :: !FilePath
   }
+
+data UserTransaction = UserTransaction
 
 printClientPolicy :: ClientTransaction -> IO ()
 printClientPolicy (ClientTransaction clientVkeyFile relayerVkeyFiles dir) = do
@@ -32,6 +34,11 @@ printRelayerPolicy :: RelayerTransaction -> IO ()
 printRelayerPolicy (RelayerTransaction relayerVkeyFile) = do
   vkey <- readPaymentVerificationKey relayerVkeyFile
   let policyId = snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash $ vkey
+  putStrLn $ trimQuot (show policyId)
+
+printUserPolicy :: UserTransaction -> IO ()
+printUserPolicy UserTransaction = do
+  let policyId = snd . policyFromPlutus $ asterizmUserCompiled
   putStrLn $ trimQuot (show policyId)
 
 -- | Remove enclosing quotation marks
