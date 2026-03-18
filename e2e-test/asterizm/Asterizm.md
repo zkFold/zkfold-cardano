@@ -112,6 +112,21 @@ Available options:
   -h,--help                Show this help text
 ```
 
+### policy user
+
+Displays the universal user policy ID. This policy is not parameterized and is the same for all users. Does not interact with the blockchain.
+
+```shell
+cabal run zkfold-cli:asterizm -- policy user --help
+```
+
+```output
+Usage: asterizm policy user
+
+Available options:
+  -h,--help                Show this help text
+```
+
 ### relayer
 
 Command used by a relayer to mint a token certifying a client's message.
@@ -162,6 +177,31 @@ Available options:
                            Payment signing key file.
   --client-vkey-file FILEPATH
                            client's payment verification key file.
+  --beneficiary-address ADDRESS
+                           Address of beneficiary receiving token(s).
+  --message HEX            Hex-encoded Asterizm structured message.
+  -h,--help                Show this help text
+```
+
+### user send
+
+Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID.
+
+```shell
+cabal run zkfold-cli:asterizm -- user send --help
+```
+
+```output
+Usage: asterizm user send --core-config-file FILEPATH
+  --signing-key-file FILEPATH
+  --beneficiary-address ADDRESS
+  --message HEX
+
+Available options:
+  --core-config-file FILEPATH
+                           Path to core config file (required).
+  --signing-key-file FILEPATH
+                           Payment signing key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
   --message HEX            Hex-encoded Asterizm structured message.
@@ -350,6 +390,22 @@ asterizm$ cabal run zkfold-cli:asterizm -- client send \
 ![client send Tx](figures/05-client-send-tx.svg)
 
 **Figure:** Client Send Tx
+
+### User Send (Outgoing Message)
+
+Any user can initiate an outgoing message by minting and sending a token under the universal user policy:
+
+```shell
+asterizm$ cabal run zkfold-cli:asterizm -- user send \
+  --core-config-file ./assets/config.json \
+  --signing-key-file ./keys/user.skey \
+  --beneficiary-address $(cat ./keys/client.addr) \
+  --message "$outgoingMessage"
+```
+
+```output
+"<transaction-id>"
+```
 
 ### Retrieve Messages
 
