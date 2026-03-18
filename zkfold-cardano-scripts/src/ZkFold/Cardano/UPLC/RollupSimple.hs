@@ -146,7 +146,7 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                        ( verify @PlonkupPlutus
                            rcSetupBytes
                            ( toF
-                               <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, bridgeInCommitment oldState, bridgeOutCommitment oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, bridgeInCommitment newState, bridgeOutCommitment newState, 1]
+                               <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, 1]
                                <> bridgeInS
                                <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
                            )
