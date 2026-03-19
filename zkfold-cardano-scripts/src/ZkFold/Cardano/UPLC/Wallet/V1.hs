@@ -50,14 +50,14 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         c = integerToByteString BigEndian 256 paddedHash
 
-        TxOutRef txId ix = txOutRef 
+        TxOutRef txId ix = txOutRef
 
         transcript = mconcat $ c : (getTxId txId) : (integerToByteString BigEndian 32 ix) : (integerToByteString BigEndian 256 <$> aut)
         digest = sha2_256 transcript
 
         slices = enumFromThenTo 0 2 30
 
-        -- FIXME `sliceByteString` 's documentation states that its second argument is the end index while its implementation implies that it is the length of the substring. 
+        -- FIXME `sliceByteString` 's documentation states that its second argument is the end index while its implementation implies that it is the length of the substring.
         -- Here, I trust the implementation.
         -- We need to keep an eye on this function in case it changes behaviour in the future.
         is = fmap (\s -> byteStringToInteger BigEndian $ sliceByteString s 2 digest) slices
