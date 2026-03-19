@@ -31,7 +31,9 @@ newtype UserId = UserId { userId :: BuiltinByteString }
   deriving newtype (ToData, FromData, UnsafeFromData)
   deriving anyclass HasBlueprintDefinition
 
-PlutusTx.Blueprint.TH.makeHasSchemaInstance ''UserId [('UserId, 0)]
+instance HasBlueprintSchema UserId referencedTypes where
+  {-# INLINEABLE schema #-}
+  schema = schema @BuiltinByteString
 
 data SigmaProof = SigmaProof { v :: [Integer], aut :: [Integer] }
   deriving stock (Show, Generic)

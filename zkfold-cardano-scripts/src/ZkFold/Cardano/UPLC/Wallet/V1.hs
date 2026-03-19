@@ -64,13 +64,15 @@ rewardingZKP (unsafeFromBuiltinData -> OnChainWalletConfig {..}) sc =
 
         correctLengths = length v == 16 && length aut == 16 && length is == 16
 
+        allNonZero = all (/= 0) v && all (/= 0) aut
+
         verified = and $ flip map (zip (zip v aut) is) $ \((vi, auti), i) ->
             let lhs = myExpMod vi pubE pubN
                 rhs = (auti * myExpMod paddedHash i pubN) `modInteger` pubN
              in lhs == rhs
        in
         -- Check that the user knows an RSA signature for a JWT containing the email
-         correctLengths && verified && hasZkFoldFee && hasCorrectBeacon && spendsInput
+         correctLengths && allNonZero && verified && hasZkFoldFee && hasCorrectBeacon && spendsInput
  where
   -- tx reference inputs
   refInput = txInfo & BI.tail & BI.head & BI.unsafeDataAsList & BI.head -- TxInInfo
