@@ -1,0 +1,296 @@
+{
+  "$id": "smart-wallet-v1",
+  "$schema": "https://cips.cardano.org/cips/cip57/schemas/plutus-blueprint.json",
+  "$vocabulary": {
+    "https://cips.cardano.org/cips/cip57": true,
+    "https://json-schema.org/draft/2020-12/vocab/applicator": true,
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  },
+  "preamble": {
+    "title": "Smart Wallet",
+    "description": "Validators related to zkFold's Smart Wallet. Visit https://zkfold.io/ for more details",
+    "version": "0.1.0",
+    "plutusVersion": "v3",
+    "license": "MIT"
+  },
+  "validators": [
+    {
+      "title": "rewardingZKP",
+      "description": "Smart wallet rewards script",
+      "redeemer": {
+        "title": "Rewarding script redeemer",
+        "purpose": "withdraw",
+        "schema": {
+          "$ref": "#/definitions/RewardingRedeemer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "Wallet config",
+          "purpose": "withdraw",
+          "schema": {
+            "$ref": "#/definitions/OnChainWalletConfig"
+          }
+        }
+      ],
+      "compiledCode": "590efe01010032323232323232323232323232323232323232323232323232323222932323255333573466e1d2000002113232328009bae35742009375c6ae8400e6eb8d5d08014c05cd5d0800cdd69aba135744002357440026ae88004d5d100088980ba481035054310035573c0046aae74004dd5001488888c8c8c8c8c8c8c008d4068dd60009aba1357446ae88010c8c004004896400626007002910c80148889656640124520212259900494801c8ccd5cd19b8f002001800400a50024a400e50029199ab9a3371e004003000801115900390ac801486400a52005290029480148cc09800800650024a400a50029198130010009222801244520092801488954ccd5cd19b870060031155333573466e1c01400844ccd5cd19b8700400180040084600423002230024564006430028c0008c00844ccd5cd19b883330150034890048810000d8014002300244c026001133008008005046532646464aa666ae68cdc3a40000042264646500132323255333573466e1d200000211328009bae35742005375c6ae840066eb8d5d09aba20011aba2001113027491035054310035573c0046aae74004dd51aba10049bae3574200732323255333573466e1d2000002113280098009aba100298009aba135744004322350023758002664600200244266059000228019bad0029a998020020900080084800444c09d2401035054310035573c0046aae74004dd51aba10029919192a999ab9a3370e9000001089bae3574200222604e9201035054310035573c0046aae74004dd51aba1001980f1aba135744002357440026ae88004d5d1000889810a49035054310035573c0046aae74004dd51aba1001911114802c88a401a45001005802400e013002800c01e00c122222222323323001001225900189801c00a442b264b3200322900591199ab9a3371e008005000801119001914802c88ccd5cd19b8700300180040088c00932646464aa666ae68cdc3a40000042264646500132323255333573466e1d200000211328009bae35742005375c6ae840066eb8d5d09aba20011aba2001113034491035054310035573c0046aae74004dd51aba10049bae3574200732323255333573466e1d2000002113280098009aba100298009aba135744004322350023758002664600200244266073000228019bad0029a998020020900080084800444c0d12401035054310035573c0046aae74004dd51aba10029919192a999ab9a3370e9000001089bae357420022260689201035054310035573c0046aae74004dd51aba100198159aba135744002357440026ae88004d5d1000889817249035054310035573c0046aae74004dd51aba100e911114802c88a401a45001005802400e013002800c01e00c12222222200144c01600113300400400100308c8c94c8ca4c0a8d5d09aba20048a800c84c00cccc0b880048c8c8c954ccd5cd19b8748000008460026eb4d5d0800cdd69aba1357440021130304901035054310035573c0046aae74004dd5000800c85400826002c46465200f2232323232323232323259590038ac800c56406e2b201f10118c009180123002460048a4d1303749103505435001816180399800998008018030022a8122a999ab9a3370e9010181d80088aa999ab9a3370e9010181e00208999ab9a3370e9010181e801400200423002118014c9919192a999ab9a3370e9000001089919194004c8c8c954ccd5cd19b874800000844ca0026eb8d5d08014dd71aba10019bae357426ae880046ae8800444c0f1241035054310035573c0046aae74004dd51aba10049bae3574200732323255333573466e1d2000002113280098009aba100298009aba135744004322350023758002664600200244266083000228019bad0029a998020020900080084800444c0f12401035054310035573c0046aae74004dd51aba10029919192a999ab9a3370e9000001089bae357420022260789201035054310035573c0046aae74004dd51aba100198199aba135744002357440026ae88004d5d100088981b249035054310035573c0046aae74004dd51aba1016911114802c88a401a45001005802400e013002800c01e00c1222222220041991800800912c800c600122180199bca4a2666e30009200400599802002000800e6e48c0da006666f2528a410008007801802e006666f2528a40800093037001132646464aa666ae68cdc3a40000042264646500132323255333573466e1d200000211328009bae35742005375c6ae840066eb8d5d09aba20011aba2001113039491035054310035573c0046aae74004dd51aba10049bae3574200732323255333573466e1d2000002113280098009aba100298009aba13574400432235002375800266460020024426607d000228019bad0029a998020020900080084800444c0e52401035054310035573c0046aae74004dd51aba10029919192a999ab9a3370e9000001089bae357420022260729201035054310035573c0046aae74004dd51aba100198181aba135744002357440026ae88004d5d1000889819a49035054310035573c0046aae74004dd51aba1013911114802c88a401a45001005802400e013002800c01e00c122222222003191800800912c800c6001221801c80148a400a44646464aa666ae68cdc380080108aa999ab9a3370e900000088c008460002300233302a004900f910010008cdc319b8200233302900a004001001900d91000899802002000866e0120808080808080808080808080808080808080808080808080808080808080808080808080808882808a8490c0e0c0b28190998496c1c186b0e2c081f0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f33794944dc919b8a3020010337149101012e0030203371401e66e28060cdc50068070c0bd200032332300100122590018cb592219002912a999ab9a3375e00400e23200322800801400411330060060030008dd4803199ab9a3370e900119980c1998153ae5029357420020280270008011aba235573c6ea8d5d09aba235573c6ea8d5d09bac357426ae880346ae88010c04cc8d4054dd60009aba100135573c6ea8d5d08009aab9e375400c3323001001221122590028c002442b200718004886007001004801266aa6601001024002006002048004888c8cc8c0040048964006290004886400a44aa666ae68cdc78010048898038008899803003001800864600200244b200314800244320052255333573466e3c00801c4400444cc01801800c3230010012222323255333573466e1d200000411480084554ccd5cd19b874800801044cdc300280188aa999ab9a3370e900019b86004480104400444cdc319b820010050033370c66e08004004008cccc01001000ccdc1801240080024646464a64a666ae68cdc3a4004004226002902008aa999ab9a3370e9002001089800a404022aa666ae68cdc3a400c004226002900808aa999ab9a3370e9004001089800a401022aa666ae68cdc3a40140042260029002089800a4004464666f2528802180498041980380200099b8233794944014004cdc30012401866e0ccdc024014002900619b8248040dc68009918008009112a999ab9a3370e900000108c0004600666e180052080019991980200200099b8100248008cdc1800a41000232300100122590018c00244300355333573466e240092032113370090410080108aa999ab9a3371200490330899b8048238040084554ccd5cd19b89002481e844cdc08012401022a666ae68cdc3a40f80042902d0a417c03330040040010c8c0040048964006290004884cdc000119b824820010cc01001000464600200244b2003180048856400a2660080080031801044666ae68cdc7801000c00200464600200244b2003180048860072005220024cc01001000433230010012213300c80011400cc8c8c954ccd5cd19b87480000084600260106ae8400660146ae84d5d1000844c0392401035054310035573c0046aae74004dd50014d4cc01001048004004240024646464aa666ae68cdc3a400000423001375c6ae840066eb4d5d09aba2001089805249035054310035573c0046aae74004dd500099918008009109980540008a006600a0053533004004120010010900091919192a999ab9a3370e90000010899194004c01cd5d0801cccc031d728059aba100298049aba1001998043ae357426ae880046ae88004d5d1000889804249035054310035573c0046aae74004dd500091919192a999ab9a3370e900000108994004c004d5d08014cc0188c8c8c954ccd5cd19b874800000846002600a6ae8400422aa666ae68cdc3a40040042265003375a6ae8400a6eb4d5d0800cdd69aba135744002357440022260189201035054310035573c0046aae74004dd50009aba135744004232323255333573466e1d2000002118009bae357420021155333573466e1d2002002118019bae3574200211300b4901035054310035573c0046aae74004dd5000889803a481035054310035573c0046aae74004dd5000911919192a999ab9a3370e900100108c0084554ccd5cd19b874800000846002600a6ae8400422600e921035054310035573c0046aae74004dd500091919192a999ab9a3370e900000108c0004554ccd5cd19b87480080084600a6eb8d5d080084554ccd5cd19b8748010008460066ae8400422600a9201035054310035573c0046aae74004dd5000919319ab9c001800099800bae75a446446a0046eac004cc8c004004884cc0160004500380098031aab9d00298029aab9e0024d4cc0100104800400424002444a666aae7c004400c4cc008d5d08009aba20013230010012255333573466e24005203c11801800cc8cc00c00c004cdc02400800211800191800800912c800c52210091099b8a00233004004001191800800912c800c6001221801999bc94a29040020014cc01001000432300100122590018a4001221337009001198020020008c8c0040048964006290004884cdc0240046600800800232300100122590018a4001221337009001198020020009",
+      "hash": "35d26a8323947ca97b36033e89f8afbdcf5f2cdc5e0a3a70e27f87b0"
+    },
+    {
+      "title": "wallet",
+      "description": "Smart wallet spending validator",
+      "redeemer": {
+        "title": "Unit",
+        "purpose": "spend",
+        "schema": {
+          "$ref": "#/definitions/Unit"
+        }
+      },
+      "datum": {
+        "purpose": "spend",
+        "schema": {
+          "$ref": "#/definitions/BuiltinData"
+        }
+      },
+      "parameters": [
+        {
+          "title": "Dummy parameter",
+          "purpose": "spend",
+          "schema": {
+            "$ref": "#/definitions/Integer"
+          }
+        },
+        {
+          "title": "Email",
+          "purpose": "spend",
+          "schema": {
+            "$ref": "#/definitions/BuiltinByteString"
+          }
+        },
+        {
+          "title": "Script hash",
+          "purpose": "spend",
+          "schema": {
+            "$ref": "#/definitions/ScriptHash"
+          }
+        }
+      ],
+      "compiledCode": "59010d0101002222323232323232323323001001225900189801c00a44320052255333573466ebc00803044c01e000226600c00c0060011191991800800912c800c4c00da44320052255333573466ebc00803044c01c00444cc01801800c3004357426ae88d5d11aba200523259590038800c60048a4d132633573892103505435008000ccd5cd19baf357426ae88d55cf1baa00100b8004008c004d5d08011911a8011bab0013323001001221253335573e002300013322801c004d55ce8014d55cf00126a6600a00a24002002357420026ae8800448004d5d11aba2357446ae88d5d11aba235573c6ea8d5d09aab9e375400866e95200433574000297ae03374a900119aba00014bd701ba9375c005",
+      "hash": "1aac1b90f1657291ad6f41f56c599fc4a2719ef9373a78f793058e27"
+    }
+  ],
+  "definitions": {
+    "Address": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/Credential"
+        },
+        {
+          "$ref": "#/definitions/Maybe_StakingCredential"
+        }
+      ],
+      "index": 0
+    },
+    "BuiltinByteString": {
+      "dataType": "bytes"
+    },
+    "BuiltinData": {},
+    "Credential": {
+      "oneOf": [
+        {
+          "dataType": "constructor",
+          "fields": [
+            {
+              "$ref": "#/definitions/PubKeyHash"
+            }
+          ],
+          "index": 0
+        },
+        {
+          "dataType": "constructor",
+          "fields": [
+            {
+              "$ref": "#/definitions/ScriptHash"
+            }
+          ],
+          "index": 1
+        }
+      ]
+    },
+    "CurrencySymbol": {
+      "title": "CurrencySymbol",
+      "dataType": "bytes"
+    },
+    "Integer": {
+      "dataType": "integer"
+    },
+    "JWTParts": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/BuiltinByteString"
+        },
+        {
+          "$ref": "#/definitions/BuiltinByteString"
+        },
+        {
+          "$ref": "#/definitions/BuiltinByteString"
+        }
+      ],
+      "index": 0
+    },
+    "KeyId": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/BuiltinByteString"
+        }
+      ],
+      "index": 0
+    },
+    "List_Integer": {
+      "dataType": "list",
+      "items": {
+        "dataType": "integer"
+      }
+    },
+    "Maybe_StakingCredential": {
+      "oneOf": [
+        {
+          "dataType": "constructor",
+          "fields": [],
+          "index": 1
+        },
+        {
+          "dataType": "constructor",
+          "fields": [
+            {
+              "$ref": "#/definitions/StakingCredential"
+            }
+          ],
+          "index": 0
+        }
+      ]
+    },
+    "OnChainWalletConfig": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/CurrencySymbol"
+        },
+        {
+          "$ref": "#/definitions/TokenName"
+        },
+        {
+          "$ref": "#/definitions/BuiltinByteString"
+        },
+        {
+          "$ref": "#/definitions/Address"
+        },
+        {
+          "$ref": "#/definitions/Integer"
+        }
+      ],
+      "index": 0
+    },
+    "PubKeyHash": {
+      "title": "PubKeyHash",
+      "dataType": "bytes"
+    },
+    "RewardingRedeemer": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/JWTParts"
+        },
+        {
+          "$ref": "#/definitions/UserId"
+        },
+        {
+          "$ref": "#/definitions/SigmaProof"
+        },
+        {
+          "$ref": "#/definitions/KeyId"
+        },
+        {
+          "$ref": "#/definitions/TxOutRef"
+        }
+      ],
+      "index": 0
+    },
+    "ScriptHash": {
+      "title": "ScriptHash",
+      "dataType": "bytes"
+    },
+    "SigmaProof": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/List_Integer"
+        },
+        {
+          "$ref": "#/definitions/List_Integer"
+        }
+      ],
+      "index": 0
+    },
+    "StakingCredential": {
+      "oneOf": [
+        {
+          "dataType": "constructor",
+          "fields": [
+            {
+              "$ref": "#/definitions/Credential"
+            }
+          ],
+          "index": 0
+        },
+        {
+          "dataType": "constructor",
+          "fields": [
+            {
+              "$ref": "#/definitions/Integer"
+            },
+            {
+              "$ref": "#/definitions/Integer"
+            },
+            {
+              "$ref": "#/definitions/Integer"
+            }
+          ],
+          "index": 1
+        }
+      ]
+    },
+    "TokenName": {
+      "title": "TokenName",
+      "dataType": "bytes"
+    },
+    "TxId": {
+      "title": "TxId",
+      "dataType": "bytes"
+    },
+    "TxOutRef": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/TxId"
+        },
+        {
+          "$ref": "#/definitions/Integer"
+        }
+      ],
+      "index": 0
+    },
+    "Unit": {
+      "dataType": "constructor",
+      "fields": [],
+      "index": 0
+    },
+    "UserId": {
+      "dataType": "bytes"
+    }
+  }
+}

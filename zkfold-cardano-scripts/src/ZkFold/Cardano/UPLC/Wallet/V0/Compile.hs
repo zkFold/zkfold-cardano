@@ -1,4 +1,4 @@
-module ZkFold.Cardano.UPLC.Wallet.Compile (
+module ZkFold.Cardano.UPLC.Wallet.V0.Compile (
   writeSmartWalletBP,
   web2AuthSerialisedScript,
   web2AuthCompiledCode,
@@ -21,7 +21,7 @@ import           PlutusTx.Blueprint
 import qualified PlutusTx.Prelude                    as PlutusTx 
 import           Prelude                             (FilePath, IO, ($))
 
-import           ZkFold.Cardano.UPLC.Wallet
+import           ZkFold.Cardano.UPLC.Wallet.V0
 
 smartWalletBP :: ContractBlueprint
 smartWalletBP =

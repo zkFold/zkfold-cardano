@@ -9,7 +9,8 @@ build-type: Simple
 data-dir: data
 data-files:
   compiled-scripts/rollup-simple.blueprint
-  compiled-scripts/smart-wallet.blueprint
+  compiled-scripts/smart-wallet-v0.blueprint
+  compiled-scripts/smart-wallet-v1.blueprint
 
 common lang
   default-language: Haskell2010
@@ -59,8 +60,10 @@ library
   exposed-modules:
     ZkFold.Cardano.UPLC.RollupSimple.CompiledScript
     ZkFold.Cardano.UPLC.RollupSimple.Types
-    ZkFold.Cardano.UPLC.Wallet.CompiledScript
-    ZkFold.Cardano.UPLC.Wallet.Types
+    ZkFold.Cardano.UPLC.Wallet.V0.CompiledScript
+    ZkFold.Cardano.UPLC.Wallet.V0.Types
+    ZkFold.Cardano.UPLC.Wallet.V1.CompiledScript
+    ZkFold.Cardano.UPLC.Wallet.V1.Types
 
   hs-source-dirs: src
   build-depends:

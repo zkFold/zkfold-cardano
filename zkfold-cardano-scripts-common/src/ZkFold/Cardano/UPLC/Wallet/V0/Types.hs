@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module ZkFold.Cardano.UPLC.Wallet.Types (
+module ZkFold.Cardano.UPLC.Wallet.V0.Types (
   JWTParts (..),
   KeyId (..),
   Web2Auth (..),
