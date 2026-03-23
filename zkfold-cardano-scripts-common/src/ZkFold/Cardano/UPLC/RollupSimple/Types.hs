@@ -22,8 +22,6 @@ data RollupState = RollupState
   { previousStateHash   :: Integer
   , utxoTreeRoot        :: Integer
   , chainLength         :: Integer
-  , bridgeInCommitment  :: Integer
-  , bridgeOutCommitment :: Integer
   }
   deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
