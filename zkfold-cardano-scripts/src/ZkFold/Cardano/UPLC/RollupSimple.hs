@@ -149,6 +149,7 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                                <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, 1]
                                <> bridgeInS
                                <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
+                               <> rsrDelta
                            )
                            rsrProofBytes
                        )
