@@ -19,9 +19,9 @@ import           Prelude                             (Show)
 import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
 
 data RollupState = RollupState
-  { previousStateHash   :: Integer
-  , utxoTreeRoot        :: Integer
-  , chainLength         :: Integer
+  { previousStateHash :: Integer
+  , utxoTreeRoot      :: Integer
+  , chainLength       :: Integer
   }
   deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
