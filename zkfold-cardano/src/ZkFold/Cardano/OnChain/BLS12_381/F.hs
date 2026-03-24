@@ -7,6 +7,7 @@ import           GHC.Generics          (Generic)
 import           GHC.Natural           (Natural, naturalToInteger)
 import           PlutusTx              (makeLift)
 import           PlutusTx.Blueprint
+import           Data.Coerce           (coerce)
 import qualified PlutusTx.Blueprint.TH
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude
@@ -28,6 +29,9 @@ PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''F [('F, 0)]
 {-# INLINEABLE toF #-}
 toF :: Integer -> F
 toF = F . (`modulo` bls12_381_field_prime)
+
+unsafeToF :: Integer -> F
+unsafeToF = coerce
 
 -- | convert hash into Zp BLS12_381_Scalar
 {-# INLINEABLE toInput #-}

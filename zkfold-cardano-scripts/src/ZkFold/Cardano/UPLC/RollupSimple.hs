@@ -20,7 +20,7 @@ import qualified PlutusTx.AssocMap                      as AssocMap
 import qualified PlutusTx.Builtins.Internal             as BI
 import           PlutusTx.Prelude                       hiding (toList)
 
-import           ZkFold.Cardano.OnChain.BLS12_381       (toF)
+import           ZkFold.Cardano.OnChain.BLS12_381       (unsafeToF)
 import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
 import           ZkFold.Cardano.UPLC.RollupSimple.Types (BridgeUtxoInfo (..), BridgeUtxoStatus (..),
                                                          RollupConfiguration (..), RollupSimpleRed (..),
@@ -145,7 +145,7 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                        "rollupSimpleStake: proof verification failed"
                        ( verify @PlonkupPlutus
                            rcSetupBytes
-                           ( toF
+                           ( unsafeToF
                                <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, 1]
                                <> bridgeInS
                                <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
