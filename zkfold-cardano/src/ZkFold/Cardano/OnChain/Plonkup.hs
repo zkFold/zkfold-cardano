@@ -150,7 +150,8 @@ instance NonInteractiveProof PlonkupPlutus where
 
             -- public inputs: single-pass fold over pi and l_xi lists
             -- with incrementally computed omega powers (O(l) instead of O(l²)).
-            pi_xi_val = goPi pi l_xi (omegaNPrv * omega) (F 0)
+            -- omegas(nPrv+1) = omegaNPrv, omegas(nPrv+2) = omegaNPrv*omega, ...
+            pi_xi_val = goPi pi l_xi omegaNPrv (F 0)
             goPi [] _ _ acc = acc
             goPi _ [] _ acc = acc
             goPi (p : ps) (lx : lxs) om acc =
@@ -273,7 +274,8 @@ instance NonInteractiveProof PlonkupPlutus where
             p2 = bls12_381_millerLoop (proof1 + eta `mul` proof2) h1
 
             -- Lagrange polynomial witness validation: single-pass over l_xi
-            lagrangeValid = goLagrange l_xi (omegaNPrv * omega)
+            -- omegas(nPrv+1) = omegaNPrv, omegas(nPrv+2) = omegaNPrv*omega, ...
+            lagrangeValid = goLagrange l_xi omegaNPrv
             goLagrange [] _ = True
             goLagrange (lx : lxs) om =
                 (lx * F n * (xi - om) == one) && goLagrange lxs (om * omega)
