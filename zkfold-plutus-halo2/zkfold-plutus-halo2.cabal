@@ -1,0 +1,62 @@
+cabal-version: 3.0
+name:          zkfold-plutus-halo2
+version:       1.0.0.0
+license:       MIT 
+category:      Testing, Cryptography, Math, Symbolic Computation
+author:        Vladimir Morozov 
+maintainer:    info@zkfold.io
+synopsis:      "A plutus halo2 verifier"
+build-type:    Simple
+
+common common-lang
+  ghc-options: -Wall
+               -fno-ignore-interface-pragmas
+               -fno-omit-interface-pragmas
+               -fno-full-laziness
+               -fno-spec-constr
+               -fno-specialise
+               -fno-strictness
+               -fno-unbox-strict-fields
+               -fno-unbox-small-strict-fields
+  PlutusTx.Plugin:defer-errors
+
+library
+  import:           common-lang
+  exposed-modules:
+    Plutus.Crypto.BlsTypes
+    Plutus.Crypto.BlsUtils
+    Plutus.Crypto.Constants
+    Plutus.Crypto.Halo2
+    Plutus.Crypto.Halo2.ApplicativeParser
+    Plutus.Crypto.Halo2.CompressUncompress
+    Plutus.Crypto.Halo2.Generic.Verifier
+    Plutus.Crypto.Halo2.Generic.VKConstants
+    Plutus.Crypto.Halo2.LagrangePolynomialEvaluation
+    Plutus.Crypto.Halo2.MSMEval
+    Plutus.Crypto.Halo2.GwcMultiOpenMSM
+    Plutus.Crypto.Halo2.MSMTypes
+    Plutus.Crypto.Halo2.Halo2MultiOpenMSM
+    Plutus.Crypto.Halo2.Proof
+    Plutus.Crypto.Orphans
+    Plutus.Crypto.VKType
+
+  other-modules:    Plutus.Crypto.Halo2.Transcript
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  build-depends:
+    , aeson
+    , base               >=4.2       && <5
+    , bytestring
+    , containers
+    , file-embed
+    , lens
+    , mtl
+    , plutus-core        ^>=1.43
+    , plutus-ledger-api  ^>=1.43
+    , plutus-tx          ^>=1.43
+    , plutus-tx-plugin   ^>=1.43
+    , template-haskell
+    , th-lift
+    , text
+    , hex-text
+

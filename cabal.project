@@ -16,6 +16,7 @@ packages:
     zkfold-cli
     zkfold-example
     zkfold-uplc-converter
+    zkfold-plutus-halo2
 
 package cardano-crypto-praos
   flags: -external-libsodium-vrf
