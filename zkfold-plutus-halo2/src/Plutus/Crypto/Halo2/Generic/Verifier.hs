@@ -135,7 +135,7 @@ p4_commitment = $(lift VKConstants.p4_commitment)
 
 
 rotations_for_instances :: [Scalar]
-rotations_for_instances = $(lift (BlsUtils.getRotatedOmegas VKConstants.omega_val VKConstants.omegaInv_val 0 2))
+rotations_for_instances = $(lift (BlsUtils.getRotatedOmegas VKConstants.omega_val VKConstants.omegaInv_val 0 19))
 
 rotations_for_vanishing :: [Scalar]
 rotations_for_vanishing =
@@ -149,12 +149,29 @@ rotations_for_vanishing =
    )
 
 {-# INLINEABLE verify #-}
-verify :: Proof -> Scalar -> Scalar -> (Bool, [(BuiltinByteString, BlsUtils.Tracing)])
-verify proof p1 p2 = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
+verify :: Proof -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> (Bool, [(BuiltinByteString, BlsUtils.Tracing)])
+verify proof p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14 p15 p16 p17 p18 p19 = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
   --  public inputs
-  _ <- M.commonScalar (mkScalar 2)
+  _ <- M.commonScalar (mkScalar 19)
   !i1 <- M.commonScalar p1
   !i2 <- M.commonScalar p2
+  !i3 <- M.commonScalar p3
+  !i4 <- M.commonScalar p4
+  !i5 <- M.commonScalar p5
+  !i6 <- M.commonScalar p6
+  !i7 <- M.commonScalar p7
+  !i8 <- M.commonScalar p8
+  !i9 <- M.commonScalar p9
+  !i10 <- M.commonScalar p10
+  !i11 <- M.commonScalar p11
+  !i12 <- M.commonScalar p12
+  !i13 <- M.commonScalar p13
+  !i14 <- M.commonScalar p14
+  !i15 <- M.commonScalar p15
+  !i16 <- M.commonScalar p16
+  !i17 <- M.commonScalar p17
+  !i18 <- M.commonScalar p18
+  !i19 <- M.commonScalar p19
 
 
   !a1 <- M.readPoint
@@ -227,7 +244,7 @@ verify proof p1 p2 = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
       --    lagrange eval for instances (public inputs)
       !lagrange_polynomial_instances = lagrangePolynomialBasis x xn barycentricWeight rotations_for_instances
 
-      !instanceEval1 = innerProduct lagrange_polynomial_instances [i1, i2]
+      !instanceEval1 = innerProduct lagrange_polynomial_instances [i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19]
 
       !gate_eq1 = ((((((fixedEval1 * adviceEval1) * adviceEval2) + (fixedEval2 * adviceEval1)) + (fixedEval3 * adviceEval2)) + (fixedEval4 * adviceEval3)) + fixedEval5)
 
