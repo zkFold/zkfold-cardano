@@ -10,7 +10,6 @@ import Data.Functor.Rep (Rep, Representable)
 import PlutusTx.Builtins (
     BuiltinByteString,
     ByteOrder (..),
-    addInteger,
     blake2b_224,
     bls12_381_G1_compressed_generator,
     bls12_381_G1_uncompress,
@@ -22,9 +21,8 @@ import PlutusTx.Builtins (
     consByteString,
     emptyByteString,
     integerToByteString,
-    subtractInteger,
  )
-import PlutusTx.Prelude (Bool (..), length, (!!), ($), (&&), (.), (<>), (==))
+import PlutusTx.Prelude (Bool (..), ($), (&&), (.), (<>), (==))
 import Prelude (undefined)
 
 import ZkFold.Algebra.Class
@@ -57,9 +55,7 @@ instance NonInteractiveProof PlonkupPlutus where
     {-# INLINEABLE verify #-}
     verify :: SetupVerify PlonkupPlutus -> Input PlonkupPlutus -> Proof PlonkupPlutus -> Bool
     verify SetupBytes{..} pi ProofBytes{..} =
-        let l = length pi
-
-            g0 = bls12_381_G1_uncompress bls12_381_G1_compressed_generator
+        let g0 = bls12_381_G1_uncompress bls12_381_G1_compressed_generator
             h0 = bls12_381_G2_uncompress bls12_381_G2_compressed_generator
 
             -- uncompress Setup G1 elements
@@ -150,28 +146,22 @@ instance NonInteractiveProof PlonkupPlutus where
 
             zhX_xi = xi_n - one
 
-            omegas i =
-                if i == nPrv `addInteger` 1
-                    then omegaNPrv
-                    else omegas (i `subtractInteger` 1) * omega
-
             lagrange1_xi = omega * zhX_xi * l1_xi
 
-            -- public inputs
-            pi_xi i =
-                if i == 0
-                    then F 0
-                    else
-                        pi_xi (i `subtractInteger` 1)
-                            + (pi !! (i `subtractInteger` 1))
-                            * (l_xi !! (i `subtractInteger` 1))
-                            * omegas (nPrv `addInteger` i)
+            -- public inputs: single-pass fold over pi and l_xi lists
+            -- with incrementally computed omega powers (O(l) instead of O(l²)).
+            -- omegas(nPrv+1) = omegaNPrv, omegas(nPrv+2) = omegaNPrv*omega, ...
+            pi_xi_val = goPi pi l_xi omegaNPrv (F 0)
+            goPi [] _ _ acc = acc
+            goPi _ [] _ acc = acc
+            goPi (p : ps) (lx : lxs) om acc =
+                goPi ps lxs (om * omega) (acc + p * lx * om)
 
             cmT_zeta = cmT1 + zeta `mul` (cmT2 + zeta `mul` cmT3)
 
             -- final calculations
             r0 =
-                negate (pi_xi l)
+                negate pi_xi_val
                     * zhX_xi
                     - alpha
                     * (a_xi + beta * s1_xi + gamma)
@@ -283,17 +273,13 @@ instance NonInteractiveProof PlonkupPlutus where
             p1 = bls12_381_millerLoop (xi `mul` proof1 + (eta * xi * omega) `mul` proof2 + f - e) h0
             p2 = bls12_381_millerLoop (proof1 + eta `mul` proof2) h1
 
-            -- Lagrange polynomial witness validation
-            lagrangeIsValid i =
-                if i == 0
-                    then True
-                    else
-                        (l_xi !! (i `subtractInteger` 1))
-                            * F n
-                            * (xi - omegas (nPrv `addInteger` i))
-                            == one
-                            && lagrangeIsValid (i `subtractInteger` 1)
-         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one) && lagrangeIsValid l
+            -- Lagrange polynomial witness validation: single-pass over l_xi
+            -- omegas(nPrv+1) = omegaNPrv, omegas(nPrv+2) = omegaNPrv*omega, ...
+            lagrangeValid = goLagrange l_xi omegaNPrv
+            goLagrange [] _ = True
+            goLagrange (lx : lxs) om =
+                (lx * F n * (xi - om) == one) && goLagrange lxs (om * omega)
+         in bls12_381_finalVerify p1 p2 && (l1_xi * F n * (xi - omega) == one) && lagrangeValid
 
 instance
     ( Representable i

@@ -3,6 +3,7 @@
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
 import           Data.Aeson            (FromJSON, ToJSON)
+import           Data.Coerce           (coerce)
 import           GHC.Generics          (Generic)
 import           GHC.Natural           (Natural, naturalToInteger)
 import           PlutusTx              (makeLift)
@@ -28,6 +29,9 @@ PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''F [('F, 0)]
 {-# INLINEABLE toF #-}
 toF :: Integer -> F
 toF = F . (`modulo` bls12_381_field_prime)
+
+unsafeToF :: Integer -> F
+unsafeToF = coerce
 
 -- | convert hash into Zp BLS12_381_Scalar
 {-# INLINEABLE toInput #-}
