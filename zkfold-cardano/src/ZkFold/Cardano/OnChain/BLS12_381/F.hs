@@ -3,11 +3,11 @@
 module ZkFold.Cardano.OnChain.BLS12_381.F where
 
 import           Data.Aeson            (FromJSON, ToJSON)
+import           Data.Coerce           (coerce)
 import           GHC.Generics          (Generic)
 import           GHC.Natural           (Natural, naturalToInteger)
 import           PlutusTx              (makeLift)
 import           PlutusTx.Blueprint
-import           Data.Coerce           (coerce)
 import qualified PlutusTx.Blueprint.TH
 import           PlutusTx.Builtins
 import           PlutusTx.Prelude
