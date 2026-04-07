@@ -33,6 +33,10 @@ data RollupSimpleRed = RollupSimpleRed
   -- ^ Proof for state update.
   , rsrAddress    :: Address
   -- ^ Address of the spending validator.
+  , rsrDelta      :: [Integer]
+  -- ^ Tree delta: flattened list of field elements encoding Merkle tree leaf changes.
+  -- Structure: [bi*(position, newHash)] ++ [t*n*position] ++ [t*n*(isActive, position, newHash)]
+  -- The ZK proof binds this data to the state transition, so a wrong delta fails verification.
   }
   deriving stock (Show, Generic)
   deriving anyclass HasBlueprintDefinition
