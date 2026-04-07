@@ -102,8 +102,10 @@ executable asterizm
         ZkFold.Cardano.Asterizm.Utils
         ZkFold.Cardano.Asterizm.Transaction.Client
         ZkFold.Cardano.Asterizm.Transaction.Hash
+        ZkFold.Cardano.Asterizm.Transaction.Policy
         ZkFold.Cardano.Asterizm.Transaction.Relayer
         ZkFold.Cardano.Asterizm.Transaction.Retrieve
+        ZkFold.Cardano.Asterizm.Transaction.User
         ZkFold.Cardano.Options.Common
         ZkFold.Cardano.Options.AsterizmCLI
     build-depends:
