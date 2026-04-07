@@ -4,7 +4,6 @@ import           Prelude
 import           System.FilePath                          ((</>))
 
 import           ZkFold.Cardano.UPLC.RollupSimple.Compile (writeRollupSimpleBP)
--- import qualified ZkFold.Cardano.UPLC.Wallet.V0.Compile    as V0
 import qualified ZkFold.Cardano.UPLC.Wallet.V1.Compile    as V1
 
 -- To be executed from root of zkfold-cardano repository.
