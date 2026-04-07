@@ -20,8 +20,52 @@ common common-lang
                -fno-unbox-small-strict-fields
   PlutusTx.Plugin:defer-errors
 
+common extensions
+  default-extensions:
+    BangPatterns
+    BinaryLiterals
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NoStarIsType
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    PolyKinds
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    ViewPatterns
+
 library
-  import:           common-lang
+  import:           common-lang, extensions
   exposed-modules:
     Plutus.Crypto.BlsTypes
     Plutus.Crypto.BlsUtils
@@ -60,3 +104,32 @@ library
     , text
     , hex-text
 
+test-suite halo2-ledger-test
+  import:           common-lang, extensions
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test
+  ghc-options:
+    -threaded
+    "-with-rtsopts=-A128M -AL256m -qb0 -qn4 -N"
+
+  other-modules:
+    Paths_zkfold_plutus_halo2
+
+  autogen-modules:
+    Paths_zkfold_plutus_halo2
+
+  build-depends:
+    adjunctions,
+    aeson,
+    aeson-pretty,
+    base,
+    binary,
+    bytestring,
+    containers,
+    hspec <2.12,
+    mtl,
+    plutus-tx,
+    symbolic-base,
+    symbolic-ledger,
+    zkfold-plutus-halo2,

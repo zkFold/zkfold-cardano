@@ -29,15 +29,16 @@ benchmarks: true
 source-repository-package
   type: git
   location: https://github.com/zkFold/symbolic.git
-  tag: cf1899410af481880baccb66890047ceba02b9d1 
+  tag: 7fc6c6535e5925e6ffd1796f6e39b6ca69b25c85 
   subdir:
     symbolic-base
     symbolic-examples
+    symbolic-ledger
     symbolic-uplc
 
 index-state:
-  , hackage.haskell.org 2025-04-15T19:49:23Z
-  , cardano-haskell-packages 2025-04-11T16:42:25Z
+  , hackage.haskell.org 2026-04-02T02:24:05Z 
+  , cardano-haskell-packages 2026-04-01T09:04:56Z 
 
 source-repository-package
   type: git
