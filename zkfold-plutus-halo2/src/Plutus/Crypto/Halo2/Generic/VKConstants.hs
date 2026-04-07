@@ -25,28 +25,13 @@ module Plutus.Crypto.Halo2.Generic.VKConstants (
 
 ) where
 
-import Data.Bifunctor (bimap)
-import Plutus.Crypto.BlsTypes (
-  Scalar,
-  bls12_381_field_prime,
-  mkFp,
-  mkScalar,
- )
-import Plutus.Crypto.Halo2.CompressUncompress (
-  constructG1Point,
- )
-import PlutusTx.Prelude (
-  BuiltinBLS12_381_G1_Element,
-  BuiltinBLS12_381_G2_Element,
-  bls12_381_G1_compressed_zero,
-  bls12_381_G1_uncompress,
-  bls12_381_G2_uncompress,
-  BuiltinByteString,
-  modulo,
- )
-import PlutusTx.Builtins.HasOpaque (
-  stringToBuiltinByteStringHex,
- )
+import           Data.Bifunctor                         (bimap)
+import           Plutus.Crypto.BlsTypes                 (Scalar, bls12_381_field_prime, mkFp, mkScalar)
+import           Plutus.Crypto.Halo2.CompressUncompress (constructG1Point)
+import           PlutusTx.Builtins.HasOpaque            (stringToBuiltinByteStringHex)
+import           PlutusTx.Prelude                       (BuiltinBLS12_381_G1_Element, BuiltinBLS12_381_G2_Element,
+                                                         BuiltinByteString, bls12_381_G1_compressed_zero,
+                                                         bls12_381_G1_uncompress, bls12_381_G2_uncompress, modulo)
 
 f_commitments_val_pairs :: [(Integer, Integer)]
 f_commitments_val_pairs =

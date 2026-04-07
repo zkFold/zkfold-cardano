@@ -2,55 +2,38 @@
 
 module Main where
 
-import ZkFold.Symbolic.Ledger.Examples.One
-import ZkFold.Symbolic.Ledger.Examples.One qualified as One
+import           Control.Exception                      (evaluate)
+import           Control.Monad.Except                   (runExceptT)
+import           Data.Binary                            (Binary)
+import           Data.Foldable                          (toList)
+import           Data.Functor.Rep                       (Representable)
+import           GHC.Generics                           (U1 (..), (:*:) (..))
+import           GHC.TypeNats                           (KnownNat)
+import           Plutus.Crypto.BlsTypes                 (mkScalar)
+import           Plutus.Crypto.Halo2.Generic.Verifier   (verify)
+import qualified PlutusTx.Builtins                      as PlutusTx
+import           System.Environment                     (getEnv)
+import           Test.Hspec                             (Spec, hspec, it, shouldBe)
 
-import Control.Exception (evaluate)
-import Control.Monad.Except (runExceptT)
-import GHC.Generics (U1 (..), (:*:) (..))
-import Test.Hspec (Spec, it, hspec, shouldBe)
-import ZkFold.ArithmeticCircuit (acSizeM, acSizeN)
-import ZkFold.Protocol.Halo2.Export (runProver)
-import ZkFold.Symbolic.Data.Class (arithmetize, payload)
-import ZkFold.Symbolic.Interpreter (runInterpreter)
-import System.Environment (getEnv)
-
-import Data.Foldable (toList)
-import Data.Functor.Rep (Representable)
-import Data.Binary (Binary)
-import GHC.Generics (U1(..), (:*:)(..))
-import GHC.TypeNats (KnownNat)
-
-import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
-import ZkFold.Algebra.Class (toConstant)
-import ZkFold.ArithmeticCircuit (ArithmeticCircuit)
-import ZkFold.Protocol.Plonkup.Relation (PlonkupRelation(..), toPlonkupRelation)
-import ZkFold.Symbolic.Ledger.Circuit.Compile
-  ( LedgerCircuit
-  , LedgerCircuitGates
-  , LedgerContractCompiledInput
-  , LedgerContractOutputLayout
-  , LedgerContractInput
-  )
-
-import ZkFold.Symbolic.Ledger.Types
-import ZkFold.Symbolic.Ledger.Types.Field (RollupBF, RollupBFInterpreter)
-import PlutusTx.Builtins qualified as PlutusTx
-
-import ZkFold.Symbolic.Ledger.Types.Field (RollupBF)
-import ZkFold.Algebra.EllipticCurve.BLS12_381
-import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
-import ZkFold.Symbolic.Ledger.Circuit.Compile (
-  LedgerCircuitGates,
-  LedgerContractInput (..),
-  ledgerCircuit,
- )
-import Plutus.Crypto.Halo2.Generic.Verifier (verify) 
-import Plutus.Crypto.BlsTypes (mkScalar)
+import           ZkFold.Algebra.Class                   (toConstant)
+import           ZkFold.Algebra.EllipticCurve.BLS12_381
+import           ZkFold.Algebra.Polynomial.Univariate   (PolyVec)
+import           ZkFold.ArithmeticCircuit               (ArithmeticCircuit, acSizeM, acSizeN)
+import           ZkFold.Protocol.Halo2.Export           (runProver)
+import           ZkFold.Protocol.Plonkup.Relation       (PlonkupRelation (..), toPlonkupRelation)
+import           ZkFold.Symbolic.Data.Class             (arithmetize, payload)
+import           ZkFold.Symbolic.Interpreter            (runInterpreter)
+import           ZkFold.Symbolic.Ledger.Circuit.Compile (LedgerCircuit, LedgerCircuitGates, LedgerContractCompiledInput,
+                                                         LedgerContractInput (..), LedgerContractOutputLayout,
+                                                         ledgerCircuit)
+import           ZkFold.Symbolic.Ledger.Examples.One
+import qualified ZkFold.Symbolic.Ledger.Examples.One    as One
+import           ZkFold.Symbolic.Ledger.Types
+import           ZkFold.Symbolic.Ledger.Types.Field     (RollupBF, RollupBFInterpreter)
 
 
 main :: IO ()
-main = hspec specHalo2E2EOne 
+main = hspec specHalo2E2EOne
 
 
 
@@ -110,11 +93,11 @@ specHalo2E2EOne =
 
     putStrLn "Computing proof"
 
-    Right zkLedgerProof <- runExceptT $ runProver @_ @_ @LedgerCircuitGates @_ @(PolyVec RollupBF) proverExe compiledCircuit compiledInput 
+    Right zkLedgerProof <- runExceptT $ runProver @_ @_ @LedgerCircuitGates @_ @(PolyVec RollupBF) proverExe compiledCircuit compiledInput
 
     putStrLn "Proof computed"
 
-    let Just inputs = extractLedgerPublicInputs compiledCircuit lci 
+    let Just inputs = extractLedgerPublicInputs compiledCircuit lci
     let sc i = mkScalar (fromIntegral $ toConstant $ inputs !! i)
 
     print inputs

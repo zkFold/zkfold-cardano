@@ -1,14 +1,13 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveLift #-}
-{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE DeriveLift                 #-}
+{-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE InstanceSigs               #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Plutus.Crypto.BlsTypes (
@@ -32,59 +31,21 @@ module Plutus.Crypto.BlsTypes (
 ) where
 
 import qualified Language.Haskell.TH.Lift as TH
-import PlutusTx (makeIsDataIndexed, makeLift)
-import PlutusTx.Builtins (
-    BuiltinBLS12_381_G1_Element,
-    BuiltinBLS12_381_G2_Element,
-    BuiltinByteString,
-    bls12_381_G1_add,
-    bls12_381_G1_compressed_zero,
-    bls12_381_G1_neg,
-    bls12_381_G1_scalarMul,
-    bls12_381_G1_uncompress,
-    bls12_381_G2_add,
-    bls12_381_G2_compressed_zero,
-    bls12_381_G2_neg,
-    bls12_381_G2_scalarMul,
-    bls12_381_G2_uncompress,
-    consByteString,
-    emptyByteString,
---    expModInteger, --TODO: use `expModInteger` built-in for powmod and recip, when it get's activated on-chain
-    indexByteString,
- )
-import PlutusTx.Numeric (
-    negate,
- )
-import PlutusTx.Prelude (
-    AdditiveGroup (..),
-    AdditiveMonoid (..),
-    AdditiveSemigroup (..),
-    Bool (..),
-    Eq (..),
-    Integer,
-    Module (..),
-    MultiplicativeMonoid (..),
-    MultiplicativeSemigroup (..),
-    Ord ((<), (<=)),
-    compare,
-    divide,
-    dropByteString,
-    error,
-    even,
-    modulo,
-    otherwise,
-    ($),
-    (&&),
-    (/=),
-    (.),
-    (<>),
-    (>),
-    (||),
- )
-
-import PlutusTx.Show (Show, show)
-import Text.Printf (printf)
-import qualified Prelude as Haskell
+import           PlutusTx                 (makeIsDataIndexed, makeLift)
+import           PlutusTx.Builtins        (BuiltinBLS12_381_G1_Element, BuiltinBLS12_381_G2_Element, BuiltinByteString,
+                                           bls12_381_G1_add, bls12_381_G1_compressed_zero, bls12_381_G1_neg,
+                                           bls12_381_G1_scalarMul, bls12_381_G1_uncompress, bls12_381_G2_add,
+                                           bls12_381_G2_compressed_zero, bls12_381_G2_neg, bls12_381_G2_scalarMul,
+                                           bls12_381_G2_uncompress, consByteString, emptyByteString, indexByteString)
+import           PlutusTx.Numeric         (negate)
+import           PlutusTx.Prelude         (AdditiveGroup (..), AdditiveMonoid (..), AdditiveSemigroup (..), Bool (..),
+                                           Eq (..), Integer, Module (..), MultiplicativeMonoid (..),
+                                           MultiplicativeSemigroup (..), Ord ((<), (<=)), compare, divide,
+                                           dropByteString, error, even, modulo, otherwise, ($), (&&), (.), (/=), (<>),
+                                           (>), (||))
+import           PlutusTx.Show            (Show, show)
+import qualified Prelude                  as Haskell
+import           Text.Printf              (printf)
 
 -- In this module, we setup the two prime order fields for BLS12-381.
 -- as the type Fp (base points) and Scalar.
@@ -297,7 +258,7 @@ instance Ord Fp where
 
 -- The field elements are the x and y coordinates of the points on the curve.
 data Fp2 = Fp2
-    { real :: Fp
+    { real      :: Fp
     , imaginary :: Fp
     }
     deriving (Haskell.Show, Haskell.Eq)

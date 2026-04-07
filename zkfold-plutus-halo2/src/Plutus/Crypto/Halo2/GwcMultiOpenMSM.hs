@@ -1,42 +1,29 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeApplications    #-}
 
 module Plutus.Crypto.Halo2.GwcMultiOpenMSM (
     buildMSMTH,
     NameAnn (NameAnn),
 ) where
 
-import Control.Monad (forM, when)
-import Data.Bifunctor (second)
-import Data.Coerce (coerce)
-import Data.Foldable (toList)
-import qualified Data.Sequence as Seq
-import Language.Haskell.TH (varE)
-import Language.Haskell.TH.Syntax (
-    Body (NormalB),
-    Dec (ValD),
-    Exp (LetE, ListE),
-    Name,
-    Pat (BangP, VarP),
-    Q,
-    Quote (newName),
- )
-
-import Plutus.Crypto.BlsTypes (Scalar, mkScalar)
-
-import Plutus.Crypto.Halo2.MSMTypes (
-    MSMElem (MSMElem),
-    MinimalVerifierQuery (mv_commitment, mv_eval),
- )
-import qualified PlutusTx.Builtins as PlutusTx
-import qualified PlutusTx.Prelude as PlutusTx
+import           Control.Monad                (forM, when)
+import           Data.Bifunctor               (second)
+import           Data.Coerce                  (coerce)
+import           Data.Foldable                (toList)
+import qualified Data.Sequence                as Seq
+import           Language.Haskell.TH          (varE)
+import           Language.Haskell.TH.Syntax   (Body (NormalB), Dec (ValD), Exp (LetE, ListE), Name, Pat (BangP, VarP),
+                                               Q, Quote (newName))
+import           Plutus.Crypto.BlsTypes       (Scalar, mkScalar)
+import           Plutus.Crypto.Halo2.MSMTypes (MSMElem (MSMElem), MinimalVerifierQuery (mv_commitment, mv_eval))
+import qualified PlutusTx.Builtins            as PlutusTx
+import qualified PlutusTx.Prelude             as PlutusTx
 
 {-# INLINEABLE buildMSMElem #-}
 buildMSMElem :: Scalar -> Scalar -> MinimalVerifierQuery -> MSMElem
@@ -90,7 +77,7 @@ newtype UName = UName Name
 newtype VName = VName Name
 
 expand :: [(a, [b])] -> [(a, b)]
-expand [] = []
+expand []            = []
 expand ((a, bs) : r) = ((a,) <$> bs) ++ expand r
 
 buildMSMTH :: (Eq a) => Name -> Name -> [NameAnn a] -> [Name] -> [Name] -> Q Exp

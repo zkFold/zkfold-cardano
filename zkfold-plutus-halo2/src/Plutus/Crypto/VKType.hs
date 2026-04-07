@@ -1,6 +1,6 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeApplications    #-}
 
 module Plutus.Crypto.VKType (
     BigUInteger (BigUInteger),
@@ -16,11 +16,11 @@ module Plutus.Crypto.VKType (
 )
 where
 
-import Data.Aeson (FromJSON (parseJSON))
-import GHC.Base (coerce)
-import GHC.Generics (Generic)
-import Plutus.Crypto.BlsTypes (Fp, Scalar, mkFp, mkScalar)
-import Text.Read (readMaybe)
+import           Data.Aeson             (FromJSON (parseJSON))
+import           GHC.Base               (coerce)
+import           GHC.Generics           (Generic)
+import           Plutus.Crypto.BlsTypes (Fp, Scalar, mkFp, mkScalar)
+import           Text.Read              (readMaybe)
 
 newtype BigUInteger = BigUInteger {unBigUInteger :: Integer}
     deriving (Show)
@@ -63,8 +63,8 @@ newtype Rotation = Rotation Integer
 instance FromJSON Rotation
 
 data ConstraintSystem = ConstraintSystem
-    { advice_queries :: [(ColumnIndex, Rotation)]
-    , fixed_queries :: [(ColumnIndex, Rotation)]
+    { advice_queries   :: [(ColumnIndex, Rotation)]
+    , fixed_queries    :: [(ColumnIndex, Rotation)]
     , blinding_factors :: Integer
     }
     deriving (Generic, Show)
@@ -72,7 +72,7 @@ data ConstraintSystem = ConstraintSystem
 instance FromJSON ConstraintSystem
 
 data EvaluationDomain scalar = EvaluationDomain
-    { omega :: scalar
+    { omega     :: scalar
     , omega_inv :: scalar
     }
     deriving (Generic, Show)
@@ -80,11 +80,11 @@ data EvaluationDomain scalar = EvaluationDomain
 instance (FromJSON scalar) => FromJSON (EvaluationDomain scalar)
 
 data VerifyingKey fp scalar = VerifyingKey
-    { transcript_repr :: scalar
+    { transcript_repr   :: scalar
     , fixed_commitments :: [G1Affine fp]
-    , permutation :: [G1Affine fp]
-    , cs :: ConstraintSystem
-    , domain :: EvaluationDomain scalar
+    , permutation       :: [G1Affine fp]
+    , cs                :: ConstraintSystem
+    , domain            :: EvaluationDomain scalar
     }
     deriving (Generic, Show)
 

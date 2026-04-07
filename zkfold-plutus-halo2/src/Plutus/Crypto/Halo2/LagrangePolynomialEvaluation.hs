@@ -1,6 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (
     lagrangePolynomialBasis,
@@ -9,23 +9,11 @@ module Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (
     basis,
 ) where
 
-import Plutus.Crypto.BlsTypes (
-    Scalar,
-    recip,
- )
-import Plutus.Crypto.BlsUtils (rotateOmega)
-import PlutusTx.List (foldl, zip, head, reverse, tail)
-import PlutusTx.Prelude (
-    AdditiveMonoid (..),
-    MultiplicativeMonoid (one),
-    fmap,
-    ($),
-    (*),
-    (+),
-    (-),
-    (/=),
-    (<>),
- )
+import           Plutus.Crypto.BlsTypes (Scalar, recip)
+import           Plutus.Crypto.BlsUtils (rotateOmega)
+import           PlutusTx.List          (foldl, head, reverse, tail, zip)
+import           PlutusTx.Prelude       (AdditiveMonoid (..), MultiplicativeMonoid (one), fmap, ($), (*), (+), (-),
+                                         (/=), (<>))
 import qualified Prelude
 
 {- | Computes evaluations (at the point `x`, where `xn = x^n`) of Lagrange

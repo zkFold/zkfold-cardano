@@ -1,8 +1,8 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QualifiedDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QualifiedDo       #-}
+{-# LANGUAGE TemplateHaskell   #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -ddump-splices #-}
 -- no-unused-local-binds is here because for some circuits not all bindings are used
@@ -13,60 +13,37 @@
 
 module Plutus.Crypto.Halo2.Generic.Verifier (verify) where
 
-import Language.Haskell.TH.Syntax (lift)
-import Plutus.Crypto.BlsTypes (
-  MultiplicativeGroup (recip),
-  Scalar,
-  mkScalar,
-  powMod,
- )
-import qualified Plutus.Crypto.BlsUtils as BlsUtils
-import qualified Plutus.Crypto.Constants as Constants
-import qualified Plutus.Crypto.Halo2.Generic.VKConstants as VKConstants
-import qualified Plutus.Crypto.Halo2.ApplicativeParser as M
-import Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (
-  lagrangePolynomialBasis,
- )
-import Plutus.Crypto.Halo2.MSMEval (eval)
-import Plutus.Crypto.Halo2.Halo2MultiOpenMSM (
-  buildMSM,
- )
-import Plutus.Crypto.Orphans ()
-import PlutusTx.Builtins (
-  BuiltinBLS12_381_G1_Element,
-  BuiltinBLS12_381_G2_Element,
-  BuiltinBLS12_381_MlResult,
-  bls12_381_G1_compressed_zero,
-  bls12_381_G2_compressed_generator,
-  bls12_381_finalVerify,
-  bls12_381_millerLoop,
-  bls12_381_G1_uncompress,
-  bls12_381_G2_uncompress,
-  BuiltinByteString,
- )
-import PlutusTx.Prelude (
-  AdditiveGroup (..),
-  AdditiveSemigroup (..),
-  Bool,
-  Integer,
-  MultiplicativeSemigroup (..),
-  flip,
-  fst,
-  scale,
-  zero,
-  negate,
-  modulo,
-  ($)
- )
-import PlutusTx.List (foldl,(!!),take,head,drop)
-import Plutus.Crypto.Halo2 (Proof, bls12_381_field_prime)
+import           Language.Haskell.TH.Syntax                       (lift)
+import           Plutus.Crypto.BlsTypes                           (MultiplicativeGroup (recip), Scalar, mkScalar,
+                                                                   powMod)
+import qualified Plutus.Crypto.BlsUtils                           as BlsUtils
+import qualified Plutus.Crypto.Constants                          as Constants
+import           Plutus.Crypto.Halo2                              (Proof, bls12_381_field_prime)
+import qualified Plutus.Crypto.Halo2.ApplicativeParser            as M
+import qualified Plutus.Crypto.Halo2.Generic.VKConstants          as VKConstants
+import           Plutus.Crypto.Halo2.Halo2MultiOpenMSM            (buildMSM)
+import           Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (lagrangePolynomialBasis)
+import           Plutus.Crypto.Halo2.MSMEval                      (eval)
+import           Plutus.Crypto.Orphans                            ()
+import           PlutusTx.Builtins                                (BuiltinBLS12_381_G1_Element,
+                                                                   BuiltinBLS12_381_G2_Element,
+                                                                   BuiltinBLS12_381_MlResult, BuiltinByteString,
+                                                                   bls12_381_G1_compressed_zero,
+                                                                   bls12_381_G1_uncompress,
+                                                                   bls12_381_G2_compressed_generator,
+                                                                   bls12_381_G2_uncompress, bls12_381_finalVerify,
+                                                                   bls12_381_millerLoop)
+import           PlutusTx.List                                    (drop, foldl, head, take, (!!))
+import           PlutusTx.Prelude                                 (AdditiveGroup (..), AdditiveSemigroup (..), Bool,
+                                                                   Integer, MultiplicativeSemigroup (..), flip, fst,
+                                                                   modulo, negate, scale, zero, ($))
 
 {-# INLINEABLE innerProduct #-}
 innerProduct :: [Scalar] -> [Scalar] -> Scalar
-innerProduct [] [] = mkScalar 0
+innerProduct [] []             = mkScalar 0
 innerProduct (x : xs) (y : ys) = (x * y) + (innerProduct xs ys)
 -- todo throw here as lists are of different sizes
-innerProduct _ _ = mkScalar 0
+innerProduct _ _               = mkScalar 0
 
 -- FROM VERIFICATION KEY
 
@@ -277,8 +254,8 @@ verify proof p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14 p15 p16 p17 p18 p19 
       !left4 = ((instanceEval1 + ( beta  * permutationCommon4)) +  gamma ) --part of set b
 
 
-      !left_set1 = permutations_evaluated_a_2 * left1 * left2 * left3 
-      !left_set2 = permutations_evaluated_b_2 * left4 
+      !left_set1 = permutations_evaluated_a_2 * left1 * left2 * left3
+      !left_set2 = permutations_evaluated_b_2 * left4
 
 
       !right1 = ((adviceEval1 + (( beta  *  x ) * ( powMod  scalarDelta  0  ))) +  gamma ) --part of set a
@@ -287,8 +264,8 @@ verify proof p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14 p15 p16 p17 p18 p19 
       !right4 = ((instanceEval1 + (( beta  *  x ) * ( powMod  scalarDelta  3  ))) +  gamma ) --part of set b
 
 
-      !right_set1 = permutations_evaluated_a_1 * right1 * right2 * right3 
-      !right_set2 = permutations_evaluated_b_1 * right4 
+      !right_set1 = permutations_evaluated_a_1 * right1 * right2 * right3
+      !right_set2 = permutations_evaluated_b_1 * right4
 
 
       !permutations1 = (left_set1 - right_set1) * (scalarOne - (last_evaluation + sum_of_evaluation_for_blinding_factors))

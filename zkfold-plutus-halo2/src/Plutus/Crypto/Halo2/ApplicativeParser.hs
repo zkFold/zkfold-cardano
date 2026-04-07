@@ -1,5 +1,5 @@
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Plutus.Crypto.Halo2.ApplicativeParser (
     readPoint,
@@ -18,17 +18,11 @@ module Plutus.Crypto.Halo2.ApplicativeParser (
 )
 where
 
-import Plutus.Crypto.BlsTypes (Scalar)
-import qualified Plutus.Crypto.Halo2.Proof as Proof
+import           Plutus.Crypto.BlsTypes         (Scalar)
+import qualified Plutus.Crypto.Halo2.Proof      as Proof
 import qualified Plutus.Crypto.Halo2.Transcript as Transcript
-import PlutusTx.Prelude (
-    Applicative (pure, (<*>)),
-    BuiltinBLS12_381_G1_Element,
-    Functor (fmap),
-    emptyByteString,
-    ($),
-    (<$>),
- )
+import           PlutusTx.Prelude               (Applicative (pure, (<*>)), BuiltinBLS12_381_G1_Element, Functor (fmap),
+                                                 emptyByteString, ($), (<$>))
 
 type State = (Proof.Proof, Transcript.Transcript)
 
