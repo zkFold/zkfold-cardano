@@ -98,11 +98,9 @@ specHalo2E2EOne =
         let inputs = case extractLedgerPublicInputs compiledCircuit lci of
                 Just i -> i
                 Nothing -> error "Public inputs could not be extracted"
-        let sc i = mkScalar (fromIntegral $ toConstant $ inputs !! i)
+        let scalars = (mkScalar . fromIntegral . toConstant) <$> inputs 
 
-        print inputs
-
-        let verifierResult = verify (PlutusTx.toBuiltin zkLedgerProof) (sc 0) (sc 1) (sc 2) (sc 3) (sc 4) (sc 5) (sc 6) (sc 7) (sc 8) (sc 9) (sc 10) (sc 11) (sc 12) (sc 13) (sc 14) (sc 15) (sc 16) (sc 17) (sc 18)
+        let verifierResult = verify (PlutusTx.toBuiltin zkLedgerProof) scalars 
 
         print verifierResult
 

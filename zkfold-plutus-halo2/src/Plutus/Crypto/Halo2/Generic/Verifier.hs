@@ -126,8 +126,8 @@ rotations_for_vanishing =
    )
 
 {-# INLINEABLE verify #-}
-verify :: Proof -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> Scalar -> (Bool, [(BuiltinByteString, BlsUtils.Tracing)])
-verify proof p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14 p15 p16 p17 p18 p19 = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
+verify :: Proof -> [Scalar] -> (Bool, [(BuiltinByteString, BlsUtils.Tracing)])
+verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19] = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
   --  public inputs
   _ <- M.commonScalar (mkScalar 19)
   !i1 <- M.commonScalar p1
