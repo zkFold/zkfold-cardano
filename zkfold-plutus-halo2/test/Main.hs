@@ -2,35 +2,30 @@
 
 module Main where
 
-import Control.Exception (evaluate)
-import Control.Monad.Except (runExceptT)
-import GHC.Generics (U1 (..), (:*:) (..))
-import GHC.TypeNats (KnownNat)
-import Plutus.Crypto.BlsTypes (mkScalar)
-import Plutus.Crypto.Halo2.Generic.Verifier (verify)
-import PlutusTx.Builtins qualified as PlutusTx
-import System.Environment (getEnv)
-import Test.Hspec (Spec, hspec, it, shouldBe)
+import           Control.Exception                      (evaluate)
+import           Control.Monad.Except                   (runExceptT)
+import           GHC.Generics                           (U1 (..), (:*:) (..))
+import           GHC.TypeNats                           (KnownNat)
+import           Plutus.Crypto.BlsTypes                 (mkScalar)
+import           Plutus.Crypto.Halo2.Generic.Verifier   (verify)
+import qualified PlutusTx.Builtins                      as PlutusTx
+import           System.Environment                     (getEnv)
+import           Test.Hspec                             (Spec, hspec, it, shouldBe)
 
-import ZkFold.Algebra.Class (toConstant)
-import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
-import ZkFold.ArithmeticCircuit (acSizeM, acSizeN)
-import ZkFold.Protocol.Halo2.Export (runProver)
-import ZkFold.Protocol.Plonkup.Relation (PlonkupRelation (..), toPlonkupRelation)
-import ZkFold.Symbolic.Data.Class (arithmetize, payload)
-import ZkFold.Symbolic.Interpreter (runInterpreter)
-import ZkFold.Symbolic.Ledger.Circuit.Compile (
-    LedgerCircuit,
-    LedgerCircuitGates,
-    LedgerContractCompiledInput,
-    LedgerContractInput (..),
-    LedgerContractOutputLayout,
-    ledgerCircuit,
- )
-import ZkFold.Symbolic.Ledger.Examples.One
-import ZkFold.Symbolic.Ledger.Examples.One qualified as One
-import ZkFold.Symbolic.Ledger.Types
-import ZkFold.Symbolic.Ledger.Types.Field (RollupBF, RollupBFInterpreter)
+import           ZkFold.Algebra.Class                   (toConstant)
+import           ZkFold.Algebra.Polynomial.Univariate   (PolyVec)
+import           ZkFold.ArithmeticCircuit               (acSizeM, acSizeN)
+import           ZkFold.Protocol.Halo2.Export           (runProver)
+import           ZkFold.Protocol.Plonkup.Relation       (PlonkupRelation (..), toPlonkupRelation)
+import           ZkFold.Symbolic.Data.Class             (arithmetize, payload)
+import           ZkFold.Symbolic.Interpreter            (runInterpreter)
+import           ZkFold.Symbolic.Ledger.Circuit.Compile (LedgerCircuit, LedgerCircuitGates, LedgerContractCompiledInput,
+                                                         LedgerContractInput (..), LedgerContractOutputLayout,
+                                                         ledgerCircuit)
+import           ZkFold.Symbolic.Ledger.Examples.One
+import qualified ZkFold.Symbolic.Ledger.Examples.One    as One
+import           ZkFold.Symbolic.Ledger.Types
+import           ZkFold.Symbolic.Ledger.Types.Field     (RollupBF, RollupBFInterpreter)
 
 main :: IO ()
 main = hspec specHalo2E2EOne
@@ -96,11 +91,11 @@ specHalo2E2EOne =
         putStrLn "Proof computed"
 
         let inputs = case extractLedgerPublicInputs compiledCircuit lci of
-                Just i -> i
+                Just i  -> i
                 Nothing -> error "Public inputs could not be extracted"
-        let scalars = (mkScalar . fromIntegral . toConstant) <$> inputs 
+        let scalars = (mkScalar . fromIntegral . toConstant) <$> inputs
 
-        let verifierResult = verify (PlutusTx.toBuiltin zkLedgerProof) scalars 
+        let verifierResult = verify (PlutusTx.toBuiltin zkLedgerProof) scalars
 
         print verifierResult
 
