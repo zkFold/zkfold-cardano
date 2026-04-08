@@ -22,8 +22,8 @@ import           ZkFold.Symbolic.Interpreter            (runInterpreter)
 import           ZkFold.Symbolic.Ledger.Circuit.Compile (LedgerCircuit, LedgerCircuitGates, LedgerContractCompiledInput,
                                                          LedgerContractInput (..), LedgerContractOutputLayout,
                                                          ledgerCircuit)
-import           ZkFold.Symbolic.Ledger.Examples.One
 import qualified ZkFold.Symbolic.Ledger.Examples.One    as One
+import           ZkFold.Symbolic.Ledger.Examples.One
 import           ZkFold.Symbolic.Ledger.Types
 import           ZkFold.Symbolic.Ledger.Types.Field     (RollupBF, RollupBFInterpreter)
 

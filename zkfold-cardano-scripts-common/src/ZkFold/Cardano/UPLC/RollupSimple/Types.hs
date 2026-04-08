@@ -9,14 +9,13 @@ module ZkFold.Cardano.UPLC.RollupSimple.Types (
   RollupConfiguration (..),
 ) where
 
-import           GHC.Generics                        (Generic)
-import           PlutusLedgerApi.V3                  (Address, CurrencySymbol, TokenName, TxOutRef)
+import           GHC.Generics              (Generic)
+import           Plutus.Crypto.Halo2.Proof (Proof)
+import           PlutusLedgerApi.V3        (Address, CurrencySymbol, TokenName, TxOutRef)
 import           PlutusTx.Blueprint
 import qualified PlutusTx.Blueprint.TH
-import           PlutusTx.Prelude                    hiding (toList, (*), (+))
-import           Prelude                             (Show)
-
-import Plutus.Crypto.Halo2.Proof (Proof)
+import           PlutusTx.Prelude          hiding (toList, (*), (+))
+import           Prelude                   (Show)
 
 data RollupState = RollupState
   { previousStateHash :: Integer

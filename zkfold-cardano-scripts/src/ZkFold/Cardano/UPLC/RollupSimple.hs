@@ -14,6 +14,8 @@ module ZkFold.Cardano.UPLC.RollupSimple (
 ) where
 
 import           Data.Function                          ((&))
+import           Plutus.Crypto.BlsTypes                 (mkScalar)
+import           Plutus.Crypto.Halo2.Generic.Verifier   (verify)
 import           PlutusLedgerApi.V1                     (valueOf)
 import           PlutusLedgerApi.V3
 import qualified PlutusTx.AssocMap                      as AssocMap
@@ -24,9 +26,6 @@ import           ZkFold.Cardano.UPLC.RollupSimple.Types (BridgeUtxoInfo (..), Br
                                                          RollupConfiguration (..), RollupSimpleRed (..),
                                                          RollupState (..))
 import           ZkFold.Cardano.UPLC.RollupSimple.Utils
-
-import Plutus.Crypto.BlsTypes (mkScalar)
-import Plutus.Crypto.Halo2.Generic.Verifier (verify)
 
 {-# INLINEABLE rollupSimple #-}
 rollupSimple ::
@@ -143,9 +142,9 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                        (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
                   in traceIfFalse
                        "rollupSimpleStake: proof verification failed"
-                       ( fst $ verify 
+                       ( fst $ verify
                            rsrProofBytes
-                           ( mkScalar 
+                           ( mkScalar
                                <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, 1]
                                <> bridgeInS
                                <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
