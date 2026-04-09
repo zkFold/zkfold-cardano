@@ -1,6 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns       #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 
 module Plutus.Crypto.Halo2.MSMTypes (
     MinimalVerifierQuery (MinimalVerifierQuery, mv_commitment, mv_eval),
@@ -11,22 +11,16 @@ module Plutus.Crypto.Halo2.MSMTypes (
     scaleMSM,
 ) where
 
-import Plutus.Crypto.BlsTypes (Scalar)
-import PlutusTx.List (
-    map,
-    (++),
- )
-import PlutusTx.Prelude (
-    BuiltinBLS12_381_G1_Element,
-    (*),
- )
-import qualified Prelude as Haskell
+import           Plutus.Crypto.BlsTypes (Scalar)
+import           PlutusTx.List          (map, (++))
+import           PlutusTx.Prelude       (BuiltinBLS12_381_G1_Element, (*))
+import qualified Prelude                as Haskell
 
 data MinimalVerifierQuery = MinimalVerifierQuery
     { -- Commitment
       mv_commitment :: BuiltinBLS12_381_G1_Element
     , -- Evaluation of polynomial at query point
-      mv_eval :: Scalar
+      mv_eval       :: Scalar
     }
     deriving (Haskell.Eq)
 

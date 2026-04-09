@@ -22,7 +22,7 @@ import           ZkFold.Symbolic.Interpreter            (runInterpreter)
 import           ZkFold.Symbolic.Ledger.Circuit.Compile (LedgerCircuit, LedgerCircuitGates, LedgerContractCompiledInput,
                                                          LedgerContractInput (..), LedgerContractOutputLayout,
                                                          ledgerCircuit)
-import qualified ZkFold.Symbolic.Ledger.Examples.Three    as Three
+import qualified ZkFold.Symbolic.Ledger.Examples.Three  as Three
 import           ZkFold.Symbolic.Ledger.Examples.Three
 import           ZkFold.Symbolic.Ledger.Types
 import           ZkFold.Symbolic.Ledger.Types.Field     (RollupBF, RollupBFInterpreter)
