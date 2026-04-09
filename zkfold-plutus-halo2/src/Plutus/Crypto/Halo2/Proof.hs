@@ -1,6 +1,6 @@
-{-# LANGUAGE BangPatterns      #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Plutus.Crypto.Halo2.Proof (
     readPoint,
@@ -10,13 +10,28 @@ module Plutus.Crypto.Halo2.Proof (
 )
 where
 
-import           GHC.ByteOrder          (ByteOrder (..))
-import           Plutus.Crypto.BlsTypes (Scalar, mkScalar)
-import           PlutusTx.Builtins      (byteStringToInteger)
-import           PlutusTx.Numeric       (MultiplicativeSemigroup ((*)))
-import           PlutusTx.Prelude       (BuiltinBLS12_381_G1_Element, BuiltinByteString, Integer,
-                                         bls12_381_G1_uncompress, lengthOfByteString, sliceByteString, traceError, ($),
-                                         (==))
+import GHC.ByteOrder (ByteOrder (..))
+import Plutus.Crypto.BlsTypes (
+    Scalar,
+    mkScalar,
+ )
+import PlutusTx.Builtins (
+    byteStringToInteger,
+ )
+import PlutusTx.Numeric (
+    MultiplicativeSemigroup ((*)),
+ )
+import PlutusTx.Prelude (
+    BuiltinBLS12_381_G1_Element,
+    BuiltinByteString,
+    Integer,
+    bls12_381_G1_uncompress,
+    lengthOfByteString,
+    sliceByteString,
+    traceError,
+    ($),
+    (==),
+ )
 
 type Proof = BuiltinByteString
 

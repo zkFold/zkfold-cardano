@@ -1,14 +1,23 @@
-{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Plutus.Crypto.Orphans where
 
-import           GHC.ByteOrder              (ByteOrder (..))
 import qualified Language.Haskell.TH.Syntax as TH
-import           PlutusTx.Builtins          (BuiltinBLS12_381_G1_Element, BuiltinBLS12_381_G2_Element,
-                                             bls12_381_G1_compress, bls12_381_G1_uncompress, bls12_381_G2_compress,
-                                             bls12_381_G2_uncompress, byteStringToInteger, integerToByteString)
+
+import GHC.ByteOrder (ByteOrder (..))
+
+import PlutusTx.Builtins (
+    BuiltinBLS12_381_G1_Element,
+    BuiltinBLS12_381_G2_Element,
+    bls12_381_G1_compress,
+    bls12_381_G1_uncompress,
+    bls12_381_G2_compress,
+    bls12_381_G2_uncompress,
+    byteStringToInteger,
+    integerToByteString,
+ )
 
 -- lifts for encoding constants to plutus script
 instance TH.Lift BuiltinBLS12_381_G1_Element where

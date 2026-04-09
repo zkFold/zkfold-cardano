@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns      #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Plutus.Crypto.Halo2.CompressUncompress (
@@ -6,16 +6,47 @@ module Plutus.Crypto.Halo2.CompressUncompress (
     deconstructG1Point,
 ) where
 
-import           GHC.ByteOrder          (ByteOrder (..))
-import           Plutus.Crypto.BlsTypes (Fp (Fp, unFp), bls12_381_base_prime, reverseByteString)
-import           PlutusTx.Builtins      (BuiltinBLS12_381_G1_Element, BuiltinByteString, bls12_381_G1_compress,
-                                         bls12_381_G1_compressed_zero, bls12_381_G1_uncompress, byteStringToInteger,
-                                         integerToByteString, readBit, writeBits)
-import           PlutusTx.List          (foldr)
-import           PlutusTx.Numeric       (negate)
-import           PlutusTx.Prelude       (AdditiveMonoid (..), AdditiveSemigroup (..), Bool (..), Eq (..), Integer,
-                                         Module (..), MultiplicativeMonoid (..), MultiplicativeSemigroup (..),
-                                         Ord ((<)), divide, not, otherwise, ($), (&&), (.), (>), (||))
+import GHC.ByteOrder (ByteOrder (..))
+import Plutus.Crypto.BlsTypes (
+    Fp (Fp, unFp),
+    bls12_381_base_prime,
+    reverseByteString,
+ )
+
+import PlutusTx.Builtins (
+    BuiltinBLS12_381_G1_Element,
+    BuiltinByteString,
+    bls12_381_G1_compress,
+    bls12_381_G1_compressed_zero,
+    bls12_381_G1_uncompress,
+    byteStringToInteger,
+    integerToByteString,
+    readBit,
+    writeBits,
+ )
+import PlutusTx.List (foldr)
+import PlutusTx.Numeric (
+    negate,
+ )
+import PlutusTx.Prelude (
+    AdditiveMonoid (..),
+    AdditiveSemigroup (..),
+    Bool (..),
+    Eq (..),
+    Integer,
+    Module (..),
+    MultiplicativeMonoid (..),
+    MultiplicativeSemigroup (..),
+    Ord ((<)),
+    divide,
+    not,
+    otherwise,
+    ($),
+    (&&),
+    (.),
+    (>),
+    (||),
+ )
 
 setPrefix :: BuiltinByteString -> Bool -> Bool -> Bool -> BuiltinByteString
 setPrefix bs b1 b2 b3 = result

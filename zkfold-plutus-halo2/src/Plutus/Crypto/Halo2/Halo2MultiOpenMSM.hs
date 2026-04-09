@@ -1,5 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Plutus.Crypto.Halo2.Halo2MultiOpenMSM (
     buildMSM,
@@ -9,16 +10,47 @@ module Plutus.Crypto.Halo2.Halo2MultiOpenMSM (
     finalCommitment,
 ) where
 
-import           Plutus.Crypto.BlsTypes                           (Scalar, recip)
-import           Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (lagrangeEvaluation)
-import           Plutus.Crypto.Halo2.MSMTypes                     (MSM (..), MSMElem (MSMElem), addMSM, appendTerm,
-                                                                   scaleMSM)
-import           PlutusTx.Builtins                                (BuiltinBLS12_381_G1_Element)
-import           PlutusTx.Foldable                                (length)
-import           PlutusTx.List                                    (filter, foldl, map, reverse, unzip, zip, (++))
-import           PlutusTx.Prelude                                 (Integer, bls12_381_G1_compressed_generator,
-                                                                   bls12_381_G1_neg, bls12_381_G1_uncompress,
-                                                                   enumFromTo, one, zero, (*), (+), (-), (==))
+import Plutus.Crypto.BlsTypes (
+    Scalar,
+    recip,
+ )
+import Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (
+    lagrangeEvaluation,
+ )
+import Plutus.Crypto.Halo2.MSMTypes (
+    MSM (..),
+    MSMElem (MSMElem),
+    addMSM,
+    appendTerm,
+    scaleMSM,
+ )
+import PlutusTx.Builtins (
+    BuiltinBLS12_381_G1_Element,
+ )
+import PlutusTx.List (
+    filter,
+    foldl,
+    map,
+    reverse,
+    unzip,
+    zip,
+    (++),
+ )
+import PlutusTx.Prelude (
+    Integer,
+    bls12_381_G1_compressed_generator,
+    bls12_381_G1_neg,
+    bls12_381_G1_uncompress,
+    enumFromTo,
+    one,
+    length,
+--    trace,
+    zero,
+    (*),
+    (+),
+    (-),
+    (==),
+ )
 
 -- Prepares MSM for multi-open KZG polynomial commitment verification.
 -- When evaluated, it represents the `right` input of the pairing check equation: `e(left, sG2) == e(right, G2)`,
@@ -146,7 +178,7 @@ buildQ commitmentMap pointSetsIndexes x1Powers =
                                 scaled = map (* x1Power) es
                              in
                                 case acc of
-                                    []          -> scaled
+                                    [] -> scaled
                                     accumulated -> map (\(a, b) -> a + b) (zip accumulated scaled)
                         )
                         []

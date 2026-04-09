@@ -1,10 +1,10 @@
+{-# LANGUAGE Strict #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE Strict            #-}
 
 module Plutus.Crypto.Constants where
 
-import           Plutus.Crypto.BlsTypes (Scalar, bls12_381_field_prime, mkScalar)
-import           PlutusTx.Prelude       (modulo)
+import Plutus.Crypto.BlsTypes (Scalar, bls12_381_field_prime, mkScalar)
+import PlutusTx.Prelude (modulo)
 
 -- this is constant from halo2 "halo2_proofs::halo2curves::bls12_381::Scalar::DELTA"
 scalarDelta :: Scalar

@@ -2,17 +2,40 @@
 
 module Plutus.Crypto.BlsUtils (powers, rotateOmega, Tracing, traceG1, traceG2, traceScalar, traceMVQ, traceMSM, getRotatedOmegas) where
 
-import           Data.Char                              (toUpper)
-import           Plutus.Crypto.BlsTypes                 (Scalar, mkScalar, powMod, unFp, unScalar)
-import           Plutus.Crypto.Halo2.CompressUncompress (deconstructG1Point)
-import           Plutus.Crypto.Halo2.MSMTypes
-import           PlutusTx.Builtins                      (BuiltinBLS12_381_G1_Element, BuiltinBLS12_381_G2_Element)
-import           PlutusTx.Prelude                       (BuiltinByteString, Integer, MultiplicativeMonoid (one), abs,
-                                                         bls12_381_G1_compress, bls12_381_G2_compress, fmap,
-                                                         fromBuiltin, otherwise, (*), (-), (<), (==))
-import qualified Prelude                                as Haskell
-import           Text.Hex                               (encodeHex)
-import           Text.Printf                            (printf)
+import Plutus.Crypto.BlsTypes (
+    Scalar,
+    mkScalar,
+    powMod,
+    unFp,
+    unScalar,
+ )
+import Plutus.Crypto.Halo2.CompressUncompress (
+    deconstructG1Point,
+ )
+import Plutus.Crypto.Halo2.MSMTypes
+import PlutusTx.Builtins (
+    BuiltinBLS12_381_G1_Element,
+    BuiltinBLS12_381_G2_Element,
+ )
+import PlutusTx.Prelude (
+    BuiltinByteString,
+    Integer,
+    MultiplicativeMonoid (one),
+    abs,
+    bls12_381_G2_compress,
+    bls12_381_G1_compress,
+    fmap,
+    fromBuiltin,
+    otherwise,
+    (*),
+    (-),
+    (<),
+    (==),
+ )
+import Text.Hex (encodeHex)
+import Text.Printf (printf)
+import qualified Prelude as Haskell
+import Data.Char (toUpper)
 
 printAsHex :: BuiltinByteString -> Haskell.String
 printAsHex a = (Haskell.show Haskell.. encodeHex Haskell.. fromBuiltin Haskell.$ a)

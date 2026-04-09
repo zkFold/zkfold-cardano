@@ -1,8 +1,8 @@
-{-# LANGUAGE BangPatterns      #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QualifiedDo       #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE QualifiedDo #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -ddump-splices #-}
 -- no-unused-local-binds is here because for some circuits not all bindings are used
@@ -13,37 +13,60 @@
 
 module Plutus.Crypto.Halo2.Generic.Verifier (verify) where
 
-import           Language.Haskell.TH.Syntax                       (lift)
-import           Plutus.Crypto.BlsTypes                           (MultiplicativeGroup (recip), Scalar, mkScalar,
-                                                                   powMod)
-import qualified Plutus.Crypto.BlsUtils                           as BlsUtils
-import qualified Plutus.Crypto.Constants                          as Constants
-import           Plutus.Crypto.Halo2                              (Proof, bls12_381_field_prime)
-import qualified Plutus.Crypto.Halo2.ApplicativeParser            as M
-import qualified Plutus.Crypto.Halo2.Generic.VKConstants          as VKConstants
-import           Plutus.Crypto.Halo2.Halo2MultiOpenMSM            (buildMSM)
-import           Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (lagrangePolynomialBasis)
-import           Plutus.Crypto.Halo2.MSMEval                      (eval)
-import           Plutus.Crypto.Orphans                            ()
-import           PlutusTx.Builtins                                (BuiltinBLS12_381_G1_Element,
-                                                                   BuiltinBLS12_381_G2_Element,
-                                                                   BuiltinBLS12_381_MlResult, BuiltinByteString,
-                                                                   bls12_381_G1_compressed_zero,
-                                                                   bls12_381_G1_uncompress,
-                                                                   bls12_381_G2_compressed_generator,
-                                                                   bls12_381_G2_uncompress, bls12_381_finalVerify,
-                                                                   bls12_381_millerLoop)
-import           PlutusTx.List                                    (drop, foldl, head, take, (!!))
-import           PlutusTx.Prelude                                 (AdditiveGroup (..), AdditiveSemigroup (..), Bool,
-                                                                   Integer, MultiplicativeSemigroup (..), flip, fst,
-                                                                   modulo, negate, scale, zero, ($))
+import Language.Haskell.TH.Syntax (lift)
+import Plutus.Crypto.BlsTypes (
+  MultiplicativeGroup (recip),
+  Scalar,
+  mkScalar,
+  powMod,
+ )
+import qualified Plutus.Crypto.BlsUtils as BlsUtils
+import qualified Plutus.Crypto.Constants as Constants
+import qualified Plutus.Crypto.Halo2.Generic.VKConstants as VKConstants
+import qualified Plutus.Crypto.Halo2.ApplicativeParser as M
+import Plutus.Crypto.Halo2.LagrangePolynomialEvaluation (
+  lagrangePolynomialBasis,
+ )
+import Plutus.Crypto.Halo2.MSMEval (eval)
+import Plutus.Crypto.Halo2.Halo2MultiOpenMSM (
+  buildMSM,
+ )
+import Plutus.Crypto.Orphans ()
+import PlutusTx.Builtins (
+  BuiltinBLS12_381_G1_Element,
+  BuiltinBLS12_381_G2_Element,
+  BuiltinBLS12_381_MlResult,
+  bls12_381_G1_compressed_zero,
+  bls12_381_G2_compressed_generator,
+  bls12_381_finalVerify,
+  bls12_381_millerLoop,
+  bls12_381_G1_uncompress,
+  bls12_381_G2_uncompress,
+  BuiltinByteString,
+ )
+import PlutusTx.Prelude (
+  AdditiveGroup (..),
+  AdditiveSemigroup (..),
+  Bool,
+  Integer,
+  MultiplicativeSemigroup (..),
+  flip,
+  fst,
+  scale,
+  zero,
+  negate,
+  modulo,
+  ($)
+ )
+import PlutusTx.List (foldl,(!!),take,head,drop)
+import Plutus.Crypto.Halo2 (Proof, bls12_381_field_prime)
 
 {-# INLINEABLE innerProduct #-}
 innerProduct :: [Scalar] -> [Scalar] -> Scalar
-innerProduct [] []             = mkScalar 0
+innerProduct [] [] = mkScalar 0
 innerProduct (x : xs) (y : ys) = (x * y) + (innerProduct xs ys)
 -- todo throw here as lists are of different sizes
-innerProduct _ _               = mkScalar 0
+innerProduct _ _ = mkScalar 0
 
 -- FROM VERIFICATION KEY
 
@@ -112,7 +135,7 @@ p4_commitment = $(lift VKConstants.p4_commitment)
 
 
 rotations_for_instances :: [Scalar]
-rotations_for_instances = $(lift (BlsUtils.getRotatedOmegas VKConstants.omega_val VKConstants.omegaInv_val 0 19))
+rotations_for_instances = $(lift (BlsUtils.getRotatedOmegas VKConstants.omega_val VKConstants.omegaInv_val 0 40))
 
 rotations_for_vanishing :: [Scalar]
 rotations_for_vanishing =
@@ -127,9 +150,9 @@ rotations_for_vanishing =
 
 {-# INLINEABLE verify #-}
 verify :: Proof -> [Scalar] -> (Bool, [(BuiltinByteString, BlsUtils.Tracing)])
-verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19] = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
+verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40] = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
   --  public inputs
-  _ <- M.commonScalar (mkScalar 19)
+  _ <- M.commonScalar (mkScalar 40)
   !i1 <- M.commonScalar p1
   !i2 <- M.commonScalar p2
   !i3 <- M.commonScalar p3
@@ -149,6 +172,27 @@ verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
   !i17 <- M.commonScalar p17
   !i18 <- M.commonScalar p18
   !i19 <- M.commonScalar p19
+  !i20 <- M.commonScalar p20
+  !i21 <- M.commonScalar p21
+  !i22 <- M.commonScalar p22
+  !i23 <- M.commonScalar p23
+  !i24 <- M.commonScalar p24
+  !i25 <- M.commonScalar p25
+  !i26 <- M.commonScalar p26
+  !i27 <- M.commonScalar p27
+  !i28 <- M.commonScalar p28
+  !i29 <- M.commonScalar p29
+  !i30 <- M.commonScalar p30
+  !i31 <- M.commonScalar p31
+  !i32 <- M.commonScalar p32
+  !i33 <- M.commonScalar p33
+  !i34 <- M.commonScalar p34
+  !i35 <- M.commonScalar p35
+  !i36 <- M.commonScalar p36
+  !i37 <- M.commonScalar p37
+  !i38 <- M.commonScalar p38
+  !i39 <- M.commonScalar p39
+  !i40 <- M.commonScalar p40
 
 
   !a1 <- M.readPoint
@@ -209,7 +253,7 @@ verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
 
 
   let !rotateOmega = BlsUtils.rotateOmega omega omegaInv
-      !n = 524288
+      !n = 2097152
       !xn = powMod x n
 
 -- todo check if there are case where more X rotations are needed
@@ -221,7 +265,7 @@ verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
       --    lagrange eval for instances (public inputs)
       !lagrange_polynomial_instances = lagrangePolynomialBasis x xn barycentricWeight rotations_for_instances
 
-      !instanceEval1 = innerProduct lagrange_polynomial_instances [i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19]
+      !instanceEval1 = innerProduct lagrange_polynomial_instances [i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31, i32, i33, i34, i35, i36, i37, i38, i39, i40]
 
       !gate_eq1 = ((((((fixedEval1 * adviceEval1) * adviceEval2) + (fixedEval2 * adviceEval1)) + (fixedEval3 * adviceEval2)) + (fixedEval4 * adviceEval3)) + fixedEval5)
 
@@ -254,8 +298,8 @@ verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
       !left4 = ((instanceEval1 + ( beta  * permutationCommon4)) +  gamma ) --part of set b
 
 
-      !left_set1 = permutations_evaluated_a_2 * left1 * left2 * left3
-      !left_set2 = permutations_evaluated_b_2 * left4
+      !left_set1 = permutations_evaluated_a_2 * left1 * left2 * left3 
+      !left_set2 = permutations_evaluated_b_2 * left4 
 
 
       !right1 = ((adviceEval1 + (( beta  *  x ) * ( powMod  scalarDelta  0  ))) +  gamma ) --part of set a
@@ -264,8 +308,8 @@ verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
       !right4 = ((instanceEval1 + (( beta  *  x ) * ( powMod  scalarDelta  3  ))) +  gamma ) --part of set b
 
 
-      !right_set1 = permutations_evaluated_a_1 * right1 * right2 * right3
-      !right_set2 = permutations_evaluated_b_1 * right4
+      !right_set1 = permutations_evaluated_a_1 * right1 * right2 * right3 
+      !right_set2 = permutations_evaluated_b_1 * right4 
 
 
       !permutations1 = (left_set1 - right_set1) * (scalarOne - (last_evaluation + sum_of_evaluation_for_blinding_factors))

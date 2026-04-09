@@ -9,12 +9,29 @@ module Plutus.Crypto.Halo2.Transcript (
 )
 where
 
-import           GHC.ByteOrder          (ByteOrder (..))
-import           Plutus.Crypto.BlsTypes (Scalar, bls12_381_field_prime, mkScalar, unScalar)
-import           PlutusTx.Builtins      (BuiltinBLS12_381_G1_Element, BuiltinByteString, blake2b_256,
-                                         bls12_381_G1_compress, byteStringToInteger, consByteString, emptyByteString,
-                                         integerToByteString)
-import           PlutusTx.Prelude       (Semigroup ((<>)), modulo, (*), (+))
+import GHC.ByteOrder (ByteOrder (..))
+import Plutus.Crypto.BlsTypes (
+    Scalar,
+    bls12_381_field_prime,
+    mkScalar,
+    unScalar,
+ )
+import PlutusTx.Builtins (
+    BuiltinBLS12_381_G1_Element,
+    BuiltinByteString,
+    blake2b_256,
+    bls12_381_G1_compress,
+    byteStringToInteger,
+    consByteString,
+    emptyByteString,
+    integerToByteString,
+ )
+import PlutusTx.Prelude (
+    Semigroup ((<>)),
+    modulo,
+    (*),
+    (+)
+ )
 
 -- todo constants from rust implementation of halo2
 -- /// Prefix to a prover's message soliciting a challenge

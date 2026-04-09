@@ -5,7 +5,7 @@ module Main where
 import           Control.Exception                      (evaluate)
 import           Control.Monad.Except                   (runExceptT)
 import           GHC.Generics                           (U1 (..), (:*:) (..))
-import           GHC.TypeNats                           (KnownNat)
+import           GHC.TypeNats                           (KnownNat, Natural)
 import           Plutus.Crypto.BlsTypes                 (mkScalar)
 import           Plutus.Crypto.Halo2.Generic.Verifier   (verify)
 import qualified PlutusTx.Builtins                      as PlutusTx
@@ -22,8 +22,8 @@ import           ZkFold.Symbolic.Interpreter            (runInterpreter)
 import           ZkFold.Symbolic.Ledger.Circuit.Compile (LedgerCircuit, LedgerCircuitGates, LedgerContractCompiledInput,
                                                          LedgerContractInput (..), LedgerContractOutputLayout,
                                                          ledgerCircuit)
-import qualified ZkFold.Symbolic.Ledger.Examples.One    as One
-import           ZkFold.Symbolic.Ledger.Examples.One
+import qualified ZkFold.Symbolic.Ledger.Examples.Three    as Three
+import           ZkFold.Symbolic.Ledger.Examples.Three
 import           ZkFold.Symbolic.Ledger.Types
 import           ZkFold.Symbolic.Ledger.Types.Field     (RollupBF, RollupBFInterpreter)
 
@@ -39,7 +39,7 @@ extractLedgerPublicInputs ::
     , KnownNat i
     , KnownNat o
     , KnownNat t
-    , SignatureState bi bo ud a RollupBFInterpreter
+    , SignatureState bi bo RollupBFInterpreter
     , SignatureTransactionBatch ud i o a t RollupBFInterpreter
     ) =>
     LedgerCircuit bi bo ud a i o t ->
@@ -49,7 +49,7 @@ extractLedgerPublicInputs circuit input = do
     rel <-
         toPlonkupRelation
             @(LedgerContractCompiledInput bi bo ud a i o t)
-            @(LedgerContractOutputLayout bi bo a)
+            @(LedgerContractOutputLayout bi bo a t o)
             @LedgerCircuitGates
             @RollupBF
             @(PolyVec RollupBF)
@@ -66,17 +66,17 @@ extractLedgerPublicInputs circuit input = do
 
 specHalo2E2EOne :: Spec
 specHalo2E2EOne =
-    it "E2E ledger circuit, One: prove and verify" $ do
-        let lci :: LedgerContractInput Bi Bo Ud A Ixs Oxs TxCount I
+    it "E2E ledger circuit, Three: prove and verify" $ do
+        let lci :: LedgerContractInput Bi Bo Ud A S N TxCount I
             lci =
                 LedgerContractInput
                     { lciPreviousState = prevState
                     , lciTransactionBatch = batch
                     , lciNewState = newState
-                    , lciStateWitness = One.witness
+                    , lciStateWitness = Three.witness
                     }
         proverExe <- getEnv "HALO2_PROVER"
-        compiledCircuit <- evaluate $ ledgerCircuit @Bi @Bo @Ud @A @Ixs @Oxs @TxCount @I
+        compiledCircuit <- evaluate $ ledgerCircuit @Bi @Bo @Ud @A @S @N @TxCount @I
 
         putStrLn $
             "constraints: " <> show (acSizeN compiledCircuit) <> ", variables: " <> show (acSizeM compiledCircuit)
