@@ -89,7 +89,7 @@ specHalo2E2EOne =
         zkLedgerProofE <- runExceptT $ runProver @_ @_ @LedgerCircuitGates @_ @(PolyVec RollupBF) proverExe compiledCircuit compiledInput
         zkLedgerProof <- case zkLedgerProofE of
                            Left msg -> error $ show msg
-                           Right p -> pure p
+                           Right p  -> pure p
 
         putStrLn "Proof computed"
 

@@ -36,7 +36,7 @@ import           PlutusTx.Builtins                                (BuiltinBLS12_
 import           PlutusTx.List                                    (drop, foldl, head, take, (!!))
 import           PlutusTx.Prelude                                 (AdditiveGroup (..), AdditiveSemigroup (..), Bool,
                                                                    Integer, MultiplicativeSemigroup (..), flip, fst,
-                                                                   modulo, negate, scale, zero, ($), mapM)
+                                                                   mapM, modulo, negate, scale, zero, ($))
 
 {-# INLINEABLE innerProduct #-}
 innerProduct :: [Scalar] -> [Scalar] -> Scalar
@@ -202,7 +202,7 @@ verify proof scalars = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.d
       --    lagrange eval for instances (public inputs)
       !lagrange_polynomial_instances = lagrangePolynomialBasis x xn barycentricWeight rotations_for_instances
 
-      !instanceEval1 = innerProduct lagrange_polynomial_instances is 
+      !instanceEval1 = innerProduct lagrange_polynomial_instances is
 
       !gate_eq1 = ((((((fixedEval1 * adviceEval1) * adviceEval2) + (fixedEval2 * adviceEval1)) + (fixedEval3 * adviceEval2)) + (fixedEval4 * adviceEval3)) + fixedEval5)
 
