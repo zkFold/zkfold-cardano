@@ -86,7 +86,10 @@ specHalo2E2EOne =
 
         putStrLn "Computing proof"
 
-        Right zkLedgerProof <- runExceptT $ runProver @_ @_ @LedgerCircuitGates @_ @(PolyVec RollupBF) proverExe compiledCircuit compiledInput
+        zkLedgerProofE <- runExceptT $ runProver @_ @_ @LedgerCircuitGates @_ @(PolyVec RollupBF) proverExe compiledCircuit compiledInput
+        zkLedgerProof <- case zkLedgerProofE of
+                           Left msg -> error $ show msg
+                           Right p -> pure p
 
         putStrLn "Proof computed"
 

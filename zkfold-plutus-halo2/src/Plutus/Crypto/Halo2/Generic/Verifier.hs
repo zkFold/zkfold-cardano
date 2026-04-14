@@ -36,7 +36,7 @@ import           PlutusTx.Builtins                                (BuiltinBLS12_
 import           PlutusTx.List                                    (drop, foldl, head, take, (!!))
 import           PlutusTx.Prelude                                 (AdditiveGroup (..), AdditiveSemigroup (..), Bool,
                                                                    Integer, MultiplicativeSemigroup (..), flip, fst,
-                                                                   modulo, negate, scale, zero, ($))
+                                                                   modulo, negate, scale, zero, ($), mapM)
 
 {-# INLINEABLE innerProduct #-}
 innerProduct :: [Scalar] -> [Scalar] -> Scalar
@@ -127,50 +127,10 @@ rotations_for_vanishing =
 
 {-# INLINEABLE verify #-}
 verify :: Proof -> [Scalar] -> (Bool, [(BuiltinByteString, BlsUtils.Tracing)])
-verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40] = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
+verify proof scalars = fst $ flip (M.run VKConstants.transcriptRepr) proof $ M.do
   --  public inputs
   _ <- M.commonScalar (mkScalar 40)
-  !i1 <- M.commonScalar p1
-  !i2 <- M.commonScalar p2
-  !i3 <- M.commonScalar p3
-  !i4 <- M.commonScalar p4
-  !i5 <- M.commonScalar p5
-  !i6 <- M.commonScalar p6
-  !i7 <- M.commonScalar p7
-  !i8 <- M.commonScalar p8
-  !i9 <- M.commonScalar p9
-  !i10 <- M.commonScalar p10
-  !i11 <- M.commonScalar p11
-  !i12 <- M.commonScalar p12
-  !i13 <- M.commonScalar p13
-  !i14 <- M.commonScalar p14
-  !i15 <- M.commonScalar p15
-  !i16 <- M.commonScalar p16
-  !i17 <- M.commonScalar p17
-  !i18 <- M.commonScalar p18
-  !i19 <- M.commonScalar p19
-  !i20 <- M.commonScalar p20
-  !i21 <- M.commonScalar p21
-  !i22 <- M.commonScalar p22
-  !i23 <- M.commonScalar p23
-  !i24 <- M.commonScalar p24
-  !i25 <- M.commonScalar p25
-  !i26 <- M.commonScalar p26
-  !i27 <- M.commonScalar p27
-  !i28 <- M.commonScalar p28
-  !i29 <- M.commonScalar p29
-  !i30 <- M.commonScalar p30
-  !i31 <- M.commonScalar p31
-  !i32 <- M.commonScalar p32
-  !i33 <- M.commonScalar p33
-  !i34 <- M.commonScalar p34
-  !i35 <- M.commonScalar p35
-  !i36 <- M.commonScalar p36
-  !i37 <- M.commonScalar p37
-  !i38 <- M.commonScalar p38
-  !i39 <- M.commonScalar p39
-  !i40 <- M.commonScalar p40
-
+  !is <- mapM M.commonScalar scalars
 
   !a1 <- M.readPoint
   !a2 <- M.readPoint
@@ -242,7 +202,7 @@ verify proof [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
       --    lagrange eval for instances (public inputs)
       !lagrange_polynomial_instances = lagrangePolynomialBasis x xn barycentricWeight rotations_for_instances
 
-      !instanceEval1 = innerProduct lagrange_polynomial_instances [i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31, i32, i33, i34, i35, i36, i37, i38, i39, i40]
+      !instanceEval1 = innerProduct lagrange_polynomial_instances is 
 
       !gate_eq1 = ((((((fixedEval1 * adviceEval1) * adviceEval2) + (fixedEval2 * adviceEval1)) + (fixedEval3 * adviceEval2)) + (fixedEval4 * adviceEval3)) + fixedEval5)
 
