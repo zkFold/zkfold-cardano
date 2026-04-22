@@ -18,12 +18,12 @@ import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizm
 
 -- | Transaction for sending an outgoing cross-chain message.
 data SendTransaction = SendTransaction
-  { stCoreCfgFile       :: !FilePath
-  , stSigningKeyFile    :: !FilePath
-  , stClientVKeyFile    :: !FilePath
+  { stCoreCfgFile      :: !FilePath
+  , stSigningKeyFile   :: !FilePath
+  , stClientVKeyFile   :: !FilePath
   , stTrustedAddresses :: ![BS.ByteString]
-  , stOutAddress        :: !GYAddress
-  , stMessage           :: !BS.ByteString
+  , stOutAddress       :: !GYAddress
+  , stMessage          :: !BS.ByteString
   }
 
 -- | Transaction for receiving an incoming cross-chain message.

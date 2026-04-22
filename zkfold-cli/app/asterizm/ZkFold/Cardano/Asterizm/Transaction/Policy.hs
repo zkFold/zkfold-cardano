@@ -1,6 +1,6 @@
 module ZkFold.Cardano.Asterizm.Transaction.Policy where
 
-import qualified Data.ByteString                               as BS
+import qualified Data.ByteString                              as BS
 import           GeniusYield.Types
 import           Prelude
 
