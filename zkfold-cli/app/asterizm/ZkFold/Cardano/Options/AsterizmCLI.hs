@@ -70,6 +70,7 @@ pTransactionAsterizmClient = do
                 <$> pGYCoreConfigFile
                 <*> pSigningKeyFile
                 <*> pVerificationKeyFile "client"
+                <*> many pTrustedAddress
                 <*> pBenefOutAddress
                 <*> pMessage
 
@@ -81,6 +82,7 @@ pTransactionAsterizmClient = do
                 <*> pSigningKeyFile
                 <*> pVerificationKeyFile "client"
                 <*> many (pVerificationKeyFile "relayer")
+                <*> many pTrustedAddress
                 <*> pBenefOutAddress
                 <*> pMessage
 
@@ -119,6 +121,7 @@ pTransactionAsterizmPolicy = do
             AsterizmPolicy.ClientTransaction
                 <$> pVerificationKeyFile "client"
                 <*> many (pVerificationKeyFile "relayer")
+                <*> many pTrustedAddress
                 <*> pMessageDirection
 
     pPolicyRelayer = subParser "relayer" $ Opt.info pRelayerCmd $ Opt.progDescDoc Nothing
@@ -158,6 +161,7 @@ pTransactionAsterizmRetrieve = do
             <$> pGYCoreConfigFile
             <*> pVerificationKeyFile "client"
             <*> many (pVerificationKeyFile "relayer")
+            <*> many pTrustedAddress
             <*> pMessageDirection
 
 data ClientCommandErrors

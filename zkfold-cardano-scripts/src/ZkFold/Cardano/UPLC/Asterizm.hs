@@ -15,9 +15,11 @@ import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
+import           PlutusTx.Builtins           (replicateByte)
 import           PlutusTx.Prelude            hiding (toList)
 
 type RelayerPKH = PubKeyHash
+type TrustedAddress = BuiltinByteString
 
 {-# INLINABLE buildCrosschainHash #-}
 buildCrosschainHash :: BuiltinByteString -> BuiltinByteString
@@ -58,8 +60,8 @@ untypedAsterizmRelayer pkh ctx' = check conditionSigned
 -- When @isIncoming@ is True, validates relayer reference input (incoming cross-chain message).
 -- When @isIncoming@ is False, skips relayer verification (outgoing cross-chain message).
 {-# INLINABLE untypedAsterizmClient #-}
-untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> Bool -> BuiltinData -> BuiltinUnit
-untypedAsterizmClient clientPKH allowedRelayers True ctx' =
+untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> Bool -> BuiltinData -> BuiltinUnit
+untypedAsterizmClient clientPKH allowedRelayers _ trustedAddresses True ctx' =
     let ctx = unsafeFromBuiltinData ctx'
         info = scriptContextTxInfo ctx
         refInputs = txInInfoResolved <$> txInfoReferenceInputs info
@@ -74,16 +76,19 @@ untypedAsterizmClient clientPKH allowedRelayers True ctx' =
         tokenName = TokenName $ buildCrosschainHash message
         conditionSigned = txSignedBy info clientPKH
         conditionMinting = tn == tokenName
+        conditionSourceTrusted = trustedSource trustedAddresses message
+        conditionDestinationClient = clientDestination ctx message
         relayerCS = case find (\s -> s /= adaSymbol && s `elem` allowedRelayers) $ symbols valueReferenced of
           Just cs -> cs
           Nothing -> traceError "Unrecognized relayer"
-        conditionVerifying = withCurrencySymbol relayerCS valueReferenced False $ \tokensMap ->
-           head (keys tokensMap) == tokenName
-    in check $ conditionSigned && conditionMinting && conditionVerifying
+        conditionVerifying = hasToken relayerCS tokenName valueReferenced
+    in check $ conditionSigned && conditionMinting && conditionSourceTrusted && conditionDestinationClient && conditionVerifying
 
-untypedAsterizmClient clientPKH _ False ctx' =
+untypedAsterizmClient clientPKH _ userCS trustedAddresses False ctx' =
     let ctx = unsafeFromBuiltinData ctx'
         info = scriptContextTxInfo ctx
+        refInputs = txInInfoResolved <$> txInfoReferenceInputs info
+        valueReferenced = foldMap txOutValue refInputs
         minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
         (tn, _) = case minted of
           Just [x] -> x
@@ -94,18 +99,60 @@ untypedAsterizmClient clientPKH _ False ctx' =
         tokenName = TokenName $ buildCrosschainHash message
         conditionSigned = txSignedBy info clientPKH
         conditionMinting = tn == tokenName
-    in check $ conditionSigned && conditionMinting
+        conditionUserApproved = hasToken userCS tokenName valueReferenced
+        conditionSourceClient = clientSource ctx message
+        conditionDestinationTrusted = trustedDestination trustedAddresses message
+    in check $ conditionSigned && conditionMinting && conditionUserApproved && conditionSourceClient && conditionDestinationTrusted
+
+{-# INLINABLE hasToken #-}
+hasToken :: CurrencySymbol -> TokenName -> Value -> Bool
+hasToken cs tn value =
+  withCurrencySymbol cs value False $ \tokensMap -> tn `elem` keys tokensMap
+
+{-# INLINABLE trustedSource #-}
+trustedSource :: [TrustedAddress] -> BuiltinByteString -> Bool
+trustedSource trustedAddresses message =
+  sliceByteString 0 40 message `elem` trustedAddresses
+
+{-# INLINABLE trustedDestination #-}
+trustedDestination :: [TrustedAddress] -> BuiltinByteString -> Bool
+trustedDestination trustedAddresses message =
+  sliceByteString 40 40 message `elem` trustedAddresses
+
+{-# INLINABLE clientSource #-}
+clientSource :: ScriptContext -> BuiltinByteString -> Bool
+clientSource ctx message =
+  sliceByteString 8 32 message == clientAddress ctx
+
+{-# INLINABLE clientDestination #-}
+clientDestination :: ScriptContext -> BuiltinByteString -> Bool
+clientDestination ctx message =
+  sliceByteString 48 32 message == clientAddress ctx
+
+{-# INLINABLE clientAddress #-}
+clientAddress :: ScriptContext -> BuiltinByteString
+clientAddress ctx = leftPad32 . unCurrencySymbol $ ownCurrencySymbol ctx
+
+{-# INLINABLE leftPad32 #-}
+leftPad32 :: BuiltinByteString -> BuiltinByteString
+leftPad32 bs =
+  let len = lengthOfByteString bs
+  in if len > 32
+     then traceError "Address too long"
+     else replicateByte (32 - len) 0 <> bs
 
 asterizmRelayerCompiled :: RelayerPKH -> CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmRelayerCompiled pkh =
     $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
 
-asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> Bool -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmClientCompiled clientPKH allowedRelayers isIncoming =
+asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> Bool -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming =
     $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef clientPKH
     `unsafeApplyCode` liftCodeDef allowedRelayers
+    `unsafeApplyCode` liftCodeDef userCS
+    `unsafeApplyCode` liftCodeDef trustedAddresses
     `unsafeApplyCode` liftCodeDef isIncoming
 
 -- | Plutus script (minting policy) for posting user messages on-chain.

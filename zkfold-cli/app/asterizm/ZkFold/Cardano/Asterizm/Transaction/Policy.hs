@@ -1,5 +1,6 @@
 module ZkFold.Cardano.Asterizm.Transaction.Policy where
 
+import qualified Data.ByteString                              as BS
 import           GeniusYield.Types
 import           Prelude
 
@@ -13,6 +14,7 @@ import           ZkFold.Cardano.UPLC.Asterizm                 (asterizmRelayerCo
 data ClientTransaction = ClientTransaction
   { clientVKeyFile   :: !FilePath
   , relayerVKeyFiles :: ![FilePath]
+  , trustedAddresses :: ![BS.ByteString]
   , direction        :: !MessageDirection
   }
 
@@ -23,11 +25,11 @@ data RelayerTransaction = RelayerTransaction
 data UserTransaction = UserTransaction
 
 printClientPolicy :: ClientTransaction -> IO ()
-printClientPolicy (ClientTransaction clientVkeyFile relayerVkeyFiles dir) = do
+printClientPolicy (ClientTransaction clientVkeyFile relayerVkeyFiles trustedAddressBSs dir) = do
   clientVkey   <- readPaymentVerificationKey clientVkeyFile
   relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
 
-  let clientPolicyId = derivePolicyId clientVkey relayerVkeys dir
+  let clientPolicyId = derivePolicyId clientVkey relayerVkeys trustedAddressBSs dir
   putStrLn $ trimQuot (show clientPolicyId)
 
 printRelayerPolicy :: RelayerTransaction -> IO ()

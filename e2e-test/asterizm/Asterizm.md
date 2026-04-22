@@ -81,6 +81,7 @@ cabal run zkfold-cli:asterizm -- policy client --help
 ```output
 Usage: asterizm policy client --client-vkey-file FILEPATH
   [--relayer-vkey-file FILEPATH]
+  [--trusted-address HEX]
   (--incoming | --outgoing)
 
 Available options:
@@ -88,6 +89,8 @@ Available options:
                            client's payment verification key file.
   --relayer-vkey-file FILEPATH
                            relayer's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
   --incoming               Incoming cross-chain message (requires relayer
                            verification).
   --outgoing               Outgoing cross-chain message (no relayer verification
@@ -114,7 +117,7 @@ Available options:
 
 ### policy user
 
-Displays the universal user policy ID. This policy is not parameterized and is the same for all users. Does not interact with the blockchain.
+Displays the universal user policy ID. This policy is not parameterized and is the same for all users. It is the policy used by `user send` (for example, by `03-user-outgoing.sh`). Does not interact with the blockchain.
 
 ```shell
 cabal run zkfold-cli:asterizm -- policy user --help
@@ -157,7 +160,7 @@ Available options:
 
 ### client send
 
-Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required.
+Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required, but the transaction must reference the user's universal-policy token for the same message hash.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client send --help
@@ -167,6 +170,7 @@ cabal run zkfold-cli:asterizm -- client send --help
 Usage: asterizm client send --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --client-vkey-file FILEPATH
+  [--trusted-address HEX]
   --beneficiary-address ADDRESS
   --message HEX
 
@@ -177,6 +181,8 @@ Available options:
                            Payment signing key file.
   --client-vkey-file FILEPATH
                            client's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
   --message HEX            Hex-encoded Asterizm structured message.
@@ -185,7 +191,7 @@ Available options:
 
 ### user send
 
-Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID.
+Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID returned by `policy user`, not the client policy returned by `policy client --outgoing`. A later `client send` transaction references this token before minting the client-policy token.
 
 ```shell
 cabal run zkfold-cli:asterizm -- user send --help
@@ -223,6 +229,7 @@ Usage: asterizm client receive --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --client-vkey-file FILEPATH
   [--relayer-vkey-file FILEPATH]
+  [--trusted-address HEX]
   --beneficiary-address ADDRESS
   --message HEX
 
@@ -235,6 +242,8 @@ Available options:
                            client's payment verification key file.
   --relayer-vkey-file FILEPATH
                            relayer's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
   --message HEX            Hex-encoded Asterizm structured message.
@@ -253,6 +262,7 @@ cabal run zkfold-cli:asterizm -- retrieve-messages --help
 Usage: asterizm retrieve-messages --core-config-file FILEPATH
   --client-vkey-file FILEPATH
   [--relayer-vkey-file FILEPATH]
+  [--trusted-address HEX]
   (--incoming | --outgoing)
 
 Available options:
@@ -262,6 +272,8 @@ Available options:
                            client's payment verification key file.
   --relayer-vkey-file FILEPATH
                            relayer's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
   --incoming               Incoming cross-chain message (requires relayer
                            verification).
   --outgoing               Outgoing cross-chain message (no relayer verification
@@ -282,19 +294,23 @@ What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.
 ```shell
 asterizm$ ./00-keygen.sh client
 asterizm$ ./00-keygen.sh relayer
+asterizm$ ./00-keygen.sh user
 ```
 
-This generates verification and signing keys for the client and relayer roles.
+This generates verification and signing keys for the client, relayer, and user roles.
 
 ### Policy IDs
 
-Derive the client and relayer policy IDs:
+Derive the client and relayer policy IDs. Trusted addresses are encoded as `chainId(8 bytes) || address(32 bytes)`.
 
 ```shell
+asterizm$ trustedAddress="000000000000000100000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
+
 asterizm$ # Client policy ID for incoming messages
 asterizm$ cabal run zkfold-cli:asterizm -- policy client \
   --client-vkey-file ./keys/client.vkey \
   --relayer-vkey-file ./keys/relayer.vkey \
+  --trusted-address "$trustedAddress" \
   --incoming
 ```
 
@@ -306,6 +322,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- policy client \
 asterizm$ # Client policy ID for outgoing messages
 asterizm$ cabal run zkfold-cli:asterizm -- policy client \
   --client-vkey-file ./keys/client.vkey \
+  --trusted-address "$trustedAddress" \
   --outgoing
 ```
 
@@ -358,6 +375,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- client receive \
   --signing-key-file ./keys/client.skey \
   --client-vkey-file ./keys/client.vkey \
   --relayer-vkey-file ./keys/relayer.vkey \
+  --trusted-address "$trustedAddress" \
   --beneficiary-address $(cat ./keys/client.addr) \
   --message "$message"
 ```
@@ -370,30 +388,12 @@ asterizm$ cabal run zkfold-cli:asterizm -- client receive \
 
 **Figure:** Client's Tx
 
-### Client Send (Outgoing Message)
-
-The client sends an outgoing message (no relayer verification needed):
-
-```shell
-asterizm$ cabal run zkfold-cli:asterizm -- client send \
-  --core-config-file ./assets/config.json \
-  --signing-key-file ./keys/client.skey \
-  --client-vkey-file ./keys/client.vkey \
-  --beneficiary-address $(cat ./keys/client.addr) \
-  --message "$outgoingMessage"
-```
-
-```output
-"<transaction-id>"
-```
-
-![client send Tx](figures/05-client-send-tx.svg)
-
-**Figure:** Client Send Tx
-
 ### User Send (Outgoing Message)
 
 Any user can initiate an outgoing message by minting and sending a token under the universal user policy:
+
+*Note:* The resulting token is minted under `policy user`. If you are scanning for messages created by `user send`, do not derive `policy client --outgoing` for that purpose.
+Run this step before `client send` for the same message.
 
 ```shell
 asterizm$ cabal run zkfold-cli:asterizm -- user send \
@@ -407,6 +407,28 @@ asterizm$ cabal run zkfold-cli:asterizm -- user send \
 "<transaction-id>"
 ```
 
+### Client Send (Outgoing Message)
+
+After a user has posted an outgoing message under `policy user`, the client approves it by minting the corresponding client-policy token. The transaction references the user's token and checks the destination trusted address on-chain:
+
+```shell
+asterizm$ cabal run zkfold-cli:asterizm -- client send \
+  --core-config-file ./assets/config.json \
+  --signing-key-file ./keys/client.skey \
+  --client-vkey-file ./keys/client.vkey \
+  --trusted-address "$trustedAddress" \
+  --beneficiary-address $(cat ./keys/client.addr) \
+  --message "$outgoingMessage"
+```
+
+```output
+"<transaction-id>"
+```
+
+![client send Tx](figures/05-client-send-tx.svg)
+
+**Figure:** Client Send Tx
+
 ### Retrieve Messages
 
 ```shell
@@ -415,12 +437,14 @@ asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages \
   --core-config-file ./assets/config.json \
   --client-vkey-file ./keys/client.vkey \
   --relayer-vkey-file ./keys/relayer.vkey \
+  --trusted-address "$trustedAddress" \
   --incoming
 
 asterizm$ # Retrieve outgoing messages
 asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages \
   --core-config-file ./assets/config.json \
   --client-vkey-file ./keys/client.vkey \
+  --trusted-address "$trustedAddress" \
   --outgoing
 ```
 
@@ -430,6 +454,8 @@ Client's messages on-chain:
 B "Hello, Asterizm!"
 ```
 
+*Note:* `retrieve-messages` derives the client's policy ID from `--client-vkey-file`, so it only returns messages minted via `client send` / `client receive`. It does not retrieve transactions created by `user send`.
+
 ---
 
-*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client` and `./00-keygen.sh relayer`, then fund the client and relayer addresses before running the scripts.
+*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client`, `./00-keygen.sh relayer`, and `./00-keygen.sh user`, then fund the client, relayer, and user addresses before running the scripts. If your default compiler is not the project compiler, run scripts with `CABAL_FLAGS=--with-compiler=ghc-9.6.7`. Run the numbered scripts in order; `./04-client-outgoing.sh` depends on the universal-policy token posted by `./03-user-outgoing.sh`.

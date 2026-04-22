@@ -42,6 +42,14 @@ hexReader = Opt.eitherReader $ \s ->
     Left err -> Left $ "Invalid hex string: " ++ err
     Right bs -> Right bs
 
+trustedAddressReader :: Opt.ReadM BS.ByteString
+trustedAddressReader = Opt.eitherReader $ \s ->
+  case B16.decode $ BS.pack s of
+    Left err -> Left $ "Invalid hex string: " ++ err
+    Right bs
+      | BS.length bs == 40 -> Right bs
+      | otherwise -> Left "Trusted address must be 40 bytes: 8-byte chain id followed by 32-byte address."
+
 ----- :parsing Message: -----
 
 pMessageHash :: Parser BS.ByteString
@@ -56,6 +64,13 @@ pMessage = Opt.option hexReader
     ( Opt.long "message"
         <> Opt.metavar "HEX"
         <> Opt.help "Hex-encoded Asterizm structured message."
+    )
+
+pTrustedAddress :: Parser BS.ByteString
+pTrustedAddress = Opt.option trustedAddressReader
+    ( Opt.long "trusted-address"
+        <> Opt.metavar "HEX"
+        <> Opt.help "Hex-encoded trusted Asterizm address: 8-byte chain id followed by 32-byte address."
     )
 
 ----- :parsing MessageDirection: -----

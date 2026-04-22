@@ -17,7 +17,7 @@ import           GeniusYield.GYConfig          (Confidential (..), GYCoreConfig 
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
 import           Network.HTTP.Simple
-import           PlutusLedgerApi.V3            (BuiltinByteString, fromBuiltin)
+import           PlutusLedgerApi.V3            (BuiltinByteString, fromBuiltin, toBuiltin)
 import           PlutusTx                      (unsafeFromBuiltinData)
 import           Prelude
 
@@ -25,24 +25,27 @@ import           ZkFold.Cardano.Asterizm.Types (AsterizmMessage (..), MessageDir
                                                 fromByteString)
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, asterizmUserCompiled)
 
 
 data Transaction = Transaction
   { coreCfgFile      :: !FilePath
   , clientVKeyFile   :: !FilePath
   , relayerVKeyFiles :: ![FilePath]
+  , trustedAddresses :: ![BS.ByteString]
   , direction        :: !MessageDirection
   }
 
 -- | Derive client policy ID from verification keys and direction.
-derivePolicyId :: GYPaymentVerificationKey -> [GYPaymentVerificationKey] -> MessageDirection -> GYMintingPolicyId
-derivePolicyId clientVkey relayerVkeys dir =
+derivePolicyId :: GYPaymentVerificationKey -> [GYPaymentVerificationKey] -> [BS.ByteString] -> MessageDirection -> GYMintingPolicyId
+derivePolicyId clientVkey relayerVkeys trustedAddressBSs dir =
   let clientPKH = pubKeyHashToPlutus $ pubKeyHash clientVkey
       relayerCSs = case dir of
         Incoming -> fmap (mintingPolicyIdToCurrencySymbol . snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
         Outgoing -> []  -- Empty for outgoing
-  in snd . policyFromPlutus $ asterizmClientCompiled clientPKH relayerCSs (directionToBool dir)
+      userCS = mintingPolicyIdToCurrencySymbol . snd . policyFromPlutus $ asterizmUserCompiled
+      trustedAddresses = toBuiltin <$> trustedAddressBSs
+  in snd . policyFromPlutus $ asterizmClientCompiled clientPKH relayerCSs userCS trustedAddresses (directionToBool dir)
 
 fromNetworkIdIO :: GYNetworkId -> IO String
 fromNetworkIdIO nid = case nid of
@@ -79,14 +82,14 @@ bsToAscii :: BS.ByteString -> String
 bsToAscii = map (\c -> if isPrint c then c else '.') . map (toEnum . fromIntegral) . BS.unpack
 
 retrieveMsgs :: Transaction -> IO ()
-retrieveMsgs (Transaction cfgFile clientVkeyFile relayerVkeyFiles dir) = do
+retrieveMsgs (Transaction cfgFile clientVkeyFile relayerVkeyFiles trustedAddressBSs dir) = do
   coreCfg      <- coreConfigIO cfgFile
   clientVkey   <- readPaymentVerificationKey clientVkeyFile
   relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
 
   case cfgCoreProvider coreCfg of
     GYMaestro {} -> do
-      let policyId  = derivePolicyId clientVkey relayerVkeys dir
+      let policyId  = derivePolicyId clientVkey relayerVkeys trustedAddressBSs dir
       let policyId' = trimQuot $ show policyId
 
       let nid = cfgNetworkId coreCfg
