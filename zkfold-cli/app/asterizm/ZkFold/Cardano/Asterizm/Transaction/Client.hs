@@ -12,16 +12,18 @@ import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, buildCrosschainHash)
+import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, asterizmUserCompiled,
+                                                buildCrosschainHash)
 
 
 -- | Transaction for sending an outgoing cross-chain message.
 data SendTransaction = SendTransaction
-  { stCoreCfgFile    :: !FilePath
-  , stSigningKeyFile :: !FilePath
-  , stClientVKeyFile :: !FilePath
-  , stOutAddress     :: !GYAddress
-  , stMessage        :: !BS.ByteString
+  { stCoreCfgFile       :: !FilePath
+  , stSigningKeyFile    :: !FilePath
+  , stClientVKeyFile    :: !FilePath
+  , stTrustedAddresses :: ![BS.ByteString]
+  , stOutAddress        :: !GYAddress
+  , stMessage           :: !BS.ByteString
   }
 
 -- | Transaction for receiving an incoming cross-chain message.
@@ -30,13 +32,14 @@ data ReceiveTransaction = ReceiveTransaction
   , rtSigningKeyFile   :: !FilePath
   , rtClientVKeyFile   :: !FilePath
   , rtRelayerVKeyFiles :: ![FilePath]
+  , rtTrustedAddresses :: ![BS.ByteString]
   , rtOutAddress       :: !GYAddress
   , rtMessage          :: !BS.ByteString
   }
 
 -- | Mint client token for outgoing message (no relayer verification).
 clientSend :: SendTransaction -> IO ()
-clientSend (SendTransaction cfgFile skeyFile clientVkeyFile sendTo msg) = do
+clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs sendTo msg) = do
   coreCfg    <- coreConfigIO cfgFile
   skey       <- readPaymentSigningKey skeyFile
   clientVkey <- readPaymentVerificationKey clientVkeyFile
@@ -49,8 +52,11 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile sendTo msg) = do
 
   let clientPKH        = pubKeyHashToPlutus $ pubKeyHash clientVkey
       allowedRelayers  = []  -- Empty for outgoing
+      userPolicyId     = snd . policyFromPlutus $ asterizmUserCompiled
+      userCS           = mintingPolicyIdToCurrencySymbol userPolicyId
+      trustedAddresses = toBuiltin <$> trustedAddressBSs
       isIncoming       = False
-      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers isIncoming
+      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
@@ -60,11 +66,18 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile sendTo msg) = do
 
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
-  let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-              <> mustMint policy unitRedeemer tokenName 1
-              <> mustBeSignedBy (pubKeyHash clientVkey)
-
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    userUtxos <- runGYTxQueryMonadIO nid providers $ utxosWithAsset (GYNonAdaToken userPolicyId tokenName)
+
+    userOref <- case utxosToList userUtxos of
+      u : _ -> pure $ utxoRef u
+      _     -> throwIO $ userError "No user has posted client's outgoing message yet."
+
+    let skeleton = mustHaveRefInput userOref
+                <> mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
+                <> mustMint policy unitRedeemer tokenName 1
+                <> mustBeSignedBy (pubKeyHash clientVkey)
+
     txbody <- runGYTxGameMonadIO nid
                                  providers $
                                  asUser w1
@@ -79,7 +92,7 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile sendTo msg) = do
 
 -- | Mint client token for incoming message (requires relayer verification).
 clientReceive :: ReceiveTransaction -> IO ()
-clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles sendTo msg) = do
+clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles trustedAddressBSs sendTo msg) = do
   coreCfg      <- coreConfigIO cfgFile
   skey         <- readPaymentSigningKey skeyFile
   clientVkey   <- readPaymentVerificationKey clientVkeyFile
@@ -97,8 +110,11 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
 
   let clientPKH        = pubKeyHashToPlutus $ pubKeyHash clientVkey
       allowedRelayers  = relayerCSs
+      userPolicyId     = snd . policyFromPlutus $ asterizmUserCompiled
+      userCS           = mintingPolicyIdToCurrencySymbol userPolicyId
+      trustedAddresses = toBuiltin <$> trustedAddressBSs
       isIncoming       = True
-      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers isIncoming
+      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
