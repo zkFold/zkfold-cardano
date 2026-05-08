@@ -8,7 +8,7 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus)
+import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus, submitTxWithCborOnFailure)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmUserCompiled, buildCrosschainHash)
 
 
@@ -55,9 +55,11 @@ userSend (SendTransaction cfgFile skeyFile sendTo msg) = do
                                  asUser w1
                                  (buildTxBody skeleton)
 
-    txid <- runGYTxGameMonadIO nid
+    tx <- runGYTxGameMonadIO nid
                                providers $
                                asUser w1
-                               (signTxBody txbody >>= submitTx)
+                               (signTxBody txbody)
+
+    txid <- submitTxWithCborOnFailure nid providers w1 tx
 
     print txid
