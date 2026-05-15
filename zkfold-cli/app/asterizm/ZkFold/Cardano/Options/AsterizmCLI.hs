@@ -20,6 +20,7 @@ data ClientCommand
     = TransactionAsterizmClientSend AsterizmClient.SendTransaction
     | TransactionAsterizmClientReceive AsterizmClient.ReceiveTransaction
     | TransactionAsterizmHash AsterizmHash.Transaction
+    | TransactionAsterizmBuildHash AsterizmHash.Transaction
     | TransactionAsterizmPolicyClient AsterizmPolicy.ClientTransaction
     | TransactionAsterizmPolicyRelayer AsterizmPolicy.RelayerTransaction
     | TransactionAsterizmPolicyUser AsterizmPolicy.UserTransaction
@@ -46,7 +47,8 @@ pCmds :: Parser ClientCommand
 pCmds = do
     asum $
         [ pTransactionAsterizmClient
-        , TransactionAsterizmHash      <$> pTransactionAsterizmHash
+        , TransactionAsterizmHash      <$> pTransactionAsterizmBuildCrosschainHash
+        , TransactionAsterizmBuildHash <$> pTransactionAsterizmBuildHash
         , pTransactionAsterizmPolicy
         , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer
         , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve
@@ -86,9 +88,20 @@ pTransactionAsterizmClient = do
                 <*> pBenefOutAddress
                 <*> pMessage
 
-pTransactionAsterizmHash :: Parser AsterizmHash.Transaction
-pTransactionAsterizmHash = do
-    subParser "hash" $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionAsterizmBuildCrosschainHash :: Parser AsterizmHash.Transaction
+pTransactionAsterizmBuildCrosschainHash =
+    asum
+      [ pHashCommand "hash"
+      , pHashCommand "buildCrosschainHash"
+      ]
+
+pTransactionAsterizmBuildHash :: Parser AsterizmHash.Transaction
+pTransactionAsterizmBuildHash =
+    pHashCommand "buildHash"
+
+pHashCommand :: String -> Parser AsterizmHash.Transaction
+pHashCommand cmdName =
+    subParser cmdName $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
     pCmd = AsterizmHash.Transaction <$> pMessage
 
@@ -171,6 +184,7 @@ runClientCommand = \case
     TransactionAsterizmClientSend    cmd -> ExceptT (Right <$> AsterizmClient.clientSend    cmd)
     TransactionAsterizmClientReceive cmd -> ExceptT (Right <$> AsterizmClient.clientReceive cmd)
     TransactionAsterizmHash          cmd -> ExceptT (Right <$> AsterizmHash.computeHash     cmd)
+    TransactionAsterizmBuildHash     cmd -> ExceptT (Right <$> AsterizmHash.computeBuildHash cmd)
     TransactionAsterizmPolicyClient  cmd -> ExceptT (Right <$> AsterizmPolicy.printClientPolicy  cmd)
     TransactionAsterizmPolicyRelayer cmd -> ExceptT (Right <$> AsterizmPolicy.printRelayerPolicy cmd)
     TransactionAsterizmPolicyUser    cmd -> ExceptT (Right <$> AsterizmPolicy.printUserPolicy    cmd)

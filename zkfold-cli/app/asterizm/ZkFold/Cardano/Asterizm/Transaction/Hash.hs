@@ -6,7 +6,7 @@ import qualified Data.Text.Encoding           as TE
 import           PlutusLedgerApi.V3           (fromBuiltin, toBuiltin)
 import           Prelude
 
-import           ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash)
+import           ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash, buildHash)
 
 
 data Transaction = Transaction
@@ -14,7 +14,16 @@ data Transaction = Transaction
   }
 
 computeHash :: Transaction -> IO ()
-computeHash (Transaction msg) = do
+computeHash = computeBuildCrosschainHash
+
+computeBuildCrosschainHash :: Transaction -> IO ()
+computeBuildCrosschainHash (Transaction msg) = do
   let msgHash = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
+      hexHash = TE.decodeUtf8 $ B16.encode msgHash
+  putStrLn $ show hexHash
+
+computeBuildHash :: Transaction -> IO ()
+computeBuildHash (Transaction msg) = do
+  let msgHash = fromBuiltin . buildHash . toBuiltin $ msg
       hexHash = TE.decodeUtf8 $ B16.encode msgHash
   putStrLn $ show hexHash

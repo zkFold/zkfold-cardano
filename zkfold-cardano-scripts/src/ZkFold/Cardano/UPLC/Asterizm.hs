@@ -21,6 +21,10 @@ import           PlutusTx.Prelude            hiding (toList)
 type RelayerPKH = PubKeyHash
 type TrustedAddress = BuiltinByteString
 
+{-# INLINABLE buildHash #-}
+buildHash :: BuiltinByteString -> BuiltinByteString
+buildHash = sha2_256
+
 {-# INLINABLE buildCrosschainHash #-}
 buildCrosschainHash :: BuiltinByteString -> BuiltinByteString
 buildCrosschainHash bs =

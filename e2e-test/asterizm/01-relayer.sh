@@ -36,7 +36,7 @@ payload=$(echo -n "Hello, Asterizm!" | xxd -p | tr -d '\n')
 message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
 
 # Compute hash for relayer
-messageHash=$(cabal_run zkfold-cli:asterizm -- hash --message "$message" | tr -d '"')
+messageHash=$(cabal_run zkfold-cli:asterizm -- buildCrosschainHash --message "$message" | tr -d '"')
 
 echo "Message: $message"
 echo "Message hash: $messageHash"

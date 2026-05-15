@@ -39,7 +39,7 @@ cabal run zkfold-cli:asterizm -- --help
 zkfold-cli:asterizm - Command-line utility to interact with Cardano. Provides
 specific commands to manage the 'Asterizm' protocol.
 
-Usage: asterizm (client | hash | policy | relayer | retrieve-messages)
+Usage: asterizm (client | hash | buildCrosschainHash | buildHash | policy | relayer | retrieve-messages | user)
 
 Available options:
   -h,--help                Show this help text
@@ -47,16 +47,19 @@ Available options:
 Available commands:
   client
   hash
+  buildCrosschainHash
+  buildHash
   policy
   relayer
   retrieve-messages
+  user
 ```
 
 We now describe each command.  The eager reader can jump to [section "End-to-end test"](#end-to-end-test) below to see a sample workflow.
 
-### hash
+### hash / buildCrosschainHash
 
-Computes the hash of a given message. The message is provided as a HEX-encoded bytestring.
+Computes the Asterizm cross-chain hash of a given message. The message is provided as a HEX-encoded bytestring. The `hash` command is a backward-compatible alias for `buildCrosschainHash`.
 
 ```shell
 cabal run zkfold-cli:asterizm -- hash --help
@@ -64,6 +67,26 @@ cabal run zkfold-cli:asterizm -- hash --help
 
 ```output
 Usage: asterizm hash --message HEX
+
+Available options:
+  --message HEX            Hex-encoded Asterizm structured message.
+  -h,--help                Show this help text
+```
+
+```shell
+cabal run zkfold-cli:asterizm -- buildCrosschainHash --message HEX
+```
+
+### buildHash
+
+Computes the plain SHA-256 hash of a given packed message. This matches the Solidity helper pattern `sha256(abi.encodePacked(...))` when the provided HEX is exactly that packed byte sequence.
+
+```shell
+cabal run zkfold-cli:asterizm -- buildHash --message HEX
+```
+
+```output
+Usage: asterizm buildHash --message HEX
 
 Available options:
   --message HEX            Hex-encoded Asterizm structured message.
@@ -347,7 +370,7 @@ The relayer mints a certification token for an incoming message:
 ```shell
 asterizm$ # Build message and compute hash
 asterizm$ message="0000000000000001...48656c6c6f2c20417374657269...<<hex message>>"
-asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- hash --message "$message" | tr -d '"')
+asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- buildCrosschainHash --message "$message" | tr -d '"')
 
 asterizm$ cabal run zkfold-cli:asterizm -- relayer \
   --core-config-file ./assets/config.json \

@@ -12,7 +12,7 @@ import           Prelude
 import           Test.Tasty
 import           Test.Tasty.HUnit
 
-import           ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash)
+import           ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash, buildHash)
 
 ------------- :Helpers: -------------
 
@@ -68,11 +68,14 @@ t2 = srcChainId <> srcAddress <> dstChainId <> dstAddress <> txId <> payload2
 
 -- | Hash results thrown by Solidity version of 'buildCrosschainHash'
 -- (https://github.com/Asterizm-Protocol/asterizm-contracts-evm/blob/master/contracts/libs/AsterizmHashLib.sol)
-v0, v1, v2 :: String
+v0, v1, v2, w0, w1, w2 :: String
 
 '0':'x' : v0 = "0x1f9d6a75afd516c4cc249e2a28e30e0b51f93915dc7ff0ce74b0e5c8b4dd831a"
 '0':'x' : v1 = "0x412ffcb5f599bd658a6db65ff8612756e9a5508dd274ded66d117f9eb29873e1"
 '0':'x' : v2 = "0xf8eae6a7072d95317346e49e4b5d11f42b6e6cdad22f0ea5ead1e2e11fd03502"
+w0 = "951b1c95584b91fd8776e1d26b25d745ad5d508f6337686b9f7131d7c2f7096a"
+w1 = "a1114a5df73a8d4a43d40c6b1e5858c7e16f1582119437e2661267ba90fce7e3"
+w2 = "fe30a3cb25c588e90708a5410f09932571fca41843869354d40191816da29c10"
 
 -------------- :Test: ---------------
 
@@ -81,17 +84,28 @@ main = defaultMain tests
 
 tests :: TestTree
 tests =
-  testGroup "buildCrosschainHash"
-    [ testGroup "table"
+  testGroup "Asterizm hash functions"
+    [ testGroup "buildCrosschainHash"
         ( [ testCase ("case " ++ show i) $
               (toHex . buildCrosschainHash) t @?= v
-          | (i, (t, v)) <- zip [1 :: Integer ..] cases
+          | (i, (t, v)) <- zip [1 :: Integer ..] crosschainCases
+          ]
+        )
+    , testGroup "buildHash"
+        ( [ testCase ("case " ++ show i) $
+              (toHex . buildHash) t @?= v
+          | (i, (t, v)) <- zip [1 :: Integer ..] buildHashCases
           ]
         )
     ]
   where
-    cases =
+    crosschainCases =
       [ (t0, v0)
       , (t1, v1)
       , (t2, v2)
+      ]
+    buildHashCases =
+      [ (t0, w0)
+      , (t1, w1)
+      , (t2, w2)
       ]

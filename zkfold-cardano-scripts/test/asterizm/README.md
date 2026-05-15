@@ -1,6 +1,6 @@
-# Testing *buildCrosschainHash*
+# Testing Asterizm hash functions
 
-Test checks that hashes produced by [**Plutus**](../../src/ZkFold/Cardano/UPLC/Asterizm.hs#L40) and [**Solidity**](https://github.com/Asterizm-Protocol/asterizm-contracts-evm/blob/master/contracts/libs/AsterizmHashLib.sol) versions of `buildCrosschainHash` agree.
+Test checks `buildCrosschainHash` against the [**Solidity**](https://github.com/Asterizm-Protocol/asterizm-contracts-evm/blob/master/contracts/libs/AsterizmHashLib.sol) implementation and checks `buildHash` against plain SHA-256 vectors.
 
 ## Run test
 
