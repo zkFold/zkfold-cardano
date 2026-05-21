@@ -11,7 +11,7 @@ CLI commands are provided to
 - client's receiving of incoming messages with relayer verification
 - retrieval of messages posted on the blockchain
 
-Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the hash of the message. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
+Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the hash of the message. Regular SHA-256 is used by default; pass `--crosschain-hash` on message-bearing commands when the Asterizm cross-chain hash is required. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
 
 ## Generalities
 
@@ -39,7 +39,7 @@ cabal run zkfold-cli:asterizm -- --help
 zkfold-cli:asterizm - Command-line utility to interact with Cardano. Provides
 specific commands to manage the 'Asterizm' protocol.
 
-Usage: asterizm (client | hash | buildCrosschainHash | buildHash | policy | relayer | retrieve-messages | user)
+Usage: asterizm (client | hash | policy | relayer | retrieve-messages | user)
 
 Available options:
   -h,--help                Show this help text
@@ -47,8 +47,6 @@ Available options:
 Available commands:
   client
   hash
-  buildCrosschainHash
-  buildHash
   policy
   relayer
   retrieve-messages
@@ -57,40 +55,30 @@ Available commands:
 
 We now describe each command.  The eager reader can jump to [section "End-to-end test"](#end-to-end-test) below to see a sample workflow.
 
-### hash / buildCrosschainHash
+### hash
 
-Computes the Asterizm cross-chain hash of a given message. The message is provided as a HEX-encoded bytestring. The `hash` command is a backward-compatible alias for `buildCrosschainHash`.
+Computes a message hash. The message is provided as a HEX-encoded bytestring. By default this is regular SHA-256 over the supplied bytes. Pass `--crosschain-hash` to compute the Asterizm cross-chain hash instead.
 
 ```shell
 cabal run zkfold-cli:asterizm -- hash --help
 ```
 
 ```output
-Usage: asterizm hash --message HEX
+Usage: asterizm hash [--crosschain-hash] --message HEX
 
 Available options:
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
   --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
 
 ```shell
-cabal run zkfold-cli:asterizm -- buildCrosschainHash --message HEX
+cabal run zkfold-cli:asterizm -- hash --message HEX
 ```
-
-### buildHash
-
-Computes the plain SHA-256 hash of a given packed message. This matches the Solidity helper pattern `sha256(abi.encodePacked(...))` when the provided HEX is exactly that packed byte sequence.
 
 ```shell
-cabal run zkfold-cli:asterizm -- buildHash --message HEX
-```
-
-```output
-Usage: asterizm buildHash --message HEX
-
-Available options:
-  --message HEX            Hex-encoded Asterizm structured message.
-  -h,--help                Show this help text
+cabal run zkfold-cli:asterizm -- hash --crosschain-hash --message HEX
 ```
 
 ### policy client
@@ -195,6 +183,7 @@ Usage: asterizm client send --core-config-file FILEPATH
   --client-vkey-file FILEPATH
   [--trusted-address HEX]
   --beneficiary-address ADDRESS
+  [--crosschain-hash]
   --message HEX
 
 Available options:
@@ -208,6 +197,8 @@ Available options:
                            id followed by 32-byte address.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
   --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
@@ -224,6 +215,7 @@ cabal run zkfold-cli:asterizm -- user send --help
 Usage: asterizm user send --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --beneficiary-address ADDRESS
+  [--crosschain-hash]
   --message HEX
 
 Available options:
@@ -233,6 +225,8 @@ Available options:
                            Payment signing key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
   --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
@@ -254,6 +248,7 @@ Usage: asterizm client receive --core-config-file FILEPATH
   [--relayer-vkey-file FILEPATH]
   [--trusted-address HEX]
   --beneficiary-address ADDRESS
+  [--crosschain-hash]
   --message HEX
 
 Available options:
@@ -269,6 +264,8 @@ Available options:
                            id followed by 32-byte address.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
   --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
@@ -307,6 +304,8 @@ Available options:
 ## End-to-end test
 
 What follows is a sample workflow illustrating usage of *Asterizm* CLI commands.  (Diagrams look best with your browser in *light mode*.)
+
+The scripts use regular SHA-256 by default. To run the same flow with Asterizm cross-chain token names, set `CROSSCHAIN_HASH=1` on the relayer/client/user scripts that process the same message.
 
 ![workflow](figures/00-flow.svg)
 
@@ -370,7 +369,7 @@ The relayer mints a certification token for an incoming message:
 ```shell
 asterizm$ # Build message and compute hash
 asterizm$ message="0000000000000001...48656c6c6f2c20417374657269...<<hex message>>"
-asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- buildCrosschainHash --message "$message" | tr -d '"')
+asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- hash --message "$message" | tr -d '"')
 
 asterizm$ cabal run zkfold-cli:asterizm -- relayer \
   --core-config-file ./assets/config.json \
@@ -383,6 +382,8 @@ asterizm$ cabal run zkfold-cli:asterizm -- relayer \
 ```output
 "<transaction-id>"
 ```
+
+Pass `--crosschain-hash` to `hash` here, and to the matching `client receive`, `user send`, or `client send` command below, when the token-name must use the Asterizm cross-chain hash.
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 

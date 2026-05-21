@@ -11,6 +11,11 @@ cabal_run() {
   cabal ${CABAL_FLAGS:-} -v0 run "$@"
 }
 
+hash_args=()
+if [ "${CROSSCHAIN_HASH:-0}" = "1" ]; then
+  hash_args+=(--crosschain-hash)
+fi
+
 # Build an Asterizm message with 112-byte header + payload
 # Header structure (112 bytes total):
 #   srcChainId  (8 bytes):  0x01
@@ -36,7 +41,7 @@ payload=$(echo -n "Hello, Asterizm!" | xxd -p | tr -d '\n')
 message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
 
 # Compute hash for relayer
-messageHash=$(cabal_run zkfold-cli:asterizm -- buildCrosschainHash --message "$message" | tr -d '"')
+messageHash=$(cabal_run zkfold-cli:asterizm -- hash "${hash_args[@]}" --message "$message" | tr -d '"')
 
 echo "Message: $message"
 echo "Message hash: $messageHash"

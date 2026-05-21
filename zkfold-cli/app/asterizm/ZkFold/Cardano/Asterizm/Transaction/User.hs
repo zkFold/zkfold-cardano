@@ -8,8 +8,9 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus, submitTxWithCborOnFailure)
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmUserCompiled, buildCrosschainHash)
+import           ZkFold.Cardano.Asterizm.Utils (hashMessage, hashModeRedeemer, policyFromPlutus,
+                                                submitTxWithCborOnFailure)
+import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmHashMode, asterizmUserCompiled)
 
 
 -- | Transaction for sending a user outgoing cross-chain message.
@@ -19,14 +20,15 @@ data SendTransaction = SendTransaction
   { ustCoreCfgFile    :: !FilePath
   , ustSigningKeyFile :: !FilePath
   , ustOutAddress     :: !GYAddress
+  , ustHashMode       :: !AsterizmHashMode
   , ustMessage        :: !BS.ByteString
   }
 
 -- | Mint user token for outgoing message.
 -- The minting policy is universal (not parameterized by any PKH)
--- and only validates that the token name matches the cross-chain hash.
+-- and only validates that the token name matches the selected hash.
 userSend :: SendTransaction -> IO ()
-userSend (SendTransaction cfgFile skeyFile sendTo msg) = do
+userSend (SendTransaction cfgFile skeyFile sendTo hashMode msg) = do
   coreCfg <- coreConfigIO cfgFile
   skey    <- readPaymentSigningKey skeyFile
 
@@ -39,7 +41,7 @@ userSend (SendTransaction cfgFile skeyFile sendTo msg) = do
   let plutusPolicy       = asterizmUserCompiled
       (policy, policyId) = policyFromPlutus plutusPolicy
 
-  let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
+  let msgHash    = hashMessage hashMode msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
@@ -47,7 +49,7 @@ userSend (SendTransaction cfgFile skeyFile sendTo msg) = do
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-              <> mustMint policy unitRedeemer tokenName 1
+              <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
     txbody <- runGYTxGameMonadIO nid

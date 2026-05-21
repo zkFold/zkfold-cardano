@@ -10,10 +10,11 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus, submitTxWithCborOnFailure)
+import           ZkFold.Cardano.Asterizm.Utils (hashMessage, hashModeRedeemer, policyFromPlutus,
+                                                submitTxWithCborOnFailure)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, asterizmUserCompiled,
-                                                buildCrosschainHash)
+                                                AsterizmHashMode)
 
 
 -- | Transaction for sending an outgoing cross-chain message.
@@ -23,6 +24,7 @@ data SendTransaction = SendTransaction
   , stClientVKeyFile   :: !FilePath
   , stTrustedAddresses :: ![BS.ByteString]
   , stOutAddress       :: !GYAddress
+  , stHashMode         :: !AsterizmHashMode
   , stMessage          :: !BS.ByteString
   }
 
@@ -34,12 +36,13 @@ data ReceiveTransaction = ReceiveTransaction
   , rtRelayerVKeyFiles :: ![FilePath]
   , rtTrustedAddresses :: ![BS.ByteString]
   , rtOutAddress       :: !GYAddress
+  , rtHashMode         :: !AsterizmHashMode
   , rtMessage          :: !BS.ByteString
   }
 
 -- | Mint client token for outgoing message (no relayer verification).
 clientSend :: SendTransaction -> IO ()
-clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs sendTo msg) = do
+clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs sendTo hashMode msg) = do
   coreCfg    <- coreConfigIO cfgFile
   skey       <- readPaymentSigningKey skeyFile
   clientVkey <- readPaymentVerificationKey clientVkeyFile
@@ -59,7 +62,7 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs se
       plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming
       (policy, policyId) = policyFromPlutus plutusPolicy
 
-  let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
+  let msgHash    = hashMessage hashMode msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
@@ -75,7 +78,7 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs se
 
     let skeleton = mustHaveRefInput userOref
                 <> mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-                <> mustMint policy unitRedeemer tokenName 1
+                <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
                 <> mustBeSignedBy (pubKeyHash clientVkey)
 
     txbody <- runGYTxGameMonadIO nid
@@ -94,7 +97,7 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs se
 
 -- | Mint client token for incoming message (requires relayer verification).
 clientReceive :: ReceiveTransaction -> IO ()
-clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles trustedAddressBSs sendTo msg) = do
+clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles trustedAddressBSs sendTo hashMode msg) = do
   coreCfg      <- coreConfigIO cfgFile
   skey         <- readPaymentSigningKey skeyFile
   clientVkey   <- readPaymentVerificationKey clientVkeyFile
@@ -119,7 +122,7 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
       plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming
       (policy, policyId) = policyFromPlutus plutusPolicy
 
-  let msgHash    = fromBuiltin . buildCrosschainHash . toBuiltin $ msg
+  let msgHash    = hashMessage hashMode msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
@@ -140,7 +143,7 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
 
     let skeleton = mustHaveRefInput relayerOref
                 <> mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-                <> mustMint policy unitRedeemer tokenName 1
+                <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
                 <> mustBeSignedBy (pubKeyHash clientVkey)
 
     txbody <- runGYTxGameMonadIO nid

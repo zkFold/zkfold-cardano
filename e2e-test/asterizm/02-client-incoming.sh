@@ -11,6 +11,11 @@ cabal_run() {
   cabal ${CABAL_FLAGS:-} -v0 run "$@"
 }
 
+hash_args=()
+if [ "${CROSSCHAIN_HASH:-0}" = "1" ]; then
+  hash_args+=(--crosschain-hash)
+fi
+
 # Read the incoming message (same message the relayer attested)
 message=$(cat ./assets/message-incoming.hex)
 trustedAddress="${message:0:80}"
@@ -24,4 +29,5 @@ cabal_run zkfold-cli:asterizm -- client receive \
   --relayer-vkey-file $keypath/relayer.vkey \
   --trusted-address "$trustedAddress" \
   --beneficiary-address $(cat $keypath/client.addr) \
+  "${hash_args[@]}" \
   --message "$message"

@@ -11,6 +11,11 @@ cabal_run() {
   cabal ${CABAL_FLAGS:-} -v0 run "$@"
 }
 
+hash_args=()
+if [ "${CROSSCHAIN_HASH:-0}" = "1" ]; then
+  hash_args+=(--crosschain-hash)
+fi
+
 # Build an outgoing Asterizm message (Cardano -> other chain)
 # This example uses `user send`, so the minted token will be under the
 # universal user policy (`asterizm policy user`), not the client policy.
@@ -45,4 +50,5 @@ cabal_run zkfold-cli:asterizm -- user send \
   --core-config-file $configpath \
   --signing-key-file $keypath/user.skey \
   --beneficiary-address $(cat $keypath/client.addr) \
+  "${hash_args[@]}" \
   --message "$message"

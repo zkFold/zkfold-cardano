@@ -20,7 +20,6 @@ data ClientCommand
     = TransactionAsterizmClientSend AsterizmClient.SendTransaction
     | TransactionAsterizmClientReceive AsterizmClient.ReceiveTransaction
     | TransactionAsterizmHash AsterizmHash.Transaction
-    | TransactionAsterizmBuildHash AsterizmHash.Transaction
     | TransactionAsterizmPolicyClient AsterizmPolicy.ClientTransaction
     | TransactionAsterizmPolicyRelayer AsterizmPolicy.RelayerTransaction
     | TransactionAsterizmPolicyUser AsterizmPolicy.UserTransaction
@@ -47,8 +46,7 @@ pCmds :: Parser ClientCommand
 pCmds = do
     asum $
         [ pTransactionAsterizmClient
-        , TransactionAsterizmHash      <$> pTransactionAsterizmBuildCrosschainHash
-        , TransactionAsterizmBuildHash <$> pTransactionAsterizmBuildHash
+        , TransactionAsterizmHash      <$> pTransactionAsterizmHash
         , pTransactionAsterizmPolicy
         , TransactionAsterizmRelayer   <$> pTransactionAsterizmRelayer
         , TransactionAsterizmRetrieve  <$> pTransactionAsterizmRetrieve
@@ -74,6 +72,7 @@ pTransactionAsterizmClient = do
                 <*> pVerificationKeyFile "client"
                 <*> many pTrustedAddress
                 <*> pBenefOutAddress
+                <*> pHashMode
                 <*> pMessage
 
     pClientReceive = subParser "receive" $ Opt.info pReceiveCmd $ Opt.progDescDoc Nothing
@@ -86,24 +85,14 @@ pTransactionAsterizmClient = do
                 <*> many (pVerificationKeyFile "relayer")
                 <*> many pTrustedAddress
                 <*> pBenefOutAddress
+                <*> pHashMode
                 <*> pMessage
 
-pTransactionAsterizmBuildCrosschainHash :: Parser AsterizmHash.Transaction
-pTransactionAsterizmBuildCrosschainHash =
-    asum
-      [ pHashCommand "hash"
-      , pHashCommand "buildCrosschainHash"
-      ]
-
-pTransactionAsterizmBuildHash :: Parser AsterizmHash.Transaction
-pTransactionAsterizmBuildHash =
-    pHashCommand "buildHash"
-
-pHashCommand :: String -> Parser AsterizmHash.Transaction
-pHashCommand cmdName =
-    subParser cmdName $ Opt.info pCmd $ Opt.progDescDoc Nothing
+pTransactionAsterizmHash :: Parser AsterizmHash.Transaction
+pTransactionAsterizmHash =
+    subParser "hash" $ Opt.info pCmd $ Opt.progDescDoc Nothing
   where
-    pCmd = AsterizmHash.Transaction <$> pMessage
+    pCmd = AsterizmHash.Transaction <$> pHashMode <*> pMessage
 
 pTransactionAsterizmRelayer :: Parser AsterizmRelayer.Transaction
 pTransactionAsterizmRelayer = do
@@ -163,6 +152,7 @@ pTransactionAsterizmUser = do
                 <$> pGYCoreConfigFile
                 <*> pSigningKeyFile
                 <*> pBenefOutAddress
+                <*> pHashMode
                 <*> pMessage
 
 pTransactionAsterizmRetrieve :: Parser AsterizmRetrieve.Transaction
@@ -184,7 +174,6 @@ runClientCommand = \case
     TransactionAsterizmClientSend    cmd -> ExceptT (Right <$> AsterizmClient.clientSend    cmd)
     TransactionAsterizmClientReceive cmd -> ExceptT (Right <$> AsterizmClient.clientReceive cmd)
     TransactionAsterizmHash          cmd -> ExceptT (Right <$> AsterizmHash.computeHash     cmd)
-    TransactionAsterizmBuildHash     cmd -> ExceptT (Right <$> AsterizmHash.computeBuildHash cmd)
     TransactionAsterizmPolicyClient  cmd -> ExceptT (Right <$> AsterizmPolicy.printClientPolicy  cmd)
     TransactionAsterizmPolicyRelayer cmd -> ExceptT (Right <$> AsterizmPolicy.printRelayerPolicy cmd)
     TransactionAsterizmPolicyUser    cmd -> ExceptT (Right <$> AsterizmPolicy.printUserPolicy    cmd)

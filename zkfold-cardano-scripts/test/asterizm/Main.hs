@@ -12,7 +12,7 @@ import           Prelude
 import           Test.Tasty
 import           Test.Tasty.HUnit
 
-import           ZkFold.Cardano.UPLC.Asterizm (buildCrosschainHash, buildHash)
+import           ZkFold.Cardano.UPLC.Asterizm (AsterizmHashMode (..), buildAsterizmHash, buildCrosschainHash, buildHash)
 
 ------------- :Helpers: -------------
 
@@ -95,6 +95,17 @@ tests =
         ( [ testCase ("case " ++ show i) $
               (toHex . buildHash) t @?= v
           | (i, (t, v)) <- zip [1 :: Integer ..] buildHashCases
+          ]
+        )
+    , testGroup "buildAsterizmHash"
+        ( [ testCase ("regular case " ++ show i) $
+              toHex (buildAsterizmHash RegularHash t) @?= v
+          | (i, (t, v)) <- zip [1 :: Integer ..] buildHashCases
+          ]
+        <>
+          [ testCase ("cross-chain case " ++ show i) $
+              toHex (buildAsterizmHash CrosschainHash t) @?= v
+          | (i, (t, v)) <- zip [1 :: Integer ..] crosschainCases
           ]
         )
     ]

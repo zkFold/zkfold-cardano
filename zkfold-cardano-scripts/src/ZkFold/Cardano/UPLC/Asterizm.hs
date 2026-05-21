@@ -10,16 +10,25 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
+import           GHC.Generics                 (Generic)
 import           PlutusLedgerApi.V1.Value    (symbols, withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
-import           PlutusTx                    (CompiledCode, compile, liftCodeDef, unsafeApplyCode)
+import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, unsafeApplyCode)
 import           PlutusTx.AssocMap           (keys, lookup, toList)
 import           PlutusTx.Builtins           (replicateByte)
 import           PlutusTx.Prelude            hiding (toList)
+import           Prelude                     (Show)
 
 type RelayerPKH = PubKeyHash
 type TrustedAddress = BuiltinByteString
+
+data AsterizmHashMode =
+    RegularHash
+  | CrosschainHash
+  deriving stock (Show, Generic)
+
+makeIsDataIndexed ''AsterizmHashMode [('RegularHash,0),('CrosschainHash,1)]
 
 {-# INLINABLE buildHash #-}
 buildHash :: BuiltinByteString -> BuiltinByteString
@@ -47,6 +56,11 @@ buildCrosschainHash bs =
             payLen  = len - headerLen
         in go h0 0 payLen
 
+{-# INLINABLE buildAsterizmHash #-}
+buildAsterizmHash :: AsterizmHashMode -> BuiltinByteString -> BuiltinByteString
+buildAsterizmHash RegularHash = buildHash
+buildAsterizmHash CrosschainHash = buildCrosschainHash
+
 -- | Plutus script (minting policy) for posting signed relayer messages (hashes) on-chain.
 {-# INLINABLE untypedAsterizmRelayer #-}
 untypedAsterizmRelayer :: RelayerPKH -> BuiltinData -> BuiltinUnit
@@ -67,6 +81,7 @@ untypedAsterizmRelayer pkh ctx' = check conditionSigned
 untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> Bool -> BuiltinData -> BuiltinUnit
 untypedAsterizmClient clientPKH allowedRelayers _ trustedAddresses True ctx' =
     let ctx = unsafeFromBuiltinData ctx'
+        hashMode = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
         info = scriptContextTxInfo ctx
         refInputs = txInInfoResolved <$> txInfoReferenceInputs info
         valueReferenced = foldMap txOutValue refInputs
@@ -77,7 +92,7 @@ untypedAsterizmClient clientPKH allowedRelayers _ trustedAddresses True ctx' =
         message = case txOutDatum . head $ txInfoOutputs info of
           OutputDatum d -> unsafeFromBuiltinData $ getDatum d
           _             -> traceError "Expected output datum"
-        tokenName = TokenName $ buildCrosschainHash message
+        tokenName = TokenName $ buildAsterizmHash hashMode message
         conditionSigned = txSignedBy info clientPKH
         conditionMinting = tn == tokenName
         conditionSourceTrusted = trustedSource trustedAddresses message
@@ -90,6 +105,7 @@ untypedAsterizmClient clientPKH allowedRelayers _ trustedAddresses True ctx' =
 
 untypedAsterizmClient clientPKH _ userCS trustedAddresses False ctx' =
     let ctx = unsafeFromBuiltinData ctx'
+        hashMode = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
         info = scriptContextTxInfo ctx
         refInputs = txInInfoResolved <$> txInfoReferenceInputs info
         valueReferenced = foldMap txOutValue refInputs
@@ -100,7 +116,7 @@ untypedAsterizmClient clientPKH _ userCS trustedAddresses False ctx' =
         message = case txOutDatum . head $ txInfoOutputs info of
           OutputDatum d -> unsafeFromBuiltinData $ getDatum d
           _             -> traceError "Expected output datum"
-        tokenName = TokenName $ buildCrosschainHash message
+        tokenName = TokenName $ buildAsterizmHash hashMode message
         conditionSigned = txSignedBy info clientPKH
         conditionMinting = tn == tokenName
         conditionUserApproved = hasToken userCS tokenName valueReferenced
@@ -166,6 +182,7 @@ asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncom
 untypedAsterizmUser :: BuiltinData -> BuiltinUnit
 untypedAsterizmUser ctx' =
     let ctx = unsafeFromBuiltinData ctx'
+        hashMode = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
         info = scriptContextTxInfo ctx
         minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
         (tn, _) = case minted of
@@ -174,7 +191,7 @@ untypedAsterizmUser ctx' =
         message = case txOutDatum . head $ txInfoOutputs info of
           OutputDatum d -> unsafeFromBuiltinData $ getDatum d
           _             -> traceError "Expected output datum"
-        tokenName = TokenName $ buildCrosschainHash message
+        tokenName = TokenName $ buildAsterizmHash hashMode message
         conditionMinting = tn == tokenName
     in check conditionMinting
 

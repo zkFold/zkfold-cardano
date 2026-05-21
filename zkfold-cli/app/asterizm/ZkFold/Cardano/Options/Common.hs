@@ -12,6 +12,7 @@ import qualified Options.Applicative                as Opt
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Types      (MessageDirection (..))
+import           ZkFold.Cardano.UPLC.Asterizm       (AsterizmHashMode (..))
 
 ----- :Alternatives: -----
 
@@ -64,6 +65,12 @@ pMessage = Opt.option hexReader
     ( Opt.long "message"
         <> Opt.metavar "HEX"
         <> Opt.help "Hex-encoded Asterizm structured message."
+    )
+
+pHashMode :: Parser AsterizmHashMode
+pHashMode = Opt.flag RegularHash CrosschainHash
+    ( Opt.long "crosschain-hash"
+        <> Opt.help "Use the Asterizm cross-chain hash instead of regular SHA-256."
     )
 
 pTrustedAddress :: Parser BS.ByteString

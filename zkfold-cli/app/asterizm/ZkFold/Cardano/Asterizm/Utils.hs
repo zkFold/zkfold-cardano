@@ -7,9 +7,12 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           GeniusYield.TxBuilder
 import           GeniusYield.Types
-import           PlutusTx               (CompiledCode)
+import           PlutusLedgerApi.V3     (fromBuiltin, toBuiltin)
+import           PlutusTx               (CompiledCode, toBuiltinData)
 import           Prelude
 import           System.IO              (hPutStrLn, stderr)
+
+import           ZkFold.Cardano.UPLC.Asterizm (AsterizmHashMode (..), buildCrosschainHash, buildHash)
 
 -- | Minting policy and policy ID from Plutus policy.
 policyFromPlutus :: forall a. CompiledCode a -> (GYBuildScript PlutusV3, GYMintingPolicyId)
@@ -28,6 +31,15 @@ hexToBS :: MonadFail m => T.Text -> m BS.ByteString
 hexToBS t = case B16.decode (TE.encodeUtf8 t) of
   Left err -> fail $ "Invalid hex: " ++ err
   Right bs -> pure bs
+
+-- | Hash an Asterizm message using the selected token-name hash mode.
+hashMessage :: AsterizmHashMode -> BS.ByteString -> BS.ByteString
+hashMessage RegularHash = fromBuiltin . buildHash . toBuiltin
+hashMessage CrosschainHash = fromBuiltin . buildCrosschainHash . toBuiltin
+
+-- | Minting redeemer selecting the same hash mode used off-chain.
+hashModeRedeemer :: AsterizmHashMode -> GYRedeemer
+hashModeRedeemer = redeemerFromPlutusData . toBuiltinData
 
 -- | Submit a signed transaction and print the CBOR hex when submission fails.
 submitTxWithCborOnFailure :: GYNetworkId -> GYProviders -> User -> GYTx -> IO GYTxId
