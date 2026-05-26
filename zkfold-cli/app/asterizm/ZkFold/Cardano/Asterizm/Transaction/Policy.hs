@@ -8,7 +8,8 @@ import           ZkFold.Cardano.Asterizm.Transaction.Retrieve (derivePolicyId)
 import           ZkFold.Cardano.Asterizm.Types                (MessageDirection (..))
 import           ZkFold.Cardano.Asterizm.Utils                (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common                (readPaymentVerificationKey)
-import           ZkFold.Cardano.UPLC.Asterizm                 (asterizmRelayerCompiled, asterizmUserCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm                 (asterizmOmniTokenCompiled, asterizmRelayerCompiled,
+                                                               asterizmUserCompiled)
 
 
 data ClientTransaction = ClientTransaction
@@ -23,6 +24,12 @@ data RelayerTransaction = RelayerTransaction
   }
 
 data UserTransaction = UserTransaction
+
+data TokenTransaction = TokenTransaction
+  { tokenClientVKeyFile   :: !FilePath
+  , tokenRelayerVKeyFiles :: ![FilePath]
+  , tokenTrustedAddresses :: ![BS.ByteString]
+  }
 
 printClientPolicy :: ClientTransaction -> IO ()
 printClientPolicy (ClientTransaction clientVkeyFile relayerVkeyFiles trustedAddressBSs dir) = do
@@ -42,6 +49,20 @@ printUserPolicy :: UserTransaction -> IO ()
 printUserPolicy UserTransaction = do
   let policyId = snd . policyFromPlutus $ asterizmUserCompiled
   putStrLn $ trimQuot (show policyId)
+
+printTokenPolicy :: TokenTransaction -> IO ()
+printTokenPolicy (TokenTransaction clientVkeyFile relayerVkeyFiles trustedAddressBSs) = do
+  clientVkey   <- readPaymentVerificationKey clientVkeyFile
+  relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
+
+  let incomingPolicyId = derivePolicyId clientVkey relayerVkeys trustedAddressBSs Incoming
+      outgoingPolicyId = derivePolicyId clientVkey [] trustedAddressBSs Outgoing
+      userPolicyId = snd . policyFromPlutus $ asterizmUserCompiled
+      incomingCS = mintingPolicyIdToCurrencySymbol incomingPolicyId
+      outgoingCS = mintingPolicyIdToCurrencySymbol outgoingPolicyId
+      userCS = mintingPolicyIdToCurrencySymbol userPolicyId
+      tokenPolicyId = snd . policyFromPlutus $ asterizmOmniTokenCompiled incomingCS outgoingCS userCS
+  putStrLn $ trimQuot (show tokenPolicyId)
 
 -- | Remove enclosing quotation marks
 trimQuot :: String -> String

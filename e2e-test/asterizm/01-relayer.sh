@@ -23,7 +23,10 @@ fi
 #   dstChainId  (8 bytes):  0x38
 #   dstAddress  (32 bytes): Cardano client policy ID, left-padded to 32 bytes
 #   txId        (32 bytes): 0x01
-# Payload: "Hello, Asterizm!" in hex
+# Payload: abi.decode(payload, (uint, uint, uint)):
+#   dstAddressUint: Cardano client payment key hash, left-padded to 32 bytes
+#   amount:         100
+#   txId:           same txId as in the message header
 
 srcChainId="0000000000000001"
 srcAddress="00000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
@@ -36,7 +39,10 @@ clientPolicyId=$(cabal_run zkfold-cli:asterizm -- policy client \
   --incoming)
 dstAddress=$(printf "%064s" "$clientPolicyId" | tr ' ' '0')
 txId="0000000000000000000000000000000000000000000000000000000000000001"
-payload=$(echo -n "Hello, Asterizm!" | xxd -p | tr -d '\n')
+clientPkh=$(cardano-cli address key-hash --payment-verification-key-file $keypath/client.vkey)
+dstAddressUint=$(printf "%064s" "$clientPkh" | tr ' ' '0')
+amount=$(printf "%064x" 100)
+payload="${dstAddressUint}${amount}${txId}"
 
 message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
 

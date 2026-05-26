@@ -28,10 +28,11 @@ trustedAddress="${message:80:80}"
 echo "Message: $message"
 echo "Submitting approved outgoing message..."
 
-cabal_run zkfold-cli:asterizm -- client send \
+cabal_run zkfold-cli:asterizm -- client token burn \
   --core-config-file $configpath \
   --signing-key-file $keypath/client.skey \
   --client-vkey-file $keypath/client.vkey \
+  --relayer-vkey-file $keypath/relayer.vkey \
   --trusted-address "$trustedAddress" \
   --beneficiary-address $(cat $keypath/client.addr) \
   "${hash_args[@]}" \

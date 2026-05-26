@@ -19,10 +19,13 @@ import           ZkFold.Cardano.Options.Common                hiding (pVerificat
 data ClientCommand
     = TransactionAsterizmClientSend AsterizmClient.SendTransaction
     | TransactionAsterizmClientReceive AsterizmClient.ReceiveTransaction
+    | TransactionAsterizmClientTokenMint AsterizmClient.TokenMintTransaction
+    | TransactionAsterizmClientTokenBurn AsterizmClient.TokenBurnTransaction
     | TransactionAsterizmHash AsterizmHash.Transaction
     | TransactionAsterizmPolicyClient AsterizmPolicy.ClientTransaction
     | TransactionAsterizmPolicyRelayer AsterizmPolicy.RelayerTransaction
     | TransactionAsterizmPolicyUser AsterizmPolicy.UserTransaction
+    | TransactionAsterizmPolicyToken AsterizmPolicy.TokenTransaction
     | TransactionAsterizmRelayer AsterizmRelayer.Transaction
     | TransactionAsterizmRetrieve AsterizmRetrieve.Transaction
     | TransactionAsterizmUserSend AsterizmUser.SendTransaction
@@ -61,6 +64,7 @@ pTransactionAsterizmClient = do
     pCmd = asum
         [ TransactionAsterizmClientSend <$> pClientSend
         , TransactionAsterizmClientReceive <$> pClientReceive
+        , pClientToken
         ]
 
     pClientSend = subParser "send" $ Opt.info pSendCmd $ Opt.progDescDoc Nothing
@@ -79,6 +83,39 @@ pTransactionAsterizmClient = do
       where
         pReceiveCmd = do
             AsterizmClient.ReceiveTransaction
+                <$> pGYCoreConfigFile
+                <*> pSigningKeyFile
+                <*> pVerificationKeyFile "client"
+                <*> many (pVerificationKeyFile "relayer")
+                <*> many pTrustedAddress
+                <*> pBenefOutAddress
+                <*> pHashMode
+                <*> pMessage
+
+    pClientToken = subParser "token" $ Opt.info pTokenCmd $ Opt.progDescDoc Nothing
+      where
+        pTokenCmd = asum
+          [ TransactionAsterizmClientTokenMint <$> pTokenMint
+          , TransactionAsterizmClientTokenBurn <$> pTokenBurn
+          ]
+
+        pTokenMint = subParser "mint" $ Opt.info pMintCmd $ Opt.progDescDoc Nothing
+          where
+            pMintCmd = do
+              AsterizmClient.TokenMintTransaction
+                <$> pGYCoreConfigFile
+                <*> pSigningKeyFile
+                <*> pVerificationKeyFile "client"
+                <*> many (pVerificationKeyFile "relayer")
+                <*> many pTrustedAddress
+                <*> pBenefOutAddress
+                <*> pHashMode
+                <*> pMessage
+
+        pTokenBurn = subParser "burn" $ Opt.info pBurnCmd $ Opt.progDescDoc Nothing
+          where
+            pBurnCmd = do
+              AsterizmClient.TokenBurnTransaction
                 <$> pGYCoreConfigFile
                 <*> pSigningKeyFile
                 <*> pVerificationKeyFile "client"
@@ -115,6 +152,7 @@ pTransactionAsterizmPolicy = do
         [ TransactionAsterizmPolicyClient <$> pPolicyClient
         , TransactionAsterizmPolicyRelayer <$> pPolicyRelayer
         , TransactionAsterizmPolicyUser <$> pPolicyUser
+        , TransactionAsterizmPolicyToken <$> pPolicyToken
         ]
 
     pPolicyClient = subParser "client" $ Opt.info pClientCmd $ Opt.progDescDoc Nothing
@@ -136,6 +174,14 @@ pTransactionAsterizmPolicy = do
       where
         pUserCmd = pure AsterizmPolicy.UserTransaction
 
+    pPolicyToken = subParser "token" $ Opt.info pTokenCmd $ Opt.progDescDoc Nothing
+      where
+        pTokenCmd = do
+            AsterizmPolicy.TokenTransaction
+                <$> pVerificationKeyFile "client"
+                <*> many (pVerificationKeyFile "relayer")
+                <*> many pTrustedAddress
+
 -- | Parser for user subcommands (send)
 pTransactionAsterizmUser :: Parser ClientCommand
 pTransactionAsterizmUser = do
@@ -152,6 +198,7 @@ pTransactionAsterizmUser = do
                 <$> pGYCoreConfigFile
                 <*> pSigningKeyFile
                 <*> pBenefOutAddress
+                <*> pOmniPolicyId
                 <*> pHashMode
                 <*> pMessage
 
@@ -173,10 +220,13 @@ runClientCommand :: ClientCommand -> ExceptT ClientCommandErrors IO ()
 runClientCommand = \case
     TransactionAsterizmClientSend    cmd -> ExceptT (Right <$> AsterizmClient.clientSend    cmd)
     TransactionAsterizmClientReceive cmd -> ExceptT (Right <$> AsterizmClient.clientReceive cmd)
+    TransactionAsterizmClientTokenMint cmd -> ExceptT (Right <$> AsterizmClient.clientTokenMint cmd)
+    TransactionAsterizmClientTokenBurn cmd -> ExceptT (Right <$> AsterizmClient.clientTokenBurn cmd)
     TransactionAsterizmHash          cmd -> ExceptT (Right <$> AsterizmHash.computeHash     cmd)
     TransactionAsterizmPolicyClient  cmd -> ExceptT (Right <$> AsterizmPolicy.printClientPolicy  cmd)
     TransactionAsterizmPolicyRelayer cmd -> ExceptT (Right <$> AsterizmPolicy.printRelayerPolicy cmd)
     TransactionAsterizmPolicyUser    cmd -> ExceptT (Right <$> AsterizmPolicy.printUserPolicy    cmd)
+    TransactionAsterizmPolicyToken   cmd -> ExceptT (Right <$> AsterizmPolicy.printTokenPolicy   cmd)
     TransactionAsterizmRelayer       cmd -> ExceptT (Right <$> AsterizmRelayer.relayerMint  cmd)
     TransactionAsterizmRetrieve      cmd -> ExceptT (Right <$> AsterizmRetrieve.retrieveMsgs cmd)
     TransactionAsterizmUserSend      cmd -> ExceptT (Right <$> AsterizmUser.userSend        cmd)

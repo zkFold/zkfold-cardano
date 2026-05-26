@@ -22,7 +22,7 @@ trustedAddress="${message:0:80}"
 
 echo "Submitting incoming message to client..."
 
-cabal_run zkfold-cli:asterizm -- client receive \
+cabal_run zkfold-cli:asterizm -- client token mint \
   --core-config-file $configpath \
   --signing-key-file $keypath/client.skey \
   --client-vkey-file $keypath/client.vkey \

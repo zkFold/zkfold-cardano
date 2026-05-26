@@ -1,5 +1,6 @@
 module ZkFold.Cardano.Asterizm.Transaction.User where
 
+import           Control.Exception             (throwIO)
 import qualified Data.ByteString               as BS
 import           Data.Maybe                    (fromJust)
 import           GeniusYield.GYConfig          (GYCoreConfig (..), coreConfigIO, withCfgProviders)
@@ -8,8 +9,8 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (hashMessage, hashModeRedeemer, policyFromPlutus,
-                                                submitTxWithCborOnFailure)
+import           ZkFold.Cardano.Asterizm.Utils (hashMessage, hashModeRedeemer, omniTokenNameGY, policyFromPlutus,
+                                                submitTxWithCborOnFailure, tokenTransferAmount)
 import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmHashMode, asterizmUserCompiled)
 
 
@@ -20,6 +21,7 @@ data SendTransaction = SendTransaction
   { ustCoreCfgFile    :: !FilePath
   , ustSigningKeyFile :: !FilePath
   , ustOutAddress     :: !GYAddress
+  , ustOmniPolicyId   :: !(Maybe GYMintingPolicyId)
   , ustHashMode       :: !AsterizmHashMode
   , ustMessage        :: !BS.ByteString
   }
@@ -28,7 +30,7 @@ data SendTransaction = SendTransaction
 -- The minting policy is universal (not parameterized by any PKH)
 -- and only validates that the token name matches the selected hash.
 userSend :: SendTransaction -> IO ()
-userSend (SendTransaction cfgFile skeyFile sendTo hashMode msg) = do
+userSend (SendTransaction cfgFile skeyFile sendTo mOmniPolicyId hashMode msg) = do
   coreCfg <- coreConfigIO cfgFile
   skey    <- readPaymentSigningKey skeyFile
 
@@ -48,10 +50,23 @@ userSend (SendTransaction cfgFile skeyFile sendTo hashMode msg) = do
 
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
-  let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-              <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
-
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    skeleton <- case mOmniPolicyId of
+      Nothing -> pure $
+          mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
+            <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
+      Just omniPolicyId -> do
+        amount <- either (throwIO . userError) pure $ tokenTransferAmount msg
+        let omniToken = GYToken omniPolicyId omniTokenNameGY
+        ownUtxos <- runGYTxQueryMonadIO nid providers $ utxosAtAddress changeAddr Nothing
+        omniUtxo <- case filter (\u -> valueAssetClass (utxoValue u) omniToken >= amount) $ utxosToList ownUtxos of
+          u : _ -> pure u
+          _     -> throwIO $ userError "No own UTxO contains enough omni-chain tokens to attach."
+        pure $
+          mustHaveInput (GYTxIn @PlutusV3 (utxoRef omniUtxo) GYTxInWitnessKey)
+            <> mustHaveOutput (GYTxOut sendTo (utxoValue omniUtxo <> tokenValue) inlineDatum Nothing)
+            <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
+
     txbody <- runGYTxGameMonadIO nid
                                  providers $
                                  asUser w1

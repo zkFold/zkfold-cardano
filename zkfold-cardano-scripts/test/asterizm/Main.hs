@@ -12,7 +12,10 @@ import           Prelude
 import           Test.Tasty
 import           Test.Tasty.HUnit
 
-import           ZkFold.Cardano.UPLC.Asterizm (AsterizmHashMode (..), buildAsterizmHash, buildCrosschainHash, buildHash)
+import           ZkFold.Cardano.UPLC.Asterizm (AsterizmHashMode (..), asterizmHeaderTxId, asterizmTokenAmount,
+                                               asterizmTokenDstAddress, asterizmTokenPayload,
+                                               asterizmTokenPayloadTxId, buildAsterizmHash, buildCrosschainHash,
+                                               buildHash)
 
 ------------- :Helpers: -------------
 
@@ -108,6 +111,15 @@ tests =
           | (i, (t, v)) <- zip [1 :: Integer ..] crosschainCases
           ]
         )
+    , testGroup "omni-chain token payload"
+        [ testCase "decodes destination address as ABI uint word" $
+            toHex (asterizmTokenDstAddress $ asterizmTokenPayload t2) @?=
+              "00000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
+        , testCase "decodes amount as ABI uint word" $
+            asterizmTokenAmount (asterizmTokenPayload t2) @?= 100
+        , testCase "payload txId matches header txId" $
+            asterizmTokenPayloadTxId (asterizmTokenPayload t2) @?= asterizmHeaderTxId t2
+        ]
     ]
   where
     crosschainCases =

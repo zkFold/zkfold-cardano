@@ -2,7 +2,6 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:profile-all #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:conservative-optimisation #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -10,8 +9,9 @@
 
 module ZkFold.Cardano.UPLC.Asterizm where
 
+import           GHC.ByteOrder               (ByteOrder (..))
 import           GHC.Generics                 (Generic)
-import           PlutusLedgerApi.V1.Value    (symbols, withCurrencySymbol)
+import           PlutusLedgerApi.V1.Value    (symbols, valueOf, withCurrencySymbol)
 import           PlutusLedgerApi.V3          as V3
 import           PlutusLedgerApi.V3.Contexts (ownCurrencySymbol, txSignedBy)
 import           PlutusTx                    (CompiledCode, compile, liftCodeDef, makeIsDataIndexed, unsafeApplyCode)
@@ -29,6 +29,13 @@ data AsterizmHashMode =
   deriving stock (Show, Generic)
 
 makeIsDataIndexed ''AsterizmHashMode [('RegularHash,0),('CrosschainHash,1)]
+
+data AsterizmOmniTokenAction =
+    OmniTokenMint
+  | OmniTokenBurn
+  deriving stock (Show, Generic)
+
+makeIsDataIndexed ''AsterizmOmniTokenAction [('OmniTokenMint,0),('OmniTokenBurn,1)]
 
 {-# INLINABLE buildHash #-}
 buildHash :: BuiltinByteString -> BuiltinByteString
@@ -107,8 +114,8 @@ untypedAsterizmClient clientPKH _ userCS trustedAddresses False ctx' =
     let ctx = unsafeFromBuiltinData ctx'
         hashMode = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
         info = scriptContextTxInfo ctx
-        refInputs = txInInfoResolved <$> txInfoReferenceInputs info
-        valueReferenced = foldMap txOutValue refInputs
+        inputs = txInInfoResolved <$> txInfoInputs info
+        valueSpent = foldMap txOutValue inputs
         minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
         (tn, _) = case minted of
           Just [x] -> x
@@ -119,10 +126,11 @@ untypedAsterizmClient clientPKH _ userCS trustedAddresses False ctx' =
         tokenName = TokenName $ buildAsterizmHash hashMode message
         conditionSigned = txSignedBy info clientPKH
         conditionMinting = tn == tokenName
-        conditionUserApproved = hasToken userCS tokenName valueReferenced
+        conditionUserApproved = hasToken userCS tokenName valueSpent
+        conditionUserBurned = tokenMintAmount userCS tokenName info == negate 1
         conditionSourceClient = clientSource ctx message
         conditionDestinationTrusted = trustedDestination trustedAddresses message
-    in check $ conditionSigned && conditionMinting && conditionUserApproved && conditionSourceClient && conditionDestinationTrusted
+    in check $ conditionSigned && conditionMinting && conditionUserApproved && conditionUserBurned && conditionSourceClient && conditionDestinationTrusted
 
 {-# INLINABLE hasToken #-}
 hasToken :: CurrencySymbol -> TokenName -> Value -> Bool
@@ -197,3 +205,135 @@ untypedAsterizmUser ctx' =
 
 asterizmUserCompiled :: CompiledCode (BuiltinData -> BuiltinUnit)
 asterizmUserCompiled = $$(compile [|| untypedAsterizmUser ||])
+
+{-# INLINABLE omniTokenName #-}
+omniTokenName :: TokenName
+omniTokenName = TokenName emptyByteString
+
+{-# INLINABLE asterizmTokenPayloadLen #-}
+asterizmTokenPayloadLen :: Integer
+asterizmTokenPayloadLen = 96
+
+{-# INLINABLE asterizmTokenMessageLen #-}
+asterizmTokenMessageLen :: Integer
+asterizmTokenMessageLen = 208
+
+{-# INLINABLE asterizmHeaderTxId #-}
+asterizmHeaderTxId :: BuiltinByteString -> BuiltinByteString
+asterizmHeaderTxId = sliceByteString 80 32
+
+{-# INLINABLE asterizmTokenPayload #-}
+asterizmTokenPayload :: BuiltinByteString -> BuiltinByteString
+asterizmTokenPayload message =
+  if lengthOfByteString message == asterizmTokenMessageLen
+  then sliceByteString 112 asterizmTokenPayloadLen message
+  else traceError "Invalid omni token message length"
+
+{-# INLINABLE asterizmTokenDstAddress #-}
+asterizmTokenDstAddress :: BuiltinByteString -> BuiltinByteString
+asterizmTokenDstAddress payload = sliceByteString 0 32 payload
+
+{-# INLINABLE asterizmTokenAmount #-}
+asterizmTokenAmount :: BuiltinByteString -> Integer
+asterizmTokenAmount payload = byteStringToInteger BigEndian $ sliceByteString 32 32 payload
+
+{-# INLINABLE asterizmTokenPayloadTxId #-}
+asterizmTokenPayloadTxId :: BuiltinByteString -> BuiltinByteString
+asterizmTokenPayloadTxId payload = sliceByteString 64 32 payload
+
+{-# INLINABLE ownTokenAmount #-}
+ownTokenAmount :: CurrencySymbol -> TokenName -> TxInfo -> Integer
+ownTokenAmount cs tn info = case lookup cs . mintValueToMap $ txInfoMint info of
+  Just xs -> case toList xs of
+    [(tn', amount)] ->
+      if tn' == tn
+      then amount
+      else traceError "Unexpected token name"
+    _ -> traceError "Expected exactly one token minting action"
+  _ -> traceError "Expected token minting action"
+
+{-# INLINABLE mintedToken #-}
+mintedToken :: CurrencySymbol -> TxInfo -> (TokenName, Integer)
+mintedToken cs info = case lookup cs . mintValueToMap $ txInfoMint info of
+  Just xs -> case toList xs of
+    [x] -> x
+    _   -> traceError "Expected exactly one proof minting action"
+  _ -> traceError "Expected proof minting action"
+
+{-# INLINABLE tokenMintAmount #-}
+tokenMintAmount :: CurrencySymbol -> TokenName -> TxInfo -> Integer
+tokenMintAmount cs tn info = case lookup cs . mintValueToMap $ txInfoMint info of
+  Just xs -> case find (\(tn', _) -> tn' == tn) $ toList xs of
+    Just (_, amount) -> amount
+    _                -> 0
+  _ -> 0
+
+{-# INLINABLE proofMessage #-}
+proofMessage :: CurrencySymbol -> TokenName -> [TxOut] -> BuiltinByteString
+proofMessage cs tn outputs = case find (\o -> valueOf (txOutValue o) cs tn == 1) outputs of
+  Just o -> case txOutDatum o of
+    OutputDatum d -> unsafeFromBuiltinData $ getDatum d
+    _             -> traceError "Expected proof output datum"
+  _ -> traceError "Expected proof output"
+
+{-# INLINABLE paysToPaymentKeyHash #-}
+paysToPaymentKeyHash :: BuiltinByteString -> TxOut -> Bool
+paysToPaymentKeyHash pkh out = case txOutAddress out of
+  Address (PubKeyCredential pkh') _ -> leftPad32 (getPubKeyHash pkh') == pkh
+  _                                 -> False
+
+{-# INLINABLE valuePaidToPaymentKeyHash #-}
+valuePaidToPaymentKeyHash :: CurrencySymbol -> TokenName -> BuiltinByteString -> [TxOut] -> Integer
+valuePaidToPaymentKeyHash cs tn pkh outputs = case outputs of
+  [] -> 0
+  o : os ->
+    let rest = valuePaidToPaymentKeyHash cs tn pkh os
+    in if paysToPaymentKeyHash pkh o
+       then valueOf (txOutValue o) cs tn + rest
+       else rest
+
+{-# INLINABLE hasInputWithTokens #-}
+hasInputWithTokens :: CurrencySymbol -> TokenName -> CurrencySymbol -> TokenName -> Integer -> [TxInInfo] -> Bool
+hasInputWithTokens userCS userTN omniCS omniTN amount inputs = case inputs of
+  [] -> False
+  i : is ->
+    let v = txOutValue $ txInInfoResolved i
+    in  (valueOf v userCS userTN == 1 && valueOf v omniCS omniTN >= amount)
+        || hasInputWithTokens userCS userTN omniCS omniTN amount is
+
+{-# INLINABLE untypedAsterizmOmniToken #-}
+untypedAsterizmOmniToken :: CurrencySymbol -> CurrencySymbol -> CurrencySymbol -> BuiltinData -> BuiltinUnit
+untypedAsterizmOmniToken incomingClientCS outgoingClientCS userCS ctx' =
+    let ctx = unsafeFromBuiltinData ctx'
+        action = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+        info = scriptContextTxInfo ctx
+        ownCS = ownCurrencySymbol ctx
+        ownAmount = ownTokenAmount ownCS omniTokenName info
+        proofCS = case action of
+          OmniTokenMint -> incomingClientCS
+          OmniTokenBurn -> outgoingClientCS
+        (proofTN, proofAmount) = mintedToken proofCS info
+        message = proofMessage proofCS proofTN $ txInfoOutputs info
+        payload = asterizmTokenPayload message
+        dstAddress = asterizmTokenDstAddress payload
+        amount = asterizmTokenAmount payload
+        payloadTxId = asterizmTokenPayloadTxId payload
+        conditionProofMinted = proofAmount == 1
+        conditionAmountPositive = amount > 0
+        conditionTxId = payloadTxId == asterizmHeaderTxId message
+        conditionMint = ownAmount == amount
+          && valuePaidToPaymentKeyHash ownCS omniTokenName dstAddress (txInfoOutputs info) >= amount
+        conditionBurn = ownAmount == negate amount
+          && tokenMintAmount userCS proofTN info == negate 1
+          && hasInputWithTokens userCS proofTN ownCS omniTokenName amount (txInfoInputs info)
+        conditionAction = case action of
+          OmniTokenMint -> conditionMint
+          OmniTokenBurn -> conditionBurn
+    in check $ conditionProofMinted && conditionAmountPositive && conditionTxId && conditionAction
+
+asterizmOmniTokenCompiled :: CurrencySymbol -> CurrencySymbol -> CurrencySymbol -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmOmniTokenCompiled incomingClientCS outgoingClientCS userCS =
+    $$(compile [|| untypedAsterizmOmniToken ||])
+    `unsafeApplyCode` liftCodeDef incomingClientCS
+    `unsafeApplyCode` liftCodeDef outgoingClientCS
+    `unsafeApplyCode` liftCodeDef userCS

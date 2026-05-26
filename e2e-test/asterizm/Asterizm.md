@@ -141,6 +141,29 @@ Available options:
   -h,--help                Show this help text
 ```
 
+### policy token
+
+Displays the omni-chain token policy ID. This policy is parameterized by the incoming client proof policy, outgoing client proof policy, and universal user-message policy. The token name is the empty bytestring.
+
+```shell
+cabal run zkfold-cli:asterizm -- policy token --help
+```
+
+```output
+Usage: asterizm policy token --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
+  [--trusted-address HEX]
+
+Available options:
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
+  -h,--help                Show this help text
+```
+
 ### relayer
 
 Command used by a relayer to mint a token certifying a client's message.
@@ -171,7 +194,7 @@ Available options:
 
 ### client send
 
-Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required, but the transaction must reference the user's universal-policy token for the same message hash.
+Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required, but the transaction must consume the user's universal-policy token for the same message hash and burn it while minting the client-policy proof token.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client send --help
@@ -205,7 +228,9 @@ Available options:
 
 ### user send
 
-Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID returned by `policy user`, not the client policy returned by `policy client --outgoing`. A later `client send` transaction references this token before minting the client-policy token.
+Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID returned by `policy user`, not the client policy returned by `policy client --outgoing`. A later `client send` transaction consumes and burns this token before minting the client-policy token.
+
+When `--omni-policy-id` is provided, `user send` also consumes one of the signer's UTxOs containing enough empty-name omni-chain tokens and places those tokens in the same output as the user message token. This prepares the outgoing `client token burn` transaction.
 
 ```shell
 cabal run zkfold-cli:asterizm -- user send --help
@@ -215,6 +240,7 @@ cabal run zkfold-cli:asterizm -- user send --help
 Usage: asterizm user send --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --beneficiary-address ADDRESS
+  [--omni-policy-id HEX]
   [--crosschain-hash]
   --message HEX
 
@@ -223,6 +249,83 @@ Available options:
                            Path to core config file (required).
   --signing-key-file FILEPATH
                            Payment signing key file.
+  --beneficiary-address ADDRESS
+                           Address of beneficiary receiving token(s).
+  --omni-policy-id HEX     Omni-chain token policy ID. When passed to user send,
+                           matching omni-chain tokens are attached to the user
+                           message UTxO.
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
+  --message HEX            Hex-encoded Asterizm structured message.
+  -h,--help                Show this help text
+```
+
+### client token mint
+
+Command used by the client to receive an incoming omni-chain token transfer. It mints the regular incoming client proof token and the empty-name omni-chain tokens in the same transaction.
+
+```shell
+cabal run zkfold-cli:asterizm -- client token mint --help
+```
+
+```output
+Usage: asterizm client token mint --core-config-file FILEPATH
+  --signing-key-file FILEPATH
+  --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
+  [--trusted-address HEX]
+  --beneficiary-address ADDRESS
+  [--crosschain-hash]
+  --message HEX
+
+Available options:
+  --core-config-file FILEPATH
+                           Path to core config file (required).
+  --signing-key-file FILEPATH
+                           Payment signing key file.
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
+  --beneficiary-address ADDRESS
+                           Address of beneficiary receiving token(s).
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
+  --message HEX            Hex-encoded Asterizm structured message.
+  -h,--help                Show this help text
+```
+
+### client token burn
+
+Command used by the client to approve an outgoing omni-chain token transfer. It consumes the UTxO containing both the user message token and the empty-name omni-chain tokens, burns both, and mints the regular outgoing client proof token.
+
+```shell
+cabal run zkfold-cli:asterizm -- client token burn --help
+```
+
+```output
+Usage: asterizm client token burn --core-config-file FILEPATH
+  --signing-key-file FILEPATH
+  --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
+  [--trusted-address HEX]
+  --beneficiary-address ADDRESS
+  [--crosschain-hash]
+  --message HEX
+
+Available options:
+  --core-config-file FILEPATH
+                           Path to core config file (required).
+  --signing-key-file FILEPATH
+                           Payment signing key file.
+  --client-vkey-file FILEPATH
+                           client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
+  --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
+                           id followed by 32-byte address.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
   --crosschain-hash        Use the Asterizm cross-chain hash instead of
@@ -383,18 +486,18 @@ asterizm$ cabal run zkfold-cli:asterizm -- relayer \
 "<transaction-id>"
 ```
 
-Pass `--crosschain-hash` to `hash` here, and to the matching `client receive`, `user send`, or `client send` command below, when the token-name must use the Asterizm cross-chain hash.
+Pass `--crosschain-hash` to `hash` here, and to the matching `client receive`, `client token mint`, `user send`, `client send`, or `client token burn` command below, when the token-name must use the Asterizm cross-chain hash.
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 
 **Figure:** Relayer's Tx
 
-### Client Receive (Incoming Message)
+### Client Token Mint (Incoming Message)
 
-The client receives an incoming message by validating the relayer's certification:
+The client receives an incoming token-transfer message by validating the relayer's certification, minting the client proof token, and minting empty-name omni-chain tokens:
 
 ```shell
-asterizm$ cabal run zkfold-cli:asterizm -- client receive \
+asterizm$ cabal run zkfold-cli:asterizm -- client token mint \
   --core-config-file ./assets/config.json \
   --signing-key-file ./keys/client.skey \
   --client-vkey-file ./keys/client.vkey \
@@ -417,13 +520,19 @@ asterizm$ cabal run zkfold-cli:asterizm -- client receive \
 Any user can initiate an outgoing message by minting and sending a token under the universal user policy:
 
 *Note:* The resulting token is minted under `policy user`. If you are scanning for messages created by `user send`, do not derive `policy client --outgoing` for that purpose.
-Run this step before `client send` for the same message.
+For token transfers, pass the omni-chain policy ID so the user's message token and the omni-chain tokens are placed in the same UTxO. Run this step before `client token burn` for the same message.
 
 ```shell
+asterizm$ omniPolicyId=$(cabal run zkfold-cli:asterizm -- policy token \
+  --client-vkey-file ./keys/client.vkey \
+  --relayer-vkey-file ./keys/relayer.vkey \
+  --trusted-address "$trustedAddress")
+
 asterizm$ cabal run zkfold-cli:asterizm -- user send \
   --core-config-file ./assets/config.json \
-  --signing-key-file ./keys/user.skey \
+  --signing-key-file ./keys/client.skey \
   --beneficiary-address $(cat ./keys/client.addr) \
+  --omni-policy-id "$omniPolicyId" \
   --message "$outgoingMessage"
 ```
 
@@ -431,15 +540,16 @@ asterizm$ cabal run zkfold-cli:asterizm -- user send \
 "<transaction-id>"
 ```
 
-### Client Send (Outgoing Message)
+### Client Token Burn (Outgoing Message)
 
-After a user has posted an outgoing message under `policy user`, the client approves it by minting the corresponding client-policy token. The transaction references the user's token and checks the destination trusted address on-chain:
+After a user has posted an outgoing token-transfer message under `policy user`, the client approves it by minting the corresponding client-policy token. The transaction consumes the user's token UTxO, burns the user message token, burns the omni-chain token amount from the payload, and checks the destination trusted address on-chain:
 
 ```shell
-asterizm$ cabal run zkfold-cli:asterizm -- client send \
+asterizm$ cabal run zkfold-cli:asterizm -- client token burn \
   --core-config-file ./assets/config.json \
   --signing-key-file ./keys/client.skey \
   --client-vkey-file ./keys/client.vkey \
+  --relayer-vkey-file ./keys/relayer.vkey \
   --trusted-address "$trustedAddress" \
   --beneficiary-address $(cat ./keys/client.addr) \
   --message "$outgoingMessage"
@@ -451,7 +561,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- client send \
 
 ![client send Tx](figures/05-client-send-tx.svg)
 
-**Figure:** Client Send Tx
+**Figure:** Client Token Burn Tx
 
 ### Retrieve Messages
 
@@ -475,11 +585,11 @@ asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages \
 ```output
 Client's messages on-chain:
 
-B "Hello, Asterizm!"
+<token-transfer message bytes>
 ```
 
-*Note:* `retrieve-messages` derives the client's policy ID from `--client-vkey-file`, so it only returns messages minted via `client send` / `client receive`. It does not retrieve transactions created by `user send`.
+*Note:* `retrieve-messages` derives the client's policy ID from `--client-vkey-file`, so it only returns messages minted via `client send`, `client receive`, `client token mint`, or `client token burn`. It does not retrieve transactions created by `user send`.
 
 ---
 
-*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client`, `./00-keygen.sh relayer`, and `./00-keygen.sh user`, then fund the client, relayer, and user addresses before running the scripts. If your default compiler is not the project compiler, run scripts with `CABAL_FLAGS=--with-compiler=ghc-9.6.7`. Run the numbered scripts in order; `./04-client-outgoing.sh` depends on the universal-policy token posted by `./03-user-outgoing.sh`.
+*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client`, `./00-keygen.sh relayer`, and `./00-keygen.sh user`, then fund the client, relayer, and user addresses before running the scripts. The token-transfer outgoing script signs `user send` with the client key so it can attach the client's omni-chain token UTxO to the user message token. If your default compiler is not the project compiler, run scripts with `CABAL_FLAGS=--with-compiler=ghc-9.6.7`. Run the numbered scripts in order; `./04-client-outgoing.sh` depends on the universal-policy token posted by `./03-user-outgoing.sh`.

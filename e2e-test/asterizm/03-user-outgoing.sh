@@ -25,7 +25,10 @@ fi
 #   dstChainId  (8 bytes):  0x01 (destination chain)
 #   dstAddress  (32 bytes): 0x39d2ba91296029aFBE725436B4824cA803e27391
 #   txId        (32 bytes): 0x03
-# Payload: "User outgoing from Cardano!" in hex
+# Payload: abi.decode(payload, (uint, uint, uint)):
+#   dstAddressUint: destination-chain address
+#   amount:         100
+#   txId:           same txId as in the message header
 
 srcChainId="0000000000000038"
 dstChainId="0000000000000001"
@@ -37,18 +40,25 @@ clientPolicyId=$(cabal_run zkfold-cli:asterizm -- policy client \
   --outgoing)
 srcAddress=$(printf "%064s" "$clientPolicyId" | tr ' ' '0')
 txId="0000000000000000000000000000000000000000000000000000000000000003"
-payload=$(echo -n "User outgoing from Cardano!" | xxd -p | tr -d '\n')
+amount=$(printf "%064x" 100)
+payload="${dstAddress}${amount}${txId}"
 
 message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
+omniPolicyId=$(cabal_run zkfold-cli:asterizm -- policy token \
+  --client-vkey-file $keypath/client.vkey \
+  --relayer-vkey-file $keypath/relayer.vkey \
+  --trusted-address "$trustedAddress")
 
 echo "Message: $message"
+echo "Omni-chain token policy ID: $omniPolicyId"
 mkdir -p ./assets
 echo "$message" > ./assets/message-user-outgoing.hex
 echo "Submitting user outgoing message under the universal user policy..."
 
 cabal_run zkfold-cli:asterizm -- user send \
   --core-config-file $configpath \
-  --signing-key-file $keypath/user.skey \
+  --signing-key-file $keypath/client.skey \
   --beneficiary-address $(cat $keypath/client.addr) \
+  --omni-policy-id "$omniPolicyId" \
   "${hash_args[@]}" \
   --message "$message"
