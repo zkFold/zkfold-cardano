@@ -80,11 +80,21 @@ pTrustedAddress = Opt.option trustedAddressReader
         <> Opt.help "Hex-encoded trusted Asterizm address: 8-byte chain id followed by 32-byte address."
     )
 
-pOmniPolicyId :: Parser (Maybe GYMintingPolicyId)
-pOmniPolicyId = Opt.optional $ fromString <$> Opt.strOption
+pOmniTransfer :: Parser (Maybe (GYMintingPolicyId, Integer))
+pOmniTransfer = Opt.optional $ (,) <$> pOmniPolicyId <*> pOmniTokenAmt
+
+pOmniPolicyId :: Parser GYMintingPolicyId
+pOmniPolicyId = fromString <$> Opt.strOption
     ( Opt.long "omni-policy-id"
         <> Opt.metavar "HEX"
-        <> Opt.help "Omni-chain token policy ID. When passed to user send, matching omni-chain tokens are attached to the user message UTxO."
+        <> Opt.help "Omni-chain token policy ID. Must be paired with --omni-token-amt."
+    )
+
+pOmniTokenAmt :: Parser Integer
+pOmniTokenAmt = Opt.option Opt.auto
+    ( Opt.long "omni-token-amt"
+        <> Opt.metavar "INTEGER"
+        <> Opt.help "Amount of empty-name omni-chain tokens to attach to the user message UTxO."
     )
 
 ----- :parsing MessageDirection: -----

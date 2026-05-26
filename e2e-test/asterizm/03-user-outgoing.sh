@@ -60,5 +60,6 @@ cabal_run zkfold-cli:asterizm -- user send \
   --signing-key-file $keypath/client.skey \
   --beneficiary-address $(cat $keypath/client.addr) \
   --omni-policy-id "$omniPolicyId" \
+  --omni-token-amt 100 \
   "${hash_args[@]}" \
   --message "$message"

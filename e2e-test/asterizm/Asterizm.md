@@ -230,7 +230,7 @@ Available options:
 
 Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID returned by `policy user`, not the client policy returned by `policy client --outgoing`. A later `client send` transaction consumes and burns this token before minting the client-policy token.
 
-When `--omni-policy-id` is provided, `user send` also consumes one of the signer's UTxOs containing enough empty-name omni-chain tokens and places those tokens in the same output as the user message token. This prepares the outgoing `client token burn` transaction.
+When `--omni-policy-id` and `--omni-token-amt` are provided, `user send` also consumes one of the signer's UTxOs containing enough empty-name omni-chain tokens and places exactly that token amount in the same output as the user message token. This prepares the outgoing `client token burn` transaction.
 
 ```shell
 cabal run zkfold-cli:asterizm -- user send --help
@@ -240,7 +240,7 @@ cabal run zkfold-cli:asterizm -- user send --help
 Usage: asterizm user send --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --beneficiary-address ADDRESS
-  [--omni-policy-id HEX]
+  [--omni-policy-id HEX --omni-token-amt INTEGER]
   [--crosschain-hash]
   --message HEX
 
@@ -251,9 +251,10 @@ Available options:
                            Payment signing key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
-  --omni-policy-id HEX     Omni-chain token policy ID. When passed to user send,
-                           matching omni-chain tokens are attached to the user
-                           message UTxO.
+  --omni-policy-id HEX     Omni-chain token policy ID. Must be paired with
+                           --omni-token-amt.
+  --omni-token-amt INTEGER Amount of empty-name omni-chain tokens to attach to
+                           the user message UTxO.
   --crosschain-hash        Use the Asterizm cross-chain hash instead of
                            regular SHA-256.
   --message HEX            Hex-encoded Asterizm structured message.
@@ -520,7 +521,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- client token mint \
 Any user can initiate an outgoing message by minting and sending a token under the universal user policy:
 
 *Note:* The resulting token is minted under `policy user`. If you are scanning for messages created by `user send`, do not derive `policy client --outgoing` for that purpose.
-For token transfers, pass the omni-chain policy ID so the user's message token and the omni-chain tokens are placed in the same UTxO. Run this step before `client token burn` for the same message.
+For token transfers, pass the omni-chain policy ID and token amount so the user's message token and the selected omni-chain tokens are placed in the same UTxO. Run this step before `client token burn` for the same message.
 
 ```shell
 asterizm$ omniPolicyId=$(cabal run zkfold-cli:asterizm -- policy token \
@@ -533,6 +534,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- user send \
   --signing-key-file ./keys/client.skey \
   --beneficiary-address $(cat ./keys/client.addr) \
   --omni-policy-id "$omniPolicyId" \
+  --omni-token-amt 100 \
   --message "$outgoingMessage"
 ```
 
@@ -592,4 +594,4 @@ Client's messages on-chain:
 
 ---
 
-*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client`, `./00-keygen.sh relayer`, and `./00-keygen.sh user`, then fund the client, relayer, and user addresses before running the scripts. The token-transfer outgoing script signs `user send` with the client key so it can attach the client's omni-chain token UTxO to the user message token. If your default compiler is not the project compiler, run scripts with `CABAL_FLAGS=--with-compiler=ghc-9.6.7`. Run the numbered scripts in order; `./04-client-outgoing.sh` depends on the universal-policy token posted by `./03-user-outgoing.sh`.
+*Note:*  You can reproduce this workflow using the shell scripts provided in directory `./e2e-test/asterizm`.  (Make this your active directory.)  Generate keys using `./00-keygen.sh client`, `./00-keygen.sh relayer`, and `./00-keygen.sh user`, then fund the client, relayer, and user addresses before running the scripts. The token-transfer outgoing script signs `user send` with the client key so it can attach the selected amount from the client's omni-chain token UTxO to the user message token. If your default compiler is not the project compiler, run scripts with `CABAL_FLAGS=--with-compiler=ghc-9.6.7`. Run the numbered scripts in order; `./04-client-outgoing.sh` depends on the universal-policy token posted by `./03-user-outgoing.sh`.

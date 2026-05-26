@@ -198,7 +198,7 @@ pTransactionAsterizmUser = do
                 <$> pGYCoreConfigFile
                 <*> pSigningKeyFile
                 <*> pBenefOutAddress
-                <*> pOmniPolicyId
+                <*> pOmniTransfer
                 <*> pHashMode
                 <*> pMessage
 
