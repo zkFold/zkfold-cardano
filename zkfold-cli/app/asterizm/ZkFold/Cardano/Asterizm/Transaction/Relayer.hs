@@ -8,9 +8,9 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus, submitTxWithCborOnFailure)
+import           ZkFold.Cardano.Asterizm.Utils (hashMessage, policyFromPlutus, submitTxWithCborOnFailure)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
-import           ZkFold.Cardano.UPLC.Asterizm  (asterizmRelayerCompiled)
+import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmHashMode, asterizmRelayerCompiled)
 
 
 data Transaction = Transaction
@@ -18,11 +18,12 @@ data Transaction = Transaction
   , signingKeyFile  :: !FilePath
   , relayerVKeyFile :: !FilePath
   , outAddress      :: !GYAddress
-  , messageHash     :: !BS.ByteString
+  , hashMode        :: !AsterizmHashMode
+  , message         :: !BS.ByteString
   }
 
 relayerMint :: Transaction -> IO ()
-relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo msgHash) = do
+relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo mode msg) = do
   coreCfg     <- coreConfigIO cfgFile
   skey        <- readPaymentSigningKey skeyFile
   relayerVkey <- readPaymentVerificationKey relayerVkeyFile
@@ -32,6 +33,8 @@ relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo msgHash) = do
   let signerPkh = pubKeyHash $ paymentVerificationKey skey
       changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
       w1         = User' skey Nothing changeAddr
+
+  let msgHash = hashMessage mode msg
 
   let relayerPkh = pubKeyHash relayerVkey
       redeemer = redeemerFromPlutusData $ toBuiltin msgHash
@@ -43,7 +46,9 @@ relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo msgHash) = do
       token      = GYToken policyId tokenName
       tokenValue = valueSingleton token 1
 
-  let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue Nothing Nothing)
+  let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
+
+  let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
               <> mustMint policy redeemer tokenName 1
               <> mustBeSignedBy relayerPkh
 

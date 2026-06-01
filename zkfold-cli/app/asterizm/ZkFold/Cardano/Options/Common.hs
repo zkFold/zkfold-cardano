@@ -53,13 +53,6 @@ trustedAddressReader = Opt.eitherReader $ \s ->
 
 ----- :parsing Message: -----
 
-pMessageHash :: Parser BS.ByteString
-pMessageHash = Opt.option hexReader
-    ( Opt.long "message-hash"
-        <> Opt.metavar "HEX"
-        <> Opt.help "Hex-encoded Asterizm message hash (32 bytes)."
-    )
-
 pMessage :: Parser BS.ByteString
 pMessage = Opt.option hexReader
     ( Opt.long "message"

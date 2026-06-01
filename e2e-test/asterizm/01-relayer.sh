@@ -46,9 +46,6 @@ payload="${dstAddressUint}${amount}${txId}"
 
 message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
 
-# Compute hash for relayer
-messageHash=$(cabal_run zkfold-cli:asterizm -- hash "${hash_args[@]}" --message "$message" | tr -d '"')
-
 echo "Message: $message"
 echo "Message hash: $messageHash"
 
@@ -61,4 +58,5 @@ cabal_run zkfold-cli:asterizm -- relayer \
   --signing-key-file $keypath/relayer.skey \
   --relayer-vkey-file $keypath/relayer.vkey \
   --beneficiary-address $(cat $keypath/relayer.addr) \
-  --message-hash "$messageHash"
+  "${hash_args[@]}" \
+  --message "$message"

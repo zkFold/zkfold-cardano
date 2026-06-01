@@ -6,12 +6,12 @@ CLI commands are provided to
 
 - compute the hash of a message
 - derive client and relayer policy IDs
-- relayer's certification of the message's hash
+- relayer's certification of the message and its hash
 - client's sending of outgoing messages to the blockchain
 - client's receiving of incoming messages with relayer verification
 - retrieval of messages posted on the blockchain
 
-Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the hash of the message. Regular SHA-256 is used by default; pass `--crosschain-hash` on message-bearing commands when the Asterizm cross-chain hash is required. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
+Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the hash of the message, and the message itself is posted as inline datum. Regular SHA-256 is used by default; pass `--crosschain-hash` on message-bearing commands when the Asterizm cross-chain hash is required. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
 
 ## Generalities
 
@@ -166,7 +166,7 @@ Available options:
 
 ### relayer
 
-Command used by a relayer to mint a token certifying a client's message.
+Command used by a relayer to mint a token certifying a client's message. The token-name is derived from the selected message hash, and the full message is posted as inline datum.
 
 ```shell
 cabal run zkfold-cli:asterizm -- relayer --help
@@ -177,7 +177,8 @@ Usage: asterizm relayer --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --relayer-vkey-file FILEPATH
   --beneficiary-address ADDRESS
-  --message-hash HEX
+  [--crosschain-hash]
+  --message HEX
 
 Available options:
   --core-config-file FILEPATH
@@ -188,7 +189,9 @@ Available options:
                            relayer's payment verification key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
-  --message-hash HEX       Hex-encoded Asterizm message hash (32 bytes).
+  --crosschain-hash        Use the Asterizm cross-chain hash instead of
+                           regular SHA-256.
+  --message HEX            Hex-encoded Asterizm structured message.
   -h,--help                Show this help text
 ```
 
@@ -468,26 +471,25 @@ asterizm$ cabal run zkfold-cli:asterizm -- policy relayer \
 
 ### Relayer
 
-The relayer mints a certification token for an incoming message:
+The relayer mints a certification token for an incoming message and posts the message as inline datum:
 
 ```shell
-asterizm$ # Build message and compute hash
+asterizm$ # Build message
 asterizm$ message="0000000000000001...48656c6c6f2c20417374657269...<<hex message>>"
-asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- hash --message "$message" | tr -d '"')
 
 asterizm$ cabal run zkfold-cli:asterizm -- relayer \
   --core-config-file ./assets/config.json \
   --signing-key-file ./keys/relayer.skey \
   --relayer-vkey-file ./keys/relayer.vkey \
   --beneficiary-address $(cat ./keys/relayer.addr) \
-  --message-hash "$messageHash"
+  --message "$message"
 ```
 
 ```output
 "<transaction-id>"
 ```
 
-Pass `--crosschain-hash` to `hash` here, and to the matching `client receive`, `client token mint`, `user send`, `client send`, or `client token burn` command below, when the token-name must use the Asterizm cross-chain hash.
+Pass `--crosschain-hash` to `relayer` here, and to the matching `client receive`, `client token mint`, `user send`, `client send`, or `client token burn` command below, when the token-name must use the Asterizm cross-chain hash.
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 
