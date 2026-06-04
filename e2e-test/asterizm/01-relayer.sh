@@ -45,8 +45,11 @@ amount=$(printf "%064x" 100)
 payload="${dstAddressUint}${amount}${txId}"
 
 message="${srcChainId}${srcAddress}${dstChainId}${dstAddress}${txId}${payload}"
+messageHeader="${message:0:224}"
+messageHash=$(cabal_run zkfold-cli:asterizm -- hash "${hash_args[@]}" --message "$message" | tr -d '"')
 
 echo "Message: $message"
+echo "Message header: $messageHeader"
 echo "Message hash: $messageHash"
 
 # Save message for use by client-incoming script
@@ -58,5 +61,5 @@ cabal_run zkfold-cli:asterizm -- relayer \
   --signing-key-file $keypath/relayer.skey \
   --relayer-vkey-file $keypath/relayer.vkey \
   --beneficiary-address $(cat $keypath/relayer.addr) \
-  "${hash_args[@]}" \
-  --message "$message"
+  --message-header "$messageHeader" \
+  --message-hash "$messageHash"

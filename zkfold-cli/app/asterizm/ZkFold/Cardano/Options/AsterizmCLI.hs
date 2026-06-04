@@ -141,8 +141,8 @@ pTransactionAsterizmRelayer = do
             <*> pSigningKeyFile
             <*> pVerificationKeyFile "relayer"
             <*> pBenefOutAddress
-            <*> pHashMode
-            <*> pMessage
+            <*> pMessageHeader
+            <*> pMessageHash
 
 -- | Parser for policy subcommands (client/relayer)
 pTransactionAsterizmPolicy :: Parser ClientCommand

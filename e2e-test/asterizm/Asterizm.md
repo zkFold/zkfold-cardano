@@ -11,7 +11,7 @@ CLI commands are provided to
 - client's receiving of incoming messages with relayer verification
 - retrieval of messages posted on the blockchain
 
-Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the hash of the message, and the message itself is posted as inline datum. Regular SHA-256 is used by default; pass `--crosschain-hash` on message-bearing commands when the Asterizm cross-chain hash is required. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
+Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the externally supplied hash of the message, and the message header is posted as inline datum. Regular SHA-256 is used by default by helper commands; pass `--crosschain-hash` to those helper/client commands when the Asterizm cross-chain hash is required. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
 
 ## Generalities
 
@@ -166,7 +166,7 @@ Available options:
 
 ### relayer
 
-Command used by a relayer to mint a token certifying a client's message. The token-name is derived from the selected message hash, and the full message is posted as inline datum.
+Command used by a relayer to mint a token certifying a client's message. The token-name is the supplied message hash, and the message header is posted as inline datum. Hashing is external to the relayer command.
 
 ```shell
 cabal run zkfold-cli:asterizm -- relayer --help
@@ -177,8 +177,8 @@ Usage: asterizm relayer --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --relayer-vkey-file FILEPATH
   --beneficiary-address ADDRESS
-  [--crosschain-hash]
-  --message HEX
+  --message-header HEX
+  --message-hash HEX
 
 Available options:
   --core-config-file FILEPATH
@@ -189,9 +189,9 @@ Available options:
                            relayer's payment verification key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
-  --crosschain-hash        Use the Asterizm cross-chain hash instead of
-                           regular SHA-256.
-  --message HEX            Hex-encoded Asterizm structured message.
+  --message-header HEX     Hex-encoded Asterizm message header (112 bytes,
+                           excluding payload).
+  --message-hash HEX       Hex-encoded Asterizm message hash (32 bytes).
   -h,--help                Show this help text
 ```
 
@@ -471,25 +471,28 @@ asterizm$ cabal run zkfold-cli:asterizm -- policy relayer \
 
 ### Relayer
 
-The relayer mints a certification token for an incoming message and posts the message as inline datum:
+The relayer mints a certification token for an incoming message and posts the message header as inline datum:
 
 ```shell
-asterizm$ # Build message
+asterizm$ # Build message, then split header and hash externally
 asterizm$ message="0000000000000001...48656c6c6f2c20417374657269...<<hex message>>"
+asterizm$ messageHeader="${message:0:224}"
+asterizm$ messageHash=$(cabal run zkfold-cli:asterizm -- hash --message "$message" | tr -d '"')
 
 asterizm$ cabal run zkfold-cli:asterizm -- relayer \
   --core-config-file ./assets/config.json \
   --signing-key-file ./keys/relayer.skey \
   --relayer-vkey-file ./keys/relayer.vkey \
   --beneficiary-address $(cat ./keys/relayer.addr) \
-  --message "$message"
+  --message-header "$messageHeader" \
+  --message-hash "$messageHash"
 ```
 
 ```output
 "<transaction-id>"
 ```
 
-Pass `--crosschain-hash` to `relayer` here, and to the matching `client receive`, `client token mint`, `user send`, `client send`, or `client token burn` command below, when the token-name must use the Asterizm cross-chain hash.
+Pass `--crosschain-hash` to `hash` here, and to the matching `client receive`, `client token mint`, `user send`, `client send`, or `client token burn` command below, when the token-name must use the Asterizm cross-chain hash.
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 
