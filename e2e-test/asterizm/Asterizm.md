@@ -189,8 +189,8 @@ Available options:
                            relayer's payment verification key file.
   --beneficiary-address ADDRESS
                            Address of beneficiary receiving token(s).
-  --message-header HEX     Hex-encoded Asterizm message header (112 bytes,
-                           excluding payload).
+  --message-header HEX     Hex-encoded Asterizm message header (excluding
+                           payload).
   --message-hash HEX       Hex-encoded Asterizm message hash (32 bytes).
   -h,--help                Show this help text
 ```
@@ -493,6 +493,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- relayer \
 ```
 
 Pass `--crosschain-hash` to `hash` here, and to the matching `client receive`, `client token mint`, `user send`, `client send`, or `client token burn` command below, when the token-name must use the Asterizm cross-chain hash.
+This sample message has a 112-byte header, so `messageHeader` uses the first 224 hex characters. If your header includes extra flags, pass the complete header instead.
 
 ![relayer Tx](figures/03-relayer-tx.svg)
 

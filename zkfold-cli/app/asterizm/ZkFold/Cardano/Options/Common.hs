@@ -51,14 +51,6 @@ trustedAddressReader = Opt.eitherReader $ \s ->
       | BS.length bs == 40 -> Right bs
       | otherwise -> Left "Trusted address must be 40 bytes: 8-byte chain id followed by 32-byte address."
 
-messageHeaderReader :: Opt.ReadM BS.ByteString
-messageHeaderReader = Opt.eitherReader $ \s ->
-  case B16.decode $ BS.pack s of
-    Left err -> Left $ "Invalid hex string: " ++ err
-    Right bs
-      | BS.length bs == 112 -> Right bs
-      | otherwise -> Left "Message header must be 112 bytes."
-
 messageHashReader :: Opt.ReadM BS.ByteString
 messageHashReader = Opt.eitherReader $ \s ->
   case B16.decode $ BS.pack s of
@@ -77,10 +69,10 @@ pMessageHash = Opt.option messageHashReader
     )
 
 pMessageHeader :: Parser BS.ByteString
-pMessageHeader = Opt.option messageHeaderReader
+pMessageHeader = Opt.option hexReader
     ( Opt.long "message-header"
         <> Opt.metavar "HEX"
-        <> Opt.help "Hex-encoded Asterizm message header (112 bytes, excluding payload)."
+        <> Opt.help "Hex-encoded Asterizm message header (excluding payload)."
     )
 
 pMessage :: Parser BS.ByteString
