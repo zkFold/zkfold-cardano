@@ -10,7 +10,7 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (hashMessage, hashModeRedeemer, omniTokenNameGY, policyFromPlutus,
-                                                submitTxWithCborOnFailure)
+                                                paymentUserWithCollateral, submitTxWithCborOnFailure)
 import           ZkFold.Cardano.UPLC.Asterizm  (AsterizmHashMode, asterizmUserCompiled)
 
 
@@ -36,10 +36,6 @@ userSend (SendTransaction cfgFile skeyFile sendTo mOmniTransfer hashMode msg) = 
 
   let nid = cfgNetworkId coreCfg
 
-  let signerPkh = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
-      w1         = User' skey Nothing changeAddr
-
   let plutusPolicy       = asterizmUserCompiled
       (policy, policyId) = policyFromPlutus plutusPolicy
 
@@ -51,6 +47,9 @@ userSend (SendTransaction cfgFile skeyFile sendTo mOmniTransfer hashMode msg) = 
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    w1 <- paymentUserWithCollateral nid providers skey
+    let changeAddr = userChangeAddress w1
+
     skeleton <- case mOmniTransfer of
       Nothing -> pure $
           mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)

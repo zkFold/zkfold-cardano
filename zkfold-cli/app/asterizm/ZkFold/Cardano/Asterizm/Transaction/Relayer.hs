@@ -8,7 +8,8 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (policyFromPlutus, submitTxWithCborOnFailure)
+import           ZkFold.Cardano.Asterizm.Utils (paymentUserWithCollateral, policyFromPlutus,
+                                                submitTxWithCborOnFailure)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmRelayerCompiled)
 
@@ -30,10 +31,6 @@ relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo msgHeader msgHa
 
   let nid = cfgNetworkId coreCfg
 
-  let signerPkh = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
-      w1         = User' skey Nothing changeAddr
-
   let relayerPkh = pubKeyHash relayerVkey
       redeemer = redeemerFromPlutusData $ toBuiltin msgHash
 
@@ -51,6 +48,8 @@ relayerMint (Transaction cfgFile skeyFile relayerVkeyFile sendTo msgHeader msgHa
               <> mustBeSignedBy relayerPkh
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    w1 <- paymentUserWithCollateral nid providers skey
+
     txbody <- runGYTxGameMonadIO nid
                                  providers $
                                  asUser w1

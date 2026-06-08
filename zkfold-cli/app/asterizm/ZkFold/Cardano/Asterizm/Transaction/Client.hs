@@ -11,8 +11,8 @@ import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Utils (clientActionRedeemer, hashMessage, hashModeRedeemer,
-                                                omniTokenNameGY, policyFromPlutus, submitTxWithCborOnFailure,
-                                                tokenTransferAmount)
+                                                omniTokenNameGY, paymentUserWithCollateral, policyFromPlutus,
+                                                submitTxWithCborOnFailure, tokenTransferAmount)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, asterizmUserCompiled,
                                                 asterizmOmniTokenCompiled, AsterizmHashMode,
@@ -77,10 +77,6 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles tru
 
   let nid = cfgNetworkId coreCfg
 
-  let signerPkh = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
-      w1         = User' skey Nothing changeAddr
-
   let relayerPolicyIds = fmap (snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
       relayerCSs       = mintingPolicyIdToCurrencySymbol <$> relayerPolicyIds
 
@@ -99,6 +95,8 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles tru
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    w1 <- paymentUserWithCollateral nid providers skey
+
     userUtxos <- runGYTxQueryMonadIO nid providers $ utxosWithAsset (GYNonAdaToken userPolicyId tokenName)
 
     userUtxo <- case utxosToList userUtxos of
@@ -135,10 +133,6 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
 
   let nid = cfgNetworkId coreCfg
 
-  let signerPkh = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
-      w1         = User' skey Nothing changeAddr
-
   -- Derive relayer policy IDs from their verification keys
   let relayerPolicyIds = fmap (snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
       relayerCSs       = mintingPolicyIdToCurrencySymbol <$> relayerPolicyIds
@@ -159,6 +153,8 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    w1 <- paymentUserWithCollateral nid providers skey
+
     -- Find relayer's token as reference input
     relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
       Right pids -> pure $ (`GYNonAdaToken` tokenName) <$> pids
@@ -200,10 +196,6 @@ clientTokenMint (TokenMintTransaction cfgFile skeyFile clientVkeyFile relayerVke
 
   let nid = cfgNetworkId coreCfg
 
-  let signerPkh = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
-      w1         = User' skey Nothing changeAddr
-
   let relayerPolicyIds = fmap (snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
       relayerCSs       = mintingPolicyIdToCurrencySymbol <$> relayerPolicyIds
 
@@ -226,6 +218,8 @@ clientTokenMint (TokenMintTransaction cfgFile skeyFile clientVkeyFile relayerVke
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    w1 <- paymentUserWithCollateral nid providers skey
+
     relayerTokens <- case mapM mintingPolicyIdFromCurrencySymbol relayerCSs of
       Right pids -> pure $ (`GYNonAdaToken` tokenName) <$> pids
       Left _     -> throwIO $ userError "Corrupted relayers' registry."
@@ -268,10 +262,6 @@ clientTokenBurn (TokenBurnTransaction cfgFile skeyFile clientVkeyFile relayerVke
 
   let nid = cfgNetworkId coreCfg
 
-  let signerPkh = pubKeyHash $ paymentVerificationKey skey
-      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
-      w1         = User' skey Nothing changeAddr
-
   let relayerPolicyIds = fmap (snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
       relayerCSs       = mintingPolicyIdToCurrencySymbol <$> relayerPolicyIds
 
@@ -293,6 +283,8 @@ clientTokenBurn (TokenBurnTransaction cfgFile skeyFile clientVkeyFile relayerVke
   let inlineDatum = Just (datumFromPlutusData (toBuiltin msg), GYTxOutUseInlineDatum @PlutusV3)
 
   withCfgProviders coreCfg "zkfold-cli" $ \providers -> do
+    w1 <- paymentUserWithCollateral nid providers skey
+
     userUtxos <- runGYTxQueryMonadIO nid providers $ utxosWithAsset (GYNonAdaToken userPolicyId tokenName)
 
     userUtxo <- case filter (\u -> valueAssetClass (utxoValue u) omniToken >= amount) $ utxosToList userUtxos of

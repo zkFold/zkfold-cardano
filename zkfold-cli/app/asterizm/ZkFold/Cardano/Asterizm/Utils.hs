@@ -3,7 +3,8 @@ module ZkFold.Cardano.Asterizm.Utils where
 import           Control.Exception      (SomeException, catch, throwIO)
 import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Base16 as B16
-import           Data.Maybe             (fromJust)
+import           Data.List              (sortOn)
+import           Data.Maybe             (fromJust, listToMaybe)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           GeniusYield.TxBuilder
@@ -23,6 +24,27 @@ policyFromPlutus plutusPolicy = (policy, policyId)
     mintScript = scriptFromPlutus @PlutusV3 plutusPolicy
     policy     = GYMintScript @PlutusV3 mintScript
     policyId   = mintingPolicyIdFromWitness policy
+
+-- | Build a payment-key user and reserve a pure-ADA collateral UTxO, if present.
+paymentUserWithCollateral :: GYNetworkId -> GYProviders -> GYPaymentSigningKey -> IO User
+paymentUserWithCollateral nid providers skey = do
+  let signerPkh = pubKeyHash $ paymentVerificationKey skey
+      changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
+  (ownUtxos, pp) <- runGYTxQueryMonadIO nid providers $ (,) <$> utxosAtAddress changeAddr Nothing <*> protocolParams
+  let minCollateralInput = valueAssetClass (maximumRequiredCollateralValue pp 0) GYLovelace + 1_000_000
+      collateral = (\u -> UserCollateral (utxoRef u) False) <$> selectCollateral minCollateralInput ownUtxos
+  pure (User' skey Nothing changeAddr) { userCollateral = collateral }
+
+selectCollateral :: Integer -> GYUTxOs -> Maybe GYUTxO
+selectCollateral minCollateralInput =
+  listToMaybe
+    . sortOn (flip valueAssetClass GYLovelace . utxoValue)
+    . filter isPureAdaCollateral
+    . utxosToList
+  where
+    isPureAdaCollateral u = case valueToList $ utxoValue u of
+      [(GYLovelace, n)] -> n >= minCollateralInput
+      _                 -> False
 
 -- | Convert ByteString to hex Text.
 bsToHex :: BS.ByteString -> T.Text
