@@ -36,8 +36,8 @@ dstAddress="00000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
 trustedAddress="${dstChainId}${dstAddress}"
 clientPolicyId=$(cabal_run zkfold-cli:asterizm -- policy client \
   --client-vkey-file $keypath/client.vkey \
-  --trusted-address "$trustedAddress" \
-  --outgoing)
+  --relayer-vkey-file $keypath/relayer.vkey \
+  --trusted-address "$trustedAddress")
 srcAddress=$(printf "%064s" "$clientPolicyId" | tr ' ' '0')
 txId="0000000000000000000000000000000000000000000000000000000000000003"
 amount=$(printf "%064x" 100)

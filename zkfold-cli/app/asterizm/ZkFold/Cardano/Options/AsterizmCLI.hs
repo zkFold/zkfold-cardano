@@ -74,6 +74,7 @@ pTransactionAsterizmClient = do
                 <$> pGYCoreConfigFile
                 <*> pSigningKeyFile
                 <*> pVerificationKeyFile "client"
+                <*> many (pVerificationKeyFile "relayer")
                 <*> many pTrustedAddress
                 <*> pBenefOutAddress
                 <*> pHashMode
@@ -163,7 +164,6 @@ pTransactionAsterizmPolicy = do
                 <$> pVerificationKeyFile "client"
                 <*> many (pVerificationKeyFile "relayer")
                 <*> many pTrustedAddress
-                <*> pMessageDirection
 
     pPolicyRelayer = subParser "relayer" $ Opt.info pRelayerCmd $ Opt.progDescDoc Nothing
       where

@@ -97,9 +97,3 @@ data MessageDirection
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
--- | Convert direction to Bool for on-chain script parameter.
-directionToBool :: MessageDirection -> Bool
-directionToBool Incoming = True
-directionToBool Outgoing = False
-
-

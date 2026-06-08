@@ -30,6 +30,13 @@ data AsterizmHashMode =
 
 makeIsDataIndexed ''AsterizmHashMode [('RegularHash,0),('CrosschainHash,1)]
 
+data AsterizmClientAction =
+    ClientIncoming AsterizmHashMode
+  | ClientOutgoing AsterizmHashMode
+  deriving stock (Show, Generic)
+
+makeIsDataIndexed ''AsterizmClientAction [('ClientIncoming,0),('ClientOutgoing,1)]
+
 data AsterizmOmniTokenAction =
     OmniTokenMint
   | OmniTokenBurn
@@ -82,16 +89,14 @@ untypedAsterizmRelayer pkh ctx' = check conditionSigned
     conditionSigned = txSignedBy info pkh
 
 -- | Plutus script (minting policy) for posting actual messages on-chain.
--- When @isIncoming@ is True, validates relayer reference input (incoming cross-chain message).
--- When @isIncoming@ is False, skips relayer verification (outgoing cross-chain message).
+-- Incoming messages validate a relayer reference input.
+-- Outgoing messages validate and burn a user approval token.
 {-# INLINABLE untypedAsterizmClient #-}
-untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> Bool -> BuiltinData -> BuiltinUnit
-untypedAsterizmClient clientPKH allowedRelayers _ trustedAddresses True ctx' =
+untypedAsterizmClient :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> BuiltinData -> BuiltinUnit
+untypedAsterizmClient clientPKH allowedRelayers userCS trustedAddresses ctx' =
     let ctx = unsafeFromBuiltinData ctx'
-        hashMode = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
+        action = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
         info = scriptContextTxInfo ctx
-        refInputs = txInInfoResolved <$> txInfoReferenceInputs info
-        valueReferenced = foldMap txOutValue refInputs
         minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
         (tn, _) = case minted of
           Just [x] -> x
@@ -99,38 +104,30 @@ untypedAsterizmClient clientPKH allowedRelayers _ trustedAddresses True ctx' =
         message = case txOutDatum . head $ txInfoOutputs info of
           OutputDatum d -> unsafeFromBuiltinData $ getDatum d
           _             -> traceError "Expected output datum"
-        tokenName = TokenName $ buildAsterizmHash hashMode message
         conditionSigned = txSignedBy info clientPKH
-        conditionMinting = tn == tokenName
-        conditionSourceTrusted = trustedSource trustedAddresses message
-        conditionDestinationClient = clientDestination ctx message
-        relayerCS = case find (\s -> s /= adaSymbol && s `elem` allowedRelayers) $ symbols valueReferenced of
-          Just cs -> cs
-          Nothing -> traceError "Unrecognized relayer"
-        conditionVerifying = hasToken relayerCS tokenName valueReferenced
-    in check $ conditionSigned && conditionMinting && conditionSourceTrusted && conditionDestinationClient && conditionVerifying
-
-untypedAsterizmClient clientPKH _ userCS trustedAddresses False ctx' =
-    let ctx = unsafeFromBuiltinData ctx'
-        hashMode = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
-        info = scriptContextTxInfo ctx
-        inputs = txInInfoResolved <$> txInfoInputs info
-        valueSpent = foldMap txOutValue inputs
-        minted = fmapDefault toList . lookup (ownCurrencySymbol ctx) . mintValueToMap $ txInfoMint info
-        (tn, _) = case minted of
-          Just [x] -> x
-          _        -> traceError "Expected exactly one minting action"
-        message = case txOutDatum . head $ txInfoOutputs info of
-          OutputDatum d -> unsafeFromBuiltinData $ getDatum d
-          _             -> traceError "Expected output datum"
-        tokenName = TokenName $ buildAsterizmHash hashMode message
-        conditionSigned = txSignedBy info clientPKH
-        conditionMinting = tn == tokenName
-        conditionUserApproved = hasToken userCS tokenName valueSpent
-        conditionUserBurned = tokenMintAmount userCS tokenName info == negate 1
-        conditionSourceClient = clientSource ctx message
-        conditionDestinationTrusted = trustedDestination trustedAddresses message
-    in check $ conditionSigned && conditionMinting && conditionUserApproved && conditionUserBurned && conditionSourceClient && conditionDestinationTrusted
+    in case action of
+      ClientIncoming hashMode ->
+        let refInputs = txInInfoResolved <$> txInfoReferenceInputs info
+            valueReferenced = foldMap txOutValue refInputs
+            tokenName = TokenName $ buildAsterizmHash hashMode message
+            conditionMinting = tn == tokenName
+            conditionSourceTrusted = trustedSource trustedAddresses message
+            conditionDestinationClient = clientDestination ctx message
+            relayerCS = case find (\s -> s /= adaSymbol && s `elem` allowedRelayers) $ symbols valueReferenced of
+              Just cs -> cs
+              Nothing -> traceError "Unrecognized relayer"
+            conditionVerifying = hasToken relayerCS tokenName valueReferenced
+        in check $ conditionSigned && conditionMinting && conditionSourceTrusted && conditionDestinationClient && conditionVerifying
+      ClientOutgoing hashMode ->
+        let inputs = txInInfoResolved <$> txInfoInputs info
+            valueSpent = foldMap txOutValue inputs
+            tokenName = TokenName $ buildAsterizmHash hashMode message
+            conditionMinting = tn == tokenName
+            conditionUserApproved = hasToken userCS tokenName valueSpent
+            conditionUserBurned = tokenMintAmount userCS tokenName info == negate 1
+            conditionSourceClient = clientSource ctx message
+            conditionDestinationTrusted = trustedDestination trustedAddresses message
+        in check $ conditionSigned && conditionMinting && conditionUserApproved && conditionUserBurned && conditionSourceClient && conditionDestinationTrusted
 
 {-# INLINABLE hasToken #-}
 hasToken :: CurrencySymbol -> TokenName -> Value -> Bool
@@ -174,14 +171,13 @@ asterizmRelayerCompiled pkh =
     $$(compile [|| untypedAsterizmRelayer ||])
     `unsafeApplyCode` liftCodeDef pkh
 
-asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> Bool -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming =
+asterizmClientCompiled :: PubKeyHash -> [CurrencySymbol] -> CurrencySymbol -> [TrustedAddress] -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses =
     $$(compile [|| untypedAsterizmClient ||])
     `unsafeApplyCode` liftCodeDef clientPKH
     `unsafeApplyCode` liftCodeDef allowedRelayers
     `unsafeApplyCode` liftCodeDef userCS
     `unsafeApplyCode` liftCodeDef trustedAddresses
-    `unsafeApplyCode` liftCodeDef isIncoming
 
 -- | Plutus script (minting policy) for posting user messages on-chain.
 -- Unlike the client policy, this policy is not parameterized by any public key hash.
@@ -302,18 +298,15 @@ hasInputWithTokens userCS userTN omniCS omniTN amount inputs = case inputs of
         || hasInputWithTokens userCS userTN omniCS omniTN amount is
 
 {-# INLINABLE untypedAsterizmOmniToken #-}
-untypedAsterizmOmniToken :: CurrencySymbol -> CurrencySymbol -> CurrencySymbol -> BuiltinData -> BuiltinUnit
-untypedAsterizmOmniToken incomingClientCS outgoingClientCS userCS ctx' =
+untypedAsterizmOmniToken :: CurrencySymbol -> CurrencySymbol -> BuiltinData -> BuiltinUnit
+untypedAsterizmOmniToken clientCS userCS ctx' =
     let ctx = unsafeFromBuiltinData ctx'
         action = unsafeFromBuiltinData . getRedeemer . scriptContextRedeemer $ ctx
         info = scriptContextTxInfo ctx
         ownCS = ownCurrencySymbol ctx
         ownAmount = ownTokenAmount ownCS omniTokenName info
-        proofCS = case action of
-          OmniTokenMint -> incomingClientCS
-          OmniTokenBurn -> outgoingClientCS
-        (proofTN, proofAmount) = mintedToken proofCS info
-        message = proofMessage proofCS proofTN $ txInfoOutputs info
+        (proofTN, proofAmount) = mintedToken clientCS info
+        message = proofMessage clientCS proofTN $ txInfoOutputs info
         payload = asterizmTokenPayload message
         dstAddress = asterizmTokenDstAddress payload
         amount = asterizmTokenAmount payload
@@ -331,9 +324,8 @@ untypedAsterizmOmniToken incomingClientCS outgoingClientCS userCS ctx' =
           OmniTokenBurn -> conditionBurn
     in check $ conditionProofMinted && conditionAmountPositive && conditionTxId && conditionAction
 
-asterizmOmniTokenCompiled :: CurrencySymbol -> CurrencySymbol -> CurrencySymbol -> CompiledCode (BuiltinData -> BuiltinUnit)
-asterizmOmniTokenCompiled incomingClientCS outgoingClientCS userCS =
+asterizmOmniTokenCompiled :: CurrencySymbol -> CurrencySymbol -> CompiledCode (BuiltinData -> BuiltinUnit)
+asterizmOmniTokenCompiled clientCS userCS =
     $$(compile [|| untypedAsterizmOmniToken ||])
-    `unsafeApplyCode` liftCodeDef incomingClientCS
-    `unsafeApplyCode` liftCodeDef outgoingClientCS
+    `unsafeApplyCode` liftCodeDef clientCS
     `unsafeApplyCode` liftCodeDef userCS

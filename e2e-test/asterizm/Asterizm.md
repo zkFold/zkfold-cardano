@@ -11,7 +11,7 @@ CLI commands are provided to
 - client's receiving of incoming messages with relayer verification
 - retrieval of messages posted on the blockchain
 
-Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the externally supplied hash of the message, and the message header is posted as inline datum. Regular SHA-256 is used by default by helper commands; pass `--crosschain-hash` to those helper/client commands when the Asterizm cross-chain hash is required. Another token is also minted when client sends the original message to the blockchain, requiring validation that the token-name of a token minted by a valid relayer corresponds to the hash of the message.
+Message certification by a relayer is represented by minting of a token whose policy ID is derived from the relayer's verification key. Its token-name is the externally supplied hash of the message, and the message header is posted as inline datum. Regular SHA-256 is used by default by helper commands; pass `--crosschain-hash` to those helper/client commands when the Asterizm cross-chain hash is required. The client has a single policy ID for both incoming and outgoing proofs. Direction is selected by the minting redeemer, not by a separate client contract.
 
 ## Generalities
 
@@ -85,6 +85,8 @@ cabal run zkfold-cli:asterizm -- hash --crosschain-hash --message HEX
 
 Derives and displays the client's policy ID. Does not interact with the blockchain.
 
+Use the same `--client-vkey-file`, full `--relayer-vkey-file` list, and full `--trusted-address` list everywhere this client contract is referenced. These values are script parameters, so changing any of them derives a different policy ID.
+
 ```shell
 cabal run zkfold-cli:asterizm -- policy client --help
 ```
@@ -93,7 +95,6 @@ cabal run zkfold-cli:asterizm -- policy client --help
 Usage: asterizm policy client --client-vkey-file FILEPATH
   [--relayer-vkey-file FILEPATH]
   [--trusted-address HEX]
-  (--incoming | --outgoing)
 
 Available options:
   --client-vkey-file FILEPATH
@@ -102,10 +103,6 @@ Available options:
                            relayer's payment verification key file.
   --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
                            id followed by 32-byte address.
-  --incoming               Incoming cross-chain message (requires relayer
-                           verification).
-  --outgoing               Outgoing cross-chain message (no relayer verification
-                           needed).
   -h,--help                Show this help text
 ```
 
@@ -143,7 +140,7 @@ Available options:
 
 ### policy token
 
-Displays the omni-chain token policy ID. This policy is parameterized by the incoming client proof policy, outgoing client proof policy, and universal user-message policy. The token name is the empty bytestring.
+Displays the omni-chain token policy ID. This policy is parameterized by the unified client proof policy and universal user-message policy. The token name is the empty bytestring.
 
 ```shell
 cabal run zkfold-cli:asterizm -- policy token --help
@@ -197,7 +194,7 @@ Available options:
 
 ### client send
 
-Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required, but the transaction must consume the user's universal-policy token for the same message hash and burn it while minting the client-policy proof token.
+Command used by client to send an outgoing message (Cardano as source chain). No relayer verification is required for the outgoing transaction, but relayer keys still participate in the unified client policy ID. The transaction must consume the user's universal-policy token for the same message hash and burn it while minting the client-policy proof token.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client send --help
@@ -207,6 +204,7 @@ cabal run zkfold-cli:asterizm -- client send --help
 Usage: asterizm client send --core-config-file FILEPATH
   --signing-key-file FILEPATH
   --client-vkey-file FILEPATH
+  [--relayer-vkey-file FILEPATH]
   [--trusted-address HEX]
   --beneficiary-address ADDRESS
   [--crosschain-hash]
@@ -219,6 +217,8 @@ Available options:
                            Payment signing key file.
   --client-vkey-file FILEPATH
                            client's payment verification key file.
+  --relayer-vkey-file FILEPATH
+                           relayer's payment verification key file.
   --trusted-address HEX    Hex-encoded trusted Asterizm address: 8-byte chain
                            id followed by 32-byte address.
   --beneficiary-address ADDRESS
@@ -231,7 +231,7 @@ Available options:
 
 ### user send
 
-Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID returned by `policy user`, not the client policy returned by `policy client --outgoing`. A later `client send` transaction consumes and burns this token before minting the client-policy token.
+Command for any user to send a message to the blockchain. Unlike `client send`, this does not require a client verification key and does not enforce signature verification on-chain. All users share the same (universal) policy ID returned by `policy user`, not the client policy returned by `policy client`. A later `client send` transaction consumes and burns this token before minting the client-policy token.
 
 When `--omni-policy-id` and `--omni-token-amt` are provided, `user send` also consumes one of the signer's UTxOs containing enough empty-name omni-chain tokens and places exactly that token amount in the same output as the user message token. This prepares the outgoing `client token burn` transaction.
 
@@ -266,7 +266,7 @@ Available options:
 
 ### client token mint
 
-Command used by the client to receive an incoming omni-chain token transfer. It mints the regular incoming client proof token and the empty-name omni-chain tokens in the same transaction.
+Command used by the client to receive an incoming omni-chain token transfer. It mints the unified client proof token with an incoming redeemer and the empty-name omni-chain tokens in the same transaction.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client token mint --help
@@ -303,7 +303,7 @@ Available options:
 
 ### client token burn
 
-Command used by the client to approve an outgoing omni-chain token transfer. It consumes the UTxO containing both the user message token and the empty-name omni-chain tokens, burns both, and mints the regular outgoing client proof token.
+Command used by the client to approve an outgoing omni-chain token transfer. It consumes the UTxO containing both the user message token and the empty-name omni-chain tokens, burns both, and mints the unified client proof token with an outgoing redeemer.
 
 ```shell
 cabal run zkfold-cli:asterizm -- client token burn --help
@@ -430,29 +430,16 @@ This generates verification and signing keys for the client, relayer, and user r
 
 ### Policy IDs
 
-Derive the client and relayer policy IDs. Trusted addresses are encoded as `chainId(8 bytes) || address(32 bytes)`.
+Derive the unified client and relayer policy IDs. Trusted addresses are encoded as `chainId(8 bytes) || address(32 bytes)`.
 
 ```shell
 asterizm$ trustedAddress="000000000000000100000000000000000000000039d2ba91296029afbe725436b4824ca803e27391"
 
-asterizm$ # Client policy ID for incoming messages
+asterizm$ # Unified client policy ID for incoming and outgoing proofs
 asterizm$ cabal run zkfold-cli:asterizm -- policy client \
   --client-vkey-file ./keys/client.vkey \
   --relayer-vkey-file ./keys/relayer.vkey \
-  --trusted-address "$trustedAddress" \
-  --incoming
-```
-
-```output
-<policy-id>
-```
-
-```shell
-asterizm$ # Client policy ID for outgoing messages
-asterizm$ cabal run zkfold-cli:asterizm -- policy client \
-  --client-vkey-file ./keys/client.vkey \
-  --trusted-address "$trustedAddress" \
-  --outgoing
+  --trusted-address "$trustedAddress"
 ```
 
 ```output
@@ -526,7 +513,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- client token mint \
 
 Any user can initiate an outgoing message by minting and sending a token under the universal user policy:
 
-*Note:* The resulting token is minted under `policy user`. If you are scanning for messages created by `user send`, do not derive `policy client --outgoing` for that purpose.
+*Note:* The resulting token is minted under `policy user`. If you are scanning for messages created by `user send`, do not derive `policy client` for that purpose.
 For token transfers, pass the omni-chain policy ID and token amount so the user's message token and the selected omni-chain tokens are placed in the same UTxO. Run this step before `client token burn` for the same message.
 
 ```shell
@@ -550,7 +537,7 @@ asterizm$ cabal run zkfold-cli:asterizm -- user send \
 
 ### Client Token Burn (Outgoing Message)
 
-After a user has posted an outgoing token-transfer message under `policy user`, the client approves it by minting the corresponding client-policy token. The transaction consumes the user's token UTxO, burns the user message token, burns the omni-chain token amount from the payload, and checks the destination trusted address on-chain:
+After a user has posted an outgoing token-transfer message under `policy user`, the client approves it by minting the corresponding unified client-policy token with an outgoing redeemer. The transaction consumes the user's token UTxO, burns the user message token, burns the omni-chain token amount from the payload, and checks the destination trusted address on-chain:
 
 ```shell
 asterizm$ cabal run zkfold-cli:asterizm -- client token burn \
@@ -586,6 +573,7 @@ asterizm$ # Retrieve outgoing messages
 asterizm$ cabal run zkfold-cli:asterizm -- retrieve-messages \
   --core-config-file ./assets/config.json \
   --client-vkey-file ./keys/client.vkey \
+  --relayer-vkey-file ./keys/relayer.vkey \
   --trusted-address "$trustedAddress" \
   --outgoing
 ```
@@ -596,7 +584,7 @@ Client's messages on-chain:
 <token-transfer message bytes>
 ```
 
-*Note:* `retrieve-messages` derives the client's policy ID from `--client-vkey-file`, so it only returns messages minted via `client send`, `client receive`, `client token mint`, or `client token burn`. It does not retrieve transactions created by `user send`.
+*Note:* `retrieve-messages` derives the client's policy ID from the client key, relayer keys, and trusted addresses, then filters datums by message direction. It only returns messages minted via `client send`, `client receive`, `client token mint`, or `client token burn`. It does not retrieve transactions created by `user send`.
 
 ---
 

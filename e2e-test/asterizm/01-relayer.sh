@@ -35,8 +35,7 @@ trustedAddress="${srcChainId}${srcAddress}"
 clientPolicyId=$(cabal_run zkfold-cli:asterizm -- policy client \
   --client-vkey-file $keypath/client.vkey \
   --relayer-vkey-file $keypath/relayer.vkey \
-  --trusted-address "$trustedAddress" \
-  --incoming)
+  --trusted-address "$trustedAddress")
 dstAddress=$(printf "%064s" "$clientPolicyId" | tr ' ' '0')
 txId="0000000000000000000000000000000000000000000000000000000000000001"
 clientPkh=$(cardano-cli address key-hash --payment-verification-key-file $keypath/client.vkey)

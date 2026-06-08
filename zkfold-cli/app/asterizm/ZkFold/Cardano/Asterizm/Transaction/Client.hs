@@ -10,12 +10,13 @@ import           GeniusYield.Types
 import           PlutusLedgerApi.V3            as V3
 import           Prelude
 
-import           ZkFold.Cardano.Asterizm.Utils (hashMessage, hashModeRedeemer, omniTokenNameGY, policyFromPlutus,
-                                                submitTxWithCborOnFailure, tokenTransferAmount)
+import           ZkFold.Cardano.Asterizm.Utils (clientActionRedeemer, hashMessage, hashModeRedeemer,
+                                                omniTokenNameGY, policyFromPlutus, submitTxWithCborOnFailure,
+                                                tokenTransferAmount)
 import           ZkFold.Cardano.Options.Common (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm  (asterizmClientCompiled, asterizmRelayerCompiled, asterizmUserCompiled,
                                                 asterizmOmniTokenCompiled, AsterizmHashMode,
-                                                AsterizmOmniTokenAction (..))
+                                                AsterizmClientAction (..), AsterizmOmniTokenAction (..))
 
 
 -- | Transaction for sending an outgoing cross-chain message.
@@ -23,6 +24,7 @@ data SendTransaction = SendTransaction
   { stCoreCfgFile      :: !FilePath
   , stSigningKeyFile   :: !FilePath
   , stClientVKeyFile   :: !FilePath
+  , stRelayerVKeyFiles :: ![FilePath]
   , stTrustedAddresses :: ![BS.ByteString]
   , stOutAddress       :: !GYAddress
   , stHashMode         :: !AsterizmHashMode
@@ -67,10 +69,11 @@ data TokenBurnTransaction = TokenBurnTransaction
 
 -- | Mint client token for outgoing message (no relayer verification).
 clientSend :: SendTransaction -> IO ()
-clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs sendTo hashMode msg) = do
-  coreCfg    <- coreConfigIO cfgFile
-  skey       <- readPaymentSigningKey skeyFile
-  clientVkey <- readPaymentVerificationKey clientVkeyFile
+clientSend (SendTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFiles trustedAddressBSs sendTo hashMode msg) = do
+  coreCfg      <- coreConfigIO cfgFile
+  skey         <- readPaymentSigningKey skeyFile
+  clientVkey   <- readPaymentVerificationKey clientVkeyFile
+  relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
 
   let nid = cfgNetworkId coreCfg
 
@@ -78,13 +81,14 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs se
       changeAddr = addressFromPaymentKeyHash nid $ fromPubKeyHash signerPkh
       w1         = User' skey Nothing changeAddr
 
+  let relayerPolicyIds = fmap (snd . policyFromPlutus . asterizmRelayerCompiled . pubKeyHashToPlutus . pubKeyHash) relayerVkeys
+      relayerCSs       = mintingPolicyIdToCurrencySymbol <$> relayerPolicyIds
+
   let clientPKH        = pubKeyHashToPlutus $ pubKeyHash clientVkey
-      allowedRelayers  = []  -- Empty for outgoing
       (userPolicy, userPolicyId) = policyFromPlutus asterizmUserCompiled
       userCS           = mintingPolicyIdToCurrencySymbol userPolicyId
       trustedAddresses = toBuiltin <$> trustedAddressBSs
-      isIncoming       = False
-      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming
+      plutusPolicy     = asterizmClientCompiled clientPKH relayerCSs userCS trustedAddresses
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = hashMessage hashMode msg
@@ -103,7 +107,7 @@ clientSend (SendTransaction cfgFile skeyFile clientVkeyFile trustedAddressBSs se
 
     let skeleton = mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
                 <> mustHaveInput (GYTxIn @PlutusV3 (utxoRef userUtxo) GYTxInWitnessKey)
-                <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
+                <> mustMint policy (clientActionRedeemer $ ClientOutgoing hashMode) tokenName 1
                 <> mustMint userPolicy (hashModeRedeemer hashMode) tokenName (-1)
                 <> mustBeSignedBy (pubKeyHash clientVkey)
 
@@ -144,8 +148,7 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
       userPolicyId     = snd . policyFromPlutus $ asterizmUserCompiled
       userCS           = mintingPolicyIdToCurrencySymbol userPolicyId
       trustedAddresses = toBuiltin <$> trustedAddressBSs
-      isIncoming       = True
-      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses isIncoming
+      plutusPolicy     = asterizmClientCompiled clientPKH allowedRelayers userCS trustedAddresses
       (policy, policyId) = policyFromPlutus plutusPolicy
 
   let msgHash    = hashMessage hashMode msg
@@ -169,7 +172,7 @@ clientReceive (ReceiveTransaction cfgFile skeyFile clientVkeyFile relayerVkeyFil
 
     let skeleton = mustHaveRefInput relayerOref
                 <> mustHaveOutput (GYTxOut sendTo tokenValue inlineDatum Nothing)
-                <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
+                <> mustMint policy (clientActionRedeemer $ ClientIncoming hashMode) tokenName 1
                 <> mustBeSignedBy (pubKeyHash clientVkey)
 
     txbody <- runGYTxGameMonadIO nid
@@ -208,12 +211,10 @@ clientTokenMint (TokenMintTransaction cfgFile skeyFile clientVkeyFile relayerVke
       userPolicyId     = snd . policyFromPlutus $ asterizmUserCompiled
       userCS           = mintingPolicyIdToCurrencySymbol userPolicyId
       trustedAddresses = toBuiltin <$> trustedAddressBSs
-      incomingPolicy   = asterizmClientCompiled clientPKH relayerCSs userCS trustedAddresses True
-      outgoingPolicyId = snd . policyFromPlutus $ asterizmClientCompiled clientPKH [] userCS trustedAddresses False
-      (policy, policyId) = policyFromPlutus incomingPolicy
-      incomingCS       = mintingPolicyIdToCurrencySymbol policyId
-      outgoingCS       = mintingPolicyIdToCurrencySymbol outgoingPolicyId
-      (omniPolicy, omniPolicyId) = policyFromPlutus $ asterizmOmniTokenCompiled incomingCS outgoingCS userCS
+      clientPolicy     = asterizmClientCompiled clientPKH relayerCSs userCS trustedAddresses
+      (policy, policyId) = policyFromPlutus clientPolicy
+      clientCS         = mintingPolicyIdToCurrencySymbol policyId
+      (omniPolicy, omniPolicyId) = policyFromPlutus $ asterizmOmniTokenCompiled clientCS userCS
 
   let msgHash    = hashMessage hashMode msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
@@ -238,7 +239,7 @@ clientTokenMint (TokenMintTransaction cfgFile skeyFile clientVkeyFile relayerVke
     let skeleton = mustHaveOutput (GYTxOut sendTo proofValue inlineDatum Nothing)
                 <> mustHaveOutput (GYTxOut sendTo omniValue Nothing Nothing)
                 <> mustHaveRefInput relayerOref
-                <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
+                <> mustMint policy (clientActionRedeemer $ ClientIncoming hashMode) tokenName 1
                 <> mustMint omniPolicy (omniActionRedeemer OmniTokenMint) omniTokenNameGY amount
                 <> mustBeSignedBy (pubKeyHash clientVkey)
 
@@ -278,12 +279,10 @@ clientTokenBurn (TokenBurnTransaction cfgFile skeyFile clientVkeyFile relayerVke
       trustedAddresses = toBuiltin <$> trustedAddressBSs
       (userPolicy, userPolicyId) = policyFromPlutus asterizmUserCompiled
       userCS           = mintingPolicyIdToCurrencySymbol userPolicyId
-      incomingPolicyId = snd . policyFromPlutus $ asterizmClientCompiled clientPKH relayerCSs userCS trustedAddresses True
-      outgoingPolicy   = asterizmClientCompiled clientPKH [] userCS trustedAddresses False
-      (policy, policyId) = policyFromPlutus outgoingPolicy
-      incomingCS       = mintingPolicyIdToCurrencySymbol incomingPolicyId
-      outgoingCS       = mintingPolicyIdToCurrencySymbol policyId
-      (omniPolicy, omniPolicyId) = policyFromPlutus $ asterizmOmniTokenCompiled incomingCS outgoingCS userCS
+      clientPolicy     = asterizmClientCompiled clientPKH relayerCSs userCS trustedAddresses
+      (policy, policyId) = policyFromPlutus clientPolicy
+      clientCS         = mintingPolicyIdToCurrencySymbol policyId
+      (omniPolicy, omniPolicyId) = policyFromPlutus $ asterizmOmniTokenCompiled clientCS userCS
 
   let msgHash    = hashMessage hashMode msg
       tokenName  = fromJust $ tokenNameFromBS msgHash
@@ -302,7 +301,7 @@ clientTokenBurn (TokenBurnTransaction cfgFile skeyFile clientVkeyFile relayerVke
 
     let skeleton = mustHaveOutput (GYTxOut sendTo proofValue inlineDatum Nothing)
                 <> mustHaveInput (GYTxIn @PlutusV3 (utxoRef userUtxo) GYTxInWitnessKey)
-                <> mustMint policy (hashModeRedeemer hashMode) tokenName 1
+                <> mustMint policy (clientActionRedeemer $ ClientOutgoing hashMode) tokenName 1
                 <> mustMint userPolicy (hashModeRedeemer hashMode) tokenName (-1)
                 <> mustMint omniPolicy (omniActionRedeemer OmniTokenBurn) omniTokenNameGY (negate amount)
                 <> mustBeSignedBy (pubKeyHash clientVkey)

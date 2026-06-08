@@ -5,7 +5,6 @@ import           GeniusYield.Types
 import           Prelude
 
 import           ZkFold.Cardano.Asterizm.Transaction.Retrieve (derivePolicyId)
-import           ZkFold.Cardano.Asterizm.Types                (MessageDirection (..))
 import           ZkFold.Cardano.Asterizm.Utils                (policyFromPlutus)
 import           ZkFold.Cardano.Options.Common                (readPaymentVerificationKey)
 import           ZkFold.Cardano.UPLC.Asterizm                 (asterizmOmniTokenCompiled, asterizmRelayerCompiled,
@@ -16,7 +15,6 @@ data ClientTransaction = ClientTransaction
   { clientVKeyFile   :: !FilePath
   , relayerVKeyFiles :: ![FilePath]
   , trustedAddresses :: ![BS.ByteString]
-  , direction        :: !MessageDirection
   }
 
 data RelayerTransaction = RelayerTransaction
@@ -32,11 +30,11 @@ data TokenTransaction = TokenTransaction
   }
 
 printClientPolicy :: ClientTransaction -> IO ()
-printClientPolicy (ClientTransaction clientVkeyFile relayerVkeyFiles trustedAddressBSs dir) = do
+printClientPolicy (ClientTransaction clientVkeyFile relayerVkeyFiles trustedAddressBSs) = do
   clientVkey   <- readPaymentVerificationKey clientVkeyFile
   relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
 
-  let clientPolicyId = derivePolicyId clientVkey relayerVkeys trustedAddressBSs dir
+  let clientPolicyId = derivePolicyId clientVkey relayerVkeys trustedAddressBSs
   putStrLn $ trimQuot (show clientPolicyId)
 
 printRelayerPolicy :: RelayerTransaction -> IO ()
@@ -55,13 +53,11 @@ printTokenPolicy (TokenTransaction clientVkeyFile relayerVkeyFiles trustedAddres
   clientVkey   <- readPaymentVerificationKey clientVkeyFile
   relayerVkeys <- mapM readPaymentVerificationKey relayerVkeyFiles
 
-  let incomingPolicyId = derivePolicyId clientVkey relayerVkeys trustedAddressBSs Incoming
-      outgoingPolicyId = derivePolicyId clientVkey [] trustedAddressBSs Outgoing
+  let clientPolicyId = derivePolicyId clientVkey relayerVkeys trustedAddressBSs
       userPolicyId = snd . policyFromPlutus $ asterizmUserCompiled
-      incomingCS = mintingPolicyIdToCurrencySymbol incomingPolicyId
-      outgoingCS = mintingPolicyIdToCurrencySymbol outgoingPolicyId
+      clientCS = mintingPolicyIdToCurrencySymbol clientPolicyId
       userCS = mintingPolicyIdToCurrencySymbol userPolicyId
-      tokenPolicyId = snd . policyFromPlutus $ asterizmOmniTokenCompiled incomingCS outgoingCS userCS
+      tokenPolicyId = snd . policyFromPlutus $ asterizmOmniTokenCompiled clientCS userCS
   putStrLn $ trimQuot (show tokenPolicyId)
 
 -- | Remove enclosing quotation marks

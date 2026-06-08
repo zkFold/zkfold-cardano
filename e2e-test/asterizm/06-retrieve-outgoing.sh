@@ -15,5 +15,6 @@ cabal_run() {
 cabal_run zkfold-cli:asterizm -- retrieve-messages \
   --core-config-file $configpath \
   --client-vkey-file $keypath/client.vkey \
+  --relayer-vkey-file $keypath/relayer.vkey \
   --trusted-address "$trustedAddress" \
   --outgoing

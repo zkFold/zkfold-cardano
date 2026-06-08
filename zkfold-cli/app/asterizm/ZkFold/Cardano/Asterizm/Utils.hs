@@ -13,7 +13,8 @@ import           PlutusTx               (CompiledCode, toBuiltinData)
 import           Prelude
 import           System.IO              (hPutStrLn, stderr)
 
-import           ZkFold.Cardano.UPLC.Asterizm (AsterizmHashMode (..), buildCrosschainHash, buildHash)
+import           ZkFold.Cardano.UPLC.Asterizm (AsterizmClientAction, AsterizmHashMode (..), buildCrosschainHash,
+                                               buildHash)
 
 -- | Minting policy and policy ID from Plutus policy.
 policyFromPlutus :: forall a. CompiledCode a -> (GYBuildScript PlutusV3, GYMintingPolicyId)
@@ -41,6 +42,10 @@ hashMessage CrosschainHash = fromBuiltin . buildCrosschainHash . toBuiltin
 -- | Minting redeemer selecting the same hash mode used off-chain.
 hashModeRedeemer :: AsterizmHashMode -> GYRedeemer
 hashModeRedeemer = redeemerFromPlutusData . toBuiltinData
+
+-- | Client-policy redeemer selecting direction and hash mode.
+clientActionRedeemer :: AsterizmClientAction -> GYRedeemer
+clientActionRedeemer = redeemerFromPlutusData . toBuiltinData
 
 -- | The minimal omni-chain token uses the empty Cardano token name.
 omniTokenNameGY :: GYTokenName
