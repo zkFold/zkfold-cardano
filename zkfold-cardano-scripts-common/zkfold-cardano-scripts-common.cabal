@@ -74,3 +74,4 @@ library
     plutus-ledger-api,
     plutus-tx,
     zkfold-cardano,
+    zkfold-plutus-halo2,

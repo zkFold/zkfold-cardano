@@ -1,0 +1,135 @@
+cabal-version: 3.0
+name:          zkfold-plutus-halo2
+version:       1.0.0.0
+license:       MIT 
+category:      Testing, Cryptography, Math, Symbolic Computation
+author:        Vladimir Morozov 
+maintainer:    info@zkfold.io
+synopsis:      "A plutus halo2 verifier"
+build-type:    Simple
+
+common common-lang
+  ghc-options: -Wall
+               -fno-ignore-interface-pragmas
+               -fno-omit-interface-pragmas
+               -fno-full-laziness
+               -fno-spec-constr
+               -fno-specialise
+               -fno-strictness
+               -fno-unbox-strict-fields
+               -fno-unbox-small-strict-fields
+  PlutusTx.Plugin:defer-errors
+
+common extensions
+  default-extensions:
+    BangPatterns
+    BinaryLiterals
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NoStarIsType
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    PolyKinds
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    ViewPatterns
+
+library
+  import:           common-lang, extensions
+  exposed-modules:
+    Plutus.Crypto.BlsTypes
+    Plutus.Crypto.BlsUtils
+    Plutus.Crypto.Constants
+    Plutus.Crypto.Halo2
+    Plutus.Crypto.Halo2.ApplicativeParser
+    Plutus.Crypto.Halo2.CompressUncompress
+    Plutus.Crypto.Halo2.Generic.Verifier
+    Plutus.Crypto.Halo2.Generic.VKConstants
+    Plutus.Crypto.Halo2.LagrangePolynomialEvaluation
+    Plutus.Crypto.Halo2.MSMEval
+    Plutus.Crypto.Halo2.GwcMultiOpenMSM
+    Plutus.Crypto.Halo2.MSMTypes
+    Plutus.Crypto.Halo2.Halo2MultiOpenMSM
+    Plutus.Crypto.Halo2.Proof
+    Plutus.Crypto.Orphans
+    Plutus.Crypto.VKType
+
+  other-modules:    Plutus.Crypto.Halo2.Transcript
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  build-depends:
+    , aeson
+    , base               >=4.2       && <5
+    , bytestring
+    , containers
+    , file-embed
+    , lens
+    , mtl
+    , plutus-core        ^>=1.43
+    , plutus-ledger-api  ^>=1.43
+    , plutus-tx          ^>=1.43
+    , plutus-tx-plugin   ^>=1.43
+    , template-haskell
+    , th-lift
+    , text
+    , hex-text
+
+test-suite halo2-ledger-test
+  import:           common-lang, extensions
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test
+  ghc-options:
+    -threaded
+    "-with-rtsopts=-A128M -AL256m -qb0 -qn4 -N"
+
+  other-modules:
+    Paths_zkfold_plutus_halo2
+
+  autogen-modules:
+    Paths_zkfold_plutus_halo2
+
+  build-depends:
+    adjunctions,
+    aeson,
+    aeson-pretty,
+    base,
+    binary,
+    bytestring,
+    containers,
+    hspec <2.12,
+    mtl,
+    plutus-tx,
+    symbolic-base,
+    symbolic-ledger,
+    zkfold-plutus-halo2,

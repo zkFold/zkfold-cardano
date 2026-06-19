@@ -9,14 +9,13 @@ module ZkFold.Cardano.UPLC.RollupSimple.Types (
   RollupConfiguration (..),
 ) where
 
-import           GHC.Generics                        (Generic)
-import           PlutusLedgerApi.V3                  (Address, CurrencySymbol, TokenName, TxOutRef)
+import           GHC.Generics              (Generic)
+import           Plutus.Crypto.Halo2.Proof (Proof)
+import           PlutusLedgerApi.V3        (Address, CurrencySymbol, TokenName, TxOutRef)
 import           PlutusTx.Blueprint
 import qualified PlutusTx.Blueprint.TH
-import           PlutusTx.Prelude                    hiding (toList, (*), (+))
-import           Prelude                             (Show)
-
-import           ZkFold.Cardano.OnChain.Plonkup.Data (ProofBytes, SetupBytes)
+import           PlutusTx.Prelude          hiding (toList, (*), (+))
+import           Prelude                   (Show)
 
 data RollupState = RollupState
   { previousStateHash :: Integer
@@ -29,7 +28,7 @@ data RollupState = RollupState
 PlutusTx.Blueprint.TH.makeIsDataSchemaIndexed ''RollupState [('RollupState, 0)]
 
 data RollupSimpleRed = RollupSimpleRed
-  { rsrProofBytes :: ProofBytes
+  { rsrProofBytes :: Proof
   -- ^ Proof for state update.
   , rsrAddress    :: Address
   -- ^ Address of the spending validator.
@@ -73,8 +72,6 @@ data RollupConfiguration = RollupConfiguration
   -- ^ NFT Currency Symbol.
   , rcNftTokenName      :: TokenName
   -- ^ NFT Token Name.
-  , rcSetupBytes        :: SetupBytes
-  -- ^ Setup bytes.
   , rcMaxBridgeIn       :: Integer
   -- ^ Maximum number of UTxOs that can be bridged in.
   , rcMaxBridgeOut      :: Integer

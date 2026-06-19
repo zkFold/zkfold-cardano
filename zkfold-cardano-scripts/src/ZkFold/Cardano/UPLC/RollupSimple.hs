@@ -14,19 +14,18 @@ module ZkFold.Cardano.UPLC.RollupSimple (
 ) where
 
 import           Data.Function                          ((&))
+import           Plutus.Crypto.BlsTypes                 (mkScalar)
+import           Plutus.Crypto.Halo2.Generic.Verifier   (verify)
 import           PlutusLedgerApi.V1                     (valueOf)
 import           PlutusLedgerApi.V3
 import qualified PlutusTx.AssocMap                      as AssocMap
 import qualified PlutusTx.Builtins.Internal             as BI
 import           PlutusTx.Prelude                       hiding (toList)
 
-import           ZkFold.Cardano.OnChain.BLS12_381       (unsafeToF)
-import           ZkFold.Cardano.OnChain.Plonkup         (PlonkupPlutus)
 import           ZkFold.Cardano.UPLC.RollupSimple.Types (BridgeUtxoInfo (..), BridgeUtxoStatus (..),
                                                          RollupConfiguration (..), RollupSimpleRed (..),
                                                          RollupState (..))
 import           ZkFold.Cardano.UPLC.RollupSimple.Utils
-import           ZkFold.Protocol.NonInteractiveProof    (NonInteractiveProof (..))
 
 {-# INLINEABLE rollupSimple #-}
 rollupSimple ::
@@ -143,15 +142,14 @@ rollupSimpleStake (unsafeFromBuiltinData -> RollupConfiguration {..}) scData =
                        (bridgeInList <> fillWithZeros3WithAdd (rcMaxBridgeIn - quot (length bridgeInList)) rcMaxOutputAssets 3 [])
                   in traceIfFalse
                        "rollupSimpleStake: proof verification failed"
-                       ( verify @PlonkupPlutus
-                           rcSetupBytes
-                           ( unsafeToF
+                       ( fst $ verify
+                           rsrProofBytes
+                           ( mkScalar
                                <$> [previousStateHash oldState, utxoTreeRoot oldState, chainLength oldState, previousStateHash newState, utxoTreeRoot newState, chainLength newState, 1]
                                <> bridgeInS
                                <> (bridgeOutList <> fillWithZeros3WithAdd (rcMaxBridgeOut - quot (length bridgeOutList)) rcMaxOutputAssets 3 [])
                                <> rsrDelta
                            )
-                           rsrProofBytes
                        )
                )
             && checkPrefix bridgeInInitialList bridgeInList
